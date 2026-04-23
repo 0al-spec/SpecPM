@@ -1622,6 +1622,15 @@ def load_index(index_path: Path) -> tuple[dict[str, Any], list[Issue]]:
         return empty_index(), []
     try:
         loaded = json.loads(index_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return empty_index(), [
+            Issue(
+                "error",
+                "index_read_failed",
+                f"Index could not be read: {exc}",
+                str(index_path),
+            )
+        ]
     except json.JSONDecodeError as exc:
         return empty_index(), [Issue("error", "index_json_invalid", str(exc), str(index_path))]
     if not isinstance(loaded, dict):

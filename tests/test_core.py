@@ -222,6 +222,16 @@ def test_cli_index_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-unty
     assert index_path.is_file()
 
 
+def test_index_reports_read_errors_for_existing_index_path_directory(tmp_path: Path) -> None:
+    index_path = tmp_path / "index-directory"
+    index_path.mkdir()
+
+    report = index_package(ROOT / "examples/email_tools", index_path)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "index_read_failed" for issue in report["errors"])
+
+
 def test_cli_pack_rejects_invalid_packages(tmp_path: Path) -> None:
     package = tmp_path / "invalid"
     package.mkdir()
