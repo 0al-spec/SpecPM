@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-23
+Updated: 2026-04-24
 Owner: SpecPM
 Primary source: `RFC/SpecGraph-RFC-0001.md`
 
@@ -209,8 +209,9 @@ Validation output must be available as JSON with:
 - never execute package code or scripts;
 - emit archive digest metadata.
 
-The archive extension can be decided during implementation, but the workplan
-should start with a simple deterministic tar/zip format and stable file order.
+The MVP archive format is `specpm-tar-gzip-v0`, emitted with the
+`.specpm.tgz` extension. Archives use stable file order, normalized ownership,
+and normalized timestamps.
 
 ## 10. Index, Search, and Add Requirements
 

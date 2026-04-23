@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import Any
 
 from specpm import __version__
-from specpm.core import inspect_inbox_bundle, inspect_package, list_inbox, validate_package
+from specpm.core import (
+    inspect_inbox_bundle,
+    inspect_package,
+    list_inbox,
+    pack_package,
+    validate_package,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -40,6 +46,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--json", action="store_true", help="Emit a stable JSON inspection report."
     )
     inspect_cmd.set_defaults(handler=handle_inspect)
+
+    pack = subparsers.add_parser("pack", help="Create a deterministic SpecPackage archive.")
+    pack.add_argument("package_dir")
+    pack.add_argument("-o", "--output")
+    pack.add_argument("--json", action="store_true", help="Emit a stable JSON pack report.")
+    pack.set_defaults(handler=handle_pack)
 
     inbox = subparsers.add_parser("inbox", help="Inspect SpecGraph export inbox bundles.")
     inbox_subparsers = inbox.add_subparsers(dest="inbox_command", required=True)
@@ -76,6 +88,24 @@ def handle_inspect(args: argparse.Namespace) -> int:
     else:
         print_inspection(report)
     return 1 if report["validation"]["status"] == "invalid" else 0
+
+
+def handle_pack(args: argparse.Namespace) -> int:
+    output = Path(args.output) if args.output else None
+    report = pack_package(Path(args.package_dir), output)
+    if args.json:
+        print_json(report)
+    else:
+        if report["status"] == "packed":
+            digest = report["digest"]["value"]
+            print(f"packed: {report['archive']}")
+            print(f"sha256: {digest}")
+            print(f"files: {len(report['included_files'])}")
+        else:
+            print(f"pack failed: {args.package_dir}", file=sys.stderr)
+            for issue in report.get("errors", []):
+                print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
+    return 0 if report["status"] == "packed" else 1
 
 
 def handle_inbox_list(args: argparse.Namespace) -> int:
