@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpecPM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #040806;
+      --bg-soft: #07100c;
+      --panel: rgba(9, 17, 13, 0.92);
+      --panel-strong: rgba(10, 18, 14, 0.97);
+      --text: #f1f8f3;
+      --muted: #94a79b;
+      --primary: #63e873;
+      --primary-strong: #87f593;
+      --line: rgba(99, 232, 115, 0.11);
+      --line-strong: rgba(99, 232, 115, 0.22);
+      --glow: rgba(99, 232, 115, 0.15);
+      --shadow: rgba(0, 0, 0, 0.42);
+      --mono: "IBM Plex Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
+      --sans: "Space Grotesk", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      font-family: var(--sans);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(circle at 50% -10%, rgba(99, 232, 115, 0.16), transparent 32%),
+        linear-gradient(rgba(99, 232, 115, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 232, 115, 0.025) 1px, transparent 1px);
+      background-size: auto, 64px 64px, 64px 64px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 16% 20%, rgba(99, 232, 115, 0.06), transparent 22%),
+        radial-gradient(circle at 82% 18%, rgba(99, 232, 115, 0.05), transparent 18%),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.02));
+      z-index: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1400px, calc(100vw - 3rem));
+      margin: 0 auto;
+    }
+
+    .nav,
+    .hero,
+    .trust-strip,
+    .feature-section,
+    .microcopy {
+      animation: fade-up 540ms ease both;
+    }
+
+    .hero {
+      animation-delay: 80ms;
+    }
+
+    .trust-strip {
+      animation-delay: 140ms;
+    }
+
+    .feature-section {
+      animation-delay: 180ms;
+    }
+
+    .nav-wrap {
+      border-bottom: 1px solid var(--line);
+      background: rgba(4, 8, 6, 0.85);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      min-height: 4.4rem;
+    }
+
+    .nav-left,
+    .nav-right,
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--mono);
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+      font-weight: 600;
+    }
+
+    .brand-mark {
+      color: var(--primary);
+      font-size: 1.2rem;
+      letter-spacing: -0.1em;
+      text-shadow: 0 0 20px var(--glow);
+    }
+
+    .nav-links {
+      display: none;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+    }
+
+    .nav-links a,
+    .nav-right a {
+      transition: color 160ms ease;
+    }
+
+    .nav-links a:hover,
+    .nav-right a:hover {
+      color: var(--text);
+    }
+
+    .nav-right {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      gap: 1rem;
+    }
+
+    .nav-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.5rem;
+      padding: 0.62rem 1rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 0.45rem;
+      color: var(--primary-strong);
+      background: rgba(7, 15, 11, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(540px, 0.95fr);
+      gap: 2.3rem;
+      align-items: start;
+      padding: 3.5rem 0 1.25rem;
+    }
+
+    .hero-copy {
+      padding-top: 2.2rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 1.15rem;
+      font-family: var(--mono);
+      font-size: 0.83rem;
+      color: var(--primary);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .headline {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: clamp(3.7rem, 5.7vw, 5.6rem);
+      line-height: 0.98;
+      letter-spacing: -0.08em;
+      font-weight: 600;
+      max-width: 11ch;
+    }
+
+    .headline span {
+      color: var(--primary);
+      text-shadow: 0 0 32px var(--glow);
+    }
+
+    .lede {
+      max-width: 34rem;
+      margin: 1.75rem 0 0;
+      font-size: clamp(1.15rem, 1.5vw, 1.45rem);
+      line-height: 1.55;
+      color: var(--muted);
+      font-family: var(--sans);
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.1rem;
+      margin-top: 2rem;
+    }
+
+    .button,
+    .button-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 3.4rem;
+      padding: 0.95rem 1.45rem;
+      border-radius: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.98rem;
+      transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+    }
+
+    .button:hover,
+    .button-ghost:hover,
+    .nav-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button {
+      color: #061008;
+      background: var(--primary);
+      border: 1px solid rgba(99, 232, 115, 0.65);
+      box-shadow: 0 0 0 1px rgba(99, 232, 115, 0.08), 0 0 32px rgba(99, 232, 115, 0.09);
+    }
+
+    .button-ghost {
+      color: var(--primary);
+      background: rgba(7, 14, 11, 0.76);
+      border: 1px solid var(--line-strong);
+    }
+
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1rem;
+      border: 1px solid var(--line-strong);
+      background:
+        linear-gradient(180deg, rgba(8, 14, 11, 0.96), rgba(5, 9, 7, 0.98)),
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 58px,
+          rgba(99, 232, 115, 0.022) 58px,
+          rgba(99, 232, 115, 0.022) 59px
+        );
+      box-shadow:
+        0 0 0 1px rgba(99, 232, 115, 0.03),
+        0 24px 72px var(--shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 78% 22%, rgba(99, 232, 115, 0.08), transparent 24%),
+        linear-gradient(to bottom, transparent, rgba(99, 232, 115, 0.03));
+    }
+
+    .hero-card-top {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dot {
+      width: 0.58rem;
+      height: 0.58rem;
+      border-radius: 999px;
+      background: rgba(148, 167, 155, 0.34);
+    }
+
+    .hero-card-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 270px;
+      gap: 1.1rem;
+      padding: 1.35rem;
+      font-family: var(--mono);
+    }
+
+    .cli-command {
+      margin: 0 0 1.3rem;
+      font-size: 1.02rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .cli-command .prompt,
+    .accent {
+      color: var(--primary);
+    }
+
+    .status-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.72rem;
+      color: rgba(241, 248, 243, 0.92);
+      font-size: 0.95rem;
+    }
+
+    .status-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      opacity: 0;
+      animation: fade-in 380ms ease forwards;
+    }
+
+    .status-list li:nth-child(1) {
+      animation-delay: 120ms;
+    }
+
+    .status-list li:nth-child(2) {
+      animation-delay: 200ms;
+    }
+
+    .status-list li:nth-child(3) {
+      animation-delay: 280ms;
+    }
+
+    .status-list li:nth-child(4) {
+      animation-delay: 360ms;
+    }
+
+    .status-list li:nth-child(5) {
+      animation-delay: 440ms;
+    }
+
+    .status-copy {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      min-width: 0;
+    }
+
+    .status-arrow {
+      color: var(--primary);
+      flex: none;
+    }
+
+    .status-ok {
+      color: var(--primary);
+      font-size: 0.86rem;
+      white-space: nowrap;
+    }
+
+    .summary {
+      margin-top: 1.45rem;
+      padding: 1rem 1.05rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--line);
+      background: rgba(8, 14, 11, 0.74);
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.65;
+    }
+
+    .summary strong {
+      display: block;
+      margin-bottom: 0.22rem;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    .spec-card {
+      border-radius: 0.6rem;
+      border: 1px solid var(--line);
+      background: rgba(7, 12, 10, 0.78);
+      padding: 1rem;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+
+    .spec-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .spec-title {
+      font-size: 0.92rem;
+      font-weight: 500;
+    }
+
+    .spec-tag {
+      border: 1px solid var(--line-strong);
+      border-radius: 0.35rem;
+      padding: 0.16rem 0.38rem;
+      font-size: 0.72rem;
+      color: var(--primary);
+    }
+
+    .spec-group + .spec-group {
+      margin-top: 1rem;
+    }
+
+    .spec-label {
+      display: block;
+      margin-bottom: 0.32rem;
+      color: var(--text);
+      font-size: 0.74rem;
+      font-weight: 500;
+    }
+
+    .spec-value {
+      color: rgba(241, 248, 243, 0.88);
+    }
+
+    .spec-link {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 1.2rem;
+      color: var(--primary);
+      font-size: 0.86rem;
+    }
+
+    .trust-strip {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(7, 12, 10, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.01);
+    }
+
+    .trust-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1fr;
+      gap: 1rem;
+      align-items: center;
+      min-height: 4.1rem;
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .trust-title {
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      min-width: 0;
+    }
+
+    .trust-icon,
+    .feature-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.1rem;
+      height: 2.1rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 0.45rem;
+      color: var(--primary);
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      background: rgba(8, 14, 11, 0.8);
+      flex: none;
+    }
+
+    .feature-section {
+      padding: 2.2rem 0 2.05rem;
+    }
+
+    .section-title {
+      margin: 0 0 1.3rem;
+      font-family: var(--mono);
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.2rem;
+    }
+
+    .feature-card {
+      padding: 1.45rem 1.35rem;
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      background: rgba(8, 14, 11, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.01);
+      transition: border-color 180ms ease, transform 180ms ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+    }
+
+    .feature-top {
+      display: flex;
+      align-items: center;
+      gap: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-name {
+      font-family: var(--mono);
+      font-size: 1.02rem;
+      color: var(--primary);
+    }
+
+    .feature-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.99rem;
+      line-height: 1.55;
+    }
+
+    .microcopy {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      padding: 0.95rem 0 1.2rem;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.86rem;
+    }
+
+    @keyframes fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy {
+        padding-top: 0;
+      }
+
+      .headline {
+        max-width: none;
+      }
+
+      .feature-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      .container {
+        width: calc(100vw - 1.5rem);
+      }
+
+      .nav {
+        min-height: 3.8rem;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 2rem;
+      }
+
+      .headline {
+        font-size: clamp(2.7rem, 12vw, 4rem);
+      }
+
+      .lede {
+        font-size: 1.02rem;
+      }
+
+      .hero-card-body {
+        grid-template-columns: 1fr;
+      }
+
+      .trust-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem 0;
+        gap: 0.9rem;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .microcopy {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 0.55rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="nav-wrap">
+      <nav class="nav container" aria-label="Primary">
+        <div class="nav-left">
+          <a class="brand" href="#">
+            <span class="brand-mark" aria-hidden="true">&gt;_</span>
+            <span>SPECPM</span>
+          </a>
+
+          <div class="nav-links">
+            <a href="#">Explore</a>
+            <a href="#">Docs</a>
+            <a href="#">CLI</a>
+            <a href="#">Registry</a>
+            <a href="#">Blog</a>
+          </div>
+        </div>
+
+        <div class="nav-right">
+          <a href="https://github.com/0al-spec/SpecPM">GitHub</a>
+          <a class="nav-button" href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md">Read RFC</a>
+        </div>
+      </nav>
+    </div>
+
+    <main class="container">
+      <section class="hero" aria-label="Hero">
+        <div class="hero-copy">
+          <p class="eyebrow">&gt;_ the registry for software intent</p>
+          <h1 class="headline">
+            npm installs code.
+            <br />
+            <span>SpecPM imports behavior.</span>
+          </h1>
+          <p class="lede">
+            SpecPM is the package registry for intent-based components. Discover, compose, and trust capabilities - not just code.
+          </p>
+
+          <div class="action-row">
+            <a class="button" href="https://github.com/0al-spec/SpecPM">&gt; specpm add "secure token storage for iOS"</a>
+          </div>
+        </div>
+
+        <section class="hero-card" aria-label="Spec resolution preview">
+          <div class="hero-card-top">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="dot" aria-hidden="true"></span>
+            <span class="dot" aria-hidden="true"></span>
+          </div>
+
+          <div class="hero-card-body">
+            <div>
+              <p class="cli-command">
+                <span class="prompt">$</span>
+                <span class="accent">specpm</span> add auth.secure-token-store
+              </p>
+
+              <ul class="status-list">
+                <li>
+                  <span class="status-copy">
+                    <span class="status-arrow">&gt;</span>
+                    <span>search by capability</span>
+                  </span>
+                  <span class="status-ok">matched</span>
+                </li>
+                <li>
+                  <span class="status-copy">
+                    <span class="status-arrow">&gt;</span>
+                    <span>resolve by constraints</span>
+                  </span>
+                  <span class="status-ok">iOS</span>
+                </li>
+                <li>
+                  <span class="status-copy">
+                    <span class="status-arrow">&gt;</span>
+                    <span>verify by conformance</span>
+                  </span>
+                  <span class="status-ok">14/14</span>
+                </li>
+                <li>
+                  <span class="status-copy">
+                    <span class="status-arrow">&gt;</span>
+                    <span>sync with code</span>
+                  </span>
+                  <span class="status-ok">swift</span>
+                </li>
+                <li>
+                  <span class="status-copy">
+                    <span class="status-arrow">&gt;</span>
+                    <span>done</span>
+                  </span>
+                  <span class="status-ok">ready</span>
+                </li>
+              </ul>
+
+              <div class="summary">
+                <strong>Added auth.secure-token-store@1.2.0</strong>
+                7 capabilities · 2 spec dependencies
+              </div>
+            </div>
+
+            <aside class="spec-card" aria-label="Resolved spec">
+              <div class="spec-head">
+                <span class="spec-title">auth.secure-token-store</span>
+                <span class="spec-tag">1.2.0</span>
+              </div>
+
+              <div class="spec-group">
+                <span class="spec-label">Intent</span>
+                <div class="spec-value">Authenticate and persist secure session tokens on iOS.</div>
+              </div>
+
+              <div class="spec-group">
+                <span class="spec-label">Provided by</span>
+                <div class="spec-value">specpm/auth</div>
+              </div>
+
+              <div class="spec-group">
+                <span class="spec-label">Verified</span>
+                <div class="spec-value">conformance suite · provenance bundle</div>
+              </div>
+
+              <a class="spec-link" href="#">View on Registry -&gt;</a>
+            </aside>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <section class="trust-strip" aria-label="Trust signals">
+      <div class="trust-grid container">
+        <div class="trust-title">trust by design</div>
+        <div class="trust-item">
+          <span class="trust-icon">[]</span>
+          <span>Verified specs</span>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">::</span>
+          <span>Provenance &amp; audit</span>
+        </div>
+        <div class="trust-item">
+          <span class="trust-icon">#</span>
+          <span>Sync with code</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-section container" aria-labelledby="features-title">
+      <h2 class="section-title" id="features-title">Built for how modern teams build</h2>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-top">
+            <span class="feature-icon">&gt;_</span>
+            <span class="feature-name">Capability Search</span>
+          </div>
+          <p class="feature-copy">Find specifications by what they do, not by repository name or implementation detail.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-top">
+            <span class="feature-icon">{ }</span>
+            <span class="feature-name">Constraint Resolution</span>
+          </div>
+          <p class="feature-copy">Resolve the right behavior for platform, runtime, boundary, and integration constraints.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-top">
+            <span class="feature-icon">ok</span>
+            <span class="feature-name">Conformance Verified</span>
+          </div>
+          <p class="feature-copy">Every import can carry evidence, tests, and explicit claims about what is actually satisfied.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-top">
+            <span class="feature-icon">&lt;/&gt;</span>
+            <span class="feature-name">Developer Native</span>
+          </div>
+          <p class="feature-copy">CLI, specwriter, and repository sync fit directly into how engineering teams already ship.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="microcopy container" aria-label="Microcopy">
+      <span>code is implementation</span>
+      <span>spec is dependency</span>
+    </footer>
+  </div>
+</body>
+</html>
