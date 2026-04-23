@@ -141,6 +141,16 @@
       font-style: italic;
     }
 
+    .serif-name {
+        font-family:var(--serif);
+        font-weight:400;
+        letter-spacing:0;
+        font-size:1.12em;
+        line-height:inherit;
+        vertical-align:baseline;
+        text-transform:none;
+    }
+
     h2 {
       font-size: 50px;
       line-height: 1;
@@ -1307,7 +1317,7 @@
             <em>Implementations come included.</em>
           </h1>
           <p class="lede hero-sub">
-            SpecPM is a specification registry and need resolution engine that turns implementation needs into concrete specs - each backed by real modules, subsystems, and code.
+            <span class="serif-name">SpecPM</span> is a specification registry and need resolution engine that turns implementation needs into concrete specs - each backed by real modules, subsystems, and code.
           </p>
           <div class="hero-ctas">
             <a class="btn primary" href="#api">
@@ -1400,7 +1410,7 @@
           <h2 id="statement-title">A registry of working specifications.</h2>
           <div class="statement-body">
             <p>Traditional package managers expose code first.</p>
-            <p>SpecPM works differently.</p>
+            <p><span class="serif-name">SpecPM</span> works differently.</p>
             <p>
               It stores specifications as the primary unit - structured, reusable definitions of what a module or subsystem should do. Each specification is connected to real implementation options, so a need can be resolved into a spec, and the spec can lead directly to working code.
             </p>
@@ -1419,7 +1429,7 @@
             <div class="problem-title">
               <h3 id="problem-title">Implementation decisions slow everything down.</h3>
               <p>
-                SpecPM removes that loop. Instead of searching for implementation details, agents and developers resolve needs into specification-backed modules that already know how they can be implemented.
+                <span class="serif-name">SpecPM</span> removes that loop. Instead of searching for implementation details, agents and developers resolve needs into specification-backed modules that already know how they can be implemented.
               </p>
             </div>
             <div class="loop">
@@ -1446,7 +1456,7 @@
     <section class="section" id="how" aria-labelledby="how-title">
       <div class="wrap">
         <div class="how-head">
-          <p class="eyebrow">How SpecPM Works</p>
+          <p class="eyebrow">How <span class="serif-name">SpecPM</span> Works</p>
           <h2 id="how-title">Need &rarr; Specification &rarr; Implementation</h2>
         </div>
 
@@ -1469,7 +1479,7 @@
               <path d="M24 7v8M24 33v8M7 24h8M33 24h8" stroke-width="1.5" />
             </svg>
             <h3>Resolve the best <span class="step-title-break">specification</span></h3>
-            <p>SpecPM searches the registry and finds the best matching spec by structure, constraints, context, and intended use.</p>
+            <p><span class="serif-name">SpecPM</span> searches the registry and finds the best matching spec by structure, constraints, context, and intended use.</p>
           </article>
 
           <article class="step">
@@ -1491,7 +1501,7 @@
               <path d="M606.6 785.6C556.2 785.6 531 758.4 531 704V618.8C531 590.4 527.6 570.6 520.8 559.4C514.4 547.8 504.2 542 490.2 542C485.4 542 483 539.6 483 534.8C483 530 485.4 527.6 490.2 527.6C504.2 527.6 514.4 521.8 520.8 510.2C527.6 498.6 531 478.8 531 450.8V365.6C531 311.2 556.2 284 606.6 284C611.4 284 613.8 286.4 613.8 291.2C613.8 296 611.4 298.4 606.6 298.4C579.4 298.4 565.8 320 565.8 363.2V448.4C565.8 475.2 562.2 494.8 555 507.2C548.2 519.6 537 528.8 521.4 534.8C537 540.8 548.2 550 555 562.4C562.2 574.8 565.8 594.4 565.8 621.2V706.4C565.8 749.6 579.4 771.2 606.6 771.2C611.4 771.2 613.8 773.6 613.8 778.4C613.8 783.2 611.4 785.6 606.6 785.6Z" fill="currentColor" />
             </svg>
             <h3>Use it in the <span class="step-title-break">system graph</span></h3>
-            <p>The resolved spec can be used by SpecGraph agents, developers, or automation workflows as a concrete building block for the system being designed.</p>
+            <p>The resolved spec can be used by <span class="serif-name">SpecGraph</span> agents, developers, or automation workflows as a concrete building block for the system being designed.</p>
           </article>
         </div>
       </div>
@@ -1506,7 +1516,7 @@
             Code dependencies tell you what you installed. Specifications tell you what the system needs, why it exists, how it should behave, and which implementation can satisfy it.
           </p>
           <p class="lede">
-            SpecPM makes specifications searchable, reusable, resolvable, and implementation-backed.
+            <span class="serif-name">SpecPM</span> makes specifications searchable, reusable, resolvable, and implementation-backed.
           </p>
           <div class="formula" aria-label="Need to specification to implementation">
             <span>Need</span>
@@ -1585,13 +1595,13 @@
           <p class="eyebrow"><span class="dot"></span>Built for Agents</p>
           <h2 id="agents-title">Built for agents that write specs.</h2>
           <p class="lede">
-            SpecGraph agents don&apos;t need to implement every system part from scratch. When an agent identifies a need inside a system design, it can ask SpecPM for the best matching specification.
+            <a href="https://0al-spec.github.io/SpecGraph/"><span class="serif-name">SpecGraph<span></span></a> agents don&apos;t need to implement every system part from scratch. When an agent identifies a need inside a system design, it can ask <span class="serif-name">SpecPM</span> for the best matching specification.
           </p>
         </div>
 
         <p class="agent-line">
           The agent keeps designing.<br />
-          SpecPM handles resolution.
+          <span class="serif-name">SpecPM</span> handles resolution.
         </p>
 
         <article class="dialogue" aria-label="SpecGraph and SpecPM example">
@@ -1625,11 +1635,11 @@
       <div class="wrap">
         <div class="examples-head">
           <div>
-            <p class="eyebrow">Why SpecPM Is Different</p>
+            <p class="eyebrow">Why <span class="serif-name">SpecPM</span> Is Different</p>
             <h2 id="examples-title">From manual implementation search to spec resolution.</h2>
           </div>
           <p class="lede">
-            Package managers expose implementation. SpecPM resolves intent into specs. Libraries require interpretation; specs carry structure, purpose, and implementation paths.
+            Package managers expose implementation. <span class="serif-name">SpecPM</span> resolves intent into specs. Libraries require interpretation; specs carry structure, purpose, and implementation paths.
           </p>
         </div>
 
