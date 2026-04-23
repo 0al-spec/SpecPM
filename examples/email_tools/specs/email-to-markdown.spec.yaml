@@ -1,0 +1,64 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: document_conversion.email_to_markdown
+  title: Email to Markdown Converter
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Convert email message files into Markdown while preserving visible message content and basic metadata.
+scope:
+  boundedContext: email_converter
+  includes:
+    - Parse email message input.
+    - Extract subject, sender, recipients, date, and body.
+    - Produce Markdown output.
+  excludes:
+    - Send email messages.
+    - Authenticate to mail servers.
+    - Synchronize inbox state.
+provides:
+  capabilities:
+    - id: document_conversion.email_to_markdown
+      role: primary
+      summary: Convert email content into Markdown.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: email_file_input
+      kind: file
+      summary: Accepts an email message file as input.
+      inputs:
+        - name: source
+          mediaTypes:
+            - message/rfc822
+          extensions:
+            - .eml
+      outputs:
+        - name: markdown
+          mediaTypes:
+            - text/markdown
+  outbound: []
+effects:
+  sideEffects:
+    - id: reads_input_file
+      kind: filesystem_read
+      summary: Reads the supplied email file.
+constraints:
+  - id: no_network_access_required
+    level: MUST
+    statement: Converting a local email file must not require network access.
+evidence:
+  - id: readme
+    kind: documentation
+    path: evidence/README.md
+    supports:
+      - intent.summary
+      - provides.capabilities.document_conversion.email_to_markdown
+provenance:
+  sourceConfidence:
+    intent: medium
+    boundary: medium
+    behavior: low
+

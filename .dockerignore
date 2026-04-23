@@ -1,0 +1,9 @@
+.git
+.pytest_cache
+.ruff_cache
+.venv
+.specgraph_exports
+__pycache__
+*.egg-info
+build
+dist
