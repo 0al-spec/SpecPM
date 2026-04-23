@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-23
+Updated: 2026-04-24
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -39,15 +39,15 @@ Acceptance:
 
 ## Phase 1. Core Data Loading
 
-- [ ] Implement restricted YAML loading for JSON-compatible data.
-- [ ] Reject or report unsupported YAML constructs: anchors, aliases, custom
+- [x] Implement restricted YAML loading for JSON-compatible data.
+- [x] Reject or report unsupported YAML constructs: anchors, aliases, custom
   tags, multiple documents, executable tags, and binary blobs.
-- [ ] Add package path discovery for directory packages.
-- [ ] Load `specpm.yaml` into an internal manifest object.
-- [ ] Resolve referenced spec paths relative to package root.
-- [ ] Load `BoundarySpec` documents into internal spec objects.
-- [ ] Preserve unknown `x-` extension fields.
-- [ ] Reject unknown non-extension top-level fields where the RFC requires it.
+- [x] Add package path discovery for directory packages.
+- [x] Load `specpm.yaml` into an internal manifest object.
+- [x] Resolve referenced spec paths relative to package root.
+- [x] Load `BoundarySpec` documents into internal spec objects.
+- [x] Preserve unknown `x-` extension fields.
+- [x] Reject unknown non-extension top-level fields where the RFC requires it.
 
 Acceptance:
 
@@ -57,19 +57,19 @@ Acceptance:
 
 ## Phase 2. Validator
 
-- [ ] Implement manifest required-field checks.
-- [ ] Implement supported `apiVersion` and `kind` checks.
-- [ ] Implement package ID validation.
-- [ ] Implement SemVer validation for package and spec versions.
-- [ ] Implement BoundarySpec required-field checks.
-- [ ] Implement capability ID validation.
-- [ ] Ensure manifest-level provided capabilities are declared by referenced
+- [x] Implement manifest required-field checks.
+- [x] Implement supported `apiVersion` and `kind` checks.
+- [x] Implement package ID validation.
+- [x] Implement SemVer validation for package and spec versions.
+- [x] Implement BoundarySpec required-field checks.
+- [x] Implement capability ID validation.
+- [x] Ensure manifest-level provided capabilities are declared by referenced
   BoundarySpecs.
-- [ ] Add duplicate ID checks.
-- [ ] Add evidence, foreign artifact, and implementation binding path checks as
+- [x] Add duplicate ID checks.
+- [x] Add evidence, foreign artifact, and implementation binding path checks as
   warnings.
-- [ ] Add warning for manual-assertion-only evidence.
-- [ ] Emit JSON validation reports.
+- [x] Add warning for manual-assertion-only evidence.
+- [x] Emit JSON validation reports.
 
 Acceptance:
 
@@ -99,14 +99,15 @@ Acceptance:
 
 ## Phase 4. Deterministic Pack
 
-- [ ] Define the MVP archive format and extension.
-- [ ] Collect manifest, referenced specs, evidence, foreign artifacts, optional
+- [x] Define the MVP archive format and extension: `specpm-tar-gzip-v0`,
+  emitted as `.specpm.tgz`.
+- [x] Collect manifest, referenced specs, evidence, foreign artifacts, optional
   README-like files, and sidecar files.
-- [ ] Normalize file ordering and timestamps for deterministic output.
-- [ ] Reject symlink escapes and path traversal.
-- [ ] Run validation before packing.
-- [ ] Emit digest metadata.
-- [ ] Add `specpm pack <package-dir> -o <archive>`.
+- [x] Normalize file ordering and timestamps for deterministic output.
+- [x] Reject symlink escapes and path traversal.
+- [x] Run validation before packing.
+- [x] Emit digest metadata.
+- [x] Add `specpm pack <package-dir> -o <archive>`.
 
 Acceptance:
 

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 import shutil
+import tarfile
 from pathlib import Path
 
 from specpm.cli import main
-from specpm.core import list_inbox, validate_package
+from specpm.core import list_inbox, pack_package, validate_package
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
@@ -85,6 +86,139 @@ index:
 
     assert report["status"] == "invalid"
     assert any(issue["code"] == "manifest_capability_entry_invalid" for issue in report["errors"])
+
+
+def test_validator_rejects_unknown_top_level_fields(tmp_path: Path) -> None:
+    package = tmp_path / "unknown"
+    shutil.copytree(ROOT / "examples/email_tools", package)
+    manifest = package / "specpm.yaml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8") + "\nnotInRfc: true\n",
+        encoding="utf-8",
+    )
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "unknown_top_level_field" for issue in report["errors"])
+
+
+def test_validator_warns_on_missing_foreign_and_implementation_paths(tmp_path: Path) -> None:
+    package = tmp_path / "advisory"
+    shutil.copytree(ROOT / "examples/email_tools", package)
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec_path.write_text(
+        spec_path.read_text(encoding="utf-8")
+        + """
+foreignArtifacts:
+  - id: missing_openapi
+    format: openapi
+    path: foreign/openapi.yaml
+    role: api_contract
+implementationBindings:
+  - id: python_email_converter
+    language: python
+    files:
+      owned:
+        - src/email_converter.py
+""",
+        encoding="utf-8",
+    )
+
+    report = validate_package(package)
+
+    assert report["status"] == "warning_only"
+    warning_codes = {issue["code"] for issue in report["warnings"]}
+    assert "foreign_artifact_path_missing" in warning_codes
+    assert "implementation_binding_path_missing" in warning_codes
+
+
+def test_pack_is_deterministic(tmp_path: Path) -> None:
+    first = tmp_path / "first.specpm.tgz"
+    second = tmp_path / "second.specpm.tgz"
+
+    first_report = pack_package(ROOT / "examples/email_tools", first)
+    second_report = pack_package(ROOT / "examples/email_tools", second)
+
+    assert first_report["status"] == "packed"
+    assert second_report["status"] == "packed"
+    assert first_report["digest"] == second_report["digest"]
+    assert first.read_bytes() == second.read_bytes()
+    with tarfile.open(first, "r:gz") as archive:
+        assert archive.getnames() == sorted(
+            [
+                "evidence/README.md",
+                "specpm.yaml",
+                "specs/email-to-markdown.spec.yaml",
+            ]
+        )
+
+
+def test_cli_pack_rejects_invalid_packages(tmp_path: Path) -> None:
+    package = tmp_path / "invalid"
+    package.mkdir()
+    (package / "specpm.yaml").write_text("apiVersion: [", encoding="utf-8")
+    archive = tmp_path / "invalid.specpm.tgz"
+
+    exit_code = main(["pack", str(package), "-o", str(archive), "--json"])
+
+    assert exit_code == 1
+    assert not archive.exists()
+
+
+def test_cli_pack_failure_prints_validation_details(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    package = tmp_path / "invalid"
+    package.mkdir()
+    (package / "specpm.yaml").write_text("apiVersion: [", encoding="utf-8")
+
+    exit_code = main(["pack", str(package), "-o", str(tmp_path / "invalid.specpm.tgz")])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "error validation_failed" in captured.err
+    assert "error yaml_parse_error" in captured.err
+
+
+def test_pack_rejects_output_path_overlapping_source_file(tmp_path: Path) -> None:
+    package = tmp_path / "overlap"
+    shutil.copytree(ROOT / "examples/email_tools", package)
+    manifest = package / "specpm.yaml"
+    original_manifest = manifest.read_text(encoding="utf-8")
+
+    report = pack_package(package, manifest)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "pack_output_overlaps_source" for issue in report["errors"])
+    assert manifest.read_text(encoding="utf-8") == original_manifest
+
+
+def test_pack_write_failure_removes_partial_archive(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    archive = tmp_path / "partial.specpm.tgz"
+
+    def fail_after_partial_write(root: Path, files: list[str], archive_path: Path) -> None:
+        archive_path.write_bytes(b"partial")
+        raise OSError("disk full")
+
+    monkeypatch.setattr("specpm.core.write_deterministic_tar_gz", fail_after_partial_write)
+
+    report = pack_package(ROOT / "examples/email_tools", archive)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "pack_write_failed" for issue in report["errors"])
+    assert not archive.exists()
+
+
+def test_pack_rejects_symlinks(tmp_path: Path) -> None:
+    package = tmp_path / "symlink"
+    shutil.copytree(ROOT / "examples/email_tools", package)
+    (package / "evidence/target.md").write_text("target", encoding="utf-8")
+    (package / "evidence/README.md").unlink()
+    (package / "evidence/README.md").symlink_to("target.md")
+
+    report = pack_package(package, tmp_path / "symlink.specpm.tgz")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "pack_symlink_unsupported" for issue in report["errors"])
 
 
 def test_restricted_yaml_rejects_anchors(tmp_path: Path) -> None:
