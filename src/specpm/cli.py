@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 from specpm import __version__
 from specpm.core import (
@@ -105,6 +105,8 @@ def handle_pack(args: argparse.Namespace) -> int:
             print(f"pack failed: {args.package_dir}", file=sys.stderr)
             for issue in report.get("errors", []):
                 print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
+            if "validation" in report:
+                print_validation(report["validation"], stream=sys.stderr)
     return 0 if report["status"] == "packed" else 1
 
 
@@ -140,17 +142,19 @@ def print_json(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, indent=2, sort_keys=True))
 
 
-def print_validation(report: dict[str, Any]) -> None:
+def print_validation(report: dict[str, Any], stream: TextIO | None = None) -> None:
+    stream = stream or sys.stdout
     identity = report.get("package_identity") or {}
     package_id = identity.get("package_id", "unknown")
     print(
         f"{report['status']}: {package_id} "
-        f"({report['error_count']} errors, {report['warning_count']} warnings)"
+        f"({report['error_count']} errors, {report['warning_count']} warnings)",
+        file=stream,
     )
     for issue in report["errors"]:
-        print(f"error {issue['code']}: {issue['message']}")
+        print(f"error {issue['code']}: {issue['message']}", file=stream)
     for issue in report["warnings"]:
-        print(f"warning {issue['code']}: {issue['message']}")
+        print(f"warning {issue['code']}: {issue['message']}", file=stream)
 
 
 def print_inspection(report: dict[str, Any]) -> None:

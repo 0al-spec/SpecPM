@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import gzip
 import hashlib
-import io
 import json
 import math
 import re
 import tarfile
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -358,9 +358,30 @@ def pack_package(package_dir: Path, output_path: Path | None = None) -> dict[str
                 ).to_dict()
             ],
         }
-    archive_path.parent.mkdir(parents=True, exist_ok=True)
-    write_deterministic_tar_gz(root, files, archive_path)
-    digest = sha256_file(archive_path)
+    try:
+        archive_path.parent.mkdir(parents=True, exist_ok=True)
+        write_deterministic_tar_gz(root, files, archive_path)
+        digest = sha256_file(archive_path)
+        archive_size = archive_path.stat().st_size
+    except (OSError, tarfile.TarError, zlib.error) as exc:
+        delete_partial_archive(archive_path)
+        return {
+            "status": "invalid",
+            "archive": str(archive_path),
+            "digest": None,
+            "format": "specpm-tar-gzip-v0",
+            "included_files": sorted(files),
+            "validation": validation,
+            "errors": [
+                Issue(
+                    "error",
+                    "pack_write_failed",
+                    f"Package archive could not be written: {exc}",
+                    "pack",
+                    "output",
+                ).to_dict()
+            ],
+        }
     return {
         "status": "packed",
         "archive": str(archive_path),
@@ -370,7 +391,7 @@ def pack_package(package_dir: Path, output_path: Path | None = None) -> dict[str
         },
         "format": "specpm-tar-gzip-v0",
         "included_files": sorted(files),
-        "archive_size": archive_path.stat().st_size,
+        "archive_size": archive_size,
         "validation": validation,
         "errors": [],
     }
@@ -1480,16 +1501,16 @@ def write_deterministic_tar_gz(root: Path, files: list[str], archive_path: Path)
             with tarfile.open(fileobj=gzip_file, mode="w", format=tarfile.PAX_FORMAT) as tar:
                 for rel in sorted(files):
                     path = root / rel
-                    data = path.read_bytes()
                     info = tarfile.TarInfo(rel)
-                    info.size = len(data)
+                    info.size = path.stat().st_size
                     info.mtime = 0
                     info.mode = 0o644
                     info.uid = 0
                     info.gid = 0
                     info.uname = ""
                     info.gname = ""
-                    tar.addfile(info, io.BytesIO(data))
+                    with path.open("rb") as source:
+                        tar.addfile(info, source)
 
 
 def package_file_overlap(root: Path, files: list[str], archive_path: Path) -> str | None:
@@ -1497,6 +1518,14 @@ def package_file_overlap(root: Path, files: list[str], archive_path: Path) -> st
         if (root / rel).resolve() == archive_path:
             return rel
     return None
+
+
+def delete_partial_archive(path: Path) -> None:
+    try:
+        if path.exists():
+            path.unlink()
+    except OSError:
+        pass
 
 
 def sha256_file(path: Path) -> str:
