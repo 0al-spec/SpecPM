@@ -1,1 +1,9 @@
-.specgraph_exports
+.pytest_cache/
+.ruff_cache/
+.venv/
+.specgraph_exports/
+.DS_Store
+__pycache__/
+*.egg-info/
+build/
+dist/

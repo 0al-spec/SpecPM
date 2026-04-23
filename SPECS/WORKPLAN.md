@@ -14,23 +14,28 @@ Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 - Prefer deterministic machine-readable outputs over implicit CLI prose.
 - Do not implement remote registry, signing, semantic search, or automatic
   SpecGraph canonical mutation in the MVP.
+- Treat Docker as the default reproducible execution boundary for development,
+  validation, CI parity, and cross-project handoff.
 
 ## Phase 0. Repository Baseline
 
-- [ ] Choose the implementation language and package layout.
-- [ ] Add a minimal CLI entry point named `specpm`.
-- [ ] Add test runner, linting, formatting, and CI.
-- [ ] Add examples directory with a minimal valid package from RFC 0001.
-- [ ] Add JSON fixture for the current
+- [x] Choose the implementation language and package layout: Python package
+  under `src/specpm`.
+- [x] Add a minimal CLI entry point named `specpm`.
+- [x] Add test runner, linting, formatting, and CI.
+- [x] Add Dockerfile and Compose service for reproducible local execution.
+- [x] Add examples directory with a minimal valid package from RFC 0001.
+- [x] Add JSON fixture for the current
   `.specgraph_exports/specgraph.core_repository_facade` bundle.
-- [ ] Decide where generated local state lives:
-  `.specpm/`, `specpm.lock`, and local registry index path.
+- [x] Decide where generated local state lives:
+  `.specpm/`, `specpm.lock`, and `.specpm/index.json`.
 
 Acceptance:
 
 - `specpm --help` runs locally.
 - Test suite runs from a clean checkout.
 - The RFC example is present as a test fixture.
+- Docker can run `specpm validate examples/email_tools --json`.
 
 ## Phase 1. Core Data Loading
 

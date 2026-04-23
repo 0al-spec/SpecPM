@@ -1,0 +1,27 @@
+{
+  "capabilities": [
+    "specgraph.repository_facade"
+  ],
+  "checked_files": [
+    "specpm.yaml",
+    "specs/main.spec.yaml"
+  ],
+  "error_count": 0,
+  "errors": [],
+  "package_identity": {
+    "name": "SpecGraph Core Repository Facade",
+    "package_id": "specgraph.core_repository_facade",
+    "version": "0.1.0"
+  },
+  "status": "warning_only",
+  "warning_count": 1,
+  "warnings": [
+    {
+      "code": "preview_only_package",
+      "field": "preview_only",
+      "file": "specpm.yaml",
+      "message": "Package is marked preview_only and should be reviewed before publication.",
+      "severity": "warning"
+    }
+  ]
+}

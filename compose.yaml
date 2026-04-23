@@ -1,0 +1,9 @@
+services:
+  specpm:
+    build: .
+    image: specpm:dev
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    entrypoint: ["specpm"]
+

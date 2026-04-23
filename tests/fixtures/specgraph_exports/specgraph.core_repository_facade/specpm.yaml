@@ -1,0 +1,24 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: specgraph.core_repository_facade
+  name: SpecGraph Core Repository Facade
+  version: 0.1.0
+  summary: Boundary-first package preview for the top-level SpecGraph repository facade and its canonical
+    ontology boundary.
+  license: Apache-2.0
+specs:
+  - path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+      - specgraph.repository_facade
+  requires:
+    capabilities: []
+preview_only: true
+keywords:
+  - specgraph
+  - ontology
+  - boundary-package
+  - repository-facade
+

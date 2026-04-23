@@ -1,0 +1,14 @@
+{
+  "materialized_at": "2026-04-23T16:47:34.178686+00:00",
+  "export_id": "specgraph_core_repository_facade",
+  "handoff_id": "specpm_handoff::specgraph_core_repository_facade",
+  "handoff_status": "draft_preview_only",
+  "consumer_id": "specpm",
+  "package_identity": {
+    "package_id": "specgraph.core_repository_facade",
+    "package_name": "SpecGraph Core Repository Facade",
+    "package_version": "0.1.0"
+  },
+  "source_handoff_artifact": "runs/specpm_handoff_packets.json"
+}
+

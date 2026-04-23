@@ -50,6 +50,9 @@ The MVP must solve the practical local workflow first:
   `BoundarySpec`.
 - Provide a CLI that validates, inspects, packs, indexes, searches, and adds
   local packages.
+- Provide a Docker-based development and execution baseline so the MVP can be
+  run reproducibly from a clean checkout without relying on host-specific tool
+  state.
 - Keep package contents untrusted: no script execution, no automatic remote
   fetches, no implicit code execution from Markdown or foreign artifacts.
 - Support exact capability ID search as the normative MVP resolution behavior.
@@ -239,6 +242,7 @@ search can exist only as advisory UX, not normative resolution.
 The initial project metadata can be:
 
 - `specpm.lock`
+- `.specpm/index.json`
 - `.specpm/packages/<package_id>/<version>/`
 
 The lockfile format should stay small and deterministic.
@@ -355,6 +359,8 @@ The MVP is successful when:
 The first MVP release should be local-first:
 
 - CLI and library in one repository;
+- Docker image and Compose service for local validation, tests, and scripted
+  CLI execution;
 - file-backed local registry index;
 - deterministic archives;
 - reviewable SpecGraph inbox;
@@ -362,3 +368,14 @@ The first MVP release should be local-first:
 
 The next release can consider remote publish/search, package signing, richer
 dependency solving, and formal registry APIs.
+
+## 16. Implementation Environment
+
+The MVP implementation should maintain two supported execution paths:
+
+- local Python development with `python -m pip install -e ".[dev]"`;
+- Docker execution with `docker compose run --rm specpm <command>`.
+
+Docker is the preferred reproducibility boundary for task execution, CI parity,
+and handoff between SpecPM, SpecGraph, and ContextBuilder workspaces. Runtime
+commands must not require network access after the image has been built.

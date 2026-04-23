@@ -1,0 +1,24 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: document_conversion.email_tools
+  name: Email Tools
+  version: 0.1.0
+  summary: Boundary specifications for email document conversion.
+  license: MIT
+  authors:
+    - name: Example Author
+specs:
+  - path: specs/email-to-markdown.spec.yaml
+index:
+  provides:
+    capabilities:
+      - document_conversion.email_to_markdown
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - any
+  languages: []
+foreignArtifacts: []
+

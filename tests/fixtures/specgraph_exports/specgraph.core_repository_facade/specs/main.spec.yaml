@@ -1,0 +1,75 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: specgraph.repository_facade
+  title: SpecGraph Core Repository Facade
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Boundary-first package preview for the top-level SpecGraph repository facade and its canonical
+    ontology boundary.
+scope:
+  boundedContext: specgraph_repository
+  includes:
+    - Defines the four canonical layers (Intent, Specification, Graph, Code) with clear boundaries
+    - Defines the seed node kinds with required and optional fields and the child-spec refinement path
+    - Defines the edge kinds currently in scope with source/target constraints and semantics
+    - Defines the node lifecycle and valid status transitions
+    - Establishes the separation between canonical (user-owned) and derived (rebuildable) data
+    - States the governing invariants that every node and edge must satisfy
+    - Defines a bounded canonical provenance envelope for all SG-SPEC-0001 nodes and edges
+    - "Is implementation-agnostic: no file format, storage engine, or language choices"
+    - States that SG-SPEC-0001 is a seed spec that child specs refine before the graph is frozen
+provides:
+  capabilities:
+    - id: specgraph.repository_facade
+      role: primary
+      summary: Exported capability specgraph.repository_facade from SpecGraph boundary preview.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: draft_boundary_interface
+      kind: unknown
+      summary: Draft placeholder interface. Replace with concrete boundary interfaces before publication.
+  outbound: []
+constraints:
+  - id: generated_draft_bundle
+    level: SHOULD
+    statement: This bundle was materialized from SpecGraph preview/handoff artifacts and requires manual
+      review before publication.
+evidence:
+  - id: evidence_1
+    kind: documentation
+    path: evidence/source/AGENTS.md
+    supports:
+      - intent.summary
+      - provides.capabilities.specgraph.repository_facade
+  - id: evidence_2
+    kind: documentation
+    path: evidence/source/README.md
+    supports:
+      - intent.summary
+      - provides.capabilities.specgraph.repository_facade
+  - id: evidence_3
+    kind: schema
+    path: evidence/source/specs/nodes/SG-SPEC-0001.yaml
+    supports:
+      - intent.summary
+      - provides.capabilities.specgraph.repository_facade
+  - id: evidence_4
+    kind: schema
+    path: evidence/source/specs/nodes/SG-SPEC-0054.yaml
+    supports:
+      - intent.summary
+      - provides.capabilities.specgraph.repository_facade
+  - id: materialization_notes
+    kind: manual_assertion
+    path: evidence/source/specgraph_materialization_notes.md
+    supports:
+      - intent.summary
+provenance:
+  sourceConfidence:
+    intent: medium
+    boundary: low
+    behavior: low
