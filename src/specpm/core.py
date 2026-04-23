@@ -6,6 +6,7 @@ import json
 import math
 import re
 import tarfile
+import tempfile
 import zlib
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,7 @@ import yaml
 from yaml.tokens import AliasToken, AnchorToken, TagToken
 
 SUPPORTED_API_VERSION = "specpm.dev/v0.1"
+INDEX_SCHEMA_VERSION = 1
 ID_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
@@ -395,6 +397,146 @@ def pack_package(package_dir: Path, output_path: Path | None = None) -> dict[str
         "validation": validation,
         "errors": [],
     }
+
+
+def index_package(package_ref: Path, index_path: Path) -> dict[str, Any]:
+    if package_ref.is_dir():
+        return index_directory_package(package_ref.resolve(), index_path, source_kind="directory")
+    if package_ref.is_file():
+        return index_archive_package(package_ref.resolve(), index_path)
+    return {
+        "status": "invalid",
+        "index": str(index_path),
+        "entry": None,
+        "errors": [
+            Issue(
+                "error",
+                "package_ref_missing",
+                f"Package reference does not exist: {package_ref}",
+            ).to_dict()
+        ],
+    }
+
+
+def index_directory_package(root: Path, index_path: Path, *, source_kind: str) -> dict[str, Any]:
+    validation = validate_package(root)
+    if validation["status"] == "invalid":
+        return {
+            "status": "invalid",
+            "index": str(index_path),
+            "entry": None,
+            "validation": validation,
+            "errors": [
+                {
+                    "severity": "error",
+                    "code": "validation_failed",
+                    "message": "Package validation failed; index was not updated.",
+                }
+            ],
+        }
+
+    manifest = try_load_mapping(root / "specpm.yaml", root)
+    if manifest is None:
+        return {
+            "status": "invalid",
+            "index": str(index_path),
+            "entry": None,
+            "validation": validation,
+            "errors": [
+                {
+                    "severity": "error",
+                    "code": "manifest_unavailable",
+                    "message": "Package manifest could not be loaded for indexing.",
+                }
+            ],
+        }
+
+    collect_errors: list[Issue] = []
+    files = collect_package_files(root, manifest, collect_errors)
+    if collect_errors:
+        return {
+            "status": "invalid",
+            "index": str(index_path),
+            "entry": None,
+            "validation": validation,
+            "errors": [issue.to_dict() for issue in collect_errors],
+        }
+
+    source_digest = digest_package_files(root, files)
+    entry = build_index_entry(root, manifest, validation, files, source_digest, source_kind)
+    return write_index_entry(index_path, entry, validation)
+
+
+def index_archive_package(archive_path: Path, index_path: Path) -> dict[str, Any]:
+    archive_digest = sha256_file(archive_path)
+    with tempfile.TemporaryDirectory(prefix="specpm-index-") as temp_dir:
+        temp_root = Path(temp_dir)
+        try:
+            extract_archive_safely(archive_path, temp_root)
+        except (OSError, tarfile.TarError) as exc:
+            return {
+                "status": "invalid",
+                "index": str(index_path),
+                "entry": None,
+                "errors": [
+                    Issue(
+                        "error",
+                        "archive_extract_failed",
+                        f"Archive could not be inspected safely: {exc}",
+                    ).to_dict()
+                ],
+            }
+
+        validation = validate_package(temp_root)
+        if validation["status"] == "invalid":
+            return {
+                "status": "invalid",
+                "index": str(index_path),
+                "entry": None,
+                "validation": validation,
+                "errors": [
+                    {
+                        "severity": "error",
+                        "code": "validation_failed",
+                        "message": "Archive package validation failed; index was not updated.",
+                    }
+                ],
+            }
+        manifest = try_load_mapping(temp_root / "specpm.yaml", temp_root)
+        if manifest is None:
+            return {
+                "status": "invalid",
+                "index": str(index_path),
+                "entry": None,
+                "validation": validation,
+                "errors": [
+                    {
+                        "severity": "error",
+                        "code": "manifest_unavailable",
+                        "message": "Archive manifest could not be loaded for indexing.",
+                    }
+                ],
+            }
+        collect_errors: list[Issue] = []
+        files = collect_package_files(temp_root, manifest, collect_errors)
+        if collect_errors:
+            return {
+                "status": "invalid",
+                "index": str(index_path),
+                "entry": None,
+                "validation": validation,
+                "errors": [issue.to_dict() for issue in collect_errors],
+            }
+        entry = build_index_entry(
+            temp_root,
+            manifest,
+            validation,
+            files,
+            archive_digest,
+            "archive",
+            source_path=archive_path,
+        )
+        return write_index_entry(index_path, entry, validation)
 
 
 def list_inbox(root: Path) -> dict[str, Any]:
@@ -1323,6 +1465,283 @@ def load_handoff(bundle_path: Path) -> dict[str, Any] | None:
     except json.JSONDecodeError:
         return {"status": "invalid_json"}
     return loaded if isinstance(loaded, dict) else {"status": "invalid_json"}
+
+
+def build_index_entry(
+    root: Path,
+    manifest: dict[str, Any],
+    validation: dict[str, Any],
+    files: list[str],
+    source_digest: str,
+    source_kind: str,
+    *,
+    source_path: Path | None = None,
+) -> dict[str, Any]:
+    metadata = manifest.get("metadata") if isinstance(manifest.get("metadata"), dict) else {}
+    specs = load_index_specs(root, manifest)
+    required_capabilities = sorted(
+        set(
+            capability_ids(get_field(manifest, "index.requires.capabilities"))
+            + [
+                capability
+                for spec in specs
+                for capability in capability_ids(get_field(spec, "requires.capabilities"))
+            ]
+        )
+    )
+    evidence_entries = [
+        item for spec in specs for item in spec.get("evidence", []) if isinstance(item, dict)
+    ]
+    return {
+        "package_id": metadata.get("id"),
+        "name": metadata.get("name"),
+        "version": metadata.get("version"),
+        "summary": metadata.get("summary"),
+        "license": metadata.get("license"),
+        "provided_capabilities": sorted(validation.get("capabilities", [])),
+        "required_capabilities": required_capabilities,
+        "compatibility": manifest.get("compatibility", {}),
+        "evidence_summary": summarize_evidence_entries(evidence_entries),
+        "source": {
+            "kind": source_kind,
+            "path": str(source_path or root),
+            "digest": {
+                "algorithm": "sha256",
+                "value": source_digest,
+            },
+        },
+        "validation_status": validation["status"],
+        "yanked": False,
+        "files": sorted(files),
+    }
+
+
+def load_index_specs(root: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    specs: list[dict[str, Any]] = []
+    for spec_path in iter_manifest_spec_paths(manifest, []):
+        resolved = resolve_inside(root, spec_path)
+        if resolved is None or not resolved.is_file():
+            continue
+        spec = try_load_mapping(resolved, root)
+        if spec is not None:
+            specs.append(spec)
+    return specs
+
+
+def summarize_evidence_entries(entries: list[dict[str, Any]]) -> dict[str, Any]:
+    kinds: dict[str, int] = {}
+    missing_paths = 0
+    for entry in entries:
+        kind = entry.get("kind") if isinstance(entry.get("kind"), str) else "unknown"
+        kinds[kind] = kinds.get(kind, 0) + 1
+        if "path" not in entry:
+            missing_paths += 1
+    return {
+        "total": len(entries),
+        "kinds": dict(sorted(kinds.items())),
+        "entries_without_paths": missing_paths,
+    }
+
+
+def write_index_entry(
+    index_path: Path, entry: dict[str, Any], validation: dict[str, Any]
+) -> dict[str, Any]:
+    resolved_index = index_path.resolve()
+    index_data, load_errors = load_index(resolved_index)
+    if load_errors:
+        return {
+            "status": "invalid",
+            "index": str(resolved_index),
+            "entry": None,
+            "validation": validation,
+            "errors": [issue.to_dict() for issue in load_errors],
+        }
+
+    packages = index_data["packages"]
+    for existing in packages:
+        if existing.get("package_id") == entry.get("package_id") and existing.get(
+            "version"
+        ) == entry.get("version"):
+            existing_digest = get_field(existing, "source.digest.value")
+            new_digest = get_field(entry, "source.digest.value")
+            if existing_digest == new_digest:
+                return {
+                    "status": "unchanged",
+                    "index": str(resolved_index),
+                    "entry": existing,
+                    "validation": validation,
+                    "errors": [],
+                }
+            return {
+                "status": "invalid",
+                "index": str(resolved_index),
+                "entry": None,
+                "validation": validation,
+                "errors": [
+                    Issue(
+                        "error",
+                        "duplicate_package_conflict",
+                        "Index already contains this package id and version "
+                        "with a different digest.",
+                        str(resolved_index),
+                    ).to_dict()
+                ],
+            }
+
+    packages.append(entry)
+    packages.sort(key=lambda item: (item.get("package_id") or "", item.get("version") or ""))
+    index_data["capabilities"] = build_capability_index(packages)
+    try:
+        write_json_file(resolved_index, index_data)
+    except OSError as exc:
+        return {
+            "status": "invalid",
+            "index": str(resolved_index),
+            "entry": None,
+            "validation": validation,
+            "errors": [
+                Issue(
+                    "error",
+                    "index_write_failed",
+                    f"Index could not be written: {exc}",
+                    str(resolved_index),
+                ).to_dict()
+            ],
+        }
+    return {
+        "status": "indexed",
+        "index": str(resolved_index),
+        "entry": entry,
+        "validation": validation,
+        "errors": [],
+    }
+
+
+def load_index(index_path: Path) -> tuple[dict[str, Any], list[Issue]]:
+    if not index_path.exists():
+        return empty_index(), []
+    try:
+        loaded = json.loads(index_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return empty_index(), [
+            Issue(
+                "error",
+                "index_read_failed",
+                f"Index could not be read: {exc}",
+                str(index_path),
+            )
+        ]
+    except json.JSONDecodeError as exc:
+        return empty_index(), [Issue("error", "index_json_invalid", str(exc), str(index_path))]
+    if not isinstance(loaded, dict):
+        return empty_index(), [
+            Issue(
+                "error",
+                "index_schema_invalid",
+                "Index root must be a JSON object.",
+                str(index_path),
+            )
+        ]
+    if loaded.get("schemaVersion") != INDEX_SCHEMA_VERSION:
+        return empty_index(), [
+            Issue(
+                "error",
+                "index_schema_unsupported",
+                f"Index schemaVersion must be {INDEX_SCHEMA_VERSION}.",
+                str(index_path),
+                "schemaVersion",
+            )
+        ]
+    packages = loaded.get("packages")
+    if not isinstance(packages, list):
+        return empty_index(), [
+            Issue(
+                "error", "index_schema_invalid", "Index packages must be a list.", str(index_path)
+            )
+        ]
+    loaded["capabilities"] = (
+        loaded["capabilities"] if isinstance(loaded.get("capabilities"), dict) else {}
+    )
+    return loaded, []
+
+
+def empty_index() -> dict[str, Any]:
+    return {
+        "schemaVersion": INDEX_SCHEMA_VERSION,
+        "packages": [],
+        "capabilities": {},
+    }
+
+
+def build_capability_index(packages: list[dict[str, Any]]) -> dict[str, list[dict[str, str]]]:
+    capability_index: dict[str, list[dict[str, str]]] = {}
+    for package in packages:
+        package_id = package.get("package_id")
+        version = package.get("version")
+        if not isinstance(package_id, str) or not isinstance(version, str):
+            continue
+        for capability in package.get("provided_capabilities", []):
+            if not isinstance(capability, str):
+                continue
+            capability_index.setdefault(capability, []).append(
+                {"package_id": package_id, "version": version}
+            )
+    return {
+        capability: sorted(entries, key=lambda item: (item["package_id"], item["version"]))
+        for capability, entries in sorted(capability_index.items())
+    }
+
+
+def write_json_file(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_name(f"{path.name}.tmp")
+    temp_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temp_path.replace(path)
+
+
+def digest_package_files(root: Path, files: list[str]) -> str:
+    digest = hashlib.sha256()
+    for rel in sorted(files):
+        path = root / rel
+        digest.update(rel.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(str(path.stat().st_size).encode("ascii"))
+        digest.update(b"\0")
+        with path.open("rb") as file:
+            for chunk in iter(lambda: file.read(1024 * 1024), b""):
+                digest.update(chunk)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def extract_archive_safely(archive_path: Path, destination: Path) -> None:
+    with tarfile.open(archive_path, "r:gz") as archive:
+        for member in archive.getmembers():
+            validate_archive_member(member)
+            if member.isdir():
+                continue
+            if not member.isfile():
+                raise tarfile.TarError(f"Unsupported archive member type: {member.name}")
+            target = destination / member.name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            source = archive.extractfile(member)
+            if source is None:
+                raise tarfile.TarError(f"Archive member could not be read: {member.name}")
+            with source, target.open("wb") as output:
+                for chunk in iter(lambda source=source: source.read(1024 * 1024), b""):
+                    output.write(chunk)
+
+
+def validate_archive_member(member: tarfile.TarInfo) -> None:
+    name = member.name
+    path = Path(name)
+    if path.is_absolute() or ".." in path.parts or name.startswith("/"):
+        raise tarfile.TarError(f"Unsafe archive member path: {name}")
+    if member.issym() or member.islnk():
+        raise tarfile.TarError(f"Archive symlinks and hardlinks are unsupported: {name}")
 
 
 def collect_package_files(root: Path, manifest: dict[str, Any], errors: list[Issue]) -> list[str]:
