@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 from specpm.cli import main
@@ -43,6 +44,47 @@ def test_cli_validate_json(capsys) -> None:  # type: ignore[no-untyped-def]
     payload = json.loads(captured.out)
     assert exit_code == 0
     assert payload["status"] == "valid"
+
+
+def test_cli_inbox_list_handles_invalid_manifest_identity(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    bundle = tmp_path / "broken.bundle"
+    bundle.mkdir()
+    (bundle / "specpm.yaml").write_text("apiVersion: [", encoding="utf-8")
+
+    exit_code = main(["inbox", "list", "--root", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "broken.bundle unknown [invalid]" in captured.out
+
+
+def test_manifest_rejects_malformed_capability_entries(tmp_path: Path) -> None:
+    package = tmp_path / "malformed"
+    shutil.copytree(ROOT / "examples/email_tools", package)
+    (package / "specpm.yaml").write_text(
+        """
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: document_conversion.email_tools
+  name: Email Tools
+  version: 0.1.0
+  summary: Boundary specifications for email document conversion.
+  license: MIT
+specs:
+  - path: specs/email-to-markdown.spec.yaml
+index:
+  provides:
+    capabilities:
+      - 123
+""".strip(),
+        encoding="utf-8",
+    )
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "manifest_capability_entry_invalid" for issue in report["errors"])
 
 
 def test_restricted_yaml_rejects_anchors(tmp_path: Path) -> None:

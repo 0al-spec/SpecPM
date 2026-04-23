@@ -86,12 +86,10 @@ def handle_inbox_list(args: argparse.Namespace) -> int:
         if not report["bundles"]:
             print(f"No SpecGraph export bundles found under {report['root']}.")
         for bundle in report["bundles"]:
-            identity = bundle["package_identity"]
-            print(
-                f"{identity.get('package_id', bundle['package_id'])} "
-                f"{identity.get('version', 'unknown')} "
-                f"[{bundle['inbox_status']}]"
-            )
+            identity = bundle.get("package_identity") or {}
+            package_id = identity.get("package_id") or bundle["package_id"]
+            version = identity.get("version") or "unknown"
+            print(f"{package_id} {version} [{bundle['inbox_status']}]")
     return 0
 
 

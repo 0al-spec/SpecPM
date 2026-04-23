@@ -383,10 +383,28 @@ def validate_manifest(manifest: dict[str, Any], errors: list[Issue], warnings: l
                 "index.provides.capabilities",
             )
         )
-    for capability_id in capability_ids(capabilities):
+    else:
+        for index, entry in enumerate(capabilities):
+            if isinstance(entry, str):
+                continue
+            if isinstance(entry, dict) and isinstance(entry.get("id"), str):
+                continue
+            errors.append(
+                Issue(
+                    "error",
+                    "manifest_capability_entry_invalid",
+                    "Manifest capability entries must be strings or mappings "
+                    "with a string id field.",
+                    "specpm.yaml",
+                    f"index.provides.capabilities.{index}",
+                )
+            )
+
+    manifest_capability_ids = capability_ids(capabilities)
+    for capability_id in manifest_capability_ids:
         validate_id(capability_id, "capability_id_invalid", errors, "specpm.yaml")
     warn_duplicates(
-        capability_ids(capabilities),
+        manifest_capability_ids,
         "duplicate_manifest_capability",
         "Duplicate manifest capability",
         warnings,
