@@ -166,6 +166,19 @@ def test_cli_pack_rejects_invalid_packages(tmp_path: Path) -> None:
     assert not archive.exists()
 
 
+def test_pack_rejects_output_path_overlapping_source_file(tmp_path: Path) -> None:
+    package = tmp_path / "overlap"
+    shutil.copytree(ROOT / "examples/email_tools", package)
+    manifest = package / "specpm.yaml"
+    original_manifest = manifest.read_text(encoding="utf-8")
+
+    report = pack_package(package, manifest)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "pack_output_overlaps_source" for issue in report["errors"])
+    assert manifest.read_text(encoding="utf-8") == original_manifest
+
+
 def test_pack_rejects_symlinks(tmp_path: Path) -> None:
     package = tmp_path / "symlink"
     shutil.copytree(ROOT / "examples/email_tools", package)

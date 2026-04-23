@@ -339,6 +339,25 @@ def pack_package(package_dir: Path, output_path: Path | None = None) -> dict[str
         f"{identity.get('package_id', root.name)}-{identity.get('version', '0.0.0')}.specpm.tgz"
     )
     archive_path = archive_path.resolve()
+    overlap = package_file_overlap(root, files, archive_path)
+    if overlap is not None:
+        return {
+            "status": "invalid",
+            "archive": str(archive_path),
+            "digest": None,
+            "format": "specpm-tar-gzip-v0",
+            "included_files": sorted(files),
+            "validation": validation,
+            "errors": [
+                Issue(
+                    "error",
+                    "pack_output_overlaps_source",
+                    f"Pack output path overlaps package source file: {overlap}",
+                    "pack",
+                    "output",
+                ).to_dict()
+            ],
+        }
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     write_deterministic_tar_gz(root, files, archive_path)
     digest = sha256_file(archive_path)
@@ -1471,6 +1490,13 @@ def write_deterministic_tar_gz(root: Path, files: list[str], archive_path: Path)
                     info.uname = ""
                     info.gname = ""
                     tar.addfile(info, io.BytesIO(data))
+
+
+def package_file_overlap(root: Path, files: list[str], archive_path: Path) -> str | None:
+    for rel in files:
+        if (root / rel).resolve() == archive_path:
+            return rel
+    return None
 
 
 def sha256_file(path: Path) -> str:
