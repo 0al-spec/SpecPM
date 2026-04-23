@@ -217,6 +217,7 @@ and normalized timestamps.
 
 The local MVP registry index should store:
 
+- `schemaVersion`
 - package ID;
 - version;
 - archive or source digest;

@@ -118,14 +118,14 @@ Acceptance:
 
 ## Phase 5. Local Registry Index
 
-- [ ] Define a small file-backed index schema.
-- [ ] Add `specpm index <package-dir-or-archive> --index <path>`.
-- [ ] Store package ID, version, digest, manifest summary, capabilities,
+- [x] Define a small file-backed index schema.
+- [x] Add `specpm index <package-dir-or-archive> --index <path>`.
+- [x] Store package ID, version, digest, manifest summary, capabilities,
   requirements, license, compatibility metadata, evidence summary, and yanked
   state.
-- [ ] Reject duplicate `metadata.id` + `metadata.version` entries unless
+- [x] Reject duplicate `metadata.id` + `metadata.version` entries unless
   digest matches and operation is idempotent.
-- [ ] Add index validation tests.
+- [x] Add index validation tests.
 
 Acceptance:
 

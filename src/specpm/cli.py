@@ -8,6 +8,7 @@ from typing import Any, TextIO
 
 from specpm import __version__
 from specpm.core import (
+    index_package,
     inspect_inbox_bundle,
     inspect_package,
     list_inbox,
@@ -52,6 +53,12 @@ def build_parser() -> argparse.ArgumentParser:
     pack.add_argument("-o", "--output")
     pack.add_argument("--json", action="store_true", help="Emit a stable JSON pack report.")
     pack.set_defaults(handler=handle_pack)
+
+    index = subparsers.add_parser("index", help="Add a package directory or archive to an index.")
+    index.add_argument("package_ref")
+    index.add_argument("--index", default=".specpm/index.json")
+    index.add_argument("--json", action="store_true", help="Emit a stable JSON index report.")
+    index.set_defaults(handler=handle_index)
 
     inbox = subparsers.add_parser("inbox", help="Inspect SpecGraph export inbox bundles.")
     inbox_subparsers = inbox.add_subparsers(dest="inbox_command", required=True)
@@ -108,6 +115,25 @@ def handle_pack(args: argparse.Namespace) -> int:
             if "validation" in report:
                 print_validation(report["validation"], stream=sys.stderr)
     return 0 if report["status"] == "packed" else 1
+
+
+def handle_index(args: argparse.Namespace) -> int:
+    report = index_package(Path(args.package_ref), Path(args.index))
+    if args.json:
+        print_json(report)
+    else:
+        if report["status"] in {"indexed", "unchanged"}:
+            entry = report["entry"]
+            print(
+                f"{report['status']}: {entry['package_id']} {entry['version']} -> {report['index']}"
+            )
+        else:
+            print(f"index failed: {args.package_ref}", file=sys.stderr)
+            for issue in report.get("errors", []):
+                print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
+            if "validation" in report:
+                print_validation(report["validation"], stream=sys.stderr)
+    return 0 if report["status"] in {"indexed", "unchanged"} else 1
 
 
 def handle_inbox_list(args: argparse.Namespace) -> int:
