@@ -244,6 +244,20 @@ def test_search_finds_exact_capability_match(tmp_path: Path) -> None:
     assert report["results"][0]["matched_capability"] == "document_conversion.email_to_markdown"
 
 
+def test_search_rebuilds_missing_capability_index_from_packages(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+    index_payload = json.loads(index_path.read_text(encoding="utf-8"))
+    index_payload.pop("capabilities")
+    index_path.write_text(json.dumps(index_payload), encoding="utf-8")
+
+    report = search_index("document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "ok"
+    assert report["result_count"] == 1
+    assert report["results"][0]["package_id"] == "document_conversion.email_tools"
+
+
 def test_search_unknown_capability_returns_empty_result(tmp_path: Path) -> None:
     index_path = tmp_path / "index.json"
     index_package(ROOT / "examples/email_tools", index_path)

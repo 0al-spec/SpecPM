@@ -1735,9 +1735,8 @@ def load_index(index_path: Path) -> tuple[dict[str, Any], list[Issue]]:
                 "error", "index_schema_invalid", "Index packages must be a list.", str(index_path)
             )
         ]
-    loaded["capabilities"] = (
-        loaded["capabilities"] if isinstance(loaded.get("capabilities"), dict) else {}
-    )
+    if not isinstance(loaded.get("capabilities"), dict):
+        loaded["capabilities"] = build_capability_index(packages)
     return loaded, []
 
 
