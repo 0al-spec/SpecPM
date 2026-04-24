@@ -62,3 +62,6 @@ Implemented first slice:
 
 Inbox JSON includes bundle layout checks, validation status, handoff continuity
 fields, and actionable gaps for incomplete SpecGraph export bundles.
+
+Viewer-facing JSON contracts and golden fixtures are documented in
+`SPECS/JSON_CONTRACTS.md`.

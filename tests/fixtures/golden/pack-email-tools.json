@@ -1,0 +1,35 @@
+{
+  "archive": "<tmp>/email_tools.specpm.tgz",
+  "archive_size": 1048,
+  "digest": {
+    "algorithm": "sha256",
+    "value": "0a237a4c48a092b5b60243277208433cb57309d68672e2cec8df6d59bb8fa34c"
+  },
+  "errors": [],
+  "format": "specpm-tar-gzip-v0",
+  "included_files": [
+    "evidence/README.md",
+    "specpm.yaml",
+    "specs/email-to-markdown.spec.yaml"
+  ],
+  "status": "packed",
+  "validation": {
+    "capabilities": [
+      "document_conversion.email_to_markdown"
+    ],
+    "checked_files": [
+      "specpm.yaml",
+      "specs/email-to-markdown.spec.yaml"
+    ],
+    "error_count": 0,
+    "errors": [],
+    "package_identity": {
+      "name": "Email Tools",
+      "package_id": "document_conversion.email_tools",
+      "version": "0.1.0"
+    },
+    "status": "valid",
+    "warning_count": 0,
+    "warnings": []
+  }
+}

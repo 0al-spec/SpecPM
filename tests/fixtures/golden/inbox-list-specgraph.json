@@ -1,0 +1,66 @@
+{
+  "bundles": [
+    {
+      "found": true,
+      "gaps": [],
+      "handoff": {
+        "consumer_id": "specpm",
+        "export_id": "specgraph_core_repository_facade",
+        "handoff_id": "specpm_handoff::specgraph_core_repository_facade",
+        "handoff_status": "draft_preview_only",
+        "materialized_at": "2026-04-23T16:47:34.178686+00:00",
+        "package_identity": {
+          "package_id": "specgraph.core_repository_facade",
+          "package_name": "SpecGraph Core Repository Facade",
+          "package_version": "0.1.0"
+        },
+        "source_handoff_artifact": "runs/specpm_handoff_packets.json"
+      },
+      "handoff_summary": {
+        "consumer_id": "specpm",
+        "export_id": "specgraph_core_repository_facade",
+        "handoff_id": "specpm_handoff::specgraph_core_repository_facade",
+        "handoff_status": "draft_preview_only",
+        "materialized_at": "2026-04-23T16:47:34.178686+00:00",
+        "package_identity": {
+          "package_id": "specgraph.core_repository_facade",
+          "package_name": "SpecGraph Core Repository Facade",
+          "package_version": "0.1.0"
+        },
+        "source_handoff_artifact": "runs/specpm_handoff_packets.json"
+      },
+      "inbox_status": "draft_visible",
+      "layout": {
+        "gaps": [],
+        "has_handoff": true,
+        "has_main_spec": true,
+        "has_manifest": true,
+        "optional_files": [
+          {
+            "path": "handoff.json",
+            "present": true
+          }
+        ],
+        "required_files": [
+          {
+            "path": "specpm.yaml",
+            "present": true
+          },
+          {
+            "path": "specs/main.spec.yaml",
+            "present": true
+          }
+        ]
+      },
+      "package_id": "specgraph.core_repository_facade",
+      "package_identity": {
+        "name": "SpecGraph Core Repository Facade",
+        "package_id": "specgraph.core_repository_facade",
+        "version": "0.1.0"
+      },
+      "path": "<repo>/tests/fixtures/specgraph_exports/specgraph.core_repository_facade",
+      "validation_status": "warning_only"
+    }
+  ],
+  "root": "<repo>/tests/fixtures/specgraph_exports"
+}

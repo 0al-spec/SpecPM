@@ -1,0 +1,87 @@
+{
+  "candidates": [],
+  "errors": [],
+  "index": "<tmp>/index.json",
+  "index_report": {
+    "entry": {
+      "compatibility": {
+        "languages": [],
+        "platforms": [
+          "any"
+        ]
+      },
+      "evidence_summary": {
+        "entries_without_paths": 0,
+        "kinds": {
+          "documentation": 1
+        },
+        "total": 1
+      },
+      "files": [
+        "evidence/README.md",
+        "specpm.yaml",
+        "specs/email-to-markdown.spec.yaml"
+      ],
+      "license": "MIT",
+      "name": "Email Tools",
+      "package_id": "document_conversion.email_tools",
+      "provided_capabilities": [
+        "document_conversion.email_to_markdown"
+      ],
+      "required_capabilities": [],
+      "source": {
+        "digest": {
+          "algorithm": "sha256",
+          "value": "358810394998afda59729fef24c8459abc94e6b51fec7740901463fe8ba5b266"
+        },
+        "kind": "directory",
+        "path": "<repo>/examples/email_tools"
+      },
+      "summary": "Boundary specifications for email document conversion.",
+      "validation_status": "valid",
+      "version": "0.1.0",
+      "yanked": false
+    },
+    "errors": [],
+    "index": "<tmp>/project/.specpm/index.json",
+    "status": "indexed",
+    "validation": {
+      "status": "valid"
+    }
+  },
+  "local_index": "<tmp>/project/.specpm/index.json",
+  "lockfile": "<tmp>/project/specpm.lock",
+  "matched_capability": "document_conversion.email_to_markdown",
+  "package": {
+    "cache_entry": ".specpm/packages/document_conversion.email_tools/0.1.0/package.json",
+    "compatibility": {
+      "languages": [],
+      "platforms": [
+        "any"
+      ]
+    },
+    "license": "MIT",
+    "name": "Email Tools",
+    "package_id": "document_conversion.email_tools",
+    "provided_capabilities": [
+      "document_conversion.email_to_markdown"
+    ],
+    "required_capabilities": [],
+    "source": {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "358810394998afda59729fef24c8459abc94e6b51fec7740901463fe8ba5b266"
+      },
+      "kind": "directory",
+      "path": "<repo>/examples/email_tools"
+    },
+    "summary": "Boundary specifications for email document conversion.",
+    "validation_status": "valid",
+    "version": "0.1.0",
+    "yanked": false
+  },
+  "project": "<tmp>/project",
+  "resolved_by": "capability",
+  "status": "added",
+  "target": "document_conversion.email_to_markdown"
+}

@@ -205,12 +205,12 @@ Acceptance:
 
 ## Phase 10. Viewer Contract Stabilization
 
-- [ ] Document JSON schemas for validation, inspect, search, add, inbox list,
+- [x] Document JSON schemas for validation, inspect, search, add, inbox list,
   inbox inspect, pack result, and diff result.
-- [ ] Add golden JSON fixtures.
-- [ ] Keep status vocabularies stable.
-- [ ] Add examples for rendering package cards and capability search results.
-- [ ] Align field names with the SpecGraph lifecycle where useful, without
+- [x] Add golden JSON fixtures.
+- [x] Keep status vocabularies stable.
+- [x] Add examples for rendering package cards and capability search results.
+- [x] Align field names with the SpecGraph lifecycle where useful, without
   importing SpecGraph-specific concepts into core package validation.
 
 Acceptance:

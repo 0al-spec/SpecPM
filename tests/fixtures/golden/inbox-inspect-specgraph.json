@@ -1,0 +1,222 @@
+{
+  "found": true,
+  "gaps": [],
+  "handoff": {
+    "consumer_id": "specpm",
+    "export_id": "specgraph_core_repository_facade",
+    "handoff_id": "specpm_handoff::specgraph_core_repository_facade",
+    "handoff_status": "draft_preview_only",
+    "materialized_at": "2026-04-23T16:47:34.178686+00:00",
+    "package_identity": {
+      "package_id": "specgraph.core_repository_facade",
+      "package_name": "SpecGraph Core Repository Facade",
+      "package_version": "0.1.0"
+    },
+    "source_handoff_artifact": "runs/specpm_handoff_packets.json"
+  },
+  "handoff_summary": {
+    "consumer_id": "specpm",
+    "export_id": "specgraph_core_repository_facade",
+    "handoff_id": "specpm_handoff::specgraph_core_repository_facade",
+    "handoff_status": "draft_preview_only",
+    "materialized_at": "2026-04-23T16:47:34.178686+00:00",
+    "package_identity": {
+      "package_id": "specgraph.core_repository_facade",
+      "package_name": "SpecGraph Core Repository Facade",
+      "package_version": "0.1.0"
+    },
+    "source_handoff_artifact": "runs/specpm_handoff_packets.json"
+  },
+  "inbox_status": "draft_visible",
+  "inspection": {
+    "boundary_specs": [
+      {
+        "bounded_context": "specgraph_repository",
+        "compatibility": {},
+        "constraints": [
+          {
+            "id": "generated_draft_bundle",
+            "level": "SHOULD",
+            "statement": "This bundle was materialized from SpecGraph preview/handoff artifacts and requires manual review before publication."
+          }
+        ],
+        "effects": {},
+        "evidence": [
+          {
+            "id": "evidence_1",
+            "kind": "documentation",
+            "path": "evidence/source/AGENTS.md",
+            "supports": [
+              "intent.summary",
+              "provides.capabilities.specgraph.repository_facade"
+            ]
+          },
+          {
+            "id": "evidence_2",
+            "kind": "documentation",
+            "path": "evidence/source/README.md",
+            "supports": [
+              "intent.summary",
+              "provides.capabilities.specgraph.repository_facade"
+            ]
+          },
+          {
+            "id": "evidence_3",
+            "kind": "schema",
+            "path": "evidence/source/specs/nodes/SG-SPEC-0001.yaml",
+            "supports": [
+              "intent.summary",
+              "provides.capabilities.specgraph.repository_facade"
+            ]
+          },
+          {
+            "id": "evidence_4",
+            "kind": "schema",
+            "path": "evidence/source/specs/nodes/SG-SPEC-0054.yaml",
+            "supports": [
+              "intent.summary",
+              "provides.capabilities.specgraph.repository_facade"
+            ]
+          },
+          {
+            "id": "materialization_notes",
+            "kind": "manual_assertion",
+            "path": "evidence/source/specgraph_materialization_notes.md",
+            "supports": [
+              "intent.summary"
+            ]
+          }
+        ],
+        "foreign_artifacts": [],
+        "id": "specgraph.repository_facade",
+        "implementation_bindings": [],
+        "intent_summary": "Boundary-first package preview for the top-level SpecGraph repository facade and its canonical ontology boundary.",
+        "interfaces": {
+          "inbound": [
+            {
+              "id": "draft_boundary_interface",
+              "kind": "unknown",
+              "summary": "Draft placeholder interface. Replace with concrete boundary interfaces before publication."
+            }
+          ],
+          "outbound": []
+        },
+        "keywords": [],
+        "path": "specs/main.spec.yaml",
+        "provenance": {
+          "sourceConfidence": {
+            "behavior": "low",
+            "boundary": "low",
+            "intent": "medium"
+          }
+        },
+        "provenance_confidence": {
+          "behavior": "low",
+          "boundary": "low",
+          "intent": "medium"
+        },
+        "provides": [
+          "specgraph.repository_facade"
+        ],
+        "requires": [],
+        "scope": {
+          "boundedContext": "specgraph_repository",
+          "includes": [
+            "Defines the four canonical layers (Intent, Specification, Graph, Code) with clear boundaries",
+            "Defines the seed node kinds with required and optional fields and the child-spec refinement path",
+            "Defines the edge kinds currently in scope with source/target constraints and semantics",
+            "Defines the node lifecycle and valid status transitions",
+            "Establishes the separation between canonical (user-owned) and derived (rebuildable) data",
+            "States the governing invariants that every node and edge must satisfy",
+            "Defines a bounded canonical provenance envelope for all SG-SPEC-0001 nodes and edges",
+            "Is implementation-agnostic: no file format, storage engine, or language choices",
+            "States that SG-SPEC-0001 is a seed spec that child specs refine before the graph is frozen"
+          ]
+        },
+        "status": "draft",
+        "title": "SpecGraph Core Repository Facade",
+        "version": "0.1.0"
+      }
+    ],
+    "contract_warnings": [],
+    "package": {
+      "capabilities": [
+        "specgraph.repository_facade"
+      ],
+      "compatibility": {},
+      "identity": {
+        "name": "SpecGraph Core Repository Facade",
+        "package_id": "specgraph.core_repository_facade",
+        "version": "0.1.0"
+      },
+      "keywords": [
+        "specgraph",
+        "ontology",
+        "boundary-package",
+        "repository-facade"
+      ],
+      "license": "Apache-2.0",
+      "name": "SpecGraph Core Repository Facade",
+      "preview_only": true,
+      "required_capabilities": [],
+      "summary": "Boundary-first package preview for the top-level SpecGraph repository facade and its canonical ontology boundary."
+    },
+    "validation": {
+      "capabilities": [
+        "specgraph.repository_facade"
+      ],
+      "checked_files": [
+        "specpm.yaml",
+        "specs/main.spec.yaml"
+      ],
+      "error_count": 0,
+      "errors": [],
+      "package_identity": {
+        "name": "SpecGraph Core Repository Facade",
+        "package_id": "specgraph.core_repository_facade",
+        "version": "0.1.0"
+      },
+      "status": "warning_only",
+      "warning_count": 1,
+      "warnings": [
+        {
+          "code": "preview_only_package",
+          "field": "preview_only",
+          "file": "specpm.yaml",
+          "message": "Package is marked preview_only and should be reviewed before publication.",
+          "severity": "warning"
+        }
+      ]
+    }
+  },
+  "layout": {
+    "gaps": [],
+    "has_handoff": true,
+    "has_main_spec": true,
+    "has_manifest": true,
+    "optional_files": [
+      {
+        "path": "handoff.json",
+        "present": true
+      }
+    ],
+    "required_files": [
+      {
+        "path": "specpm.yaml",
+        "present": true
+      },
+      {
+        "path": "specs/main.spec.yaml",
+        "present": true
+      }
+    ]
+  },
+  "package_id": "specgraph.core_repository_facade",
+  "package_identity": {
+    "name": "SpecGraph Core Repository Facade",
+    "package_id": "specgraph.core_repository_facade",
+    "version": "0.1.0"
+  },
+  "path": "<repo>/tests/fixtures/specgraph_exports/specgraph.core_repository_facade",
+  "validation_status": "warning_only"
+}
