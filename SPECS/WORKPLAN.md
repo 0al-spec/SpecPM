@@ -227,8 +227,8 @@ Acceptance:
 - [x] Add path traversal and symlink escape tests.
 - [x] Add large evidence path smoke test.
 - [x] Add CLI exit code contract.
-- [ ] Update README with MVP commands.
-- [ ] Mark RFC 0001 implementation coverage in docs.
+- [x] Update README with MVP commands.
+- [x] Mark RFC 0001 implementation coverage in docs.
 
 Acceptance:
 
