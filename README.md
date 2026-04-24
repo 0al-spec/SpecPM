@@ -56,3 +56,6 @@ Implemented first slice:
 - `specpm add <capability-id-or-package-ref> [--index <path>] [--project <dir>] [--json]`
 - `specpm inbox list [--root .specgraph_exports] [--json]`
 - `specpm inbox inspect <package-id> [--root .specgraph_exports] [--json]`
+
+Inbox JSON includes bundle layout checks, validation status, handoff continuity
+fields, and actionable gaps for incomplete SpecGraph export bundles.

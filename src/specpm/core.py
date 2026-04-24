@@ -955,22 +955,8 @@ def list_inbox(root: Path) -> dict[str, Any]:
     bundles = []
     if inbox_root.is_dir():
         for child in sorted(inbox_root.iterdir(), key=lambda item: item.name):
-            if child.is_dir() and (child / "specpm.yaml").is_file():
-                inspection = inspect_package(child)
-                manifest = try_load_mapping(child / "specpm.yaml", child)
-                handoff = load_handoff(child)
-                bundles.append(
-                    {
-                        "package_id": child.name,
-                        "path": str(child),
-                        "package_identity": inspection["validation"].get("package_identity"),
-                        "validation_status": inspection["validation"]["status"],
-                        "inbox_status": classify_inbox_status(
-                            manifest, handoff, inspection["validation"]["status"]
-                        ),
-                        "handoff": handoff,
-                    }
-                )
+            if child.is_dir() and is_inbox_bundle_candidate(child):
+                bundles.append(inbox_bundle_report(child, include_inspection=False))
     return {"root": str(inbox_root), "bundles": bundles}
 
 
@@ -982,20 +968,98 @@ def inspect_inbox_bundle(root: Path, package_id: str) -> dict[str, Any]:
             "package_id": package_id,
             "path": str(bundle_path),
             "inbox_status": "missing",
+            "layout": None,
+            "handoff": None,
+            "handoff_summary": None,
+            "gaps": [
+                Issue(
+                    "error",
+                    "inbox_bundle_missing",
+                    f"SpecGraph inbox bundle does not exist: {package_id}",
+                    str(bundle_path),
+                ).to_dict()
+            ],
         }
 
-    inspection = inspect_package(bundle_path)
+    return inbox_bundle_report(bundle_path, include_inspection=True)
+
+
+def is_inbox_bundle_candidate(bundle_path: Path) -> bool:
+    return any(
+        [
+            (bundle_path / "specpm.yaml").exists(),
+            (bundle_path / "specs/main.spec.yaml").exists(),
+            (bundle_path / "handoff.json").exists(),
+        ]
+    )
+
+
+def inbox_bundle_report(bundle_path: Path, *, include_inspection: bool) -> dict[str, Any]:
+    layout = inspect_inbox_layout(bundle_path)
+    validation = validate_package(bundle_path)
     manifest = try_load_mapping(bundle_path / "specpm.yaml", bundle_path)
-    handoff = load_handoff(bundle_path)
-    return {
+    handoff_report = load_handoff_report(bundle_path)
+    gaps = layout["gaps"] + handoff_report["errors"]
+    report = {
         "found": True,
-        "package_id": package_id,
+        "package_id": bundle_path.name,
         "path": str(bundle_path),
+        "package_identity": validation.get("package_identity"),
+        "validation_status": validation["status"],
         "inbox_status": classify_inbox_status(
-            manifest, handoff, inspection["validation"]["status"]
+            manifest,
+            handoff_report,
+            validation["status"],
+            layout["gaps"],
         ),
-        "handoff": handoff,
-        "inspection": inspection,
+        "layout": layout,
+        "handoff": handoff_report["payload"],
+        "handoff_summary": handoff_report["summary"],
+        "gaps": gaps,
+    }
+    if include_inspection:
+        report["inspection"] = inspect_package(bundle_path)
+    return report
+
+
+def inspect_inbox_layout(bundle_path: Path) -> dict[str, Any]:
+    required_files = [
+        inbox_layout_file(bundle_path, "specpm.yaml", "inbox_manifest_missing"),
+        inbox_layout_file(bundle_path, "specs/main.spec.yaml", "inbox_main_spec_missing"),
+    ]
+    optional_files = [
+        {
+            "path": "handoff.json",
+            "present": (bundle_path / "handoff.json").is_file(),
+        }
+    ]
+    gaps = [
+        Issue(
+            "error",
+            item["missing_code"],
+            f"SpecGraph inbox bundle is missing required file: {item['path']}",
+            str(bundle_path / item["path"]),
+        ).to_dict()
+        for item in required_files
+        if not item["present"]
+    ]
+    return {
+        "required_files": [
+            {"path": item["path"], "present": item["present"]} for item in required_files
+        ],
+        "optional_files": optional_files,
+        "has_manifest": required_files[0]["present"],
+        "has_main_spec": required_files[1]["present"],
+        "has_handoff": optional_files[0]["present"],
+        "gaps": gaps,
+    }
+
+
+def inbox_layout_file(bundle_path: Path, rel_path: str, missing_code: str) -> dict[str, Any]:
+    return {
+        "path": rel_path,
+        "present": (bundle_path / rel_path).is_file(),
+        "missing_code": missing_code,
     }
 
 
@@ -1855,27 +1919,84 @@ def summarize_boundary_spec(rel: str, spec: dict[str, Any]) -> dict[str, Any]:
 
 def classify_inbox_status(
     manifest: dict[str, Any] | None,
-    handoff: dict[str, Any] | None,
+    handoff_report: dict[str, Any],
     validation_status: str,
+    layout_gaps: list[dict[str, Any]],
 ) -> str:
+    if layout_gaps:
+        return "invalid"
     if validation_status == "invalid":
         return "invalid"
+    handoff_summary = handoff_report.get("summary") or {}
+    handoff_status = handoff_summary.get("handoff_status")
+    if handoff_report.get("present") and not handoff_report.get("valid"):
+        return "blocked"
+    if isinstance(handoff_status, str) and "blocked" in handoff_status:
+        return "blocked"
     if manifest and manifest.get("preview_only") is True:
         return "draft_visible"
-    if handoff and handoff.get("handoff_status") == "draft_preview_only":
+    if handoff_status == "draft_preview_only":
         return "draft_visible"
     return "ready_for_review"
 
 
-def load_handoff(bundle_path: Path) -> dict[str, Any] | None:
+def load_handoff_report(bundle_path: Path) -> dict[str, Any]:
     handoff_path = bundle_path / "handoff.json"
     if not handoff_path.is_file():
-        return None
+        return {
+            "present": False,
+            "valid": False,
+            "payload": None,
+            "summary": None,
+            "errors": [],
+        }
     try:
         loaded = json.loads(handoff_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {"status": "invalid_json"}
-    return loaded if isinstance(loaded, dict) else {"status": "invalid_json"}
+    except json.JSONDecodeError as exc:
+        return invalid_handoff_report(handoff_path, f"handoff.json is invalid JSON: {exc}")
+    if not isinstance(loaded, dict):
+        return invalid_handoff_report(handoff_path, "handoff.json root must be a JSON object.")
+    return {
+        "present": True,
+        "valid": True,
+        "payload": loaded,
+        "summary": summarize_handoff(loaded),
+        "errors": [],
+    }
+
+
+def invalid_handoff_report(handoff_path: Path, message: str) -> dict[str, Any]:
+    return {
+        "present": True,
+        "valid": False,
+        "payload": None,
+        "summary": {
+            "handoff_status": "invalid",
+        },
+        "errors": [
+            Issue(
+                "error",
+                "handoff_invalid",
+                message,
+                str(handoff_path),
+            ).to_dict()
+        ],
+    }
+
+
+def summarize_handoff(handoff: dict[str, Any]) -> dict[str, Any]:
+    summary_fields = [
+        "materialized_at",
+        "export_id",
+        "handoff_id",
+        "handoff_status",
+        "consumer_id",
+        "source_handoff_artifact",
+    ]
+    summary = {field: handoff.get(field) for field in summary_fields if field in handoff}
+    if isinstance(handoff.get("package_identity"), dict):
+        summary["package_identity"] = handoff["package_identity"]
+    return summary
 
 
 def build_index_entry(

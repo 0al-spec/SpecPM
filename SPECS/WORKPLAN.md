@@ -169,15 +169,15 @@ Acceptance:
 
 ## Phase 8. SpecGraph Inbox
 
-- [ ] Add `specpm inbox list --root .specgraph_exports --json`.
-- [ ] Add `specpm inbox inspect <package-id> --root .specgraph_exports --json`.
-- [ ] Detect bundles containing `specpm.yaml`, `specs/main.spec.yaml`, and
+- [x] Add `specpm inbox list --root .specgraph_exports --json`.
+- [x] Add `specpm inbox inspect <package-id> --root .specgraph_exports --json`.
+- [x] Detect bundles containing `specpm.yaml`, `specs/main.spec.yaml`, and
   optional `handoff.json`.
-- [ ] Validate discovered bundles through the same validator.
-- [ ] Surface handoff continuity fields when `handoff.json` exists.
-- [ ] Classify bundle status as `draft_visible`, `ready_for_review`,
+- [x] Validate discovered bundles through the same validator.
+- [x] Surface handoff continuity fields when `handoff.json` exists.
+- [x] Classify bundle status as `draft_visible`, `ready_for_review`,
   `invalid`, or `blocked`.
-- [ ] Ensure inbox commands never mutate SpecGraph canonical files.
+- [x] Ensure inbox commands never mutate SpecGraph canonical files.
 
 Acceptance:
 

@@ -10,6 +10,7 @@ from specpm.cli import main
 from specpm.core import (
     add_package,
     index_package,
+    inspect_inbox_bundle,
     list_inbox,
     pack_package,
     search_index,
@@ -69,9 +70,60 @@ def test_specgraph_export_is_visible_as_warning_only_draft() -> None:
 
 def test_inbox_lists_specgraph_export() -> None:
     report = list_inbox(SPECGRAPH_FIXTURE_ROOT)
+    bundle = report["bundles"][0]
 
-    assert report["bundles"][0]["package_id"] == "specgraph.core_repository_facade"
-    assert report["bundles"][0]["inbox_status"] == "draft_visible"
+    assert bundle["package_id"] == "specgraph.core_repository_facade"
+    assert bundle["inbox_status"] == "draft_visible"
+    assert bundle["layout"]["has_manifest"] is True
+    assert bundle["layout"]["has_main_spec"] is True
+    assert bundle["layout"]["has_handoff"] is True
+    assert bundle["handoff_summary"]["handoff_id"] == (
+        "specpm_handoff::specgraph_core_repository_facade"
+    )
+
+
+def test_inbox_inspect_returns_viewer_card_payload() -> None:
+    report = inspect_inbox_bundle(SPECGRAPH_FIXTURE_ROOT, "specgraph.core_repository_facade")
+
+    assert report["found"] is True
+    assert report["inbox_status"] == "draft_visible"
+    assert report["validation_status"] == "warning_only"
+    assert report["package_identity"]["package_id"] == "specgraph.core_repository_facade"
+    assert report["inspection"]["package"]["capabilities"] == ["specgraph.repository_facade"]
+    assert report["handoff_summary"]["source_handoff_artifact"] == (
+        "runs/specpm_handoff_packets.json"
+    )
+
+
+def test_inbox_lists_incomplete_bundle_with_actionable_gaps(tmp_path: Path) -> None:
+    bundle = tmp_path / "incomplete.bundle"
+    bundle.mkdir()
+    (bundle / "handoff.json").write_text(
+        json.dumps({"handoff_id": "missing_main", "handoff_status": "ready_for_review"}),
+        encoding="utf-8",
+    )
+
+    report = list_inbox(tmp_path)
+
+    assert report["bundles"][0]["package_id"] == "incomplete.bundle"
+    assert report["bundles"][0]["inbox_status"] == "invalid"
+    gap_codes = {gap["code"] for gap in report["bundles"][0]["gaps"]}
+    assert "inbox_manifest_missing" in gap_codes
+    assert "inbox_main_spec_missing" in gap_codes
+
+
+def test_inbox_malformed_handoff_blocks_valid_bundle(tmp_path: Path) -> None:
+    bundle = tmp_path / "broken_handoff"
+    shutil.copytree(SPECGRAPH_FIXTURE_ROOT / "specgraph.core_repository_facade", bundle)
+    (bundle / "handoff.json").write_text("{", encoding="utf-8")
+
+    report = inspect_inbox_bundle(tmp_path, "broken_handoff")
+
+    assert report["found"] is True
+    assert report["inbox_status"] == "blocked"
+    assert report["handoff"] is None
+    assert report["handoff_summary"]["handoff_status"] == "invalid"
+    assert any(gap["code"] == "handoff_invalid" for gap in report["gaps"])
 
 
 def test_cli_validate_json(capsys) -> None:  # type: ignore[no-untyped-def]
