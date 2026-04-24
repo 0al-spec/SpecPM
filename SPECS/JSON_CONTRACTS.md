@@ -18,7 +18,8 @@ should treat these contracts as stable for the MVP:
 - validation warnings and inspection `contract_warnings` are separate surfaces.
 
 Golden fixtures live under `tests/fixtures/golden/` and cover representative
-payloads for these contracts.
+payloads for these contracts. Golden tests assert the documented field subset
+and allow additive object fields in runtime payloads.
 
 ## Common Types
 

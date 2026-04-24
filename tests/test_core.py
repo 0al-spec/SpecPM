@@ -74,7 +74,26 @@ def assert_golden_json(
     fixture_name: str, payload: dict[str, Any], tmp_path: Path | None = None
 ) -> None:
     expected = json.loads((GOLDEN_FIXTURE_ROOT / fixture_name).read_text(encoding="utf-8"))
-    assert normalize_json_contract(payload, tmp_path) == expected
+    assert_json_contract_contains(normalize_json_contract(payload, tmp_path), expected)
+
+
+def assert_json_contract_contains(actual: Any, expected: Any, path: str = "$") -> None:
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict), f"{path}: expected object, got {type(actual).__name__}"
+        missing = sorted(set(expected) - set(actual))
+        assert not missing, f"{path}: missing keys {missing}"
+        for key, expected_value in expected.items():
+            assert_json_contract_contains(actual[key], expected_value, f"{path}.{key}")
+        return
+    if isinstance(expected, list):
+        assert isinstance(actual, list), f"{path}: expected list, got {type(actual).__name__}"
+        assert len(actual) == len(expected), (
+            f"{path}: expected {len(expected)} items, got {len(actual)}"
+        )
+        for index, expected_value in enumerate(expected):
+            assert_json_contract_contains(actual[index], expected_value, f"{path}[{index}]")
+        return
+    assert actual == expected, f"{path}: expected {expected!r}, got {actual!r}"
 
 
 def normalize_json_contract(payload: Any, tmp_path: Path | None = None) -> Any:
@@ -112,6 +131,18 @@ def normalize_json_contract_value(value: Any, replacements: list[tuple[str, str]
             normalized = normalized.replace(prefix, placeholder)
         return normalized
     return value
+
+
+def test_json_contract_subset_allows_additive_fields() -> None:
+    actual = {
+        "status": "ok",
+        "new_top_level_field": True,
+        "nested": {"stable": 1, "new_nested_field": "kept"},
+        "items": [{"id": "first", "new_item_field": "kept"}],
+    }
+    expected = {"status": "ok", "nested": {"stable": 1}, "items": [{"id": "first"}]}
+
+    assert_json_contract_contains(actual, expected)
 
 
 def test_rfc_example_validates() -> None:
