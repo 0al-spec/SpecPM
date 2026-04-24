@@ -1020,7 +1020,7 @@ def list_inbox(root: Path) -> dict[str, Any]:
         for child in sorted(inbox_root.iterdir(), key=lambda item: item.name):
             if child.is_dir() and is_inbox_bundle_candidate(child):
                 bundles.append(inbox_bundle_report(child, include_inspection=False))
-    return {"root": str(inbox_root), "bundles": bundles}
+    return {"root": str(inbox_root), "bundle_count": len(bundles), "bundles": bundles}
 
 
 def inspect_inbox_bundle(root: Path, package_id: str) -> dict[str, Any]:

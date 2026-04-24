@@ -1,0 +1,152 @@
+{
+  "boundary_specs": [
+    {
+      "bounded_context": "email_converter",
+      "compatibility": {},
+      "constraints": [
+        {
+          "id": "no_network_access_required",
+          "level": "MUST",
+          "statement": "Converting a local email file must not require network access."
+        }
+      ],
+      "effects": {
+        "sideEffects": [
+          {
+            "id": "reads_input_file",
+            "kind": "filesystem_read",
+            "summary": "Reads the supplied email file."
+          }
+        ]
+      },
+      "evidence": [
+        {
+          "id": "readme",
+          "kind": "documentation",
+          "path": "evidence/README.md",
+          "supports": [
+            "intent.summary",
+            "provides.capabilities.document_conversion.email_to_markdown"
+          ]
+        }
+      ],
+      "foreign_artifacts": [],
+      "id": "document_conversion.email_to_markdown",
+      "implementation_bindings": [],
+      "intent_summary": "Convert email message files into Markdown while preserving visible message content and basic metadata.",
+      "interfaces": {
+        "inbound": [
+          {
+            "id": "email_file_input",
+            "inputs": [
+              {
+                "extensions": [
+                  ".eml"
+                ],
+                "mediaTypes": [
+                  "message/rfc822"
+                ],
+                "name": "source"
+              }
+            ],
+            "kind": "file",
+            "outputs": [
+              {
+                "mediaTypes": [
+                  "text/markdown"
+                ],
+                "name": "markdown"
+              }
+            ],
+            "summary": "Accepts an email message file as input."
+          }
+        ],
+        "outbound": []
+      },
+      "keywords": [],
+      "path": "specs/email-to-markdown.spec.yaml",
+      "provenance": {
+        "sourceConfidence": {
+          "behavior": "low",
+          "boundary": "medium",
+          "intent": "medium"
+        }
+      },
+      "provenance_confidence": {
+        "behavior": "low",
+        "boundary": "medium",
+        "intent": "medium"
+      },
+      "provides": [
+        "document_conversion.email_to_markdown"
+      ],
+      "requires": [],
+      "scope": {
+        "boundedContext": "email_converter",
+        "excludes": [
+          "Send email messages.",
+          "Authenticate to mail servers.",
+          "Synchronize inbox state."
+        ],
+        "includes": [
+          "Parse email message input.",
+          "Extract subject, sender, recipients, date, and body.",
+          "Produce Markdown output."
+        ]
+      },
+      "status": "draft",
+      "title": "Email to Markdown Converter",
+      "version": "0.1.0"
+    }
+  ],
+  "contract_warnings": [
+    {
+      "code": "security_sensitive_effect",
+      "field": "effects.sideEffects.0.kind",
+      "file": "specs/email-to-markdown.spec.yaml",
+      "message": "BoundarySpec declares security-sensitive effect kind: filesystem_read",
+      "severity": "warning"
+    }
+  ],
+  "package": {
+    "capabilities": [
+      "document_conversion.email_to_markdown"
+    ],
+    "compatibility": {
+      "languages": [],
+      "platforms": [
+        "any"
+      ]
+    },
+    "identity": {
+      "name": "Email Tools",
+      "package_id": "document_conversion.email_tools",
+      "version": "0.1.0"
+    },
+    "keywords": [],
+    "license": "MIT",
+    "name": "Email Tools",
+    "preview_only": false,
+    "required_capabilities": [],
+    "summary": "Boundary specifications for email document conversion."
+  },
+  "validation": {
+    "capabilities": [
+      "document_conversion.email_to_markdown"
+    ],
+    "checked_files": [
+      "specpm.yaml",
+      "specs/email-to-markdown.spec.yaml"
+    ],
+    "error_count": 0,
+    "errors": [],
+    "package_identity": {
+      "name": "Email Tools",
+      "package_id": "document_conversion.email_tools",
+      "version": "0.1.0"
+    },
+    "status": "valid",
+    "warning_count": 0,
+    "warnings": []
+  }
+}

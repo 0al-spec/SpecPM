@@ -23,6 +23,7 @@ from specpm.core import (
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
+GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 
 
 def write_index_payload(index_path: Path, packages: list[dict[str, Any]]) -> None:
@@ -69,6 +70,81 @@ def copy_email_package(tmp_path: Path, name: str) -> Path:
     return package
 
 
+def assert_golden_json(
+    fixture_name: str, payload: dict[str, Any], tmp_path: Path | None = None
+) -> None:
+    expected = json.loads((GOLDEN_FIXTURE_ROOT / fixture_name).read_text(encoding="utf-8"))
+    assert_json_contract_contains(normalize_json_contract(payload, tmp_path), expected)
+
+
+def assert_json_contract_contains(actual: Any, expected: Any, path: str = "$") -> None:
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict), f"{path}: expected object, got {type(actual).__name__}"
+        missing = sorted(set(expected) - set(actual))
+        assert not missing, f"{path}: missing keys {missing}"
+        for key, expected_value in expected.items():
+            assert_json_contract_contains(actual[key], expected_value, f"{path}.{key}")
+        return
+    if isinstance(expected, list):
+        assert isinstance(actual, list), f"{path}: expected list, got {type(actual).__name__}"
+        assert len(actual) == len(expected), (
+            f"{path}: expected {len(expected)} items, got {len(actual)}"
+        )
+        for index, expected_value in enumerate(expected):
+            assert_json_contract_contains(actual[index], expected_value, f"{path}[{index}]")
+        return
+    assert actual == expected, f"{path}: expected {expected!r}, got {actual!r}"
+
+
+def normalize_json_contract(payload: Any, tmp_path: Path | None = None) -> Any:
+    replacements = path_replacements(tmp_path)
+    return normalize_json_contract_value(payload, replacements)
+
+
+def path_replacements(tmp_path: Path | None = None) -> list[tuple[str, str]]:
+    replacements = path_variants(ROOT, "<repo>")
+    if tmp_path is not None:
+        replacements.extend(path_variants(tmp_path, "<tmp>"))
+    return sorted(set(replacements), key=lambda item: len(item[0]), reverse=True)
+
+
+def path_variants(path: Path, placeholder: str) -> list[tuple[str, str]]:
+    variants = {str(path), str(path.resolve())}
+    for variant in list(variants):
+        if variant.startswith("/private/"):
+            variants.add(variant.removeprefix("/private"))
+        else:
+            variants.add(f"/private{variant}")
+    return [(variant, placeholder) for variant in variants]
+
+
+def normalize_json_contract_value(value: Any, replacements: list[tuple[str, str]]) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: normalize_json_contract_value(item, replacements) for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [normalize_json_contract_value(item, replacements) for item in value]
+    if isinstance(value, str):
+        normalized = value
+        for prefix, placeholder in replacements:
+            normalized = normalized.replace(prefix, placeholder)
+        return normalized
+    return value
+
+
+def test_json_contract_subset_allows_additive_fields() -> None:
+    actual = {
+        "status": "ok",
+        "new_top_level_field": True,
+        "nested": {"stable": 1, "new_nested_field": "kept"},
+        "items": [{"id": "first", "new_item_field": "kept"}],
+    }
+    expected = {"status": "ok", "nested": {"stable": 1}, "items": [{"id": "first"}]}
+
+    assert_json_contract_contains(actual, expected)
+
+
 def test_rfc_example_validates() -> None:
     report = validate_package(ROOT / "examples/email_tools")
 
@@ -86,6 +162,72 @@ def test_specgraph_export_is_visible_as_warning_only_draft() -> None:
     )
 
     assert report == fixture
+
+
+def test_golden_validation_json_contract() -> None:
+    assert_golden_json(
+        "validate-email-tools.json",
+        validate_package(ROOT / "examples/email_tools"),
+    )
+
+
+def test_golden_inspect_json_contract() -> None:
+    assert_golden_json(
+        "inspect-email-tools.json",
+        inspect_package(ROOT / "examples/email_tools"),
+    )
+
+
+def test_golden_search_json_contract(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    assert_golden_json(
+        "search-email-tools.json",
+        search_index("document_conversion.email_to_markdown", index_path),
+        tmp_path,
+    )
+
+
+def test_golden_pack_json_contract(tmp_path: Path) -> None:
+    assert_golden_json(
+        "pack-email-tools.json",
+        pack_package(ROOT / "examples/email_tools", tmp_path / "email_tools.specpm.tgz"),
+        tmp_path,
+    )
+
+
+def test_golden_add_json_contract(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    assert_golden_json(
+        "add-email-tools.json",
+        add_package("document_conversion.email_to_markdown", index_path, project),
+        tmp_path,
+    )
+
+
+def test_golden_inbox_list_json_contract() -> None:
+    assert_golden_json(
+        "inbox-list-specgraph.json",
+        list_inbox(SPECGRAPH_FIXTURE_ROOT),
+    )
+
+
+def test_golden_inbox_inspect_json_contract() -> None:
+    assert_golden_json(
+        "inbox-inspect-specgraph.json",
+        inspect_inbox_bundle(SPECGRAPH_FIXTURE_ROOT, "specgraph.core_repository_facade"),
+    )
+
+
+def test_golden_diff_json_contract() -> None:
+    assert_golden_json(
+        "diff-email-tools-unchanged.json",
+        diff_packages(ROOT / "examples/email_tools", ROOT / "examples/email_tools"),
+    )
 
 
 def test_inbox_lists_specgraph_export() -> None:

@@ -1,0 +1,61 @@
+{
+  "changes": {
+    "capabilities": {
+      "added": [],
+      "removed": []
+    },
+    "compatibility": {
+      "changed": false,
+      "new": {
+        "languages": [],
+        "platforms": [
+          "any"
+        ]
+      },
+      "old": {
+        "languages": [],
+        "platforms": [
+          "any"
+        ]
+      }
+    },
+    "interfaces": {
+      "added": [],
+      "changed": [],
+      "removed": []
+    },
+    "must_constraints": {
+      "added": [],
+      "changed": [],
+      "removed": []
+    },
+    "package_metadata": {
+      "changed": []
+    },
+    "required_capabilities": {
+      "added": [],
+      "removed": []
+    }
+  },
+  "classification": "unchanged",
+  "errors": [],
+  "has_changes": false,
+  "impact": {
+    "breaking": [],
+    "non_breaking": [],
+    "review_required": []
+  },
+  "new_identity": {
+    "name": "Email Tools",
+    "package_id": "document_conversion.email_tools",
+    "version": "0.1.0"
+  },
+  "new_package": "<repo>/examples/email_tools",
+  "old_identity": {
+    "name": "Email Tools",
+    "package_id": "document_conversion.email_tools",
+    "version": "0.1.0"
+  },
+  "old_package": "<repo>/examples/email_tools",
+  "status": "ok"
+}
