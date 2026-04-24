@@ -1949,6 +1949,7 @@ def summarize_manifest(manifest: dict[str, Any] | None) -> dict[str, Any]:
     if manifest is None:
         return {}
     metadata = manifest.get("metadata") if isinstance(manifest.get("metadata"), dict) else {}
+    compatibility = manifest.get("compatibility")
     return {
         "identity": package_identity(manifest),
         "name": metadata.get("name"),
@@ -1956,7 +1957,7 @@ def summarize_manifest(manifest: dict[str, Any] | None) -> dict[str, Any]:
         "license": metadata.get("license"),
         "capabilities": capability_ids(get_field(manifest, "index.provides.capabilities")),
         "required_capabilities": capability_ids(get_field(manifest, "index.requires.capabilities")),
-        "compatibility": manifest.get("compatibility", {}),
+        "compatibility": compatibility if isinstance(compatibility, dict) else {},
         "preview_only": manifest.get("preview_only", False),
         "keywords": manifest.get("keywords", []),
     }

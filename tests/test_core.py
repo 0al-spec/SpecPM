@@ -203,6 +203,23 @@ def test_cli_inspect_surfaces_provenance_and_contract_warnings(capsys) -> None: 
     assert "warning security_sensitive_effect" in captured.out
 
 
+def test_cli_inspect_handles_non_mapping_compatibility(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    package = copy_email_package(tmp_path, "bad-compatibility")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["compatibility"] = ["not", "a", "mapping"]
+    write_yaml_file(manifest_path, manifest)
+
+    report = inspect_package(package)
+    exit_code = main(["inspect", str(package)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert report["package"]["compatibility"] == {}
+    assert "Compatibility:" not in captured.out
+    assert "valid: document_conversion.email_tools" in captured.out
+
+
 def test_cli_inbox_list_handles_invalid_manifest_identity(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     bundle = tmp_path / "broken.bundle"
     bundle.mkdir()

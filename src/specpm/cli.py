@@ -301,9 +301,10 @@ def print_inspection(report: dict[str, Any]) -> None:
         print("Required capabilities:")
         for capability in package["required_capabilities"]:
             print(f"  - {capability}")
-    if package.get("compatibility"):
+    compatibility = package.get("compatibility")
+    if isinstance(compatibility, dict) and compatibility:
         print("Compatibility:")
-        for key, value in sorted(package["compatibility"].items()):
+        for key, value in sorted(compatibility.items()):
             print(f"  - {key}: {value}")
     if report.get("boundary_specs"):
         print("Boundary specs:")
