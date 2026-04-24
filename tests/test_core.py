@@ -708,6 +708,32 @@ def test_diff_removed_interface_is_breaking(tmp_path: Path) -> None:
     assert any(item["code"] == "interface_removed" for item in report["impact"]["breaking"])
 
 
+def test_diff_duplicate_interface_ids_do_not_overwrite(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    spec_path = old_package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["interfaces"]["inbound"].append(
+        {
+            "id": "email_file_input",
+            "kind": "file",
+            "summary": "Accepts a legacy duplicate email file input.",
+        }
+    )
+    write_yaml_file(spec_path, spec)
+
+    report = diff_packages(old_package, new_package)
+
+    removed = report["changes"]["interfaces"]["removed"]
+    assert report["status"] == "ok"
+    assert report["classification"] == "breaking"
+    assert len(removed) == 1
+    assert removed[0]["id"] == "email_file_input"
+    assert removed[0]["summary"] == "Accepts a legacy duplicate email file input."
+    assert removed[0]["occurrence"] == 1
+    assert any(item["code"] == "interface_removed" for item in report["impact"]["breaking"])
+
+
 def test_diff_changed_must_constraint_is_breaking(tmp_path: Path) -> None:
     old_package = copy_email_package(tmp_path, "old")
     new_package = copy_email_package(tmp_path, "new")
@@ -724,6 +750,46 @@ def test_diff_changed_must_constraint_is_breaking(tmp_path: Path) -> None:
     assert report["classification"] == "breaking"
     assert report["changes"]["must_constraints"]["changed"][0]["old"]["id"] == (
         "no_network_access_required"
+    )
+    assert any(item["code"] == "must_constraint_changed" for item in report["impact"]["breaking"])
+
+
+def test_diff_duplicate_must_constraint_ids_do_not_overwrite(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    old_spec_path = old_package / "specs/email-to-markdown.spec.yaml"
+    new_spec_path = new_package / "specs/email-to-markdown.spec.yaml"
+    old_spec = load_yaml_file(old_spec_path)
+    new_spec = load_yaml_file(new_spec_path)
+    old_spec["constraints"].append(
+        {
+            "id": "no_network_access_required",
+            "level": "MUST",
+            "statement": "Conversion must preserve visible email body text.",
+        }
+    )
+    new_spec["constraints"].append(
+        {
+            "id": "no_network_access_required",
+            "level": "MUST",
+            "statement": "Conversion must preserve visible email body text and headers.",
+        }
+    )
+    write_yaml_file(old_spec_path, old_spec)
+    write_yaml_file(new_spec_path, new_spec)
+
+    report = diff_packages(old_package, new_package)
+
+    changed = report["changes"]["must_constraints"]["changed"]
+    assert report["status"] == "ok"
+    assert report["classification"] == "breaking"
+    assert len(changed) == 1
+    assert changed[0]["old"]["id"] == "no_network_access_required"
+    assert changed[0]["old"]["occurrence"] == 1
+    assert changed[0]["new"]["occurrence"] == 1
+    assert changed[0]["old"]["statement"] == "Conversion must preserve visible email body text."
+    assert changed[0]["new"]["statement"] == (
+        "Conversion must preserve visible email body text and headers."
     )
     assert any(item["code"] == "must_constraint_changed" for item in report["impact"]["breaking"])
 

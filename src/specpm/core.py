@@ -2156,8 +2156,10 @@ def collect_required_capabilities(
 
 def interface_index(specs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     interfaces: dict[str, dict[str, Any]] = {}
+    occurrences: dict[tuple[str, str, str], int] = {}
     for spec in specs:
         spec_id = spec["summary"].get("id") or spec["path"]
+        spec_path = spec["path"]
         interface_root = spec["document"].get("interfaces", {})
         if not isinstance(interface_root, dict):
             continue
@@ -2168,12 +2170,16 @@ def interface_index(specs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             for item in items:
                 if not isinstance(item, dict) or not isinstance(item.get("id"), str):
                     continue
-                key = f"{spec_id}:{direction}:{item['id']}"
+                identity = (spec_path, direction, item["id"])
+                occurrence = occurrences.get(identity, 0)
+                occurrences[identity] = occurrence + 1
+                key = f"{spec_path}:{direction}:{item['id']}:{occurrence}"
                 interfaces[key] = {
                     "spec_id": spec_id,
-                    "path": spec["path"],
+                    "path": spec_path,
                     "direction": direction,
                     "id": item["id"],
+                    "occurrence": occurrence,
                     "kind": item.get("kind"),
                     "summary": item.get("summary"),
                     "definition": item,
@@ -2183,8 +2189,10 @@ def interface_index(specs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
 
 def must_constraint_index(specs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     constraints: dict[str, dict[str, Any]] = {}
+    occurrences: dict[tuple[str, str], int] = {}
     for spec in specs:
         spec_id = spec["summary"].get("id") or spec["path"]
+        spec_path = spec["path"]
         items = spec["document"].get("constraints", [])
         if not isinstance(items, list):
             continue
@@ -2193,11 +2201,15 @@ def must_constraint_index(specs: list[dict[str, Any]]) -> dict[str, dict[str, An
                 continue
             if not isinstance(item.get("id"), str):
                 continue
-            key = f"{spec_id}:{item['id']}"
+            identity = (spec_path, item["id"])
+            occurrence = occurrences.get(identity, 0)
+            occurrences[identity] = occurrence + 1
+            key = f"{spec_path}:{item['id']}:{occurrence}"
             constraints[key] = {
                 "spec_id": spec_id,
-                "path": spec["path"],
+                "path": spec_path,
                 "id": item["id"],
+                "occurrence": occurrence,
                 "statement": item.get("statement"),
                 "definition": item,
             }
