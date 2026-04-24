@@ -594,6 +594,56 @@ index:
     assert any(issue["code"] == "manifest_capability_entry_invalid" for issue in report["errors"])
 
 
+def test_validator_rejects_missing_manifest(tmp_path: Path) -> None:
+    package = tmp_path / "missing-manifest"
+    package.mkdir()
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "manifest_missing" for issue in report["errors"])
+
+
+def test_validator_rejects_missing_referenced_spec(tmp_path: Path) -> None:
+    package = tmp_path / "missing-spec"
+    package.mkdir()
+    (package / "specpm.yaml").write_text(
+        """
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: missing.spec
+  name: Missing Spec
+  version: 0.1.0
+  summary: Package with missing referenced spec.
+  license: MIT
+specs:
+  - path: specs/missing.spec.yaml
+index:
+  provides:
+    capabilities:
+      - missing.spec
+""".strip(),
+        encoding="utf-8",
+    )
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "spec_missing" for issue in report["errors"])
+
+
+def test_validator_rejects_malformed_boundary_spec_yaml(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "malformed-spec")
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec_path.write_text("apiVersion: [", encoding="utf-8")
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "yaml_parse_error" for issue in report["errors"])
+
+
 def test_validator_rejects_unknown_top_level_fields(tmp_path: Path) -> None:
     package = tmp_path / "unknown"
     shutil.copytree(ROOT / "examples/email_tools", package)
@@ -785,6 +835,29 @@ def test_search_reports_invalid_index(tmp_path: Path) -> None:
     assert any(issue["code"] == "index_read_failed" for issue in report["errors"])
 
 
+def test_search_reports_corrupted_index_json(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_path.write_text("{", encoding="utf-8")
+
+    report = search_index("document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "index_json_invalid" for issue in report["errors"])
+
+
+def test_search_reports_unsupported_index_schema(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_path.write_text(
+        json.dumps({"schemaVersion": 999, "packages": [], "capabilities": {}}),
+        encoding="utf-8",
+    )
+
+    report = search_index("document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "index_schema_unsupported" for issue in report["errors"])
+
+
 def test_search_finds_specgraph_fixture_capability(tmp_path: Path) -> None:
     index_path = tmp_path / "index.json"
     index_package(SPECGRAPH_FIXTURE_ROOT / "specgraph.core_repository_facade", index_path)
@@ -963,6 +1036,32 @@ def test_add_exact_package_ref_rejects_yanked_package(tmp_path: Path) -> None:
     assert report["status"] == "invalid"
     assert any(issue["code"] == "package_yanked" for issue in report["errors"])
     assert not (project / "specpm.lock").exists()
+
+
+def test_add_rejects_corrupted_index_package_entry(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    write_index_payload(
+        index_path,
+        [
+            {
+                "package_id": "document_conversion.email_tools",
+                "version": "0.1.0",
+                "provided_capabilities": "not-a-list",
+                "source": {},
+            }
+        ],
+    )
+
+    report = add_package(
+        "document_conversion.email_tools@0.1.0",
+        index_path,
+        tmp_path / "project",
+    )
+
+    assert report["status"] == "invalid"
+    error_codes = {issue["code"] for issue in report["errors"]}
+    assert "package_digest_missing" in error_codes
+    assert "package_capabilities_invalid" in error_codes
 
 
 def test_add_package_path_without_source_index(tmp_path: Path) -> None:
@@ -1221,6 +1320,16 @@ def test_cli_pack_rejects_invalid_packages(tmp_path: Path) -> None:
 
     assert exit_code == 1
     assert not archive.exists()
+
+
+def test_index_rejects_corrupted_archive(tmp_path: Path) -> None:
+    archive = tmp_path / "corrupted.specpm.tgz"
+    archive.write_bytes(b"not a gzip tar archive")
+
+    report = index_package(archive, tmp_path / "index.json")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "archive_extract_failed" for issue in report["errors"])
 
 
 def test_cli_pack_failure_prints_validation_details(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
