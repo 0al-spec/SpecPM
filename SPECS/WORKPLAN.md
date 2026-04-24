@@ -151,15 +151,15 @@ Acceptance:
 
 ## Phase 7. Add and Lock
 
-- [ ] Define minimal `specpm.lock`.
-- [ ] Define local install/cache path under `.specpm/packages/`.
-- [ ] Add `specpm add <capability-id-or-package-ref> --index <path>`.
-- [ ] Resolve exact package refs directly.
-- [ ] Resolve capability IDs through exact search.
-- [ ] Select highest stable compatible version when unambiguous.
-- [ ] Return ambiguity as a structured review-required result.
-- [ ] Write deterministic lockfile entries.
-- [ ] Copy or reference package archive/source into local project state.
+- [x] Define minimal `specpm.lock`.
+- [x] Define local install/cache path under `.specpm/packages/`.
+- [x] Add `specpm add <capability-id-or-package-ref> --index <path>`.
+- [x] Resolve exact package refs directly.
+- [x] Resolve capability IDs through exact search.
+- [x] Select highest stable compatible version when unambiguous.
+- [x] Return ambiguity as a structured review-required result.
+- [x] Write deterministic lockfile entries.
+- [x] Copy or reference package archive/source into local project state.
 
 Acceptance:
 
