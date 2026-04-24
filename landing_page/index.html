@@ -1,63 +1,69 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SpecPM</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="SpecPM is a specification registry and need resolution engine for implementation-backed specs."
+  />
+  <title>SpecPM - Resolve Needs Into Specifications</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
   <style>
     :root {
-      --bg: #040806;
-      --bg-soft: #07100c;
-      --panel: rgba(9, 17, 13, 0.92);
-      --panel-strong: rgba(10, 18, 14, 0.97);
-      --text: #f1f8f3;
-      --muted: #94a79b;
-      --primary: #63e873;
-      --primary-strong: #87f593;
-      --line: rgba(99, 232, 115, 0.11);
-      --line-strong: rgba(99, 232, 115, 0.22);
-      --glow: rgba(99, 232, 115, 0.15);
-      --shadow: rgba(0, 0, 0, 0.42);
-      --mono: "IBM Plex Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
-      --sans: "Space Grotesk", "Segoe UI", sans-serif;
+      --ink: #0b0c0d;
+      --ink-2: #151719;
+      --paper: #f4f2ed;
+      --paper-2: #e8e4dc;
+      --paper-3: #dad5ca;
+      --muted: #625f58;
+      --muted-2: #858078;
+      --rule: #191a1c;
+      --rule-soft: rgba(25, 26, 28, 0.14);
+      --rule-mid: rgba(25, 26, 28, 0.24);
+      --accent: #2c74ad;
+      --accent-soft: rgba(44, 116, 173, 0.12);
+      --dark-rule: rgba(244, 242, 237, 0.16);
+      --serif: "Instrument Serif", Georgia, serif;
+      --sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     }
 
     * {
       box-sizing: border-box;
     }
 
-    html,
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      min-height: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-      color: var(--text);
+      background: var(--paper);
+      color: var(--ink);
       font-family: var(--sans);
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(circle at 50% -10%, rgba(99, 232, 115, 0.16), transparent 32%),
-        linear-gradient(rgba(99, 232, 115, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99, 232, 115, 0.025) 1px, transparent 1px);
-      background-size: auto, 64px 64px, 64px 64px;
-      overflow-x: hidden;
+      font-size: 15px;
+      line-height: 1.5;
+      letter-spacing: 0;
+      -webkit-font-smoothing: antialiased;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 16% 20%, rgba(99, 232, 115, 0.06), transparent 22%),
-        radial-gradient(circle at 82% 18%, rgba(99, 232, 115, 0.05), transparent 18%),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.02));
-      z-index: 0;
+    body,
+    .site-nav,
+    main,
+    .footer {
+      overflow-x: clip;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
     }
 
     a {
@@ -65,783 +71,1668 @@
       text-decoration: none;
     }
 
-    .page {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
+    ::selection {
+      background: var(--ink);
+      color: var(--paper);
     }
 
-    .container {
-      width: min(1400px, calc(100vw - 3rem));
+    .wrap {
+      width: min(1440px, calc(100vw - 80px));
       margin: 0 auto;
     }
 
-    .nav,
-    .hero,
-    .trust-strip,
-    .feature-section,
-    .microcopy {
-      animation: fade-up 540ms ease both;
+    .mono {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
-    .hero {
-      animation-delay: 80ms;
-    }
-
-    .trust-strip {
-      animation-delay: 140ms;
-    }
-
-    .feature-section {
-      animation-delay: 180ms;
-    }
-
-    .nav-wrap {
-      border-bottom: 1px solid var(--line);
-      background: rgba(4, 8, 6, 0.85);
-      backdrop-filter: blur(10px);
-    }
-
-    .nav {
-      display: flex;
+    .eyebrow {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
-      min-height: 4.4rem;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
-    .nav-left,
-    .nav-right,
-    .nav-links {
-      display: flex;
+    .eyebrow::before {
+      content: "";
+      width: 26px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .eyebrow .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .display,
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: var(--serif);
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+    .display {
+      max-width: 700px;
+      font-size: 64px;
+      line-height: 0.98;
+    }
+
+    .display em,
+    .serif-italic {
+      color: var(--muted-2);
+      font-style: italic;
+    }
+
+    .serif-name {
+        font-family:var(--serif);
+        font-weight:400;
+        letter-spacing:0;
+        font-size:1.12em;
+        line-height:inherit;
+        vertical-align:baseline;
+        text-transform:none;
+    }
+
+    h2 {
+      font-size: 50px;
+      line-height: 1;
+    }
+
+    h3 {
+      font-size: 28px;
+      line-height: 1.08;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .lede {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .btn {
+      display: inline-flex;
       align-items: center;
-      gap: 1.5rem;
+      justify-content: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 19px;
+      border: 1px solid var(--rule);
+      background: transparent;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition:
+        background-color 160ms ease,
+        color 160ms ease,
+        transform 160ms ease,
+        border-color 160ms ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .btn.primary {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .btn.primary:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .btn.ghost {
+      border-color: var(--rule-soft);
+    }
+
+    .btn.dark {
+      border-color: var(--dark-rule);
+      color: var(--paper);
+    }
+
+    .btn.dark:hover {
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 1.8;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid var(--rule-soft);
+      background: color-mix(in oklab, var(--paper) 92%, transparent);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-inner {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 32px;
+      min-height: 68px;
     }
 
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 0.75rem;
-      font-family: var(--mono);
-      font-size: 1rem;
-      letter-spacing: -0.02em;
-      font-weight: 600;
+      gap: 12px;
+      font-family: var(--serif);
+      font-size: 23px;
+      line-height: 1;
     }
 
     .brand-mark {
-      color: var(--primary);
-      font-size: 1.2rem;
-      letter-spacing: -0.1em;
-      text-shadow: 0 0 20px var(--glow);
+      width: 34px;
+      height: 34px;
+      color: var(--ink);
     }
 
     .nav-links {
-      display: none;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 0.9rem;
-    }
-
-    .nav-links a,
-    .nav-right a {
-      transition: color 160ms ease;
-    }
-
-    .nav-links a:hover,
-    .nav-right a:hover {
-      color: var(--text);
-    }
-
-    .nav-right {
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 0.9rem;
-      gap: 1rem;
-    }
-
-    .nav-button {
-      display: inline-flex;
+      justify-self: center;
+      display: flex;
       align-items: center;
-      justify-content: center;
-      min-height: 2.5rem;
-      padding: 0.62rem 1rem;
-      border: 1px solid var(--line-strong);
-      border-radius: 0.45rem;
-      color: var(--primary-strong);
-      background: rgba(7, 15, 11, 0.72);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      gap: 34px;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .nav-links a {
+      opacity: 0.72;
+      transition: opacity 160ms ease;
+    }
+
+    .nav-links a:hover {
+      opacity: 1;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .hero {
+      border-bottom: 1px solid var(--rule);
+      overflow: hidden;
+    }
+
+    .hero-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(540px, 0.95fr);
-      gap: 2.3rem;
-      align-items: start;
-      padding: 3.5rem 0 1.25rem;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.58fr) minmax(300px, 0.52fr);
+      min-height: 650px;
     }
 
     .hero-copy {
-      padding-top: 2.2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 650px;
+      padding: 72px 56px 72px 0;
     }
 
-    .eyebrow {
-      margin: 0 0 1.15rem;
-      font-family: var(--mono);
-      font-size: 0.83rem;
-      color: var(--primary);
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
+    .hero-copy .eyebrow {
+      margin-bottom: 28px;
     }
 
-    .headline {
-      margin: 0;
-      font-family: var(--mono);
-      font-size: clamp(3.7rem, 5.7vw, 5.6rem);
-      line-height: 0.98;
-      letter-spacing: -0.08em;
-      font-weight: 600;
-      max-width: 11ch;
+    .hero-sub {
+      max-width: 570px;
+      margin-top: 30px;
     }
 
-    .headline span {
-      color: var(--primary);
-      text-shadow: 0 0 32px var(--glow);
-    }
-
-    .lede {
-      max-width: 34rem;
-      margin: 1.75rem 0 0;
-      font-size: clamp(1.15rem, 1.5vw, 1.45rem);
-      line-height: 1.55;
-      color: var(--muted);
-      font-family: var(--sans);
-    }
-
-    .action-row {
+    .hero-ctas {
       display: flex;
       flex-wrap: wrap;
-      gap: 1.1rem;
-      margin-top: 2rem;
+      gap: 12px;
+      margin-top: 32px;
     }
 
-    .button,
-    .button-ghost {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 3.4rem;
-      padding: 0.95rem 1.45rem;
-      border-radius: 0.5rem;
-      font-family: var(--mono);
-      font-size: 0.98rem;
-      transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+    .positioning {
+      margin-top: 31px;
+      color: var(--muted);
+      font-size: 13px;
     }
 
-    .button:hover,
-    .button-ghost:hover,
-    .nav-button:hover {
-      transform: translateY(-1px);
-    }
-
-    .button {
-      color: #061008;
-      background: var(--primary);
-      border: 1px solid rgba(99, 232, 115, 0.65);
-      box-shadow: 0 0 0 1px rgba(99, 232, 115, 0.08), 0 0 32px rgba(99, 232, 115, 0.09);
-    }
-
-    .button-ghost {
-      color: var(--primary);
-      background: rgba(7, 14, 11, 0.76);
-      border: 1px solid var(--line-strong);
-    }
-
-    .hero-card {
+    .hero-mock-wrap {
       position: relative;
-      overflow: hidden;
-      border-radius: 1rem;
-      border: 1px solid var(--line-strong);
-      background:
-        linear-gradient(180deg, rgba(8, 14, 11, 0.96), rgba(5, 9, 7, 0.98)),
-        repeating-linear-gradient(
-          to bottom,
-          transparent 0,
-          transparent 58px,
-          rgba(99, 232, 115, 0.022) 58px,
-          rgba(99, 232, 115, 0.022) 59px
-        );
-      box-shadow:
-        0 0 0 1px rgba(99, 232, 115, 0.03),
-        0 24px 72px var(--shadow),
-        inset 0 1px 0 rgba(255, 255, 255, 0.02);
-    }
-
-    .hero-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 78% 22%, rgba(99, 232, 115, 0.08), transparent 24%),
-        linear-gradient(to bottom, transparent, rgba(99, 232, 115, 0.03));
-    }
-
-    .hero-card-top {
+      z-index: 2;
       display: flex;
       align-items: center;
-      gap: 0.45rem;
-      padding: 0.85rem 1rem;
-      border-bottom: 1px solid var(--line);
+      min-height: 650px;
+      padding: 48px 0;
     }
 
-    .dot {
-      width: 0.58rem;
-      height: 0.58rem;
-      border-radius: 999px;
-      background: rgba(148, 167, 155, 0.34);
+    .resolve-card {
+      width: 100%;
+      min-width: 360px;
+      max-width: 100%;
+      border: 1px solid var(--rule-soft);
+      background: color-mix(in oklab, var(--paper) 86%, white);
+      box-shadow: 0 26px 60px rgba(11, 12, 13, 0.16);
     }
 
-    .hero-card-body {
+    .resolve-row {
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+
+    .resolve-row.split {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 270px;
-      gap: 1.1rem;
-      padding: 1.35rem;
+      grid-template-columns: 1fr 112px;
+      padding: 0;
+    }
+
+    .resolve-row.split > div {
+      padding: 22px 24px;
+    }
+
+    .resolve-row.split > div + div {
+      border-left: 1px solid var(--rule-soft);
+      text-align: center;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 12px;
       font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
-    .cli-command {
-      margin: 0 0 1.3rem;
-      font-size: 1.02rem;
-      line-height: 1.5;
-      color: var(--text);
+    .mock-input {
+      padding: 10px 12px;
+      background: var(--paper-2);
+      color: var(--ink);
+      font-size: 13px;
+      overflow-wrap: anywhere;
     }
 
-    .cli-command .prompt,
-    .accent {
-      color: var(--primary);
+    .spec-name {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 500;
+      overflow-wrap: anywhere;
     }
 
-    .status-list {
+    .fit-score {
+      color: var(--accent);
+      font-family: var(--serif);
+      font-size: 42px;
+      line-height: 0.9;
+    }
+
+    .fit-score span {
+      color: var(--ink);
+      display: block;
+      font-family: var(--sans);
+      font-size: 12px;
+      line-height: 1.2;
+      margin-top: 7px;
+    }
+
+    .includes {
+      display: grid;
+      gap: 10px;
       margin: 0;
       padding: 0;
       list-style: none;
-      display: grid;
-      gap: 0.72rem;
-      color: rgba(241, 248, 243, 0.92);
-      font-size: 0.95rem;
+      color: var(--ink);
+      font-size: 13px;
     }
 
-    .status-list li {
+    .includes li {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      opacity: 0;
-      animation: fade-in 380ms ease forwards;
+      gap: 10px;
     }
 
-    .status-list li:nth-child(1) {
-      animation-delay: 120ms;
-    }
-
-    .status-list li:nth-child(2) {
-      animation-delay: 200ms;
-    }
-
-    .status-list li:nth-child(3) {
-      animation-delay: 280ms;
-    }
-
-    .status-list li:nth-child(4) {
-      animation-delay: 360ms;
-    }
-
-    .status-list li:nth-child(5) {
-      animation-delay: 440ms;
-    }
-
-    .status-copy {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      min-width: 0;
-    }
-
-    .status-arrow {
-      color: var(--primary);
+    .includes svg {
+      width: 15px;
+      height: 15px;
+      color: var(--muted);
+      stroke-width: 1.7;
       flex: none;
     }
 
-    .status-ok {
-      color: var(--primary);
-      font-size: 0.86rem;
-      white-space: nowrap;
+    .why-copy {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
     }
 
-    .summary {
-      margin-top: 1.45rem;
-      padding: 1rem 1.05rem;
-      border-radius: 0.5rem;
-      border: 1px solid var(--line);
-      background: rgba(8, 14, 11, 0.74);
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.65;
+    .hero-photo {
+      position: relative;
+      min-height: 650px;
+      margin-right: calc((100vw - min(1440px, calc(100vw - 80px))) / -2);
+      border-left: 1px solid var(--rule);
+      background: var(--ink);
+      overflow: hidden;
     }
 
-    .summary strong {
-      display: block;
-      margin-bottom: 0.22rem;
-      color: var(--text);
-      font-size: 0.88rem;
-      font-weight: 500;
+    .hero-photo img {
+      width: 100%;
+      height: 100%;
+      min-height: 650px;
+      object-fit: cover;
+      filter: grayscale(1) contrast(1.08) brightness(0.88);
     }
 
-    .spec-card {
-      border-radius: 0.6rem;
-      border: 1px solid var(--line);
-      background: rgba(7, 12, 10, 0.78);
-      padding: 1rem;
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.5;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    .hero-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(244, 242, 237, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(244, 242, 237, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.42));
+      background-size: 72px 72px, 72px 72px, auto;
+      pointer-events: none;
     }
 
-    .spec-head {
+    .photo-coords {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: 22px;
+      z-index: 2;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-      color: var(--text);
-    }
-
-    .spec-title {
-      font-size: 0.92rem;
-      font-weight: 500;
-    }
-
-    .spec-tag {
-      border: 1px solid var(--line-strong);
-      border-radius: 0.35rem;
-      padding: 0.16rem 0.38rem;
-      font-size: 0.72rem;
-      color: var(--primary);
-    }
-
-    .spec-group + .spec-group {
-      margin-top: 1rem;
-    }
-
-    .spec-label {
-      display: block;
-      margin-bottom: 0.32rem;
-      color: var(--text);
-      font-size: 0.74rem;
-      font-weight: 500;
-    }
-
-    .spec-value {
-      color: rgba(241, 248, 243, 0.88);
-    }
-
-    .spec-link {
-      display: inline-flex;
-      align-items: center;
-      margin-top: 1.2rem;
-      color: var(--primary);
-      font-size: 0.86rem;
-    }
-
-    .trust-strip {
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      background: rgba(7, 12, 10, 0.72);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.01);
-    }
-
-    .trust-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr 1fr;
-      gap: 1rem;
-      align-items: center;
-      min-height: 4.1rem;
+      gap: 16px;
+      color: var(--paper);
       font-family: var(--mono);
-      font-size: 0.92rem;
-      color: var(--muted);
-    }
-
-    .trust-title {
-      color: var(--primary);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      opacity: 0.86;
     }
 
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      min-width: 0;
+    .section {
+      scroll-margin-top: 86px;
+      padding: 88px 0;
+      border-bottom: 1px solid var(--rule-soft);
     }
 
-    .trust-icon,
-    .feature-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 2.1rem;
-      height: 2.1rem;
-      border: 1px solid var(--line-strong);
-      border-radius: 0.45rem;
-      color: var(--primary);
-      font-family: var(--mono);
-      font-size: 0.88rem;
-      background: rgba(8, 14, 11, 0.8);
-      flex: none;
-    }
-
-    .feature-section {
-      padding: 2.2rem 0 2.05rem;
-    }
-
-    .section-title {
-      margin: 0 0 1.3rem;
-      font-family: var(--mono);
-      font-size: clamp(1.45rem, 2vw, 2rem);
-      font-weight: 500;
-      letter-spacing: -0.03em;
-    }
-
-    .feature-grid {
+    .statement-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 1.2rem;
+      grid-template-columns: minmax(0, 0.9fr) minmax(430px, 1fr);
+      gap: 86px;
+      align-items: start;
     }
 
-    .feature-card {
-      padding: 1.45rem 1.35rem;
-      border: 1px solid var(--line);
-      border-radius: 0.65rem;
-      background: rgba(8, 14, 11, 0.72);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.01);
-      transition: border-color 180ms ease, transform 180ms ease;
+    .statement h2 {
+      max-width: 470px;
+      margin-top: 24px;
     }
 
-    .feature-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--line-strong);
+    .statement-body {
+      display: grid;
+      gap: 18px;
+      max-width: 530px;
+      margin-top: 26px;
+      color: var(--muted);
+      line-height: 1.62;
     }
 
-    .feature-top {
+    .punchline {
+      margin-top: 30px;
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 24px;
+      font-style: italic;
+      line-height: 1.12;
+    }
+
+    .problem-panel {
+      border: 1px solid var(--rule-soft);
+      background: color-mix(in oklab, var(--paper) 88%, white);
+    }
+
+    .problem-panel .panel-head {
+      padding: 20px 26px;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+
+    .problem-content {
+      display: grid;
+      grid-template-columns: 0.95fr 1fr;
+    }
+
+    .problem-title {
+      padding: 30px 34px;
+      border-right: 1px solid var(--rule-soft);
+    }
+
+    .problem-title h3 {
+      font-size: 40px;
+    }
+
+    .problem-title p {
+      margin-top: 84px;
+      color: var(--muted);
+      line-height: 1.58;
+    }
+
+    .loop {
+      padding: 30px 34px;
+      color: var(--muted);
+    }
+
+    .loop-list {
+      display: grid;
+      gap: 12px;
+      margin: 24px 0 26px;
+      padding: 0;
+      list-style: none;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .loop-list li {
+      display: grid;
+      grid-template-columns: 35px 1fr;
+      gap: 12px;
+    }
+
+    .loop-list b {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .stop-list {
+      display: grid;
+      gap: 8px;
+      padding-top: 22px;
+      border-top: 1px solid var(--rule-soft);
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .how-head {
       display: flex;
       align-items: center;
-      gap: 0.95rem;
-      margin-bottom: 1rem;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 42px;
     }
 
-    .feature-name {
-      font-family: var(--mono);
-      font-size: 1.02rem;
-      color: var(--primary);
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--rule-soft);
     }
 
-    .feature-copy {
-      margin: 0;
+    .step {
+      position: relative;
+      min-height: 245px;
+      padding: 28px 28px 28px 32px;
+      border-right: 1px solid var(--rule-soft);
+    }
+
+    .step:last-child {
+      border-right: 0;
+    }
+
+    .step:not(:last-child)::after {
+      content: "->";
+      position: absolute;
+      top: 29px;
+      right: 18px;
       color: var(--muted);
-      font-size: 0.99rem;
+      font-family: var(--mono);
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .step-num {
+      margin-bottom: 24px;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .step-icon {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 28px;
+      color: var(--ink);
+    }
+
+    .step h3 {
+      font-size: 25px;
+      line-height: 1.08;
+    }
+
+    .step-title-break {
+      display: inline;
+    }
+
+    @media (min-width: 861px) {
+      .step-title-break {
+        display: block;
+      }
+    }
+
+    .step p {
+      max-width: 270px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
       line-height: 1.55;
     }
 
-    .microcopy {
+    .dark-section {
+      scroll-margin-top: 86px;
+      padding: 86px 0;
+      border-bottom: 1px solid var(--rule);
+      background: #0f1010;
+      color: var(--paper);
+    }
+
+    .dark-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(540px, 1fr);
+      gap: 86px;
+      align-items: start;
+    }
+
+    .dark-section .eyebrow,
+    .dark-section .mono,
+    .dark-section .lede {
+      color: color-mix(in oklab, var(--paper) 62%, transparent);
+    }
+
+    .dark-section h2 {
+      max-width: 460px;
+      margin-top: 24px;
+    }
+
+    .dark-section .lede {
+      max-width: 490px;
+      margin-top: 26px;
+    }
+
+    .formula {
       display: flex;
-      justify-content: flex-end;
-      gap: 1rem;
-      padding: 0.95rem 0 1.2rem;
+      flex-wrap: wrap;
+      gap: 13px;
+      margin-top: 56px;
+      align-items: center;
+      color: var(--paper);
+      font-family: var(--serif);
+      font-size: 25px;
+    }
+
+    .formula span:nth-child(3) {
+      color: #7ab4e8;
+    }
+
+    .registry-head {
+      margin-bottom: 22px;
+    }
+
+    .registry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .category-card {
+      min-height: 175px;
+      padding: 24px;
+      border: 1px solid var(--dark-rule);
+      background: rgba(255, 255, 255, 0.015);
+      transition:
+        border-color 160ms ease,
+        background-color 160ms ease,
+        transform 160ms ease;
+    }
+
+    .category-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(122, 180, 232, 0.48);
+      background: rgba(44, 116, 173, 0.08);
+    }
+
+    .category-card svg {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 22px;
+      color: var(--paper);
+      stroke-width: 1.4;
+    }
+
+    .category-card h3 {
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .category-card p {
+      margin-top: 9px;
+      color: color-mix(in oklab, var(--paper) 60%, transparent);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .agents {
+      scroll-margin-top: 86px;
+      padding: 72px 0;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+
+    .agents-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(230px, 0.42fr) minmax(420px, 0.78fr);
+      gap: 46px;
+      align-items: center;
+    }
+
+    .agents h2 {
+      max-width: 410px;
+      margin-top: 24px;
+    }
+
+    .agents .lede {
+      max-width: 560px;
+      margin-top: 24px;
+    }
+
+    .agent-line {
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 32px;
+      line-height: 1.06;
+    }
+
+    .dialogue {
+      border: 1px solid var(--rule-soft);
+    }
+
+    .dialogue-block {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      gap: 24px;
+      padding: 24px;
+      background: color-mix(in oklab, var(--paper) 88%, white);
+    }
+
+    .dialogue-block + .dialogue-block {
+      border-top: 1px solid var(--rule-soft);
+    }
+
+    .dialogue-icon {
+      width: 42px;
+      height: 42px;
+      color: var(--ink);
+    }
+
+    .dialogue .label {
+      margin-bottom: 9px;
+    }
+
+    .dialogue p {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .examples {
+      scroll-margin-top: 86px;
+      padding: 88px 0;
+      border-bottom: 1px solid var(--rule-soft);
+      background: color-mix(in oklab, var(--paper) 86%, white);
+    }
+
+    .examples-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+      gap: 80px;
+      margin-bottom: 46px;
+    }
+
+    .examples-head h2 {
+      margin-top: 24px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--rule-soft);
+      border-bottom: 1px solid var(--rule-soft);
+    }
+
+    .comparison {
+      padding: 30px 34px;
+    }
+
+    .comparison + .comparison {
+      border-left: 1px solid var(--rule-soft);
+    }
+
+    .comparison h3 {
+      margin-bottom: 20px;
+    }
+
+    .comparison ol {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .api-grid {
+      scroll-margin-top: 86px;
+      display: grid;
+      grid-template-columns: minmax(0, 0.75fr) minmax(520px, 1fr);
+      gap: 70px;
+      align-items: start;
+      margin-top: 74px;
+    }
+
+    .api-copy h2 {
+      margin-top: 24px;
+    }
+
+    .api-copy .lede {
+      max-width: 500px;
+      margin-top: 24px;
+    }
+
+    .code-window {
+      overflow: hidden;
+      border: 1px solid var(--rule);
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .code-top {
+      display: flex;
+      gap: 7px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(244, 242, 237, 0.14);
+    }
+
+    .code-top span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(244, 242, 237, 0.44);
+    }
+
+    pre {
+      margin: 0;
+      padding: 22px 24px 26px;
+      overflow: auto;
+      line-height: 1.55;
+      white-space: pre;
+    }
+
+    .cmd {
+      color: #7ab4e8;
+    }
+
+    .cta {
+      scroll-margin-top: 86px;
+      display: grid;
+      grid-template-columns: minmax(280px, 0.62fr) minmax(0, 1fr) auto;
+      gap: 58px;
+      align-items: stretch;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .cta-photo {
+      position: relative;
+      min-height: 245px;
+      margin-left: calc((100vw - min(1440px, calc(100vw - 80px))) / -2);
+      overflow: hidden;
+      background: var(--ink);
+    }
+
+    .cta-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(1) contrast(1.05) brightness(0.78);
+    }
+
+    .cta-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(244, 242, 237, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(244, 242, 237, 0.08) 1px, transparent 1px);
+      background-size: 58px 58px;
+    }
+
+    .cta-copy {
+      padding: 54px 0;
+    }
+
+    .cta-copy h2 {
+      margin-top: 18px;
+      max-width: 520px;
+    }
+
+    .cta-copy .lede {
+      max-width: 430px;
+      margin-top: 18px;
+    }
+
+    .cta-actions {
+      display: grid;
+      gap: 10px;
+      align-content: center;
+      padding-right: 14px;
+    }
+
+    .footer {
+      background: var(--paper);
+    }
+
+    .footer-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--rule-soft);
+    }
+
+    .footer-strip span {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 22px;
+      border-right: 1px solid var(--rule-soft);
       color: var(--muted);
       font-family: var(--mono);
-      font-size: 0.86rem;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: uppercase;
     }
 
-    @keyframes fade-up {
-      from {
-        opacity: 0;
-        transform: translateY(12px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .footer-strip span:last-child {
+      border-right: 0;
     }
 
-    @keyframes fade-in {
-      from {
-        opacity: 0;
-        transform: translateY(4px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .footer-main {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 0;
+      color: var(--muted);
+      font-size: 13px;
     }
 
     @media (max-width: 1180px) {
-      .hero {
+      .display {
+        font-size: 58px;
+      }
+
+      .hero-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(330px, 0.72fr);
+      }
+
+      .hero-photo {
+        display: none;
+      }
+
+      .statement-grid,
+      .dark-grid,
+      .agents-grid,
+      .api-grid {
         grid-template-columns: 1fr;
+        gap: 42px;
       }
 
-      .hero-copy {
-        padding-top: 0;
+      .registry-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
 
-      .headline {
-        max-width: none;
+      .agents-grid {
+        align-items: start;
       }
 
-      .feature-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .cta {
+        grid-template-columns: 0.55fr 1fr;
+      }
+
+      .cta-actions {
+        grid-column: 2;
+        grid-template-columns: repeat(2, max-content);
+        justify-content: start;
+        padding: 0 0 48px;
       }
     }
 
     @media (max-width: 860px) {
-      .container {
-        width: calc(100vw - 1.5rem);
+      .wrap {
+        width: min(calc(100% - 32px), 720px);
       }
 
-      .nav {
-        min-height: 3.8rem;
+      .nav-inner {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
       }
 
       .nav-links {
         display: none;
       }
 
-      .hero {
-        padding-top: 2rem;
+      .nav-actions .ghost {
+        display: none;
       }
 
-      .headline {
-        font-size: clamp(2.7rem, 12vw, 4rem);
+      .nav-actions .btn.primary {
+        width: 46px;
+        min-width: 46px;
+        padding: 0;
+        font-size: 0;
       }
 
-      .lede {
-        font-size: 1.02rem;
+      .nav-actions .btn.primary svg {
+        width: 16px;
+        height: 16px;
       }
 
-      .hero-card-body {
+      .eyebrow {
+        display: block;
+        font-size: 10px;
+        line-height: 1.4;
+      }
+
+      .eyebrow::before,
+      .eyebrow .dot {
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .eyebrow::before {
+        margin-right: 12px;
+      }
+
+      .eyebrow .dot {
+        margin-right: 8px;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1fr;
+        min-height: 0;
+      }
+
+      .hero-copy,
+      .hero-mock-wrap {
+        min-height: 0;
+      }
+
+      .hero-copy {
+        padding: 54px 0 32px;
+      }
+
+      .hero-mock-wrap {
+        padding: 0 0 40px;
+      }
+
+      .resolve-card {
+        min-width: 0;
+      }
+
+      .display {
+        font-size: 42px;
+        max-width: 100%;
+      }
+
+      .display em {
+        display: block;
+      }
+
+      h2 {
+        font-size: 38px;
+      }
+
+      .section,
+      .dark-section,
+      .examples {
+        padding: 62px 0;
+      }
+
+      .statement-grid {
         grid-template-columns: 1fr;
       }
 
-      .trust-grid {
-        grid-template-columns: 1fr;
-        padding: 1rem 0;
-        gap: 0.9rem;
-      }
-
-      .feature-grid {
+      .problem-content,
+      .examples-head,
+      .comparison-grid {
         grid-template-columns: 1fr;
       }
 
-      .microcopy {
-        justify-content: flex-start;
-        flex-wrap: wrap;
-        gap: 0.55rem 1rem;
+      .problem-title {
+        border-right: 0;
+        border-bottom: 1px solid var(--rule-soft);
+      }
+
+      .problem-title p {
+        margin-top: 24px;
+      }
+
+      .how-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .step {
+        min-height: auto;
+        padding: 28px 20px;
+        border-right: 0;
+        border-bottom: 1px solid var(--rule-soft);
+      }
+
+      .step:last-child {
+        border-bottom: 0;
+      }
+
+      .step:not(:last-child)::after {
+        display: none;
+      }
+
+      .registry-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison + .comparison {
+        border-left: 0;
+        border-top: 1px solid var(--rule-soft);
+      }
+
+      .api-grid {
+        margin-top: 52px;
+      }
+
+      .cta {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+
+      .cta-photo {
+        min-height: 190px;
+        margin-left: 0;
+      }
+
+      .cta-copy {
+        padding: 40px 0 24px;
+      }
+
+      .cta-actions {
+        grid-column: auto;
+        grid-template-columns: 1fr;
+        padding-bottom: 40px;
+      }
+
+      .footer-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .footer-main {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .nav-actions .btn {
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 12px;
+      }
+
+      .brand {
+        font-size: 21px;
+      }
+
+      .brand-mark {
+        width: 30px;
+        height: 30px;
+      }
+
+      .display {
+        font-size: 40px;
+      }
+
+      h2 {
+        font-size: 34px;
+      }
+
+      .resolve-row,
+      .resolve-row.split > div {
+        padding: 18px;
+      }
+
+      .resolve-row.split {
+        grid-template-columns: 1fr;
+      }
+
+      .resolve-row.split > div + div {
+        border-left: 0;
+        border-top: 1px solid var(--rule-soft);
+        text-align: left;
+      }
+
+      .footer-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-strip span {
+        border-right: 0;
+        border-bottom: 1px solid var(--rule-soft);
       }
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="nav-wrap">
-      <nav class="nav container" aria-label="Primary">
-        <div class="nav-left">
-          <a class="brand" href="#">
-            <span class="brand-mark" aria-hidden="true">&gt;_</span>
-            <span>SPECPM</span>
-          </a>
+  <header class="site-nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#" aria-label="SpecPM home">
+        <svg class="brand-mark" viewBox="0 0 1091 1091" fill="none" aria-hidden="true">
+          <path d="M374 534.5C374 488.384 336.616 451 290.5 451C244.384 451 207 488.384 207 534.5C207 580.616 244.384 618 290.5 618V642C231.129 642 183 593.871 183 534.5C183 475.129 231.129 427 290.5 427C349.871 427 398 475.129 398 534.5C398 593.871 349.871 642 290.5 642V618C336.616 618 374 580.616 374 534.5Z" fill="currentColor" />
+          <path d="M881 291.5C881 245.384 843.616 208 797.5 208C751.384 208 714 245.384 714 291.5C714 337.616 751.384 375 797.5 375V399C738.129 399 690 350.871 690 291.5C690 232.129 738.129 184 797.5 184C856.871 184 905 232.129 905 291.5C905 350.871 856.871 399 797.5 399V375C843.616 375 881 337.616 881 291.5Z" fill="currentColor" />
+          <path d="M881 777.5C881 731.384 843.616 694 797.5 694C751.384 694 714 731.384 714 777.5C714 823.616 751.384 861 797.5 861V885C738.129 885 690 836.871 690 777.5C690 718.129 738.129 670 797.5 670C856.871 670 905 718.129 905 777.5C905 836.871 856.871 885 797.5 885V861C843.616 861 881 823.616 881 777.5Z" fill="currentColor" />
+          <path d="M606.6 785.6C556.2 785.6 531 758.4 531 704V618.8C531 590.4 527.6 570.6 520.8 559.4C514.4 547.8 504.2 542 490.2 542C485.4 542 483 539.6 483 534.8C483 530 485.4 527.6 490.2 527.6C504.2 527.6 514.4 521.8 520.8 510.2C527.6 498.6 531 478.8 531 450.8V365.6C531 311.2 556.2 284 606.6 284C611.4 284 613.8 286.4 613.8 291.2C613.8 296 611.4 298.4 606.6 298.4C579.4 298.4 565.8 320 565.8 363.2V448.4C565.8 475.2 562.2 494.8 555 507.2C548.2 519.6 537 528.8 521.4 534.8C537 540.8 548.2 550 555 562.4C562.2 574.8 565.8 594.4 565.8 621.2V706.4C565.8 749.6 579.4 771.2 606.6 771.2C611.4 771.2 613.8 773.6 613.8 778.4C613.8 783.2 611.4 785.6 606.6 785.6Z" fill="currentColor" />
+        </svg>
+        SpecPM
+      </a>
 
-          <div class="nav-links">
-            <a href="#">Explore</a>
-            <a href="#">Docs</a>
-            <a href="#">CLI</a>
-            <a href="#">Registry</a>
-            <a href="#">Blog</a>
-          </div>
-        </div>
-
-        <div class="nav-right">
-          <a href="https://github.com/0al-spec/SpecPM">GitHub</a>
-          <a class="nav-button" href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md">Read RFC</a>
-        </div>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#registry">Registry</a>
+        <a href="#how">How it Works</a>
+        <a href="#agents">For Agents</a>
+        <a href="#api">Docs</a>
+        <a href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">GitHub</a>
       </nav>
+
+      <div class="nav-actions">
+        <a class="btn ghost" href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">RFC on GitHub</a>
+        <a class="btn primary" href="#resolve">
+          Resolve a Need
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M5 12h14" />
+            <path d="m13 6 6 6-6 6" />
+          </svg>
+        </a>
+      </div>
     </div>
+  </header>
 
-    <main class="container">
-      <section class="hero" aria-label="Hero">
+  <main>
+    <section class="hero" id="resolve">
+      <div class="wrap hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">&gt;_ the registry for software intent</p>
-          <h1 class="headline">
-            npm installs code.
-            <br />
-            <span>SpecPM imports behavior.</span>
+          <p class="eyebrow"><span class="dot"></span>Specification Registry + Need Resolution Engine</p>
+          <h1 class="display">
+            Resolve needs into specifications.
+            <em>Implementations come included.</em>
           </h1>
-          <p class="lede">
-            SpecPM is the package registry for intent-based components. Discover, compose, and trust capabilities - not just code.
+          <p class="lede hero-sub">
+            <span class="serif-name">SpecPM</span> is a specification registry and need resolution engine that turns implementation needs into concrete specs - each backed by real modules, subsystems, and code.
           </p>
-
-          <div class="action-row">
-            <a class="button" href="https://github.com/0al-spec/SpecPM">&gt; specpm add "secure token storage for iOS"</a>
+          <div class="hero-ctas">
+            <a class="btn primary" href="#api">
+              Resolve a Need
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </a>
+            <a class="btn" href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">RFC on GitHub</a>
           </div>
+          <p class="positioning">Spec-first. Implementation-backed. Built for agentic software creation.</p>
         </div>
 
-        <section class="hero-card" aria-label="Spec resolution preview">
-          <div class="hero-card-top">
-            <span class="dot" aria-hidden="true"></span>
-            <span class="dot" aria-hidden="true"></span>
-            <span class="dot" aria-hidden="true"></span>
-          </div>
+        <div class="hero-mock-wrap">
+          <article class="resolve-card" aria-label="SpecPM resolution preview">
+            <div class="resolve-row">
+              <span class="label">Need</span>
+              <div class="mock-input">User authentication for a B2B SaaS dashboard</div>
+            </div>
 
-          <div class="hero-card-body">
-            <div>
-              <p class="cli-command">
-                <span class="prompt">$</span>
-                <span class="accent">specpm</span> add auth.secure-token-store
-              </p>
-
-              <ul class="status-list">
-                <li>
-                  <span class="status-copy">
-                    <span class="status-arrow">&gt;</span>
-                    <span>search by capability</span>
-                  </span>
-                  <span class="status-ok">matched</span>
-                </li>
-                <li>
-                  <span class="status-copy">
-                    <span class="status-arrow">&gt;</span>
-                    <span>resolve by constraints</span>
-                  </span>
-                  <span class="status-ok">iOS</span>
-                </li>
-                <li>
-                  <span class="status-copy">
-                    <span class="status-arrow">&gt;</span>
-                    <span>verify by conformance</span>
-                  </span>
-                  <span class="status-ok">14/14</span>
-                </li>
-                <li>
-                  <span class="status-copy">
-                    <span class="status-arrow">&gt;</span>
-                    <span>sync with code</span>
-                  </span>
-                  <span class="status-ok">swift</span>
-                </li>
-                <li>
-                  <span class="status-copy">
-                    <span class="status-arrow">&gt;</span>
-                    <span>done</span>
-                  </span>
-                  <span class="status-ok">ready</span>
-                </li>
-              </ul>
-
-              <div class="summary">
-                <strong>Added auth.secure-token-store@1.2.0</strong>
-                7 capabilities · 2 spec dependencies
+            <div class="resolve-row split">
+              <div>
+                <span class="label">Resolved Specification</span>
+                <div class="spec-name">auth.user-session</div>
+              </div>
+              <div>
+                <span class="label">Fit</span>
+                <div class="fit-score">98% <span>match</span></div>
               </div>
             </div>
 
-            <aside class="spec-card" aria-label="Resolved spec">
-              <div class="spec-head">
-                <span class="spec-title">auth.secure-token-store</span>
-                <span class="spec-tag">1.2.0</span>
-              </div>
+            <div class="resolve-row">
+              <span class="label">Implementation Included</span>
+              <ul class="includes">
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <circle cx="12" cy="12" r="8" />
+                    <path d="m9.5 12 1.7 1.8 3.7-4" />
+                  </svg>
+                  OAuth adapter
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <rect x="5" y="4" width="14" height="16" rx="2" />
+                    <path d="M8 8h8M8 12h8M8 16h5" />
+                  </svg>
+                  JWT session module
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M4 12h16" />
+                    <path d="m14 6 6 6-6 6" />
+                  </svg>
+                  Passwordless login flow
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M12 3 5 6v6c0 4.5 3 7.3 7 9 4-1.7 7-4.5 7-9V6l-7-3Z" />
+                    <path d="M9.5 12.5 11 14l3.5-4" />
+                  </svg>
+                  Role-based access layer
+                </li>
+              </ul>
+            </div>
 
-              <div class="spec-group">
-                <span class="spec-label">Intent</span>
-                <div class="spec-value">Authenticate and persist secure session tokens on iOS.</div>
-              </div>
+            <div class="resolve-row">
+              <span class="label">Why This Spec</span>
+              <p class="why-copy">
+                Matches SaaS auth requirements, supports enterprise identity providers, and includes production-ready implementation paths.
+              </p>
+            </div>
+          </article>
+        </div>
 
-              <div class="spec-group">
-                <span class="spec-label">Provided by</span>
-                <div class="spec-value">specpm/auth</div>
-              </div>
-
-              <div class="spec-group">
-                <span class="spec-label">Verified</span>
-                <div class="spec-value">conformance suite · provenance bundle</div>
-              </div>
-
-              <a class="spec-link" href="#">View on Registry -&gt;</a>
-            </aside>
+        <div class="hero-photo" aria-hidden="true">
+          <img src="assets/hero.jpg" alt="" />
+          <div class="photo-coords">
+            <span>N 37.7749</span>
+            <span>W 122.4094</span>
           </div>
-        </section>
-      </section>
-    </main>
-
-    <section class="trust-strip" aria-label="Trust signals">
-      <div class="trust-grid container">
-        <div class="trust-title">trust by design</div>
-        <div class="trust-item">
-          <span class="trust-icon">[]</span>
-          <span>Verified specs</span>
-        </div>
-        <div class="trust-item">
-          <span class="trust-icon">::</span>
-          <span>Provenance &amp; audit</span>
-        </div>
-        <div class="trust-item">
-          <span class="trust-icon">#</span>
-          <span>Sync with code</span>
         </div>
       </div>
     </section>
 
-    <section class="feature-section container" aria-labelledby="features-title">
-      <h2 class="section-title" id="features-title">Built for how modern teams build</h2>
-
-      <div class="feature-grid">
-        <article class="feature-card">
-          <div class="feature-top">
-            <span class="feature-icon">&gt;_</span>
-            <span class="feature-name">Capability Search</span>
+    <section class="section" aria-labelledby="statement-title">
+      <div class="wrap statement-grid">
+        <div class="statement">
+          <p class="eyebrow">Not Another Package Manager</p>
+          <h2 id="statement-title">A registry of working specifications.</h2>
+          <div class="statement-body">
+            <p>Traditional package managers expose code first.</p>
+            <p><span class="serif-name">SpecPM</span> works differently.</p>
+            <p>
+              It stores specifications as the primary unit - structured, reusable definitions of what a module or subsystem should do. Each specification is connected to real implementation options, so a need can be resolved into a spec, and the spec can lead directly to working code.
+            </p>
           </div>
-          <p class="feature-copy">Find specifications by what they do, not by repository name or implementation detail.</p>
-        </article>
+          <p class="punchline">
+            You don&apos;t start with packages.<br />
+            You start with the right specification.
+          </p>
+        </div>
 
-        <article class="feature-card">
-          <div class="feature-top">
-            <span class="feature-icon">{ }</span>
-            <span class="feature-name">Constraint Resolution</span>
+        <article class="problem-panel" aria-labelledby="problem-title">
+          <div class="panel-head">
+            <p class="eyebrow">The Problem</p>
           </div>
-          <p class="feature-copy">Resolve the right behavior for platform, runtime, boundary, and integration constraints.</p>
-        </article>
-
-        <article class="feature-card">
-          <div class="feature-top">
-            <span class="feature-icon">ok</span>
-            <span class="feature-name">Conformance Verified</span>
+          <div class="problem-content">
+            <div class="problem-title">
+              <h3 id="problem-title">Implementation decisions slow everything down.</h3>
+              <p>
+                <span class="serif-name">SpecPM</span> removes that loop. Instead of searching for implementation details, agents and developers resolve needs into specification-backed modules that already know how they can be implemented.
+              </p>
+            </div>
+            <div class="loop">
+              <p>Every product need creates the same loop:</p>
+              <ol class="loop-list">
+                <li><b>01</b><span>Search for libraries.</span></li>
+                <li><b>02</b><span>Compare APIs.</span></li>
+                <li><b>03</b><span>Read docs.</span></li>
+                <li><b>04</b><span>Evaluate trade-offs.</span></li>
+                <li><b>05</b><span>Wire integrations.</span></li>
+                <li><b>06</b><span>Rewrite glue code.</span></li>
+              </ol>
+              <div class="stop-list">
+                <span>- Stop searching.</span>
+                <span>- Stop comparing.</span>
+                <span>- Stop wiring from scratch.</span>
+              </div>
+            </div>
           </div>
-          <p class="feature-copy">Every import can carry evidence, tests, and explicit claims about what is actually satisfied.</p>
-        </article>
-
-        <article class="feature-card">
-          <div class="feature-top">
-            <span class="feature-icon">&lt;/&gt;</span>
-            <span class="feature-name">Developer Native</span>
-          </div>
-          <p class="feature-copy">CLI, specwriter, and repository sync fit directly into how engineering teams already ship.</p>
         </article>
       </div>
     </section>
 
-    <footer class="microcopy container" aria-label="Microcopy">
-      <span>code is implementation</span>
-      <span>spec is dependency</span>
-    </footer>
-  </div>
+    <section class="section" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="how-head">
+          <p class="eyebrow">How <span class="serif-name">SpecPM</span> Works</p>
+          <h2 id="how-title">Need &rarr; Specification &rarr; Implementation</h2>
+        </div>
+
+        <div class="steps">
+          <article class="step">
+            <div class="step-num">01 / 04</div>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M10 13h28v19H20l-8 6v-6h-2V13Z" stroke-width="1.5" />
+              <path d="M17 20h14M17 25h10" stroke-width="1.5" />
+            </svg>
+            <h3>Describe the <span class="step-title-break">need</span></h3>
+            <p>A user, developer, or agent describes what is required: authentication, billing, notifications, audit logs, data sync, search, permissions, or any other system part.</p>
+          </article>
+
+          <article class="step">
+            <div class="step-num">02 / 04</div>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" aria-hidden="true">
+              <circle cx="24" cy="24" r="10" stroke-width="1.5" />
+              <circle cx="24" cy="24" r="3" stroke-width="1.5" />
+              <path d="M24 7v8M24 33v8M7 24h8M33 24h8" stroke-width="1.5" />
+            </svg>
+            <h3>Resolve the best <span class="step-title-break">specification</span></h3>
+            <p><span class="serif-name">SpecPM</span> searches the registry and finds the best matching spec by structure, constraints, context, and intended use.</p>
+          </article>
+
+          <article class="step">
+            <div class="step-num">03 / 04</div>
+            <svg class="step-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="m24 9 16 8-16 8-16-8 16-8Z" stroke-width="1.5" />
+              <path d="m12 25 12 6 12-6M12 33l12 6 12-6" stroke-width="1.5" />
+            </svg>
+            <h3>Get code <span class="step-title-break">included</span></h3>
+            <p>Each resolved spec is backed by real modules, subsystems, adapters, or code templates. The implementation comes with the specification.</p>
+          </article>
+
+          <article class="step">
+            <div class="step-num">04 / 04</div>
+            <svg class="step-icon" viewBox="0 0 1091 1091" fill="none" aria-hidden="true">
+              <path d="M374 534.5C374 488.384 336.616 451 290.5 451C244.384 451 207 488.384 207 534.5C207 580.616 244.384 618 290.5 618V642C231.129 642 183 593.871 183 534.5C183 475.129 231.129 427 290.5 427C349.871 427 398 475.129 398 534.5C398 593.871 349.871 642 290.5 642V618C336.616 618 374 580.616 374 534.5Z" fill="currentColor" />
+              <path d="M881 291.5C881 245.384 843.616 208 797.5 208C751.384 208 714 245.384 714 291.5C714 337.616 751.384 375 797.5 375V399C738.129 399 690 350.871 690 291.5C690 232.129 738.129 184 797.5 184C856.871 184 905 232.129 905 291.5C905 350.871 856.871 399 797.5 399V375C843.616 375 881 337.616 881 291.5Z" fill="currentColor" />
+              <path d="M881 777.5C881 731.384 843.616 694 797.5 694C751.384 694 714 731.384 714 777.5C714 823.616 751.384 861 797.5 861V885C738.129 885 690 836.871 690 777.5C690 718.129 738.129 670 797.5 670C856.871 670 905 718.129 905 777.5C905 836.871 856.871 885 797.5 885V861C843.616 861 881 823.616 881 777.5Z" fill="currentColor" />
+              <path d="M606.6 785.6C556.2 785.6 531 758.4 531 704V618.8C531 590.4 527.6 570.6 520.8 559.4C514.4 547.8 504.2 542 490.2 542C485.4 542 483 539.6 483 534.8C483 530 485.4 527.6 490.2 527.6C504.2 527.6 514.4 521.8 520.8 510.2C527.6 498.6 531 478.8 531 450.8V365.6C531 311.2 556.2 284 606.6 284C611.4 284 613.8 286.4 613.8 291.2C613.8 296 611.4 298.4 606.6 298.4C579.4 298.4 565.8 320 565.8 363.2V448.4C565.8 475.2 562.2 494.8 555 507.2C548.2 519.6 537 528.8 521.4 534.8C537 540.8 548.2 550 555 562.4C562.2 574.8 565.8 594.4 565.8 621.2V706.4C565.8 749.6 579.4 771.2 606.6 771.2C611.4 771.2 613.8 773.6 613.8 778.4C613.8 783.2 611.4 785.6 606.6 785.6Z" fill="currentColor" />
+            </svg>
+            <h3>Use it in the <span class="step-title-break">system graph</span></h3>
+            <p>The resolved spec can be used by <span class="serif-name">SpecGraph</span> agents, developers, or automation workflows as a concrete building block for the system being designed.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="dark-section" id="registry" aria-labelledby="registry-title">
+      <div class="wrap dark-grid">
+        <div>
+          <p class="eyebrow">A Registry for Specs, Not Just Code</p>
+          <h2 id="registry-title">Specifications are the new dependency layer.</h2>
+          <p class="lede">
+            Code dependencies tell you what you installed. Specifications tell you what the system needs, why it exists, how it should behave, and which implementation can satisfy it.
+          </p>
+          <p class="lede">
+            <span class="serif-name">SpecPM</span> makes specifications searchable, reusable, resolvable, and implementation-backed.
+          </p>
+          <div class="formula" aria-label="Need to specification to implementation">
+            <span>Need</span>
+            <span>&rarr;</span>
+            <span>Specification</span>
+            <span>&rarr;</span>
+            <span>Implementation</span>
+          </div>
+        </div>
+
+        <div>
+          <p class="mono registry-head">Popular Spec Categories</p>
+          <div class="registry-grid">
+            <article class="category-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <rect x="5" y="10" width="14" height="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+              </svg>
+              <h3>Authentication</h3>
+              <p>User sessions, OAuth flows, passwordless login, enterprise SSO, RBAC, and identity lifecycle specs.</p>
+            </article>
+
+            <article class="category-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="M3 10h18M7 15h5" />
+              </svg>
+              <h3>Billing</h3>
+              <p>Subscriptions, invoices, metering, checkout flows, payment adapters, and revenue operations specs.</p>
+            </article>
+
+            <article class="category-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                <path d="M10 21h4" />
+              </svg>
+              <h3>Notifications</h3>
+              <p>Email, push, SMS, webhooks, routing logic, templates, delivery policies, and retry behavior specs.</p>
+            </article>
+
+            <article class="category-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <ellipse cx="12" cy="5" rx="8" ry="3" />
+                <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+                <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
+              </svg>
+              <h3>Data Systems</h3>
+              <p>Pipelines, sync jobs, storage interfaces, indexing, search, analytics, and data transformation specs.</p>
+            </article>
+
+            <article class="category-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M12 3 5 6v6c0 4.5 3 7.3 7 9 4-1.7 7-4.5 7-9V6l-7-3Z" />
+                <path d="M12 8v5l3 2" />
+              </svg>
+              <h3>Security &amp; Audit</h3>
+              <p>Access policies, audit logs, permission boundaries, compliance events, and operational visibility specs.</p>
+            </article>
+
+            <article class="category-card">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+                <path d="M12 12 4.5 7.7M12 12l7.5-4.3M12 12v8.5" />
+              </svg>
+              <h3>Infrastructure Modules</h3>
+              <p>Deployment units, runtime requirements, background workers, queues, schedulers, and service boundaries.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="agents" id="agents" aria-labelledby="agents-title">
+      <div class="wrap agents-grid">
+        <div>
+          <p class="eyebrow"><span class="dot"></span>Built for Agents</p>
+          <h2 id="agents-title">Built for agents that write specs.</h2>
+          <p class="lede">
+            <a href="https://0al-spec.github.io/SpecGraph/"><span class="serif-name">SpecGraph<span></span></a> agents don&apos;t need to implement every system part from scratch. When an agent identifies a need inside a system design, it can ask <span class="serif-name">SpecPM</span> for the best matching specification.
+          </p>
+        </div>
+
+        <p class="agent-line">
+          The agent keeps designing.<br />
+          <span class="serif-name">SpecPM</span> handles resolution.
+        </p>
+
+        <article class="dialogue" aria-label="SpecGraph and SpecPM example">
+          <div class="dialogue-block">
+            <svg class="dialogue-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" aria-hidden="true">
+              <circle cx="24" cy="16" r="7" stroke-width="1.4" />
+              <path d="M12 39c2.2-8 21.8-8 24 0" stroke-width="1.4" />
+            </svg>
+            <div>
+              <span class="label">SpecGraph Agent</span>
+              <p>&ldquo;I need enterprise-ready authentication for a SaaS product.&rdquo;</p>
+            </div>
+          </div>
+          <div class="dialogue-block">
+            <svg class="dialogue-icon" viewBox="0 0 1091 1091" fill="none" aria-hidden="true">
+              <path d="M374 534.5C374 488.384 336.616 451 290.5 451C244.384 451 207 488.384 207 534.5C207 580.616 244.384 618 290.5 618V642C231.129 642 183 593.871 183 534.5C183 475.129 231.129 427 290.5 427C349.871 427 398 475.129 398 534.5C398 593.871 349.871 642 290.5 642V618C336.616 618 374 580.616 374 534.5Z" fill="currentColor" />
+              <path d="M881 291.5C881 245.384 843.616 208 797.5 208C751.384 208 714 245.384 714 291.5C714 337.616 751.384 375 797.5 375V399C738.129 399 690 350.871 690 291.5C690 232.129 738.129 184 797.5 184C856.871 184 905 232.129 905 291.5C905 350.871 856.871 399 797.5 399V375C843.616 375 881 337.616 881 291.5Z" fill="currentColor" />
+              <path d="M881 777.5C881 731.384 843.616 694 797.5 694C751.384 694 714 731.384 714 777.5C714 823.616 751.384 861 797.5 861V885C738.129 885 690 836.871 690 777.5C690 718.129 738.129 670 797.5 670C856.871 670 905 718.129 905 777.5C905 836.871 856.871 885 797.5 885V861C843.616 861 881 823.616 881 777.5Z" fill="currentColor" />
+              <path d="M606.6 785.6C556.2 785.6 531 758.4 531 704V618.8C531 590.4 527.6 570.6 520.8 559.4C514.4 547.8 504.2 542 490.2 542C485.4 542 483 539.6 483 534.8C483 530 485.4 527.6 490.2 527.6C504.2 527.6 514.4 521.8 520.8 510.2C527.6 498.6 531 478.8 531 450.8V365.6C531 311.2 556.2 284 606.6 284C611.4 284 613.8 286.4 613.8 291.2C613.8 296 611.4 298.4 606.6 298.4C579.4 298.4 565.8 320 565.8 363.2V448.4C565.8 475.2 562.2 494.8 555 507.2C548.2 519.6 537 528.8 521.4 534.8C537 540.8 548.2 550 555 562.4C562.2 574.8 565.8 594.4 565.8 621.2V706.4C565.8 749.6 579.4 771.2 606.6 771.2C611.4 771.2 613.8 773.6 613.8 778.4C613.8 783.2 611.4 785.6 606.6 785.6Z" fill="currentColor" />
+            </svg>
+            <div>
+              <span class="label">SpecPM</span>
+              <p>&ldquo;Use auth.enterprise-sso. It includes SAML, OAuth, SCIM provisioning, RBAC, and audit-ready session tracking.&rdquo;</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="examples" aria-labelledby="examples-title">
+      <div class="wrap">
+        <div class="examples-head">
+          <div>
+            <p class="eyebrow">Why <span class="serif-name">SpecPM</span> Is Different</p>
+            <h2 id="examples-title">From manual implementation search to spec resolution.</h2>
+          </div>
+          <p class="lede">
+            Package managers expose implementation. <span class="serif-name">SpecPM</span> resolves intent into specs. Libraries require interpretation; specs carry structure, purpose, and implementation paths.
+          </p>
+        </div>
+
+        <div class="comparison-grid">
+          <article class="comparison">
+            <h3>Before SpecPM</h3>
+            <ol>
+              <li>Search for a library</li>
+              <li>Compare APIs</li>
+              <li>Read documentation</li>
+              <li>Guess the right fit</li>
+              <li>Write integration glue</li>
+              <li>Maintain implementation decisions manually</li>
+            </ol>
+          </article>
+          <article class="comparison">
+            <h3>With SpecPM</h3>
+            <ol>
+              <li>Describe the need</li>
+              <li>Resolve the best specification</li>
+              <li>Get implementation paths included</li>
+              <li>Attach the spec to the system design</li>
+              <li>Let agents compose from structured building blocks</li>
+            </ol>
+          </article>
+        </div>
+
+        <div class="api-grid" id="api">
+          <div class="api-copy">
+            <p class="eyebrow">Resolve Specs Programmatically</p>
+            <h2>Built for humans and agents.</h2>
+            <p class="lede">
+              Search the registry, resolve needs, inspect specs, and retrieve implementation-backed modules through a simple CLI and API.
+            </p>
+          </div>
+
+          <div class="code-window" aria-label="SpecPM CLI example">
+            <div class="code-top"><span></span><span></span><span></span></div>
+            <pre><code><span class="cmd">$ specpm resolve "enterprise authentication for B2B SaaS"</span>
+
+resolved:
+  spec: auth.enterprise-sso
+  match: 0.98
+  includes:
+    - saml-sso
+    - oauth-adapter
+    - scim-provisioning
+    - rbac
+    - audit-events
+  implementations:
+    - auth-enterprise-module
+    - oauth-saml-adapter
+    - session-service-template</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap cta" aria-labelledby="cta-title">
+      <div class="cta-photo" aria-hidden="true">
+        <img src="assets/hero.jpg" alt="" />
+      </div>
+      <div class="cta-copy">
+        <p class="eyebrow">Ready to Resolve?</p>
+        <h2 id="cta-title">Resolve your next implementation need.</h2>
+        <p class="lede">
+          Start with a need. Get the right specification. Use the implementation already behind it.
+        </p>
+      </div>
+      <div class="cta-actions">
+        <a class="btn primary" href="#api">
+          Resolve a Need
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M5 12h14" />
+            <path d="m13 6 6 6-6 6" />
+          </svg>
+        </a>
+        <a class="btn" href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">RFC on GitHub</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-strip" aria-label="Footer positioning statements">
+      <span>SpecPM - specification registry and need resolution engine.</span>
+      <span>Spec-first. Implementation-backed.</span>
+      <span>A registry of implementation-backed specifications for agentic software creation.</span>
+      <span>The spec-first way to find working modules and subsystems.</span>
+    </div>
+    <div class="wrap footer-main">
+      <span>Resolve needs into specifications. Implementations come included.</span>
+      <span>&copy; 2026 SpecPM</span>
+    </div>
+  </footer>
 </body>
 </html>
