@@ -221,7 +221,7 @@ Acceptance:
 
 ## Phase 11. Release Hardening
 
-- [ ] Add end-to-end tests for validate, inspect, pack, index, search, add,
+- [x] Add end-to-end tests for validate, inspect, pack, index, search, add,
   inbox, and diff.
 - [ ] Add corrupted package tests.
 - [ ] Add path traversal and symlink escape tests.

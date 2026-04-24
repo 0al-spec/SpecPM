@@ -70,6 +70,15 @@ def copy_email_package(tmp_path: Path, name: str) -> Path:
     return package
 
 
+def run_cli_json(args: list[str], capsys, expected_exit: int = 0) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+    exit_code = main(args)
+    captured = capsys.readouterr()
+    assert exit_code == expected_exit, captured.err
+    loaded = json.loads(captured.out)
+    assert isinstance(loaded, dict)
+    return loaded
+
+
 def assert_golden_json(
     fixture_name: str, payload: dict[str, Any], tmp_path: Path | None = None
 ) -> None:
@@ -488,6 +497,72 @@ def test_cli_add_ambiguity_returns_nonzero_exit_code(tmp_path: Path, capsys) -> 
     payload = json.loads(captured.out)
     assert exit_code == 1
     assert payload["status"] == "ambiguous"
+
+
+def test_cli_end_to_end_local_package_workflow(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    package = ROOT / "examples/email_tools"
+    archive = tmp_path / "email_tools.specpm.tgz"
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+
+    validation = run_cli_json(["validate", str(package), "--json"], capsys)
+    inspection = run_cli_json(["inspect", str(package), "--json"], capsys)
+    pack = run_cli_json(["pack", str(package), "-o", str(archive), "--json"], capsys)
+    indexed = run_cli_json(
+        ["index", str(archive), "--index", str(index_path), "--json"],
+        capsys,
+    )
+    search = run_cli_json(
+        [
+            "search",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        capsys,
+    )
+    added = run_cli_json(
+        [
+            "add",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--project",
+            str(project),
+            "--json",
+        ],
+        capsys,
+    )
+    inbox_list = run_cli_json(
+        ["inbox", "list", "--root", str(SPECGRAPH_FIXTURE_ROOT), "--json"],
+        capsys,
+    )
+    inbox_inspect = run_cli_json(
+        [
+            "inbox",
+            "inspect",
+            "specgraph.core_repository_facade",
+            "--root",
+            str(SPECGRAPH_FIXTURE_ROOT),
+            "--json",
+        ],
+        capsys,
+    )
+    diff = run_cli_json(["diff", str(package), str(package), "--json"], capsys)
+
+    assert validation["status"] == "valid"
+    assert inspection["package"]["identity"]["package_id"] == "document_conversion.email_tools"
+    assert pack["status"] == "packed"
+    assert archive.is_file()
+    assert indexed["status"] == "indexed"
+    assert indexed["entry"]["source"]["kind"] == "archive"
+    assert search["result_count"] == 1
+    assert added["status"] == "added"
+    assert (project / "specpm.lock").is_file()
+    assert inbox_list["bundle_count"] == 1
+    assert inbox_inspect["inbox_status"] == "draft_visible"
+    assert diff["classification"] == "unchanged"
 
 
 def test_manifest_rejects_malformed_capability_entries(tmp_path: Path) -> None:
