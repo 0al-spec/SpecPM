@@ -224,8 +224,8 @@ Acceptance:
 - [x] Add end-to-end tests for validate, inspect, pack, index, search, add,
   inbox, and diff.
 - [x] Add corrupted package tests.
-- [ ] Add path traversal and symlink escape tests.
-- [ ] Add large evidence path smoke test.
+- [x] Add path traversal and symlink escape tests.
+- [x] Add large evidence path smoke test.
 - [x] Add CLI exit code contract.
 - [ ] Update README with MVP commands.
 - [ ] Mark RFC 0001 implementation coverage in docs.

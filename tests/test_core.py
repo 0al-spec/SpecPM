@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import shutil
 import tarfile
@@ -631,6 +632,32 @@ index:
 
     assert report["status"] == "invalid"
     assert any(issue["code"] == "spec_missing" for issue in report["errors"])
+
+
+def test_validator_rejects_spec_path_traversal(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "spec-traversal")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["specs"] = [{"path": "../outside.spec.yaml"}]
+    write_yaml_file(manifest_path, manifest)
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "path_escape" for issue in report["errors"])
+
+
+def test_validator_rejects_evidence_path_escape(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "evidence-traversal")
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["evidence"][0]["path"] = "../outside.md"
+    write_yaml_file(spec_path, spec)
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "path_escape" for issue in report["errors"])
 
 
 def test_validator_rejects_malformed_boundary_spec_yaml(tmp_path: Path) -> None:
@@ -1332,6 +1359,20 @@ def test_index_rejects_corrupted_archive(tmp_path: Path) -> None:
     assert any(issue["code"] == "archive_extract_failed" for issue in report["errors"])
 
 
+def test_index_rejects_archive_member_path_traversal(tmp_path: Path) -> None:
+    archive = tmp_path / "unsafe.specpm.tgz"
+    with tarfile.open(archive, "w:gz") as tar:
+        member = tarfile.TarInfo("../evil.txt")
+        payload = b"escape"
+        member.size = len(payload)
+        tar.addfile(member, fileobj=io.BytesIO(payload))
+
+    report = index_package(archive, tmp_path / "index.json")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "archive_extract_failed" for issue in report["errors"])
+
+
 def test_cli_pack_failure_prints_validation_details(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     package = tmp_path / "invalid"
     package.mkdir()
@@ -1385,6 +1426,77 @@ def test_pack_rejects_symlinks(tmp_path: Path) -> None:
 
     assert report["status"] == "invalid"
     assert any(issue["code"] == "pack_symlink_unsupported" for issue in report["errors"])
+
+
+def test_pack_rejects_nested_symlink_in_artifact_directory(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "nested-symlink")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["foreignArtifacts"] = [
+        {
+            "id": "foreign_docs",
+            "format": "docs",
+            "path": "foreign",
+            "role": "documentation",
+        }
+    ]
+    write_yaml_file(manifest_path, manifest)
+    foreign_dir = package / "foreign"
+    foreign_dir.mkdir()
+    (tmp_path / "outside.md").write_text("outside", encoding="utf-8")
+    (foreign_dir / "outside.md").symlink_to(tmp_path / "outside.md")
+
+    report = pack_package(package, tmp_path / "nested-symlink.specpm.tgz")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "pack_symlink_unsupported" for issue in report["errors"])
+
+
+def test_pack_rejects_foreign_artifact_path_traversal(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "foreign-traversal")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["foreignArtifacts"] = [
+        {
+            "id": "outside",
+            "format": "docs",
+            "path": "../outside.md",
+            "role": "documentation",
+        }
+    ]
+    write_yaml_file(manifest_path, manifest)
+
+    report = pack_package(package, tmp_path / "foreign-traversal.specpm.tgz")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "validation_failed" for issue in report["errors"])
+    assert any(issue["code"] == "path_escape" for issue in report["validation"]["errors"])
+
+
+def test_pack_includes_large_evidence_file(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "large-evidence")
+    evidence_path = package / "evidence/large.bin"
+    evidence_path.write_bytes(b"specpm-large-evidence\n" * 65536)
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["evidence"].append(
+        {
+            "id": "large_fixture",
+            "kind": "documentation",
+            "path": "evidence/large.bin",
+            "supports": ["intent.summary"],
+        }
+    )
+    write_yaml_file(spec_path, spec)
+    archive = tmp_path / "large-evidence.specpm.tgz"
+
+    report = pack_package(package, archive)
+
+    assert report["status"] == "packed"
+    assert "evidence/large.bin" in report["included_files"]
+    with tarfile.open(archive, "r:gz") as tar:
+        member = tar.getmember("evidence/large.bin")
+        assert member.size == evidence_path.stat().st_size
 
 
 def test_restricted_yaml_rejects_anchors(tmp_path: Path) -> None:
