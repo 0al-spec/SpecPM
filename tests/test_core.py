@@ -374,6 +374,122 @@ def test_cli_inbox_list_handles_invalid_manifest_identity(tmp_path: Path, capsys
     assert "broken.bundle unknown [invalid]" in captured.out
 
 
+def test_cli_exit_code_contract_for_success_and_failure_paths(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+    invalid_package = tmp_path / "invalid-package"
+    invalid_package.mkdir()
+    (invalid_package / "specpm.yaml").write_text("apiVersion: [", encoding="utf-8")
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    valid_commands = [
+        ["validate", str(ROOT / "examples/email_tools"), "--json"],
+        ["inspect", str(ROOT / "examples/email_tools"), "--json"],
+        [
+            "pack",
+            str(ROOT / "examples/email_tools"),
+            "-o",
+            str(tmp_path / "email_tools.specpm.tgz"),
+            "--json",
+        ],
+        ["index", str(ROOT / "examples/email_tools"), "--index", str(index_path), "--json"],
+        [
+            "search",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        [
+            "add",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--project",
+            str(project),
+            "--json",
+        ],
+        ["diff", str(ROOT / "examples/email_tools"), str(ROOT / "examples/email_tools"), "--json"],
+        ["inbox", "list", "--root", str(SPECGRAPH_FIXTURE_ROOT), "--json"],
+        [
+            "inbox",
+            "inspect",
+            "specgraph.core_repository_facade",
+            "--root",
+            str(SPECGRAPH_FIXTURE_ROOT),
+            "--json",
+        ],
+    ]
+    invalid_commands = [
+        ["validate", str(invalid_package), "--json"],
+        ["inspect", str(invalid_package), "--json"],
+        ["pack", str(invalid_package), "-o", str(tmp_path / "invalid.specpm.tgz"), "--json"],
+        ["index", str(tmp_path / "missing-package"), "--index", str(index_path), "--json"],
+        [
+            "search",
+            "BadCapability",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        [
+            "add",
+            "BadCapability",
+            "--index",
+            str(index_path),
+            "--project",
+            str(project),
+            "--json",
+        ],
+        ["diff", str(invalid_package), str(ROOT / "examples/email_tools"), "--json"],
+        [
+            "inbox",
+            "inspect",
+            "missing.bundle",
+            "--root",
+            str(SPECGRAPH_FIXTURE_ROOT),
+            "--json",
+        ],
+    ]
+
+    for command in valid_commands:
+        assert main(command) == 0, command
+        capsys.readouterr()
+    for command in invalid_commands:
+        assert main(command) == 1, command
+        capsys.readouterr()
+
+
+def test_cli_add_ambiguity_returns_nonzero_exit_code(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    index_path = tmp_path / "index.json"
+    first_entry = indexed_email_entry(tmp_path)
+    second_entry = dict(first_entry)
+    second_entry["package_id"] = "document_conversion.alt_email_tools"
+    second_entry["name"] = "Alt Email Tools"
+    second_entry["source"] = {
+        **first_entry["source"],
+        "digest": {"algorithm": "sha256", "value": "e" * 64},
+    }
+    write_index_payload(index_path, [first_entry, second_entry])
+
+    exit_code = main(
+        [
+            "add",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--project",
+            str(tmp_path / "project"),
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 1
+    assert payload["status"] == "ambiguous"
+
+
 def test_manifest_rejects_malformed_capability_entries(tmp_path: Path) -> None:
     package = tmp_path / "malformed"
     shutil.copytree(ROOT / "examples/email_tools", package)
