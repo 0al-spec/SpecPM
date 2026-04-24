@@ -20,6 +20,7 @@ Run without installing by using the source tree:
 PYTHONPATH=src python3 -m specpm.cli validate examples/email_tools --json
 PYTHONPATH=src python3 -m specpm.cli pack examples/email_tools -o /tmp/email_tools.specpm.tgz --json
 PYTHONPATH=src python3 -m specpm.cli index examples/email_tools --index /tmp/specpm-index.json --json
+PYTHONPATH=src python3 -m specpm.cli search document_conversion.email_to_markdown --index /tmp/specpm-index.json --json
 PYTHONPATH=src python3 -m specpm.cli inbox list --json
 ```
 
@@ -30,6 +31,7 @@ docker build -t specpm:dev .
 docker compose run --rm specpm validate examples/email_tools --json
 docker compose run --rm specpm pack examples/email_tools -o /tmp/email_tools.specpm.tgz --json
 docker compose run --rm specpm index examples/email_tools --index /tmp/specpm-index.json --json
+docker compose run --rm specpm search document_conversion.email_to_markdown --index /tmp/specpm-index.json --json
 docker compose run --rm specpm inbox list --json
 ```
 
@@ -48,5 +50,6 @@ Implemented first slice:
 - `specpm inspect <package-dir> [--json]`
 - `specpm pack <package-dir> [-o <archive>] [--json]`
 - `specpm index <package-dir-or-archive> [--index <path>] [--json]`
+- `specpm search <capability-id> [--index <path>] [--json]`
 - `specpm inbox list [--root .specgraph_exports] [--json]`
 - `specpm inbox inspect <package-id> [--root .specgraph_exports] [--json]`

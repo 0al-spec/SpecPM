@@ -418,6 +418,82 @@ def index_package(package_ref: Path, index_path: Path) -> dict[str, Any]:
     }
 
 
+def search_index(capability_id: str, index_path: Path) -> dict[str, Any]:
+    errors: list[Issue] = []
+    validate_id(capability_id, "capability_id_invalid", errors, "search")
+    if errors:
+        return {
+            "status": "invalid",
+            "index": str(index_path),
+            "query": {"capability_id": capability_id},
+            "result_count": 0,
+            "results": [],
+            "errors": [issue.to_dict() for issue in errors],
+        }
+
+    resolved_index = index_path.resolve()
+    index_data, load_errors = load_index(resolved_index)
+    if load_errors:
+        return {
+            "status": "invalid",
+            "index": str(resolved_index),
+            "query": {"capability_id": capability_id},
+            "result_count": 0,
+            "results": [],
+            "errors": [issue.to_dict() for issue in load_errors],
+        }
+
+    capability_index = index_data.get("capabilities")
+    if not isinstance(capability_index, dict):
+        capability_index = build_capability_index(index_data["packages"])
+    matches = capability_index.get(capability_id, [])
+    if not isinstance(matches, list):
+        matches = []
+    packages_by_identity = {
+        (package.get("package_id"), package.get("version")): package
+        for package in index_data["packages"]
+        if isinstance(package, dict)
+    }
+    results = []
+    for match in matches:
+        if not isinstance(match, dict):
+            continue
+        package = packages_by_identity.get((match.get("package_id"), match.get("version")))
+        if package is None:
+            continue
+        results.append(search_result_from_package(package, capability_id))
+
+    results.sort(key=lambda item: (item["package_id"], item["version"]))
+    return {
+        "status": "ok",
+        "index": str(resolved_index),
+        "query": {"capability_id": capability_id},
+        "result_count": len(results),
+        "results": results,
+        "errors": [],
+    }
+
+
+def search_result_from_package(package: dict[str, Any], capability_id: str) -> dict[str, Any]:
+    return {
+        "package_id": package.get("package_id"),
+        "version": package.get("version"),
+        "name": package.get("name"),
+        "summary": package.get("summary"),
+        "license": package.get("license"),
+        "matched_capability": capability_id,
+        "provided_capabilities": package.get("provided_capabilities", []),
+        "required_capabilities": package.get("required_capabilities", []),
+        "compatibility": package.get("compatibility", {}),
+        "confidence_summary": {
+            "validation_status": package.get("validation_status"),
+            "evidence": package.get("evidence_summary", {}),
+        },
+        "source": package.get("source", {}),
+        "yanked": package.get("yanked", False),
+    }
+
+
 def index_directory_package(root: Path, index_path: Path, *, source_kind: str) -> dict[str, Any]:
     validation = validate_package(root)
     if validation["status"] == "invalid":

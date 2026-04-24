@@ -135,12 +135,12 @@ Acceptance:
 
 ## Phase 6. Search
 
-- [ ] Add `specpm search <capability-id> --index <path>`.
-- [ ] Implement exact capability ID matching.
-- [ ] Return package ID, version, summary, capabilities, license,
+- [x] Add `specpm search <capability-id> --index <path>`.
+- [x] Implement exact capability ID matching.
+- [x] Return package ID, version, summary, capabilities, license,
   compatibility, and confidence summary.
-- [ ] Add `--json` output.
-- [ ] Keep keyword/fuzzy search out of normative MVP resolution.
+- [x] Add `--json` output.
+- [x] Keep keyword/fuzzy search out of normative MVP resolution.
 
 Acceptance:
 

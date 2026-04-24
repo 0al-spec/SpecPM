@@ -13,6 +13,7 @@ from specpm.core import (
     inspect_package,
     list_inbox,
     pack_package,
+    search_index,
     validate_package,
 )
 
@@ -59,6 +60,12 @@ def build_parser() -> argparse.ArgumentParser:
     index.add_argument("--index", default=".specpm/index.json")
     index.add_argument("--json", action="store_true", help="Emit a stable JSON index report.")
     index.set_defaults(handler=handle_index)
+
+    search = subparsers.add_parser("search", help="Search an index by exact capability id.")
+    search.add_argument("capability_id")
+    search.add_argument("--index", default=".specpm/index.json")
+    search.add_argument("--json", action="store_true", help="Emit a stable JSON search report.")
+    search.set_defaults(handler=handle_search)
 
     inbox = subparsers.add_parser("inbox", help="Inspect SpecGraph export inbox bundles.")
     inbox_subparsers = inbox.add_subparsers(dest="inbox_command", required=True)
@@ -134,6 +141,25 @@ def handle_index(args: argparse.Namespace) -> int:
             if "validation" in report:
                 print_validation(report["validation"], stream=sys.stderr)
     return 0 if report["status"] in {"indexed", "unchanged"} else 1
+
+
+def handle_search(args: argparse.Namespace) -> int:
+    report = search_index(args.capability_id, Path(args.index))
+    if args.json:
+        print_json(report)
+    else:
+        if report["status"] == "ok":
+            if not report["results"]:
+                print(f"No packages found for capability: {args.capability_id}")
+            for result in report["results"]:
+                print(
+                    f"{result['package_id']} {result['version']} [{result['matched_capability']}]"
+                )
+        else:
+            print(f"search failed: {args.capability_id}", file=sys.stderr)
+            for issue in report.get("errors", []):
+                print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
+    return 0 if report["status"] == "ok" else 1
 
 
 def handle_inbox_list(args: argparse.Namespace) -> int:
