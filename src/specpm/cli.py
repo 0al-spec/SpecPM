@@ -9,6 +9,7 @@ from typing import Any, TextIO
 from specpm import __version__
 from specpm.core import (
     add_package,
+    diff_packages,
     index_package,
     inspect_inbox_bundle,
     inspect_package,
@@ -76,6 +77,12 @@ def build_parser() -> argparse.ArgumentParser:
     add.add_argument("--project", default=".")
     add.add_argument("--json", action="store_true", help="Emit a stable JSON add report.")
     add.set_defaults(handler=handle_add)
+
+    diff = subparsers.add_parser("diff", help="Diff two SpecPackage directories.")
+    diff.add_argument("old_package")
+    diff.add_argument("new_package")
+    diff.add_argument("--json", action="store_true", help="Emit a stable JSON diff report.")
+    diff.set_defaults(handler=handle_diff)
 
     inbox = subparsers.add_parser("inbox", help="Inspect SpecGraph export inbox bundles.")
     inbox_subparsers = inbox.add_subparsers(dest="inbox_command", required=True)
@@ -195,6 +202,38 @@ def handle_add(args: argparse.Namespace) -> int:
             for issue in report.get("errors", []):
                 print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
     return 0 if report["status"] in {"added", "unchanged"} else 1
+
+
+def handle_diff(args: argparse.Namespace) -> int:
+    report = diff_packages(Path(args.old_package), Path(args.new_package))
+    if args.json:
+        print_json(report)
+    else:
+        if report["status"] == "ok":
+            print(f"{report['classification']}: {args.old_package} -> {args.new_package}")
+            changes = report["changes"]
+            print(
+                "capabilities: "
+                f"-{len(changes['capabilities']['removed'])} "
+                f"+{len(changes['capabilities']['added'])}"
+            )
+            print(
+                "interfaces: "
+                f"-{len(changes['interfaces']['removed'])} "
+                f"+{len(changes['interfaces']['added'])} "
+                f"~{len(changes['interfaces']['changed'])}"
+            )
+            print(
+                "must constraints: "
+                f"-{len(changes['must_constraints']['removed'])} "
+                f"+{len(changes['must_constraints']['added'])} "
+                f"~{len(changes['must_constraints']['changed'])}"
+            )
+        else:
+            print(f"diff failed: {args.old_package} -> {args.new_package}", file=sys.stderr)
+            for issue in report.get("errors", []):
+                print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
+    return 0 if report["status"] == "ok" else 1
 
 
 def handle_inbox_list(args: argparse.Namespace) -> int:

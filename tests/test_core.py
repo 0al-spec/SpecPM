@@ -6,9 +6,12 @@ import tarfile
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from specpm.cli import main
 from specpm.core import (
     add_package,
+    diff_packages,
     index_package,
     inspect_inbox_bundle,
     list_inbox,
@@ -47,6 +50,22 @@ def indexed_email_entry(tmp_path: Path) -> dict[str, Any]:
     index_path = tmp_path / "source-index.json"
     index_package(ROOT / "examples/email_tools", index_path)
     return json.loads(index_path.read_text(encoding="utf-8"))["packages"][0]
+
+
+def load_yaml_file(path: Path) -> dict[str, Any]:
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert isinstance(loaded, dict)
+    return loaded
+
+
+def write_yaml_file(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+
+def copy_email_package(tmp_path: Path, name: str) -> Path:
+    package = tmp_path / name
+    shutil.copytree(ROOT / "examples/email_tools", package)
+    return package
 
 
 def test_rfc_example_validates() -> None:
@@ -593,6 +612,204 @@ def test_cli_add_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untype
     assert exit_code == 0
     assert payload["status"] == "added"
     assert payload["package"]["package_id"] == "document_conversion.email_tools"
+
+
+def test_diff_identical_package_is_unchanged() -> None:
+    report = diff_packages(ROOT / "examples/email_tools", ROOT / "examples/email_tools")
+
+    assert report["status"] == "ok"
+    assert report["classification"] == "unchanged"
+    assert report["has_changes"] is False
+
+
+def test_diff_removed_capability_is_breaking(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    new_capability = "document_conversion.email_to_text"
+    manifest_path = new_package / "specpm.yaml"
+    spec_path = new_package / "specs/email-to-markdown.spec.yaml"
+    manifest = load_yaml_file(manifest_path)
+    spec = load_yaml_file(spec_path)
+    manifest["index"]["provides"]["capabilities"] = [new_capability]
+    spec["provides"]["capabilities"][0]["id"] = new_capability
+    write_yaml_file(manifest_path, manifest)
+    write_yaml_file(spec_path, spec)
+
+    report = diff_packages(old_package, new_package)
+
+    assert report["status"] == "ok"
+    assert report["classification"] == "breaking"
+    assert report["changes"]["capabilities"]["removed"] == ["document_conversion.email_to_markdown"]
+    assert report["changes"]["capabilities"]["added"] == [new_capability]
+    assert any(item["code"] == "capability_removed" for item in report["impact"]["breaking"])
+
+
+def test_diff_added_capability_requires_review(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    new_capability = "document_conversion.email_to_text"
+    manifest_path = new_package / "specpm.yaml"
+    spec_path = new_package / "specs/email-to-markdown.spec.yaml"
+    manifest = load_yaml_file(manifest_path)
+    spec = load_yaml_file(spec_path)
+    manifest["index"]["provides"]["capabilities"].append(new_capability)
+    spec["provides"]["capabilities"].append(
+        {
+            "id": new_capability,
+            "role": "secondary",
+            "summary": "Convert email content into plain text.",
+        }
+    )
+    write_yaml_file(manifest_path, manifest)
+    write_yaml_file(spec_path, spec)
+
+    report = diff_packages(old_package, new_package)
+
+    assert report["status"] == "ok"
+    assert report["classification"] == "review_required"
+    assert report["changes"]["capabilities"]["added"] == [new_capability]
+    assert any(item["code"] == "capability_added" for item in report["impact"]["review_required"])
+
+
+def test_diff_added_required_capability_is_breaking(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    required_capability = "storage.local_filesystem"
+    manifest_path = new_package / "specpm.yaml"
+    spec_path = new_package / "specs/email-to-markdown.spec.yaml"
+    manifest = load_yaml_file(manifest_path)
+    spec = load_yaml_file(spec_path)
+    manifest["index"]["requires"]["capabilities"] = [required_capability]
+    spec["requires"]["capabilities"] = [{"id": required_capability, "summary": "Read local files."}]
+    write_yaml_file(manifest_path, manifest)
+    write_yaml_file(spec_path, spec)
+
+    report = diff_packages(old_package, new_package)
+
+    assert report["status"] == "ok"
+    assert report["classification"] == "breaking"
+    assert report["changes"]["required_capabilities"]["added"] == [required_capability]
+    assert any(item["code"] == "required_capability_added" for item in report["impact"]["breaking"])
+
+
+def test_diff_removed_interface_is_breaking(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    spec_path = new_package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["interfaces"]["inbound"] = []
+    write_yaml_file(spec_path, spec)
+
+    report = diff_packages(old_package, new_package)
+
+    assert report["status"] == "ok"
+    assert report["classification"] == "breaking"
+    assert report["changes"]["interfaces"]["removed"][0]["id"] == "email_file_input"
+    assert any(item["code"] == "interface_removed" for item in report["impact"]["breaking"])
+
+
+def test_diff_duplicate_interface_ids_do_not_overwrite(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    spec_path = old_package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["interfaces"]["inbound"].append(
+        {
+            "id": "email_file_input",
+            "kind": "file",
+            "summary": "Accepts a legacy duplicate email file input.",
+        }
+    )
+    write_yaml_file(spec_path, spec)
+
+    report = diff_packages(old_package, new_package)
+
+    removed = report["changes"]["interfaces"]["removed"]
+    assert report["status"] == "ok"
+    assert report["classification"] == "breaking"
+    assert len(removed) == 1
+    assert removed[0]["id"] == "email_file_input"
+    assert removed[0]["summary"] == "Accepts a legacy duplicate email file input."
+    assert removed[0]["occurrence"] == 1
+    assert any(item["code"] == "interface_removed" for item in report["impact"]["breaking"])
+
+
+def test_diff_changed_must_constraint_is_breaking(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    spec_path = new_package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["constraints"][0]["statement"] = (
+        "Converting a local email file may require configured network access."
+    )
+    write_yaml_file(spec_path, spec)
+
+    report = diff_packages(old_package, new_package)
+
+    assert report["status"] == "ok"
+    assert report["classification"] == "breaking"
+    assert report["changes"]["must_constraints"]["changed"][0]["old"]["id"] == (
+        "no_network_access_required"
+    )
+    assert any(item["code"] == "must_constraint_changed" for item in report["impact"]["breaking"])
+
+
+def test_diff_duplicate_must_constraint_ids_do_not_overwrite(tmp_path: Path) -> None:
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    old_spec_path = old_package / "specs/email-to-markdown.spec.yaml"
+    new_spec_path = new_package / "specs/email-to-markdown.spec.yaml"
+    old_spec = load_yaml_file(old_spec_path)
+    new_spec = load_yaml_file(new_spec_path)
+    old_spec["constraints"].append(
+        {
+            "id": "no_network_access_required",
+            "level": "MUST",
+            "statement": "Conversion must preserve visible email body text.",
+        }
+    )
+    new_spec["constraints"].append(
+        {
+            "id": "no_network_access_required",
+            "level": "MUST",
+            "statement": "Conversion must preserve visible email body text and headers.",
+        }
+    )
+    write_yaml_file(old_spec_path, old_spec)
+    write_yaml_file(new_spec_path, new_spec)
+
+    report = diff_packages(old_package, new_package)
+
+    changed = report["changes"]["must_constraints"]["changed"]
+    assert report["status"] == "ok"
+    assert report["classification"] == "breaking"
+    assert len(changed) == 1
+    assert changed[0]["old"]["id"] == "no_network_access_required"
+    assert changed[0]["old"]["occurrence"] == 1
+    assert changed[0]["new"]["occurrence"] == 1
+    assert changed[0]["old"]["statement"] == "Conversion must preserve visible email body text."
+    assert changed[0]["new"]["statement"] == (
+        "Conversion must preserve visible email body text and headers."
+    )
+    assert any(item["code"] == "must_constraint_changed" for item in report["impact"]["breaking"])
+
+
+def test_cli_diff_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    old_package = copy_email_package(tmp_path, "old")
+    new_package = copy_email_package(tmp_path, "new")
+    manifest_path = new_package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["metadata"]["summary"] = "Updated summary."
+    write_yaml_file(manifest_path, manifest)
+
+    exit_code = main(["diff", str(old_package), str(new_package), "--json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["status"] == "ok"
+    assert payload["classification"] == "review_required"
+    assert payload["changes"]["package_metadata"]["changed"][0]["field"] == "summary"
 
 
 def test_cli_pack_rejects_invalid_packages(tmp_path: Path) -> None:
