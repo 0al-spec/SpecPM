@@ -286,6 +286,41 @@ def inspect_package(package_dir: Path) -> dict[str, Any]:
     }
 
 
+def diff_packages(old_package_dir: Path, new_package_dir: Path) -> dict[str, Any]:
+    old_model = package_diff_model(old_package_dir)
+    new_model = package_diff_model(new_package_dir)
+    validation_errors = diff_validation_errors(old_model, new_model)
+    if validation_errors:
+        return {
+            "status": "invalid",
+            "classification": "invalid",
+            "old_package": old_model["path"],
+            "new_package": new_model["path"],
+            "old_identity": old_model["package"].get("identity"),
+            "new_identity": new_model["package"].get("identity"),
+            "old_validation": old_model["validation"],
+            "new_validation": new_model["validation"],
+            "changes": empty_diff_changes(),
+            "impact": empty_diff_impact(),
+            "errors": [issue.to_dict() for issue in validation_errors],
+        }
+
+    changes = structural_diff_changes(old_model, new_model)
+    impact = classify_structural_changes(changes)
+    return {
+        "status": "ok",
+        "classification": diff_classification(impact),
+        "has_changes": has_structural_changes(changes),
+        "old_package": old_model["path"],
+        "new_package": new_model["path"],
+        "old_identity": old_model["package"].get("identity"),
+        "new_identity": new_model["package"].get("identity"),
+        "changes": changes,
+        "impact": impact,
+        "errors": [],
+    }
+
+
 def pack_package(package_dir: Path, output_path: Path | None = None) -> dict[str, Any]:
     root = package_dir.resolve()
     validation = validate_package(root)
@@ -1997,6 +2032,321 @@ def summarize_handoff(handoff: dict[str, Any]) -> dict[str, Any]:
     if isinstance(handoff.get("package_identity"), dict):
         summary["package_identity"] = handoff["package_identity"]
     return summary
+
+
+def package_diff_model(package_dir: Path) -> dict[str, Any]:
+    root = package_dir.resolve()
+    validation = validate_package(root)
+    manifest = try_load_mapping(root / "specpm.yaml", root)
+    specs = []
+    if manifest is not None:
+        for spec_path in iter_manifest_spec_paths(manifest, []):
+            resolved = resolve_inside(root, spec_path)
+            if resolved is None or not resolved.is_file():
+                continue
+            spec = try_load_mapping(resolved, root)
+            if spec is None:
+                continue
+            rel = relative_path(root, resolved)
+            specs.append(
+                {
+                    "path": rel,
+                    "document": spec,
+                    "summary": summarize_boundary_spec(rel, spec),
+                }
+            )
+    package = summarize_manifest(manifest)
+    return {
+        "path": str(root),
+        "validation": validation,
+        "manifest": manifest,
+        "package": package,
+        "specs": specs,
+        "provided_capabilities": sorted(set(validation.get("capabilities", []))),
+        "required_capabilities": collect_required_capabilities(manifest, specs),
+    }
+
+
+def diff_validation_errors(old_model: dict[str, Any], new_model: dict[str, Any]) -> list[Issue]:
+    errors = []
+    if old_model["validation"]["status"] == "invalid":
+        errors.append(
+            Issue(
+                "error",
+                "old_package_invalid",
+                "Old package must validate before structural diff.",
+                old_model["path"],
+            )
+        )
+    if new_model["validation"]["status"] == "invalid":
+        errors.append(
+            Issue(
+                "error",
+                "new_package_invalid",
+                "New package must validate before structural diff.",
+                new_model["path"],
+            )
+        )
+    return errors
+
+
+def empty_diff_changes() -> dict[str, Any]:
+    return {
+        "capabilities": {"removed": [], "added": []},
+        "required_capabilities": {"removed": [], "added": []},
+        "interfaces": {"removed": [], "added": [], "changed": []},
+        "must_constraints": {"removed": [], "added": [], "changed": []},
+        "package_metadata": {"changed": []},
+        "compatibility": {"changed": False, "old": {}, "new": {}},
+    }
+
+
+def empty_diff_impact() -> dict[str, list[dict[str, Any]]]:
+    return {
+        "breaking": [],
+        "review_required": [],
+        "non_breaking": [],
+    }
+
+
+def structural_diff_changes(old_model: dict[str, Any], new_model: dict[str, Any]) -> dict[str, Any]:
+    changes = empty_diff_changes()
+    old_capabilities = set(old_model["provided_capabilities"])
+    new_capabilities = set(new_model["provided_capabilities"])
+    changes["capabilities"] = {
+        "removed": sorted(old_capabilities - new_capabilities),
+        "added": sorted(new_capabilities - old_capabilities),
+    }
+
+    old_required = set(old_model["required_capabilities"])
+    new_required = set(new_model["required_capabilities"])
+    changes["required_capabilities"] = {
+        "removed": sorted(old_required - new_required),
+        "added": sorted(new_required - old_required),
+    }
+
+    changes["interfaces"] = diff_keyed_items(
+        interface_index(old_model["specs"]), interface_index(new_model["specs"])
+    )
+    changes["must_constraints"] = diff_keyed_items(
+        must_constraint_index(old_model["specs"]), must_constraint_index(new_model["specs"])
+    )
+    changes["package_metadata"] = {
+        "changed": diff_package_metadata(old_model["package"], new_model["package"])
+    }
+
+    old_compatibility = old_model["package"].get("compatibility", {})
+    new_compatibility = new_model["package"].get("compatibility", {})
+    changes["compatibility"] = {
+        "changed": old_compatibility != new_compatibility,
+        "old": old_compatibility,
+        "new": new_compatibility,
+    }
+    return changes
+
+
+def collect_required_capabilities(
+    manifest: dict[str, Any] | None, specs: list[dict[str, Any]]
+) -> list[str]:
+    required = capability_ids(get_field(manifest, "index.requires.capabilities"))
+    for spec in specs:
+        required.extend(capability_ids(get_field(spec["document"], "requires.capabilities")))
+    return sorted(set(required))
+
+
+def interface_index(specs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    interfaces: dict[str, dict[str, Any]] = {}
+    for spec in specs:
+        spec_id = spec["summary"].get("id") or spec["path"]
+        interface_root = spec["document"].get("interfaces", {})
+        if not isinstance(interface_root, dict):
+            continue
+        for direction in ("inbound", "outbound"):
+            items = interface_root.get(direction, [])
+            if not isinstance(items, list):
+                continue
+            for item in items:
+                if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+                    continue
+                key = f"{spec_id}:{direction}:{item['id']}"
+                interfaces[key] = {
+                    "spec_id": spec_id,
+                    "path": spec["path"],
+                    "direction": direction,
+                    "id": item["id"],
+                    "kind": item.get("kind"),
+                    "summary": item.get("summary"),
+                    "definition": item,
+                }
+    return interfaces
+
+
+def must_constraint_index(specs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    constraints: dict[str, dict[str, Any]] = {}
+    for spec in specs:
+        spec_id = spec["summary"].get("id") or spec["path"]
+        items = spec["document"].get("constraints", [])
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict) or item.get("level") != "MUST":
+                continue
+            if not isinstance(item.get("id"), str):
+                continue
+            key = f"{spec_id}:{item['id']}"
+            constraints[key] = {
+                "spec_id": spec_id,
+                "path": spec["path"],
+                "id": item["id"],
+                "statement": item.get("statement"),
+                "definition": item,
+            }
+    return constraints
+
+
+def diff_keyed_items(
+    old_items: dict[str, dict[str, Any]], new_items: dict[str, dict[str, Any]]
+) -> dict[str, list[dict[str, Any]]]:
+    removed = [old_items[key] for key in sorted(set(old_items) - set(new_items))]
+    added = [new_items[key] for key in sorted(set(new_items) - set(old_items))]
+    changed = [
+        {
+            "key": key,
+            "old": old_items[key],
+            "new": new_items[key],
+        }
+        for key in sorted(set(old_items) & set(new_items))
+        if old_items[key].get("definition") != new_items[key].get("definition")
+    ]
+    return {"removed": removed, "added": added, "changed": changed}
+
+
+def diff_package_metadata(
+    old_package: dict[str, Any], new_package: dict[str, Any]
+) -> list[dict[str, Any]]:
+    fields = {
+        "package_id": ("identity", "package_id"),
+        "name": ("name",),
+        "version": ("identity", "version"),
+        "summary": ("summary",),
+        "license": ("license",),
+    }
+    changed = []
+    for field, path in fields.items():
+        old_value = nested_value(old_package, path)
+        new_value = nested_value(new_package, path)
+        if old_value != new_value:
+            changed.append({"field": field, "old": old_value, "new": new_value})
+    return changed
+
+
+def nested_value(data: dict[str, Any], path: tuple[str, ...]) -> Any:
+    current: Any = data
+    for item in path:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(item)
+    return current
+
+
+def classify_structural_changes(changes: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    impact = empty_diff_impact()
+    for capability in changes["capabilities"]["removed"]:
+        impact["breaking"].append(
+            impact_item("capability_removed", "Removed provided capability.", capability)
+        )
+    for capability in changes["capabilities"]["added"]:
+        impact["review_required"].append(
+            impact_item("capability_added", "Added provided capability.", capability)
+        )
+    for capability in changes["required_capabilities"]["added"]:
+        impact["breaking"].append(
+            impact_item("required_capability_added", "Added required capability.", capability)
+        )
+    for capability in changes["required_capabilities"]["removed"]:
+        impact["non_breaking"].append(
+            impact_item(
+                "required_capability_removed",
+                "Removed required capability.",
+                capability,
+            )
+        )
+    for item in changes["interfaces"]["removed"]:
+        impact["breaking"].append(impact_item("interface_removed", "Removed interface.", item))
+    for item in changes["interfaces"]["added"]:
+        impact["review_required"].append(impact_item("interface_added", "Added interface.", item))
+    for item in changes["interfaces"]["changed"]:
+        impact["breaking"].append(impact_item("interface_changed", "Changed interface.", item))
+    must_codes = {
+        "removed": "must_constraint_removed",
+        "added": "must_constraint_added",
+        "changed": "must_constraint_changed",
+    }
+    for kind in ("removed", "added", "changed"):
+        for item in changes["must_constraints"][kind]:
+            impact["breaking"].append(
+                impact_item(
+                    must_codes[kind],
+                    f"MUST constraint {kind}.",
+                    item,
+                )
+            )
+    for item in changes["package_metadata"]["changed"]:
+        target = "breaking" if item["field"] == "package_id" else "review_required"
+        impact[target].append(
+            impact_item("package_metadata_changed", "Changed package metadata.", item)
+        )
+    if changes["compatibility"]["changed"]:
+        impact["review_required"].append(
+            impact_item(
+                "compatibility_changed",
+                "Changed compatibility metadata.",
+                changes["compatibility"],
+            )
+        )
+    return impact
+
+
+def impact_item(code: str, message: str, value: Any) -> dict[str, Any]:
+    return {
+        "code": code,
+        "message": message,
+        "value": value,
+    }
+
+
+def diff_classification(impact: dict[str, list[dict[str, Any]]]) -> str:
+    if impact["breaking"]:
+        return "breaking"
+    if impact["review_required"]:
+        return "review_required"
+    if impact["non_breaking"]:
+        return "non_breaking"
+    return "unchanged"
+
+
+def has_structural_changes(changes: dict[str, Any]) -> bool:
+    return any(
+        [
+            bool(changes["capabilities"]["removed"] or changes["capabilities"]["added"]),
+            bool(
+                changes["required_capabilities"]["removed"]
+                or changes["required_capabilities"]["added"]
+            ),
+            bool(
+                changes["interfaces"]["removed"]
+                or changes["interfaces"]["added"]
+                or changes["interfaces"]["changed"]
+            ),
+            bool(
+                changes["must_constraints"]["removed"]
+                or changes["must_constraints"]["added"]
+                or changes["must_constraints"]["changed"]
+            ),
+            bool(changes["package_metadata"]["changed"]),
+            bool(changes["compatibility"]["changed"]),
+        ]
+    )
 
 
 def build_index_entry(

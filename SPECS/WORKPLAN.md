@@ -189,13 +189,13 @@ Acceptance:
 
 ## Phase 9. Structural Diff
 
-- [ ] Add `specpm diff <old-package> <new-package> --json`.
-- [ ] Detect removed and added capabilities.
-- [ ] Detect removed interfaces.
-- [ ] Detect changed required capabilities.
-- [ ] Detect changed MUST constraints.
-- [ ] Detect changed package metadata and compatibility metadata.
-- [ ] Classify likely breaking changes conservatively.
+- [x] Add `specpm diff <old-package-dir> <new-package-dir> --json`.
+- [x] Detect removed and added capabilities.
+- [x] Detect removed interfaces.
+- [x] Detect changed required capabilities.
+- [x] Detect changed MUST constraints.
+- [x] Detect changed package metadata and compatibility metadata.
+- [x] Classify likely breaking changes conservatively.
 
 Acceptance:
 
