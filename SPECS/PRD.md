@@ -271,6 +271,12 @@ effects, foreign artifact, implementation binding, and security-warning
 summaries. SpecGraph handoff continuity belongs to `specpm inbox inspect`, not
 plain package inspection.
 
+The inspection JSON should expose advisory `contract_warnings[]` separately
+from validation warnings. These warnings do not affect validation status; they
+highlight contract facts that a reviewer or viewer should notice, including
+security-sensitive effects and security-sensitive provided or required
+capabilities.
+
 `specpm diff` should initially operate on package directories. Archive diff can
 be added after archive inspection is promoted beyond indexing.
 

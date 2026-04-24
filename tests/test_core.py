@@ -14,6 +14,7 @@ from specpm.core import (
     diff_packages,
     index_package,
     inspect_inbox_bundle,
+    inspect_package,
     list_inbox,
     pack_package,
     search_index,
@@ -114,6 +115,45 @@ def test_inbox_inspect_returns_viewer_card_payload() -> None:
     )
 
 
+def test_inspect_boundary_summary_exposes_viewer_contract() -> None:
+    report = inspect_package(ROOT / "examples/email_tools")
+
+    spec = report["boundary_specs"][0]
+    warning_codes = {issue["code"] for issue in report["contract_warnings"]}
+    assert spec["scope"]["includes"][0] == "Parse email message input."
+    assert spec["effects"]["sideEffects"][0]["kind"] == "filesystem_read"
+    assert spec["foreign_artifacts"] == []
+    assert spec["implementation_bindings"] == []
+    assert spec["provenance_confidence"] == {
+        "intent": "medium",
+        "boundary": "medium",
+        "behavior": "low",
+    }
+    assert "security_sensitive_effect" in warning_codes
+    assert any(
+        issue.get("field") == "effects.sideEffects.0.kind" for issue in report["contract_warnings"]
+    )
+
+
+def test_inspect_contract_warnings_include_sensitive_capabilities(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "sensitive")
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["requires"]["capabilities"] = [
+        {"id": "storage.local_filesystem", "summary": "Read local files."}
+    ]
+    write_yaml_file(spec_path, spec)
+
+    report = inspect_package(package)
+
+    assert any(
+        issue["code"] == "security_sensitive_capability"
+        and "storage.local_filesystem" in issue["message"]
+        and issue.get("field") == "requires.capabilities"
+        for issue in report["contract_warnings"]
+    )
+
+
 def test_inbox_lists_incomplete_bundle_with_actionable_gaps(tmp_path: Path) -> None:
     bundle = tmp_path / "incomplete.bundle"
     bundle.mkdir()
@@ -152,6 +192,15 @@ def test_cli_validate_json(capsys) -> None:  # type: ignore[no-untyped-def]
     payload = json.loads(captured.out)
     assert exit_code == 0
     assert payload["status"] == "valid"
+
+
+def test_cli_inspect_surfaces_provenance_and_contract_warnings(capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(["inspect", str(ROOT / "examples/email_tools")])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Provenance confidence: behavior=low, boundary=medium, intent=medium" in captured.out
+    assert "warning security_sensitive_effect" in captured.out
 
 
 def test_cli_inbox_list_handles_invalid_manifest_identity(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
