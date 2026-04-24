@@ -81,21 +81,23 @@ Acceptance:
 
 ## Phase 3. Inspect
 
-- [ ] Implement human-readable `specpm inspect <package-dir>`.
-- [ ] Implement `specpm inspect <package-dir> --json`.
-- [ ] Summarize package identity, license, capabilities, requirements, and
+- [x] Implement human-readable `specpm inspect <package-dir>`.
+- [x] Implement `specpm inspect <package-dir> --json`.
+- [x] Summarize package identity, license, capabilities, requirements, and
   compatibility metadata.
-- [ ] Summarize BoundarySpec intent, scope, interfaces, effects, constraints,
-  evidence, provenance, foreign artifacts, and implementation bindings.
-- [ ] Surface provenance confidence prominently.
+- [x] Summarize BoundarySpec intent, bounded context, interfaces, constraints,
+  evidence, and provenance in JSON.
+- [ ] Add full BoundarySpec scope, effects, foreign artifacts, and
+  implementation bindings to inspect summaries.
+- [ ] Surface provenance confidence prominently in human-readable output.
 - [ ] Surface security-sensitive effects and capabilities as warnings.
 
 Acceptance:
 
 - Inspecting the RFC example gives a compact contract summary.
-- Inspecting the SpecGraph bundle shows
-  `specgraph.repository_facade`, draft boundary status, evidence paths, and
-  `handoff.json` if present.
+- Inspecting the SpecGraph bundle shows `specgraph.repository_facade`, draft
+  boundary status, and evidence paths.
+- SpecGraph `handoff.json` continuity is surfaced by `specpm inbox inspect`.
 
 ## Phase 4. Deterministic Pack
 

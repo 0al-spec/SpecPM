@@ -265,6 +265,12 @@ The lockfile format should stay small and deterministic.
 - license;
 - provenance confidence.
 
+The MVP may stage this surface: baseline package identity, capabilities,
+interfaces, constraints, evidence, and provenance can ship before the fuller
+effects, foreign artifact, implementation binding, and security-warning
+summaries. SpecGraph handoff continuity belongs to `specpm inbox inspect`, not
+plain package inspection.
+
 `specpm diff` should detect at least:
 
 - removed capabilities;
