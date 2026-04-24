@@ -17,6 +17,7 @@ from yaml.tokens import AliasToken, AnchorToken, TagToken
 
 SUPPORTED_API_VERSION = "specpm.dev/v0.1"
 INDEX_SCHEMA_VERSION = 1
+LOCK_SCHEMA_VERSION = 1
 ID_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
@@ -443,25 +444,10 @@ def search_index(capability_id: str, index_path: Path) -> dict[str, Any]:
             "errors": [issue.to_dict() for issue in load_errors],
         }
 
-    capability_index = index_data.get("capabilities")
-    if not isinstance(capability_index, dict):
-        capability_index = build_capability_index(index_data["packages"])
-    matches = capability_index.get(capability_id, [])
-    if not isinstance(matches, list):
-        matches = []
-    packages_by_identity = {
-        (package.get("package_id"), package.get("version")): package
-        for package in index_data["packages"]
-        if isinstance(package, dict)
-    }
-    results = []
-    for match in matches:
-        if not isinstance(match, dict):
-            continue
-        package = packages_by_identity.get((match.get("package_id"), match.get("version")))
-        if package is None:
-            continue
-        results.append(search_result_from_package(package, capability_id))
+    results = [
+        search_result_from_package(package, capability_id)
+        for package in packages_for_capability(index_data, capability_id)
+    ]
 
     results.sort(key=lambda item: (item["package_id"], item["version"]))
     return {
@@ -492,6 +478,355 @@ def search_result_from_package(package: dict[str, Any], capability_id: str) -> d
         "source": package.get("source", {}),
         "yanked": package.get("yanked", False),
     }
+
+
+def packages_for_capability(index_data: dict[str, Any], capability_id: str) -> list[dict[str, Any]]:
+    capability_index = index_data.get("capabilities")
+    if not isinstance(capability_index, dict):
+        capability_index = build_capability_index(index_data["packages"])
+    matches = capability_index.get(capability_id, [])
+    if not isinstance(matches, list):
+        matches = []
+    packages_by_identity = {
+        (package.get("package_id"), package.get("version")): package
+        for package in index_data["packages"]
+        if isinstance(package, dict)
+    }
+    packages = []
+    for match in matches:
+        if not isinstance(match, dict):
+            continue
+        package = packages_by_identity.get((match.get("package_id"), match.get("version")))
+        if package is None:
+            continue
+        packages.append(package)
+    return packages
+
+
+def add_package(target: str, index_path: Path, project_dir: Path) -> dict[str, Any]:
+    project_root = project_dir.resolve()
+    target_path = Path(target)
+    if target_path.exists():
+        return add_package_path(target_path.resolve(), project_root, target)
+
+    if "@" in target:
+        package_id, version = target.rsplit("@", 1)
+        errors: list[Issue] = []
+        validate_id(package_id, "package_id_invalid", errors, "add")
+        validate_semver(version, "package_version_invalid", errors, "add")
+        if errors:
+            return add_invalid_report(target, index_path, project_root, errors)
+        return add_exact_index_package(package_id, version, index_path, project_root, target)
+
+    errors = []
+    validate_id(target, "capability_id_invalid", errors, "add")
+    if errors:
+        return add_invalid_report(target, index_path, project_root, errors)
+    return add_capability_from_index(target, index_path, project_root)
+
+
+def add_package_path(package_ref: Path, project_root: Path, target: str) -> dict[str, Any]:
+    local_index = project_index_path(project_root)
+    lock_errors = validate_lock_before_project_mutation(project_root)
+    if lock_errors:
+        return add_invalid_report(
+            target,
+            None,
+            project_root,
+            lock_errors,
+            resolved_by="path",
+        )
+
+    with tempfile.TemporaryDirectory(prefix="specpm-add-") as temp_dir:
+        index_report = index_package(package_ref, Path(temp_dir) / "index.json")
+    if index_report["status"] not in {"indexed", "unchanged"}:
+        return {
+            "status": "invalid",
+            "target": target,
+            "resolved_by": "path",
+            "project": str(project_root),
+            "index": None,
+            "local_index": str(local_index),
+            "lockfile": str(project_root / "specpm.lock"),
+            "package": None,
+            "candidates": [],
+            "index_report": index_report,
+            "errors": index_report.get("errors", []),
+        }
+    return add_selected_package(
+        target,
+        index_report["entry"],
+        project_root,
+        resolved_by="path",
+        matched_capability=None,
+        source_index=None,
+    )
+
+
+def add_exact_index_package(
+    package_id: str,
+    version: str,
+    index_path: Path,
+    project_root: Path,
+    target: str,
+) -> dict[str, Any]:
+    resolved_index = index_path.resolve()
+    index_data, load_errors = load_index(resolved_index)
+    if load_errors:
+        return add_invalid_report(target, resolved_index, project_root, load_errors)
+
+    for package in index_data["packages"]:
+        if package.get("package_id") == package_id and package.get("version") == version:
+            return add_selected_package(
+                target,
+                package,
+                project_root,
+                resolved_by="package_ref",
+                matched_capability=None,
+                source_index=resolved_index,
+            )
+    return add_invalid_report(
+        target,
+        resolved_index,
+        project_root,
+        [
+            Issue(
+                "error",
+                "package_ref_not_found",
+                f"Package reference not found in index: {package_id}@{version}",
+                str(resolved_index),
+            )
+        ],
+    )
+
+
+def add_capability_from_index(
+    capability_id: str, index_path: Path, project_root: Path
+) -> dict[str, Any]:
+    resolved_index = index_path.resolve()
+    index_data, load_errors = load_index(resolved_index)
+    if load_errors:
+        return add_invalid_report(capability_id, resolved_index, project_root, load_errors)
+
+    candidates = packages_for_capability(index_data, capability_id)
+    if not candidates:
+        return add_invalid_report(
+            capability_id,
+            resolved_index,
+            project_root,
+            [
+                Issue(
+                    "error",
+                    "capability_not_found",
+                    f"No packages provide capability: {capability_id}",
+                    str(resolved_index),
+                )
+            ],
+        )
+
+    addable = [package for package in candidates if package.get("yanked") is not True]
+    stable = [package for package in addable if is_stable_semver(package.get("version"))]
+    if not stable:
+        return add_invalid_report(
+            capability_id,
+            resolved_index,
+            project_root,
+            [
+                Issue(
+                    "error",
+                    "no_stable_candidate",
+                    f"No stable non-yanked package provides capability: {capability_id}",
+                    str(resolved_index),
+                )
+            ],
+            candidates=[
+                search_result_from_package(package, capability_id) for package in candidates
+            ],
+        )
+
+    selected_by_package = select_highest_stable_by_package(stable)
+    selected = sorted(selected_by_package.values(), key=lambda item: item.get("package_id") or "")
+    if not selected:
+        return add_invalid_report(
+            capability_id,
+            resolved_index,
+            project_root,
+            [
+                Issue(
+                    "error",
+                    "no_addable_candidates",
+                    f"No addable package provides capability: {capability_id}",
+                    str(resolved_index),
+                )
+            ],
+            candidates=[
+                search_result_from_package(package, capability_id) for package in candidates
+            ],
+        )
+    if len(selected) > 1:
+        return {
+            "status": "ambiguous",
+            "target": capability_id,
+            "resolved_by": "capability",
+            "project": str(project_root),
+            "index": str(resolved_index),
+            "local_index": str(project_index_path(project_root)),
+            "lockfile": str(project_root / "specpm.lock"),
+            "package": None,
+            "candidate_count": len(selected),
+            "candidates": [
+                search_result_from_package(package, capability_id) for package in selected
+            ],
+            "errors": [],
+        }
+
+    return add_selected_package(
+        capability_id,
+        selected[0],
+        project_root,
+        resolved_by="capability",
+        matched_capability=capability_id,
+        source_index=resolved_index,
+    )
+
+
+def add_selected_package(
+    target: str,
+    package: dict[str, Any],
+    project_root: Path,
+    *,
+    resolved_by: str,
+    matched_capability: str | None,
+    source_index: Path | None,
+) -> dict[str, Any]:
+    validation_errors = validate_add_package_entry(package)
+    if validation_errors:
+        return add_invalid_report(
+            target,
+            source_index,
+            project_root,
+            validation_errors,
+            resolved_by=resolved_by,
+        )
+    if package.get("yanked") is True:
+        return add_invalid_report(
+            target,
+            source_index,
+            project_root,
+            [
+                Issue(
+                    "error",
+                    "package_yanked",
+                    f"Package is yanked: {package['package_id']}@{package['version']}",
+                )
+            ],
+            resolved_by=resolved_by,
+        )
+
+    cache_entry = package_cache_entry(package)
+    lock_errors = validate_lock_before_project_mutation(project_root, package, cache_entry)
+    if lock_errors:
+        return add_invalid_report(
+            target,
+            source_index,
+            project_root,
+            lock_errors,
+            resolved_by=resolved_by,
+        )
+
+    local_index = project_index_path(project_root)
+    index_report = write_index_entry(
+        local_index,
+        dict(package),
+        {"status": package.get("validation_status", "unknown")},
+    )
+    if index_report["status"] not in {"indexed", "unchanged"}:
+        return {
+            "status": "invalid",
+            "target": target,
+            "resolved_by": resolved_by,
+            "project": str(project_root),
+            "index": str(source_index) if source_index is not None else None,
+            "local_index": str(local_index),
+            "lockfile": str(project_root / "specpm.lock"),
+            "package": None,
+            "candidates": [],
+            "index_report": index_report,
+            "errors": index_report.get("errors", []),
+        }
+
+    try:
+        write_package_cache_entry(project_root, package, cache_entry)
+        lock_report = write_lock_entry(project_root, package, cache_entry)
+    except OSError as exc:
+        return add_invalid_report(
+            target,
+            source_index,
+            project_root,
+            [
+                Issue(
+                    "error",
+                    "project_state_write_failed",
+                    f"Project state could not be written: {exc}",
+                    str(project_root),
+                )
+            ],
+        )
+
+    if lock_report["status"] == "invalid":
+        return {
+            "status": "invalid",
+            "target": target,
+            "resolved_by": resolved_by,
+            "project": str(project_root),
+            "index": str(source_index) if source_index is not None else None,
+            "local_index": str(local_index),
+            "lockfile": str(project_root / "specpm.lock"),
+            "package": None,
+            "candidates": [],
+            "lock_report": lock_report,
+            "errors": lock_report.get("errors", []),
+        }
+
+    return {
+        "status": lock_report["status"],
+        "target": target,
+        "resolved_by": resolved_by,
+        "matched_capability": matched_capability,
+        "project": str(project_root),
+        "index": str(source_index) if source_index is not None else None,
+        "local_index": str(local_index),
+        "lockfile": str(project_root / "specpm.lock"),
+        "package": lock_report["entry"],
+        "candidates": [],
+        "index_report": index_report,
+        "errors": [],
+    }
+
+
+def add_invalid_report(
+    target: str,
+    index_path: Path | None,
+    project_root: Path,
+    errors: list[Issue],
+    *,
+    candidates: list[dict[str, Any]] | None = None,
+    resolved_by: str | None = None,
+) -> dict[str, Any]:
+    report = {
+        "status": "invalid",
+        "target": target,
+        "project": str(project_root),
+        "index": str(index_path.resolve()) if isinstance(index_path, Path) else None,
+        "local_index": str(project_index_path(project_root)),
+        "lockfile": str(project_root / "specpm.lock"),
+        "package": None,
+        "candidates": candidates or [],
+        "errors": [issue.to_dict() for issue in errors],
+    }
+    if resolved_by is not None:
+        report["resolved_by"] = resolved_by
+    return report
 
 
 def index_directory_package(root: Path, index_path: Path, *, source_kind: str) -> dict[str, Any]:
@@ -1765,6 +2100,241 @@ def build_capability_index(packages: list[dict[str, Any]]) -> dict[str, list[dic
         capability: sorted(entries, key=lambda item: (item["package_id"], item["version"]))
         for capability, entries in sorted(capability_index.items())
     }
+
+
+def project_index_path(project_root: Path) -> Path:
+    return project_root / ".specpm/index.json"
+
+
+def validate_lock_before_project_mutation(
+    project_root: Path,
+    package: dict[str, Any] | None = None,
+    cache_entry: str | None = None,
+) -> list[Issue]:
+    lock_data, lock_errors = load_lock(project_root / "specpm.lock")
+    if lock_errors or package is None or cache_entry is None:
+        return lock_errors
+
+    lock_entry = build_lock_entry(package, cache_entry)
+    for existing in lock_data["packages"]:
+        if (
+            existing.get("package_id") == lock_entry["package_id"]
+            and existing.get("version") == lock_entry["version"]
+        ):
+            existing_digest = get_field(existing, "source.digest.value")
+            new_digest = get_field(lock_entry, "source.digest.value")
+            if existing_digest != new_digest:
+                return [
+                    Issue(
+                        "error",
+                        "lock_package_conflict",
+                        "Lockfile already contains this package id and version "
+                        "with a different digest.",
+                        str(project_root / "specpm.lock"),
+                    )
+                ]
+    return []
+
+
+def load_lock(lock_path: Path) -> tuple[dict[str, Any], list[Issue]]:
+    if not lock_path.exists():
+        return empty_lock(), []
+    try:
+        loaded = json.loads(lock_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return empty_lock(), [
+            Issue("error", "lock_read_failed", f"Lockfile could not be read: {exc}", str(lock_path))
+        ]
+    except json.JSONDecodeError as exc:
+        return empty_lock(), [Issue("error", "lock_json_invalid", str(exc), str(lock_path))]
+    if not isinstance(loaded, dict):
+        return empty_lock(), [
+            Issue(
+                "error",
+                "lock_schema_invalid",
+                "Lockfile root must be a JSON object.",
+                str(lock_path),
+            )
+        ]
+    if loaded.get("schemaVersion") != LOCK_SCHEMA_VERSION:
+        return empty_lock(), [
+            Issue(
+                "error",
+                "lock_schema_unsupported",
+                f"Lockfile schemaVersion must be {LOCK_SCHEMA_VERSION}.",
+                str(lock_path),
+                "schemaVersion",
+            )
+        ]
+    packages = loaded.get("packages")
+    if not isinstance(packages, list):
+        return empty_lock(), [
+            Issue(
+                "error", "lock_schema_invalid", "Lockfile packages must be a list.", str(lock_path)
+            )
+        ]
+    return loaded, []
+
+
+def empty_lock() -> dict[str, Any]:
+    return {
+        "schemaVersion": LOCK_SCHEMA_VERSION,
+        "packages": [],
+    }
+
+
+def write_lock_entry(
+    project_root: Path, package: dict[str, Any], cache_entry: str
+) -> dict[str, Any]:
+    lock_path = project_root / "specpm.lock"
+    lock_data, load_errors = load_lock(lock_path)
+    if load_errors:
+        return {
+            "status": "invalid",
+            "lockfile": str(lock_path),
+            "entry": None,
+            "errors": [issue.to_dict() for issue in load_errors],
+        }
+
+    lock_entry = build_lock_entry(package, cache_entry)
+    packages = lock_data["packages"]
+    status = "added"
+    for index, existing in enumerate(packages):
+        if (
+            existing.get("package_id") == lock_entry["package_id"]
+            and existing.get("version") == lock_entry["version"]
+        ):
+            existing_digest = get_field(existing, "source.digest.value")
+            new_digest = get_field(lock_entry, "source.digest.value")
+            if existing_digest != new_digest:
+                return {
+                    "status": "invalid",
+                    "lockfile": str(lock_path),
+                    "entry": None,
+                    "errors": [
+                        Issue(
+                            "error",
+                            "lock_package_conflict",
+                            "Lockfile already contains this package id and version "
+                            "with a different digest.",
+                            str(lock_path),
+                        ).to_dict()
+                    ],
+                }
+            if existing == lock_entry:
+                status = "unchanged"
+            else:
+                packages[index] = lock_entry
+            break
+    else:
+        packages.append(lock_entry)
+
+    packages.sort(key=lambda item: (item.get("package_id") or "", item.get("version") or ""))
+    write_json_file(lock_path, lock_data)
+    return {
+        "status": status,
+        "lockfile": str(lock_path),
+        "entry": lock_entry,
+        "errors": [],
+    }
+
+
+def build_lock_entry(package: dict[str, Any], cache_entry: str) -> dict[str, Any]:
+    return {
+        "package_id": package.get("package_id"),
+        "version": package.get("version"),
+        "name": package.get("name"),
+        "summary": package.get("summary"),
+        "license": package.get("license"),
+        "provided_capabilities": package.get("provided_capabilities", []),
+        "required_capabilities": package.get("required_capabilities", []),
+        "compatibility": package.get("compatibility", {}),
+        "source": package.get("source", {}),
+        "validation_status": package.get("validation_status"),
+        "yanked": package.get("yanked", False),
+        "cache_entry": cache_entry,
+    }
+
+
+def package_cache_entry(package: dict[str, Any]) -> str:
+    package_id = package["package_id"]
+    version = package["version"]
+    return f".specpm/packages/{package_id}/{version}/package.json"
+
+
+def write_package_cache_entry(
+    project_root: Path, package: dict[str, Any], cache_entry: str
+) -> None:
+    cache_rel = cache_entry
+    cache_path = project_root / cache_rel
+    write_json_file(
+        cache_path,
+        {
+            "schemaVersion": LOCK_SCHEMA_VERSION,
+            "package": package,
+        },
+    )
+
+
+def validate_add_package_entry(package: dict[str, Any]) -> list[Issue]:
+    errors: list[Issue] = []
+    validate_id(package.get("package_id"), "package_id_invalid", errors, "index")
+    validate_semver(package.get("version"), "package_version_invalid", errors, "index")
+    source_digest = get_field(package, "source.digest.value")
+    if not isinstance(source_digest, str) or not source_digest:
+        errors.append(
+            Issue(
+                "error",
+                "package_digest_missing",
+                "Indexed package source digest is required for add.",
+                "index",
+                "source.digest.value",
+            )
+        )
+    capabilities = package.get("provided_capabilities")
+    if not isinstance(capabilities, list):
+        errors.append(
+            Issue(
+                "error",
+                "package_capabilities_invalid",
+                "Indexed package provided_capabilities must be a list.",
+                "index",
+                "provided_capabilities",
+            )
+        )
+    return errors
+
+
+def select_highest_stable_by_package(
+    packages: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    selected: dict[str, dict[str, Any]] = {}
+    for package in packages:
+        package_id = package.get("package_id")
+        version = package.get("version")
+        if not isinstance(package_id, str) or semver_key(version) is None:
+            continue
+        current = selected.get(package_id)
+        if current is None or semver_key(version) > semver_key(current.get("version")):
+            selected[package_id] = package
+    return selected
+
+
+def is_stable_semver(version: Any) -> bool:
+    parsed = semver_key(version)
+    if parsed is None:
+        return False
+    public = str(version).split("+", 1)[0]
+    return "-" not in public
+
+
+def semver_key(version: Any) -> tuple[int, int, int] | None:
+    if not isinstance(version, str) or not SEMVER_RE.match(version):
+        return None
+    public = version.split("+", 1)[0]
+    numeric = public.split("-", 1)[0]
+    major, minor, patch = numeric.split(".")
+    return (int(major), int(minor), int(patch))
 
 
 def write_json_file(path: Path, payload: dict[str, Any]) -> None:
