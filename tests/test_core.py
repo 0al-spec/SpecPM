@@ -6,7 +6,7 @@ import tarfile
 from pathlib import Path
 
 from specpm.cli import main
-from specpm.core import index_package, list_inbox, pack_package, validate_package
+from specpm.core import index_package, list_inbox, pack_package, search_index, validate_package
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
@@ -230,6 +230,84 @@ def test_index_reports_read_errors_for_existing_index_path_directory(tmp_path: P
 
     assert report["status"] == "invalid"
     assert any(issue["code"] == "index_read_failed" for issue in report["errors"])
+
+
+def test_search_finds_exact_capability_match(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    report = search_index("document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "ok"
+    assert report["result_count"] == 1
+    assert report["results"][0]["package_id"] == "document_conversion.email_tools"
+    assert report["results"][0]["matched_capability"] == "document_conversion.email_to_markdown"
+
+
+def test_search_rebuilds_missing_capability_index_from_packages(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+    index_payload = json.loads(index_path.read_text(encoding="utf-8"))
+    index_payload.pop("capabilities")
+    index_path.write_text(json.dumps(index_payload), encoding="utf-8")
+
+    report = search_index("document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "ok"
+    assert report["result_count"] == 1
+    assert report["results"][0]["package_id"] == "document_conversion.email_tools"
+
+
+def test_search_unknown_capability_returns_empty_result(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    report = search_index("document_conversion.unknown", index_path)
+
+    assert report["status"] == "ok"
+    assert report["result_count"] == 0
+    assert report["results"] == []
+
+
+def test_search_reports_invalid_index(tmp_path: Path) -> None:
+    index_path = tmp_path / "index-directory"
+    index_path.mkdir()
+
+    report = search_index("document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "index_read_failed" for issue in report["errors"])
+
+
+def test_search_finds_specgraph_fixture_capability(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(SPECGRAPH_FIXTURE_ROOT / "specgraph.core_repository_facade", index_path)
+
+    report = search_index("specgraph.repository_facade", index_path)
+
+    assert report["status"] == "ok"
+    assert report["result_count"] == 1
+    assert report["results"][0]["package_id"] == "specgraph.core_repository_facade"
+
+
+def test_cli_search_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    exit_code = main(
+        [
+            "search",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["result_count"] == 1
 
 
 def test_cli_pack_rejects_invalid_packages(tmp_path: Path) -> None:
