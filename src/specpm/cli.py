@@ -297,11 +297,75 @@ def print_inspection(report: dict[str, Any]) -> None:
         print("Capabilities:")
         for capability in package["capabilities"]:
             print(f"  - {capability}")
+    if package.get("required_capabilities"):
+        print("Required capabilities:")
+        for capability in package["required_capabilities"]:
+            print(f"  - {capability}")
+    compatibility = package.get("compatibility")
+    if isinstance(compatibility, dict) and compatibility:
+        print("Compatibility:")
+        for key, value in sorted(compatibility.items()):
+            print(f"  - {key}: {value}")
     if report.get("boundary_specs"):
         print("Boundary specs:")
         for spec in report["boundary_specs"]:
             print(f"  - {spec['id']} ({spec['path']})")
+            if spec.get("intent_summary"):
+                print(f"    Intent: {spec['intent_summary']}")
+            if spec.get("bounded_context"):
+                print(f"    Bounded context: {spec['bounded_context']}")
+            if spec.get("provides"):
+                print(f"    Provides: {', '.join(spec['provides'])}")
+            if spec.get("requires"):
+                print(f"    Requires: {', '.join(spec['requires'])}")
+            interface_counts = summarize_interface_counts(spec.get("interfaces"))
+            if interface_counts:
+                print(f"    Interfaces: {interface_counts}")
+            effect_kinds = summarize_effect_kinds(spec.get("effects"))
+            if effect_kinds:
+                print(f"    Effects: {effect_kinds}")
+            confidence = summarize_mapping(spec.get("provenance_confidence"))
+            if confidence:
+                print(f"    Provenance confidence: {confidence}")
+    if report.get("contract_warnings"):
+        print("Contract warnings:")
+        for issue in report["contract_warnings"]:
+            print(f"warning {issue['code']}: {issue['message']}")
     print_validation(report["validation"])
+
+
+def summarize_interface_counts(interfaces: Any) -> str:
+    if not isinstance(interfaces, dict):
+        return ""
+    counts = []
+    for direction in ("inbound", "outbound"):
+        items = interfaces.get(direction, [])
+        if isinstance(items, list):
+            counts.append(f"{direction}={len(items)}")
+    return ", ".join(counts)
+
+
+def summarize_effect_kinds(effects: Any) -> str:
+    if not isinstance(effects, dict):
+        return ""
+    side_effects = effects.get("sideEffects", [])
+    if not isinstance(side_effects, list):
+        return ""
+    kinds = sorted(
+        {
+            item["kind"]
+            for item in side_effects
+            if isinstance(item, dict) and isinstance(item.get("kind"), str)
+        }
+    )
+    return ", ".join(kinds)
+
+
+def summarize_mapping(mapping: Any) -> str:
+    if not isinstance(mapping, dict):
+        return ""
+    parts = [f"{key}={value}" for key, value in sorted(mapping.items())]
+    return ", ".join(parts)
 
 
 if __name__ == "__main__":

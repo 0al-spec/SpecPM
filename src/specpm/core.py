@@ -75,6 +75,33 @@ KNOWN_FOREIGN_ARTIFACT_ROLES = {
 }
 KNOWN_CONSTRAINT_LEVELS = {"MUST", "SHOULD", "MAY"}
 KNOWN_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
+SECURITY_SENSITIVE_EFFECT_KINDS = {
+    "filesystem_read",
+    "filesystem_write",
+    "network_read",
+    "network_write",
+    "database_read",
+    "database_write",
+    "process_spawn",
+    "environment_read",
+    "environment_write",
+    "message_publish",
+    "state_mutation",
+}
+SECURITY_SENSITIVE_CAPABILITY_TOKENS = {
+    "credential",
+    "credentials",
+    "database",
+    "db",
+    "environment",
+    "filesystem",
+    "network",
+    "process",
+    "secret",
+    "secrets",
+    "shell",
+    "storage",
+}
 MANIFEST_TOP_LEVEL_FIELDS = {
     "apiVersion",
     "kind",
@@ -282,6 +309,7 @@ def inspect_package(package_dir: Path) -> dict[str, Any]:
     return {
         "package": summarize_manifest(manifest),
         "boundary_specs": boundary_specs,
+        "contract_warnings": inspect_contract_warnings(boundary_specs),
         "validation": validation,
     }
 
@@ -1921,6 +1949,7 @@ def summarize_manifest(manifest: dict[str, Any] | None) -> dict[str, Any]:
     if manifest is None:
         return {}
     metadata = manifest.get("metadata") if isinstance(manifest.get("metadata"), dict) else {}
+    compatibility = manifest.get("compatibility")
     return {
         "identity": package_identity(manifest),
         "name": metadata.get("name"),
@@ -1928,13 +1957,19 @@ def summarize_manifest(manifest: dict[str, Any] | None) -> dict[str, Any]:
         "license": metadata.get("license"),
         "capabilities": capability_ids(get_field(manifest, "index.provides.capabilities")),
         "required_capabilities": capability_ids(get_field(manifest, "index.requires.capabilities")),
-        "compatibility": manifest.get("compatibility", {}),
+        "compatibility": compatibility if isinstance(compatibility, dict) else {},
         "preview_only": manifest.get("preview_only", False),
         "keywords": manifest.get("keywords", []),
     }
 
 
 def summarize_boundary_spec(rel: str, spec: dict[str, Any]) -> dict[str, Any]:
+    provenance = spec.get("provenance", {})
+    if not isinstance(provenance, dict):
+        provenance = {}
+    provenance_confidence = provenance.get("sourceConfidence", {})
+    if not isinstance(provenance_confidence, dict):
+        provenance_confidence = {}
     return {
         "path": rel,
         "id": get_field(spec, "metadata.id"),
@@ -1942,14 +1977,76 @@ def summarize_boundary_spec(rel: str, spec: dict[str, Any]) -> dict[str, Any]:
         "version": get_field(spec, "metadata.version"),
         "status": get_field(spec, "metadata.status"),
         "intent_summary": get_field(spec, "intent.summary"),
+        "scope": spec.get("scope", {}),
         "bounded_context": get_field(spec, "scope.boundedContext"),
         "provides": capability_ids(get_field(spec, "provides.capabilities")),
         "requires": capability_ids(get_field(spec, "requires.capabilities")),
         "interfaces": spec.get("interfaces", {}),
+        "effects": spec.get("effects", {}),
         "constraints": spec.get("constraints", []),
         "evidence": spec.get("evidence", []),
-        "provenance": spec.get("provenance", {}),
+        "foreign_artifacts": spec.get("foreignArtifacts", []),
+        "implementation_bindings": spec.get("implementationBindings", []),
+        "compatibility": spec.get("compatibility", {}),
+        "keywords": spec.get("keywords", []),
+        "provenance": provenance,
+        "provenance_confidence": provenance_confidence,
     }
+
+
+def inspect_contract_warnings(boundary_specs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    warnings: list[Issue] = []
+    for spec in boundary_specs:
+        spec_path = spec.get("path")
+        if not isinstance(spec_path, str):
+            spec_path = None
+        effects = spec.get("effects")
+        if isinstance(effects, dict):
+            side_effects = effects.get("sideEffects", [])
+            if isinstance(side_effects, list):
+                for index, item in enumerate(side_effects):
+                    if not isinstance(item, dict):
+                        continue
+                    kind = item.get("kind")
+                    if isinstance(kind, str) and kind in SECURITY_SENSITIVE_EFFECT_KINDS:
+                        warnings.append(
+                            Issue(
+                                "warning",
+                                "security_sensitive_effect",
+                                f"BoundarySpec declares security-sensitive effect kind: {kind}",
+                                spec_path,
+                                f"effects.sideEffects.{index}.kind",
+                            )
+                        )
+        for section, field in (
+            ("provides", "provides.capabilities"),
+            ("requires", "requires.capabilities"),
+        ):
+            capabilities = spec.get(section)
+            if not isinstance(capabilities, list):
+                continue
+            for capability_id in capabilities:
+                if not isinstance(capability_id, str):
+                    continue
+                if capability_has_security_sensitive_token(capability_id):
+                    warnings.append(
+                        Issue(
+                            "warning",
+                            "security_sensitive_capability",
+                            (
+                                "BoundarySpec declares security-sensitive "
+                                f"{section} capability: {capability_id}"
+                            ),
+                            spec_path,
+                            field,
+                        )
+                    )
+    return [warning.to_dict() for warning in warnings]
+
+
+def capability_has_security_sensitive_token(capability_id: str) -> bool:
+    tokens = {token for token in re.split(r"[._:-]+", capability_id.lower()) if token}
+    return bool(tokens & SECURITY_SENSITIVE_CAPABILITY_TOKENS)
 
 
 def classify_inbox_status(

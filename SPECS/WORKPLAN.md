@@ -87,10 +87,10 @@ Acceptance:
   compatibility metadata.
 - [x] Summarize BoundarySpec intent, bounded context, interfaces, constraints,
   evidence, and provenance in JSON.
-- [ ] Add full BoundarySpec scope, effects, foreign artifacts, and
+- [x] Add full BoundarySpec scope, effects, foreign artifacts, and
   implementation bindings to inspect summaries.
-- [ ] Surface provenance confidence prominently in human-readable output.
-- [ ] Surface security-sensitive effects and capabilities as warnings.
+- [x] Surface provenance confidence prominently in human-readable output.
+- [x] Surface security-sensitive effects and capabilities as warnings.
 
 Acceptance:
 
