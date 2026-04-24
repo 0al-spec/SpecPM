@@ -381,6 +381,56 @@ def test_add_unique_capability_is_idempotent(tmp_path: Path) -> None:
     assert (project / "specpm.lock").read_text(encoding="utf-8") == lock_before
 
 
+def test_add_rejects_invalid_lock_before_project_mutation(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "specpm.lock").write_text("{", encoding="utf-8")
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    report = add_package("document_conversion.email_to_markdown", index_path, project)
+
+    assert report["status"] == "invalid"
+    assert report["resolved_by"] == "capability"
+    assert any(issue["code"] == "lock_json_invalid" for issue in report["errors"])
+    assert not (project / ".specpm").exists()
+
+
+def test_add_rejects_lock_conflict_before_project_mutation(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+    project.mkdir()
+    entry = indexed_email_entry(tmp_path)
+    (project / "specpm.lock").write_text(
+        json.dumps(
+            {
+                "schemaVersion": 1,
+                "packages": [
+                    {
+                        "package_id": entry["package_id"],
+                        "version": entry["version"],
+                        "source": {
+                            "digest": {
+                                "algorithm": "sha256",
+                                "value": "d" * 64,
+                            }
+                        },
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    report = add_package("document_conversion.email_to_markdown", index_path, project)
+
+    assert report["status"] == "invalid"
+    assert report["resolved_by"] == "capability"
+    assert any(issue["code"] == "lock_package_conflict" for issue in report["errors"])
+    assert not (project / ".specpm").exists()
+
+
 def test_add_selects_highest_stable_version_for_same_package(tmp_path: Path) -> None:
     index_path = tmp_path / "index.json"
     project = tmp_path / "project"
@@ -454,6 +504,19 @@ def test_add_package_path_without_source_index(tmp_path: Path) -> None:
     assert report["resolved_by"] == "path"
     assert (project / ".specpm/index.json").is_file()
     assert (project / "specpm.lock").is_file()
+
+
+def test_add_package_path_rejects_invalid_lock_before_local_index(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "specpm.lock").write_text("{", encoding="utf-8")
+
+    report = add_package(str(ROOT / "examples/email_tools"), tmp_path / "missing.json", project)
+
+    assert report["status"] == "invalid"
+    assert report["resolved_by"] == "path"
+    assert any(issue["code"] == "lock_json_invalid" for issue in report["errors"])
+    assert not (project / ".specpm").exists()
 
 
 def test_cli_add_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]

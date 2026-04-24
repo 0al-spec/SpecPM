@@ -527,7 +527,18 @@ def add_package(target: str, index_path: Path, project_dir: Path) -> dict[str, A
 
 def add_package_path(package_ref: Path, project_root: Path, target: str) -> dict[str, Any]:
     local_index = project_index_path(project_root)
-    index_report = index_package(package_ref, local_index)
+    lock_errors = validate_lock_before_project_mutation(project_root)
+    if lock_errors:
+        return add_invalid_report(
+            target,
+            None,
+            project_root,
+            lock_errors,
+            resolved_by="path",
+        )
+
+    with tempfile.TemporaryDirectory(prefix="specpm-add-") as temp_dir:
+        index_report = index_package(package_ref, Path(temp_dir) / "index.json")
     if index_report["status"] not in {"indexed", "unchanged"}:
         return {
             "status": "invalid",
@@ -690,7 +701,13 @@ def add_selected_package(
 ) -> dict[str, Any]:
     validation_errors = validate_add_package_entry(package)
     if validation_errors:
-        return add_invalid_report(target, source_index, project_root, validation_errors)
+        return add_invalid_report(
+            target,
+            source_index,
+            project_root,
+            validation_errors,
+            resolved_by=resolved_by,
+        )
     if package.get("yanked") is True:
         return add_invalid_report(
             target,
@@ -703,6 +720,18 @@ def add_selected_package(
                     f"Package is yanked: {package['package_id']}@{package['version']}",
                 )
             ],
+            resolved_by=resolved_by,
+        )
+
+    cache_entry = package_cache_entry(package)
+    lock_errors = validate_lock_before_project_mutation(project_root, package, cache_entry)
+    if lock_errors:
+        return add_invalid_report(
+            target,
+            source_index,
+            project_root,
+            lock_errors,
+            resolved_by=resolved_by,
         )
 
     local_index = project_index_path(project_root)
@@ -727,7 +756,7 @@ def add_selected_package(
         }
 
     try:
-        cache_entry = write_package_cache_entry(project_root, package)
+        write_package_cache_entry(project_root, package, cache_entry)
         lock_report = write_lock_entry(project_root, package, cache_entry)
     except OSError as exc:
         return add_invalid_report(
@@ -782,8 +811,9 @@ def add_invalid_report(
     errors: list[Issue],
     *,
     candidates: list[dict[str, Any]] | None = None,
+    resolved_by: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    report = {
         "status": "invalid",
         "target": target,
         "project": str(project_root),
@@ -794,6 +824,9 @@ def add_invalid_report(
         "candidates": candidates or [],
         "errors": [issue.to_dict() for issue in errors],
     }
+    if resolved_by is not None:
+        report["resolved_by"] = resolved_by
+    return report
 
 
 def index_directory_package(root: Path, index_path: Path, *, source_kind: str) -> dict[str, Any]:
@@ -2073,6 +2106,36 @@ def project_index_path(project_root: Path) -> Path:
     return project_root / ".specpm/index.json"
 
 
+def validate_lock_before_project_mutation(
+    project_root: Path,
+    package: dict[str, Any] | None = None,
+    cache_entry: str | None = None,
+) -> list[Issue]:
+    lock_data, lock_errors = load_lock(project_root / "specpm.lock")
+    if lock_errors or package is None or cache_entry is None:
+        return lock_errors
+
+    lock_entry = build_lock_entry(package, cache_entry)
+    for existing in lock_data["packages"]:
+        if (
+            existing.get("package_id") == lock_entry["package_id"]
+            and existing.get("version") == lock_entry["version"]
+        ):
+            existing_digest = get_field(existing, "source.digest.value")
+            new_digest = get_field(lock_entry, "source.digest.value")
+            if existing_digest != new_digest:
+                return [
+                    Issue(
+                        "error",
+                        "lock_package_conflict",
+                        "Lockfile already contains this package id and version "
+                        "with a different digest.",
+                        str(project_root / "specpm.lock"),
+                    )
+                ]
+    return []
+
+
 def load_lock(lock_path: Path) -> tuple[dict[str, Any], list[Issue]]:
     if not lock_path.exists():
         return empty_lock(), []
@@ -2193,10 +2256,16 @@ def build_lock_entry(package: dict[str, Any], cache_entry: str) -> dict[str, Any
     }
 
 
-def write_package_cache_entry(project_root: Path, package: dict[str, Any]) -> str:
+def package_cache_entry(package: dict[str, Any]) -> str:
     package_id = package["package_id"]
     version = package["version"]
-    cache_rel = f".specpm/packages/{package_id}/{version}/package.json"
+    return f".specpm/packages/{package_id}/{version}/package.json"
+
+
+def write_package_cache_entry(
+    project_root: Path, package: dict[str, Any], cache_entry: str
+) -> None:
+    cache_rel = cache_entry
     cache_path = project_root / cache_rel
     write_json_file(
         cache_path,
@@ -2205,7 +2274,6 @@ def write_package_cache_entry(project_root: Path, package: dict[str, Any]) -> st
             "package": package,
         },
     )
-    return cache_rel
 
 
 def validate_add_package_entry(package: dict[str, Any]) -> list[Issue]:
