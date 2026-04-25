@@ -225,7 +225,7 @@ def handle_yank(args: argparse.Namespace) -> int:
         print_json(report)
     else:
         print_index_lifecycle(report)
-    return 0 if report["status"] in {"yanked", "unyanked", "unchanged"} else 1
+    return 0 if report["status"] in {"yanked", "unchanged"} else 1
 
 
 def handle_unyank(args: argparse.Namespace) -> int:
@@ -234,7 +234,7 @@ def handle_unyank(args: argparse.Namespace) -> int:
         print_json(report)
     else:
         print_index_lifecycle(report)
-    return 0 if report["status"] in {"yanked", "unyanked", "unchanged"} else 1
+    return 0 if report["status"] in {"unyanked", "unchanged"} else 1
 
 
 def handle_diff(args: argparse.Namespace) -> int:
