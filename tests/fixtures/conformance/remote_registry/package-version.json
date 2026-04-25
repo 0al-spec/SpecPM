@@ -1,0 +1,37 @@
+{
+  "apiVersion": "specpm.registry/v0",
+  "schemaVersion": 1,
+  "kind": "RemotePackageVersion",
+  "status": "ok",
+  "package": {
+    "package_id": "document_conversion.email_tools",
+    "name": "Email Tools",
+    "version": "0.1.0",
+    "summary": "Boundary specifications for email document conversion.",
+    "license": "MIT",
+    "provided_capabilities": [
+      "document_conversion.email_to_markdown"
+    ],
+    "required_capabilities": [],
+    "compatibility": {
+      "platforms": [
+        "any"
+      ],
+      "languages": []
+    },
+    "state": {
+      "yanked": false,
+      "deprecated": false
+    },
+    "source": {
+      "kind": "archive",
+      "format": "specpm-tar-gzip-v0",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "size": 4096,
+      "url": "https://registry.example.invalid/v0/packages/document_conversion.email_tools/versions/0.1.0/archive"
+    }
+  }
+}

@@ -23,11 +23,13 @@ scope:
     - Diff package versions using conservative structural classification.
     - Inspect local SpecGraph export inbox bundles.
     - Publish portable conformance artifacts for local implementation behavior.
+    - Document the post-MVP read-only remote registry API contract.
+    - Publish static conformance fixtures for remote registry payload shape.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
   excludes:
-    - Remote registry hosting.
+    - Remote registry service or client runtime.
     - specpm publish.
     - Remote package yanking governance.
     - Package signing and trust policy.
@@ -70,6 +72,12 @@ provides:
     - id: specpm.conformance.local_suite
       role: secondary
       summary: Provide repository-relative conformance fixtures for validation and local registry lifecycle behavior.
+    - id: specpm.registry.remote_api_contract
+      role: secondary
+      summary: Document the post-MVP read-only remote registry API contract without adding network runtime behavior.
+    - id: specpm.conformance.remote_registry_payloads
+      role: secondary
+      summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
     - id: specpm.documentation.docc_site
       role: secondary
       summary: Build a DocC documentation site for SpecPM contracts and package-manager boundaries.
@@ -254,6 +262,19 @@ evidence:
     path: specs/CONFORMANCE.md
     supports:
       - specpm.conformance.local_suite
+      - specpm.conformance.remote_registry_payloads
+  - id: conformance_fixtures
+    kind: test
+    path: tests/fixtures/conformance
+    supports:
+      - specpm.conformance.local_suite
+      - specpm.conformance.remote_registry_payloads
+  - id: remote_registry_api
+    kind: documentation
+    path: specs/REMOTE_REGISTRY_API.md
+    supports:
+      - specpm.registry.remote_api_contract
+      - specpm.conformance.remote_registry_payloads
   - id: rfc_coverage
     kind: documentation
     path: specs/RFC_0001_COVERAGE.md
@@ -306,6 +327,7 @@ implementationBindings:
       border:
         - specs/JSON_CONTRACTS.md
         - specs/CONFORMANCE.md
+        - specs/REMOTE_REGISTRY_API.md
   - id: tests
     path: tests/test_core.py
     files:

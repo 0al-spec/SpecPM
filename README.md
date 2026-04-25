@@ -80,6 +80,9 @@ Viewer-facing JSON contracts and golden fixtures are documented in
 
 Portable conformance artifacts are documented in `specs/CONFORMANCE.md`.
 
+The post-MVP remote registry API contract is documented in
+`specs/REMOTE_REGISTRY_API.md`.
+
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.
 
