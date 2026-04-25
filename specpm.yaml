@@ -24,6 +24,8 @@ index:
       - specpm.package.diff
       - specpm.specgraph.inbox
       - specpm.conformance.local_suite
+      - specpm.registry.remote_api_contract
+      - specpm.conformance.remote_registry_payloads
       - specpm.documentation.docc_site
       - specpm.cli.public_surface
       - specpm.public_api.core_functions

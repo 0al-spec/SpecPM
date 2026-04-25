@@ -1,0 +1,11 @@
+{
+  "apiVersion": "specpm.registry/v0",
+  "schemaVersion": 1,
+  "kind": "RemoteRegistryError",
+  "status": "not_found",
+  "error": {
+    "code": "package_not_found",
+    "message": "Package not found: document_conversion.missing",
+    "target": "document_conversion.missing"
+  }
+}

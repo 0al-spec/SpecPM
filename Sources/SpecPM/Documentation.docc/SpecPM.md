@@ -32,6 +32,7 @@ The canonical source files remain in the repository:
 - `specs/WORKPLAN.md`
 - `specs/JSON_CONTRACTS.md`
 - `specs/CONFORMANCE.md`
+- `specs/REMOTE_REGISTRY_API.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `RFC/SpecGraph-RFC-0001.md`
 

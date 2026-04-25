@@ -281,9 +281,33 @@ Acceptance:
 - The conformance artifacts do not introduce remote registry, signing, graph
   reasoning, artifact generation, or agent runtime behavior.
 
+## Phase 14. Remote Registry API Contract
+
+- [x] Define a read-only remote registry API v0 contract.
+- [x] Document package metadata lookup.
+- [x] Document package version lookup.
+- [x] Document exact capability search.
+- [x] Document yanked and deprecated version state.
+- [x] Document stable registry error payloads.
+- [x] Add static JSON fixtures for representative registry responses.
+- [x] Add conformance cases that validate registry payload shape without
+  starting a server or performing network requests.
+
+Acceptance:
+
+- The remote registry API contract is documented as post-MVP.
+- The contract does not implement `specpm publish`.
+- The contract does not implement a remote client, remote server, auth, signing,
+  namespace governance, dependency solving, semantic search, or remote yanking
+  mutation workflow.
+- Static fixtures cover package metadata, package version, exact capability
+  search, yanked version visibility, and not-found errors.
+- Tests fail if documented remote registry payload fixtures drift from the
+  expected contract shape.
+
 ## Post-MVP Tracks
 
-- Remote registry API.
+- Remote registry service and client implementation.
 - `specpm publish`.
 - Remote package yanking governance.
 - Package signing and trust policies.

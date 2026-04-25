@@ -30,7 +30,19 @@ ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
 GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
-CONFORMANCE_CASE_KINDS = {"validate_package", "registry_lifecycle"}
+CONFORMANCE_CASE_KINDS = {
+    "registry_lifecycle",
+    "remote_registry_payload",
+    "validate_package",
+}
+REMOTE_REGISTRY_API_VERSION = "specpm.registry/v0"
+REMOTE_REGISTRY_PAYLOAD_KINDS = {
+    "RemoteCapabilitySearch",
+    "RemotePackage",
+    "RemotePackageVersion",
+    "RemoteRegistryError",
+}
+REMOTE_REGISTRY_STATUSES = {"invalid", "not_found", "ok"}
 
 
 def write_index_payload(index_path: Path, packages: list[dict[str, Any]]) -> None:
@@ -83,6 +95,74 @@ def load_conformance_suite() -> dict[str, Any]:
     case_kinds = {case["kind"] for case in suite["cases"]}
     assert case_kinds <= CONFORMANCE_CASE_KINDS
     return suite
+
+
+def assert_sha256_digest(value: dict[str, Any]) -> None:
+    assert value["algorithm"] == "sha256"
+    assert isinstance(value["value"], str)
+    assert len(value["value"]) == 64
+    int(value["value"], 16)
+
+
+def assert_remote_registry_source(value: dict[str, Any]) -> None:
+    assert value["kind"] == "archive"
+    assert value["format"] == "specpm-tar-gzip-v0"
+    assert_sha256_digest(value["digest"])
+    assert isinstance(value["size"], int)
+    assert value["size"] > 0
+    assert isinstance(value["url"], str)
+    assert value["url"].startswith("https://registry.example.invalid/")
+
+
+def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
+    assert payload["apiVersion"] == REMOTE_REGISTRY_API_VERSION
+    assert payload["schemaVersion"] == 1
+    assert payload["kind"] in REMOTE_REGISTRY_PAYLOAD_KINDS
+    assert payload["status"] in REMOTE_REGISTRY_STATUSES
+
+    if payload["kind"] == "RemotePackage":
+        package = payload["package"]
+        assert isinstance(package["package_id"], str)
+        assert isinstance(package["name"], str)
+        assert isinstance(package["capabilities"], list)
+        assert isinstance(package["versions"], list)
+        for version in package["versions"]:
+            assert isinstance(version["version"], str)
+            assert isinstance(version["yanked"], bool)
+            assert isinstance(version["deprecated"], bool)
+        return
+
+    if payload["kind"] == "RemotePackageVersion":
+        package = payload["package"]
+        assert isinstance(package["package_id"], str)
+        assert isinstance(package["name"], str)
+        assert isinstance(package["version"], str)
+        assert isinstance(package["provided_capabilities"], list)
+        assert isinstance(package["required_capabilities"], list)
+        assert isinstance(package["state"]["yanked"], bool)
+        assert isinstance(package["state"]["deprecated"], bool)
+        assert_remote_registry_source(package["source"])
+        return
+
+    if payload["kind"] == "RemoteCapabilitySearch":
+        assert payload["query"]["match"] == "exact"
+        assert isinstance(payload["result_count"], int)
+        assert payload["result_count"] == len(payload["results"])
+        for result in payload["results"]:
+            assert isinstance(result["package_id"], str)
+            assert isinstance(result["version"], str)
+            assert isinstance(result["matched_capability"], str)
+            assert isinstance(result["provided_capabilities"], list)
+            assert isinstance(result["required_capabilities"], list)
+            assert isinstance(result["yanked"], bool)
+            assert isinstance(result["deprecated"], bool)
+            assert_remote_registry_source(result["source"])
+        return
+
+    assert payload["kind"] == "RemoteRegistryError"
+    assert payload["status"] in {"invalid", "not_found"}
+    assert isinstance(payload["error"]["code"], str)
+    assert isinstance(payload["error"]["message"], str)
 
 
 def cli_command_names() -> set[str]:
@@ -340,6 +420,36 @@ def test_conformance_registry_lifecycle_cases(tmp_path: Path) -> None:
         assert issue_codes(add_yanked["errors"]) == set(expected["add_yanked_error_codes"])
         assert unyanked["status"] == expected["unyank_status"], case["id"]
         assert add_unyanked["status"] == expected["add_unyanked_status"], case["id"]
+
+
+def test_conformance_remote_registry_payload_cases() -> None:
+    suite = load_conformance_suite()
+    remote_cases = [case for case in suite["cases"] if case["kind"] == "remote_registry_payload"]
+    assert remote_cases
+
+    fixture_root = (ROOT / "tests/fixtures/conformance/remote_registry").resolve()
+    for case in remote_cases:
+        payload_path = (ROOT / case["payload"]).resolve()
+        assert payload_path.is_relative_to(fixture_root), case["id"]
+        payload = json.loads(payload_path.read_text(encoding="utf-8"))
+        assert isinstance(payload, dict), case["id"]
+        assert_remote_registry_payload_shape(payload)
+
+        expected = case["expected"]
+        assert payload["kind"] == expected["kind"], case["id"]
+        assert payload["status"] == expected["status"], case["id"]
+        if payload["kind"] == "RemoteRegistryError":
+            assert payload["error"]["code"] == expected["error_code"], case["id"]
+        if "package_id" in expected:
+            assert payload["package"]["package_id"] == expected["package_id"], case["id"]
+        if "version" in expected:
+            assert payload["package"]["version"] == expected["version"], case["id"]
+        if "yanked" in expected:
+            assert payload["package"]["state"]["yanked"] is expected["yanked"], case["id"]
+        if "capability_id" in expected:
+            assert payload["query"]["capability_id"] == expected["capability_id"], case["id"]
+        if "result_count" in expected:
+            assert payload["result_count"] == expected["result_count"], case["id"]
 
 
 def test_inbox_lists_specgraph_export() -> None:

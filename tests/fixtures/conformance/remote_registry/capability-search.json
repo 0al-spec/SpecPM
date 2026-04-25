@@ -1,0 +1,37 @@
+{
+  "apiVersion": "specpm.registry/v0",
+  "schemaVersion": 1,
+  "kind": "RemoteCapabilitySearch",
+  "status": "ok",
+  "query": {
+    "capability_id": "document_conversion.email_to_markdown",
+    "match": "exact"
+  },
+  "result_count": 1,
+  "results": [
+    {
+      "package_id": "document_conversion.email_tools",
+      "version": "0.1.0",
+      "name": "Email Tools",
+      "summary": "Boundary specifications for email document conversion.",
+      "matched_capability": "document_conversion.email_to_markdown",
+      "provided_capabilities": [
+        "document_conversion.email_to_markdown"
+      ],
+      "required_capabilities": [],
+      "license": "MIT",
+      "yanked": false,
+      "deprecated": false,
+      "source": {
+        "kind": "archive",
+        "format": "specpm-tar-gzip-v0",
+        "digest": {
+          "algorithm": "sha256",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "size": 4096,
+        "url": "https://registry.example.invalid/v0/packages/document_conversion.email_tools/versions/0.1.0/archive"
+      }
+    }
+  ]
+}

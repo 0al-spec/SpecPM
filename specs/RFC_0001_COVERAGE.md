@@ -29,7 +29,8 @@ intentionally left for post-MVP tracks.
 | Add / local project state | Implemented | `specpm.lock`, `.specpm/index.json`, and `.specpm/packages/.../package.json` are deterministic local metadata. |
 | Inspect | Implemented | Package, BoundarySpec, evidence, effects, compatibility, provenance, implementation binding, and contract warning summaries are exposed. |
 | Structural diff | Implemented | Diff detects capability, required capability, interface, MUST constraint, package metadata, and compatibility changes with conservative classification. |
-| Conformance artifacts | Implemented | `tests/fixtures/conformance/specpm-conformance-v0.json` covers validation outcomes and local registry lifecycle behavior. |
+| Conformance artifacts | Implemented | `tests/fixtures/conformance/specpm-conformance-v0.json` covers validation outcomes, local registry lifecycle behavior, and static remote registry payload shape. |
+| Remote registry API contract | Documented post-MVP contract | Read-only JSON payloads are documented in `specs/REMOTE_REGISTRY_API.md`; static conformance fixtures validate shape only. |
 | Security handling | Implemented for MVP | Packages are untrusted data; path traversal, symlinks, unsafe archive members, malformed YAML/JSON, and script execution are blocked or avoided. |
 | SpecGraph inbox | Implemented as local bridge | `.specgraph_exports/` bundles are listed and inspected without mutating canonical SpecGraph files. This extends the local MVP bridge. |
 
@@ -38,7 +39,7 @@ intentionally left for post-MVP tracks.
 | RFC area | Status | Reason |
 | --- | --- | --- |
 | `specpm publish` | Post-MVP | Remote registry hosting, immutability enforcement, and governance are outside the local-first MVP. |
-| Remote registry API | Post-MVP | The MVP uses a local file-backed index only. |
+| Remote registry service/client runtime | Post-MVP | The MVP uses a local file-backed index only. The read-only API contract is documented, but no network runtime exists. |
 | Package signing / trust web | Post-MVP | Signing, trust policy, and revocation are explicitly non-goals for the MVP. |
 | Full dependency solving | Post-MVP | `add` resolves one exact package or capability at a time. |
 | Keyword/fuzzy/semantic search | Post-MVP for normative resolution | Exact capability ID matching is the only normative search path. |
@@ -49,6 +50,26 @@ intentionally left for post-MVP tracks.
 | Derived artifact generation and artifact evals | Post-MVP | SpecPM is the package substrate for SpecGraph, not an artifact generator or eval runtime. |
 | Package-provided prompt execution | Post-MVP / rejected for core | Package content is untrusted data and cannot command the host. |
 | Stable JSON contract for derived artifact metadata | Post-MVP | No derived artifact fields are part of the MVP JSON contract. |
+
+## Post-MVP Contract: Remote Registry API
+
+The read-only remote registry API v0 contract is documented in
+`specs/REMOTE_REGISTRY_API.md`.
+
+The contract covers:
+
+- package metadata lookup;
+- package version lookup;
+- exact capability search;
+- yanked and deprecated version state;
+- stable error payloads.
+
+The conformance suite includes static `remote_registry_payload` cases for these
+payloads. These cases validate JSON shape only. They do not start a remote
+registry service, perform HTTP requests, download archives, publish packages, or
+mutate registry state.
+
+Runtime implementation remains deferred.
 
 ## Deferred: Derived Artifact Generation and Artifact Evals
 
@@ -99,6 +120,7 @@ artifact generator, eval runner, or agent runtime.
 - CLI exit code contract: `specs/CLI_EXIT_CODES.md`
 - Viewer JSON contracts: `specs/JSON_CONTRACTS.md`
 - Conformance artifacts: `specs/CONFORMANCE.md`
+- Remote registry API contract: `specs/REMOTE_REGISTRY_API.md`
 - Golden JSON fixtures: `tests/fixtures/golden/`
 - End-to-end and hardening tests: `tests/test_core.py`
 - MVP example package: `examples/email_tools/`

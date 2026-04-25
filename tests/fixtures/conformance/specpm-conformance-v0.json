@@ -79,6 +79,61 @@
         "unyank_status": "unyanked",
         "add_unyanked_status": "added"
       }
+    },
+    {
+      "id": "remote_registry.package_metadata",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/package-metadata.json",
+      "expected": {
+        "kind": "RemotePackage",
+        "status": "ok",
+        "package_id": "document_conversion.email_tools"
+      }
+    },
+    {
+      "id": "remote_registry.package_version",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/package-version.json",
+      "expected": {
+        "kind": "RemotePackageVersion",
+        "status": "ok",
+        "package_id": "document_conversion.email_tools",
+        "version": "0.1.0",
+        "yanked": false
+      }
+    },
+    {
+      "id": "remote_registry.capability_search",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/capability-search.json",
+      "expected": {
+        "kind": "RemoteCapabilitySearch",
+        "status": "ok",
+        "capability_id": "document_conversion.email_to_markdown",
+        "result_count": 1
+      }
+    },
+    {
+      "id": "remote_registry.yanked_version",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/yanked-version.json",
+      "expected": {
+        "kind": "RemotePackageVersion",
+        "status": "ok",
+        "package_id": "document_conversion.email_tools",
+        "version": "0.1.0",
+        "yanked": true
+      }
+    },
+    {
+      "id": "remote_registry.error_not_found",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/error-not-found.json",
+      "expected": {
+        "kind": "RemoteRegistryError",
+        "status": "not_found",
+        "error_code": "package_not_found"
+      }
     }
   ]
 }

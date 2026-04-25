@@ -18,6 +18,7 @@ Completed areas include:
 - release hardening;
 - local registry lifecycle;
 - conformance test artifacts.
+- remote registry API contract documentation and static payload fixtures.
 
 ## Post-MVP Tracks
 
@@ -35,20 +36,14 @@ Current post-MVP tracks include:
 - cross-repo PR workflow automation with SpecGraph;
 - SpecGraph feedback promotion from observed downstream adoption.
 
-## Recommended Next Documentation Track
+## Recommended Next Track
 
-The next useful documentation increment is a read-only remote registry API
-contract:
+The read-only remote registry API contract is documented. The next useful
+runtime increment is a remote registry service/client design that consumes that
+contract without adding publish, signing, or namespace governance prematurely.
 
-- package metadata lookup;
-- version lookup;
-- exact capability search metadata;
-- yanked and deprecated state;
-- stable error and status vocabulary;
-- static conformance fixtures without network tests.
-
-`specpm publish`, auth, signing, namespace governance, and remote service
-implementation should follow after the remote API contract is stable.
+`specpm publish`, auth, signing, namespace governance, and remote yanking
+mutation workflows remain separate follow-up tracks.
 
 ## References
 
