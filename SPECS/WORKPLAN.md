@@ -240,11 +240,31 @@ Acceptance:
 - README has enough commands for a new user to validate and inspect a package.
 - The MVP does not require network access.
 
+## Phase 12. Local Registry Lifecycle
+
+- [x] Add `specpm yank <package-id@version> --index <path> --reason <reason>`.
+- [x] Add `specpm unyank <package-id@version> --index <path>`.
+- [x] Preserve yanked packages in exact search results with `yanked: true`.
+- [x] Keep `specpm add` rejection for yanked packages.
+- [x] Make yank and unyank idempotent when the index is already in the requested
+  state.
+- [x] Emit stable JSON lifecycle reports.
+- [x] Document lifecycle command exit codes and JSON contracts.
+
+Acceptance:
+
+- Yanking an indexed package sets `yanked: true` and stores a deterministic
+  reason without removing the package from the local index.
+- Unyanking clears local yanked metadata and allows `specpm add` to select the
+  package again.
+- Invalid package refs and missing index entries produce structured errors.
+- The lifecycle commands work through Docker and local Python execution.
+
 ## Post-MVP Tracks
 
 - Remote registry API.
 - `specpm publish`.
-- Package yanking semantics.
+- Remote package yanking governance.
 - Package signing and trust policies.
 - Namespace governance.
 - Natural-language or semantic capability search.

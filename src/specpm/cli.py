@@ -16,7 +16,9 @@ from specpm.core import (
     list_inbox,
     pack_package,
     search_index,
+    unyank_index_package,
     validate_package,
+    yank_index_package,
 )
 
 
@@ -77,6 +79,19 @@ def build_parser() -> argparse.ArgumentParser:
     add.add_argument("--project", default=".")
     add.add_argument("--json", action="store_true", help="Emit a stable JSON add report.")
     add.set_defaults(handler=handle_add)
+
+    yank = subparsers.add_parser("yank", help="Mark an indexed package as yanked.")
+    yank.add_argument("package_ref", help="Package reference in package_id@version form.")
+    yank.add_argument("--index", default=".specpm/index.json")
+    yank.add_argument("--reason", required=True, help="Human-readable yanking reason.")
+    yank.add_argument("--json", action="store_true", help="Emit a stable JSON yank report.")
+    yank.set_defaults(handler=handle_yank)
+
+    unyank = subparsers.add_parser("unyank", help="Remove the yanked flag from an indexed package.")
+    unyank.add_argument("package_ref", help="Package reference in package_id@version form.")
+    unyank.add_argument("--index", default=".specpm/index.json")
+    unyank.add_argument("--json", action="store_true", help="Emit a stable JSON unyank report.")
+    unyank.set_defaults(handler=handle_unyank)
 
     diff = subparsers.add_parser("diff", help="Diff two SpecPackage directories.")
     diff.add_argument("old_package")
@@ -204,6 +219,24 @@ def handle_add(args: argparse.Namespace) -> int:
     return 0 if report["status"] in {"added", "unchanged"} else 1
 
 
+def handle_yank(args: argparse.Namespace) -> int:
+    report = yank_index_package(args.package_ref, Path(args.index), args.reason)
+    if args.json:
+        print_json(report)
+    else:
+        print_index_lifecycle(report)
+    return 0 if report["status"] in {"yanked", "unchanged"} else 1
+
+
+def handle_unyank(args: argparse.Namespace) -> int:
+    report = unyank_index_package(args.package_ref, Path(args.index))
+    if args.json:
+        print_json(report)
+    else:
+        print_index_lifecycle(report)
+    return 0 if report["status"] in {"unyanked", "unchanged"} else 1
+
+
 def handle_diff(args: argparse.Namespace) -> int:
     report = diff_packages(Path(args.old_package), Path(args.new_package))
     if args.json:
@@ -266,6 +299,18 @@ def handle_inbox_inspect(args: argparse.Namespace) -> int:
 
 def print_json(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, indent=2, sort_keys=True))
+
+
+def print_index_lifecycle(report: dict[str, Any]) -> None:
+    if report["status"] in {"yanked", "unyanked", "unchanged"}:
+        package = report["package"]
+        print(
+            f"{report['status']}: {package['package_id']} {package['version']} -> {report['index']}"
+        )
+        return
+    print(f"{report['action']} failed: {report['target']}", file=sys.stderr)
+    for issue in report.get("errors", []):
+        print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
 
 
 def print_validation(report: dict[str, Any], stream: TextIO | None = None) -> None:

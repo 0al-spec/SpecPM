@@ -19,7 +19,9 @@ from specpm.core import (
     list_inbox,
     pack_package,
     search_index,
+    unyank_index_package,
     validate_package,
+    yank_index_package,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -411,6 +413,22 @@ def test_cli_exit_code_contract_for_success_and_failure_paths(tmp_path: Path, ca
             "--json",
         ],
         [
+            "yank",
+            "document_conversion.email_tools@0.1.0",
+            "--index",
+            str(index_path),
+            "--reason",
+            "exit code smoke",
+            "--json",
+        ],
+        [
+            "unyank",
+            "document_conversion.email_tools@0.1.0",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        [
             "add",
             "document_conversion.email_to_markdown",
             "--index",
@@ -438,6 +456,22 @@ def test_cli_exit_code_contract_for_success_and_failure_paths(tmp_path: Path, ca
         [
             "search",
             "BadCapability",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        [
+            "yank",
+            "BadPackage@0.1.0",
+            "--index",
+            str(index_path),
+            "--reason",
+            "invalid smoke",
+            "--json",
+        ],
+        [
+            "unyank",
+            "BadPackage@0.1.0",
             "--index",
             str(index_path),
             "--json",
@@ -523,6 +557,38 @@ def test_cli_end_to_end_local_package_workflow(tmp_path: Path, capsys) -> None: 
         ],
         capsys,
     )
+    yanked = run_cli_json(
+        [
+            "yank",
+            "document_conversion.email_tools@0.1.0",
+            "--index",
+            str(index_path),
+            "--reason",
+            "end-to-end lifecycle smoke",
+            "--json",
+        ],
+        capsys,
+    )
+    yanked_search = run_cli_json(
+        [
+            "search",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        capsys,
+    )
+    unyanked = run_cli_json(
+        [
+            "unyank",
+            "document_conversion.email_tools@0.1.0",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        capsys,
+    )
     added = run_cli_json(
         [
             "add",
@@ -559,6 +625,9 @@ def test_cli_end_to_end_local_package_workflow(tmp_path: Path, capsys) -> None: 
     assert indexed["status"] == "indexed"
     assert indexed["entry"]["source"]["kind"] == "archive"
     assert search["result_count"] == 1
+    assert yanked["status"] == "yanked"
+    assert yanked_search["results"][0]["yanked"] is True
+    assert unyanked["status"] == "unyanked"
     assert added["status"] == "added"
     assert (project / "specpm.lock").is_file()
     assert inbox_list["bundle_count"] == 1
@@ -1065,6 +1134,73 @@ def test_add_exact_package_ref_rejects_yanked_package(tmp_path: Path) -> None:
     assert not (project / "specpm.lock").exists()
 
 
+def test_yank_index_package_marks_entry_and_blocks_add(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    report = yank_index_package(
+        "document_conversion.email_tools@0.1.0",
+        index_path,
+        "superseded by a local smoke test",
+    )
+    search = search_index("document_conversion.email_to_markdown", index_path)
+    add_report = add_package("document_conversion.email_tools@0.1.0", index_path, project)
+    index_payload = json.loads(index_path.read_text(encoding="utf-8"))
+    package = index_payload["packages"][0]
+
+    assert report["status"] == "yanked"
+    assert report["package"]["yanked"] is True
+    assert report["package"]["yank"]["reason"] == "superseded by a local smoke test"
+    assert package["yanked"] is True
+    assert package["yank"]["reason"] == "superseded by a local smoke test"
+    assert search["results"][0]["yanked"] is True
+    assert add_report["status"] == "invalid"
+    assert any(issue["code"] == "package_yanked" for issue in add_report["errors"])
+
+
+def test_yank_is_idempotent_and_unyank_reenables_add(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    first = yank_index_package(
+        "document_conversion.email_tools@0.1.0",
+        index_path,
+        "temporary local yank",
+    )
+    second = yank_index_package(
+        "document_conversion.email_tools@0.1.0",
+        index_path,
+        "temporary local yank",
+    )
+    unyanked = unyank_index_package("document_conversion.email_tools@0.1.0", index_path)
+    add_report = add_package("document_conversion.email_to_markdown", index_path, project)
+    index_payload = json.loads(index_path.read_text(encoding="utf-8"))
+    package = index_payload["packages"][0]
+
+    assert first["status"] == "yanked"
+    assert second["status"] == "unchanged"
+    assert unyanked["status"] == "unyanked"
+    assert package["yanked"] is False
+    assert "yank" not in package
+    assert add_report["status"] == "added"
+
+
+def test_yank_missing_package_ref_is_invalid(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    report = yank_index_package(
+        "document_conversion.email_tools@9.9.9",
+        index_path,
+        "missing package",
+    )
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "package_ref_not_found" for issue in report["errors"])
+
+
 def test_add_rejects_corrupted_index_package_entry(tmp_path: Path) -> None:
     index_path = tmp_path / "index.json"
     write_index_payload(
@@ -1137,6 +1273,40 @@ def test_cli_add_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untype
     assert exit_code == 0
     assert payload["status"] == "added"
     assert payload["package"]["package_id"] == "document_conversion.email_tools"
+
+
+def test_cli_yank_and_unyank_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    yanked = run_cli_json(
+        [
+            "yank",
+            "document_conversion.email_tools@0.1.0",
+            "--index",
+            str(index_path),
+            "--reason",
+            "cli lifecycle smoke",
+            "--json",
+        ],
+        capsys,
+    )
+    unyanked = run_cli_json(
+        [
+            "unyank",
+            "document_conversion.email_tools@0.1.0",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        capsys,
+    )
+
+    assert yanked["status"] == "yanked"
+    assert yanked["package"]["yanked"] is True
+    assert yanked["package"]["yank"]["reason"] == "cli lifecycle smoke"
+    assert unyanked["status"] == "unyanked"
+    assert unyanked["package"]["yanked"] is False
 
 
 def test_diff_identical_package_is_unchanged() -> None:
