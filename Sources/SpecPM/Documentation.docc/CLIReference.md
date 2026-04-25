@@ -66,6 +66,18 @@ specpm inbox inspect <package-id> [--root .specgraph_exports] [--json]
 Inbox commands inspect local SpecGraph export bundles without mutating canonical
 SpecGraph state.
 
+## Remote Registry Metadata
+
+```bash
+specpm remote package <package-id> --registry <url> [--json]
+specpm remote version <package-id@version> --registry <url> [--json]
+specpm remote search <capability-id> --registry <url> [--json]
+```
+
+Remote commands are explicit read-only metadata clients for the post-MVP
+registry contract. They do not download archives, publish packages, mutate
+remote state, or execute package content.
+
 ## Exit Codes
 
 The CLI exit code contract is documented in `specs/CLI_EXIT_CODES.md`.

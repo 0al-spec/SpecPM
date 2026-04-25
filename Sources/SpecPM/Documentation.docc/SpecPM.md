@@ -21,6 +21,7 @@ The local MVP supports:
 - local yank and unyank lifecycle state;
 - structural diff;
 - SpecGraph inbox inspection for `.specgraph_exports/` bundles;
+- read-only remote registry metadata lookup;
 - viewer-facing JSON contracts and portable conformance artifacts.
 
 ## Source Documents

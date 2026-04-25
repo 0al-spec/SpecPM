@@ -8,13 +8,14 @@ Scope: post-MVP read-only registry contract
 
 This document defines the first remote registry API contract for SpecPM.
 
-The contract is intentionally docs/conformance-first. It describes stable JSON
-payloads and static conformance fixtures before SpecPM implements a remote
-client, remote server, `specpm publish`, authentication, signing, namespace
-governance, or remote yanking workflows.
+The contract started docs/conformance-first. It describes stable JSON payloads
+and static conformance fixtures before SpecPM implements a remote server,
+`specpm publish`, authentication, signing, namespace governance, or remote
+yanking workflows.
 
 SpecPM remains local-first for the MVP. The remote registry API is a post-MVP
-contract that downstream services and future SpecPM clients can implement.
+contract that downstream services and SpecPM read-only metadata clients can
+implement.
 
 ## Boundary
 
@@ -29,7 +30,6 @@ The remote registry API contract defines read-only discovery surfaces:
 The contract does not define:
 
 - remote registry server implementation;
-- SpecPM CLI network behavior;
 - `specpm publish`;
 - package upload flows;
 - remote package yanking mutation flows;
@@ -42,6 +42,24 @@ The contract does not define:
 
 Package content remains untrusted data. A registry may describe packages and
 desired downstream outputs, but package content cannot command the host.
+
+## Read-Only Client Surface
+
+SpecPM may provide explicit read-only client commands for this contract:
+
+```bash
+specpm remote package <package-id> --registry <url> [--json]
+specpm remote version <package-id@version> --registry <url> [--json]
+specpm remote search <capability-id> --registry <url> [--json]
+```
+
+These commands fetch metadata only. They do not download package archives,
+install packages, mutate local project state, publish packages, authenticate,
+sign packages, execute package content, or perform remote yanking workflows.
+
+Remote client commands MUST validate package IDs, package refs, capability IDs,
+registry URLs, timeouts, and response payload shape before returning a
+successful machine-readable report.
 
 ## Transport
 
@@ -224,7 +242,9 @@ tests/fixtures/conformance/remote_registry/
 
 The suite manifest references those fixtures with `remote_registry_payload`
 cases. These cases validate JSON shape only. They do not start a server, perform
-HTTP requests, download package archives, or mutate registry state.
+HTTP requests, download package archives, or mutate registry state. Client tests
+may use fixture-backed HTTP fetch stubs so the repository test suite does not
+require a live registry service.
 
 ## Security Considerations
 

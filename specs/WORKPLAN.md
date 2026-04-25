@@ -305,9 +305,35 @@ Acceptance:
 - Tests fail if documented remote registry payload fixtures drift from the
   expected contract shape.
 
+## Phase 15. Read-Only Remote Registry Client
+
+- [x] Add `specpm remote package <package-id> --registry <url>`.
+- [x] Add `specpm remote version <package-id@version> --registry <url>`.
+- [x] Add `specpm remote search <capability-id> --registry <url>`.
+- [x] Fetch only explicit read-only registry metadata endpoints.
+- [x] Validate remote registry payload shape before returning a successful
+  report.
+- [x] Return stable JSON client reports for `ok`, `not_found`, and `invalid`
+  outcomes.
+- [x] Reject invalid package IDs, package refs, capability IDs, registry URLs,
+  and timeouts before network access.
+- [x] Keep archive download, local install/cache, publish, auth, signing,
+  namespace governance, remote yanking mutation, and semantic search out of
+  scope.
+
+Acceptance:
+
+- Remote package, version, and exact capability search commands produce stable
+  JSON reports.
+- Remote error payloads remain machine-readable and produce non-zero CLI exits.
+- Client tests use fixture-backed HTTP fetch stubs and do not require a live
+  registry service.
+- The client never executes package content and never downloads package
+  archives as a side effect of reading metadata.
+
 ## Post-MVP Tracks
 
-- Remote registry service and client implementation.
+- Remote registry service implementation.
 - `specpm publish`.
 - Remote package yanking governance.
 - Package signing and trust policies.

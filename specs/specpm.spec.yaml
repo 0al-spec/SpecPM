@@ -25,12 +25,14 @@ scope:
     - Publish portable conformance artifacts for local implementation behavior.
     - Document the post-MVP read-only remote registry API contract.
     - Publish static conformance fixtures for remote registry payload shape.
+    - Fetch read-only remote registry metadata for package lookup, package version lookup, and exact capability search.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
   excludes:
-    - Remote registry service or client runtime.
+    - Remote registry service implementation.
     - specpm publish.
+    - Remote package archive download, install, or cache behavior.
     - Remote package yanking governance.
     - Package signing and trust policy.
     - Namespace governance.
@@ -74,7 +76,10 @@ provides:
       summary: Provide repository-relative conformance fixtures for validation and local registry lifecycle behavior.
     - id: specpm.registry.remote_api_contract
       role: secondary
-      summary: Document the post-MVP read-only remote registry API contract without adding network runtime behavior.
+      summary: Document the post-MVP read-only remote registry API contract.
+    - id: specpm.registry.remote_readonly_client
+      role: secondary
+      summary: Fetch and validate read-only remote registry metadata without downloading archives or mutating local state.
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
@@ -167,6 +172,14 @@ interfaces:
           mediaTypes:
             - application/json
             - text/plain
+    - id: cli_remote
+      kind: cli
+      summary: specpm remote package, specpm remote version, and specpm remote search for read-only registry metadata.
+      outputs:
+        - name: remote_registry_client_report
+          mediaTypes:
+            - application/json
+            - text/plain
     - id: python_core_api
       kind: library
       summary: Importable functions in specpm.core for automation and tests.
@@ -179,6 +192,10 @@ interfaces:
         - add_package
         - yank_index_package
         - unyank_index_package
+        - get_remote_package
+        - get_remote_package_version
+        - search_remote_registry
+        - validate_remote_registry_payload
         - diff_packages
         - list_inbox
         - inspect_inbox_bundle
@@ -210,6 +227,9 @@ effects:
     - id: write_local_artifacts
       kind: filesystem_write
       summary: Writes deterministic archives, local index files, lockfiles, package cache metadata, and DocC build output.
+    - id: read_remote_registry_metadata
+      kind: network_read
+      summary: Reads explicitly requested remote registry JSON metadata through the read-only client.
     - id: no_package_execution
       kind: unknown
       summary: Package content is treated as data and is not executed by SpecPM core.
@@ -274,6 +294,7 @@ evidence:
     path: specs/REMOTE_REGISTRY_API.md
     supports:
       - specpm.registry.remote_api_contract
+      - specpm.registry.remote_readonly_client
       - specpm.conformance.remote_registry_payloads
   - id: rfc_coverage
     kind: documentation
@@ -299,6 +320,7 @@ evidence:
     supports:
       - specpm.public_api.core_functions
       - provides.capabilities
+      - specpm.registry.remote_readonly_client
   - id: core_tests
     kind: test
     path: tests/test_core.py

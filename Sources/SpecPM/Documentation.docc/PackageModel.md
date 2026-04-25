@@ -20,9 +20,11 @@ SpecPM dogfoods its own package model. The repository root contains
 `specpm.yaml` and `specs/specpm.spec.yaml`, which describe the implemented
 public CLI command surface and importable core functions as a `SpecPackage`.
 
-The self-spec is intentionally limited to implemented local-first behavior. It
-does not claim remote registry hosting, `specpm publish`, signing, semantic
-search, derived artifact generation, or SpecGraph graph reasoning.
+The self-spec is intentionally limited to implemented package-manager behavior.
+It may describe explicit read-only remote registry metadata lookup, but it does
+not claim remote registry hosting, `specpm publish`, remote archive download,
+signing, semantic search, derived artifact generation, or SpecGraph graph
+reasoning.
 
 The repository documentation directory is lowercase `specs/`. This avoids a
 fragile uppercase/lowercase directory split on case-insensitive filesystems and

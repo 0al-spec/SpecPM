@@ -18,7 +18,8 @@ Completed areas include:
 - release hardening;
 - local registry lifecycle;
 - conformance test artifacts.
-- remote registry API contract documentation and static payload fixtures.
+- remote registry API contract documentation and static payload fixtures;
+- read-only remote registry metadata client.
 
 ## Post-MVP Tracks
 
@@ -38,9 +39,10 @@ Current post-MVP tracks include:
 
 ## Recommended Next Track
 
-The read-only remote registry API contract is documented. The next useful
-runtime increment is a remote registry service/client design that consumes that
-contract without adding publish, signing, or namespace governance prematurely.
+The read-only remote registry API contract and metadata client are implemented.
+The next useful remote increment is service-side behavior or a controlled
+download/cache design that still avoids publish, signing, namespace governance,
+and remote mutation semantics.
 
 `specpm publish`, auth, signing, namespace governance, and remote yanking
 mutation workflows remain separate follow-up tracks.

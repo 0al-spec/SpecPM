@@ -62,12 +62,16 @@ rejection for yanked packages, unyank, and add success.
 does not start a registry server, perform HTTP requests, download archives, or
 mutate registry state.
 
+Read-only remote registry client tests reuse those payloads behind HTTP fetch
+stubs. They verify endpoint construction and stable client reports without a
+live registry service.
+
 ## Non-Goals
 
 The conformance suite does not define `specpm publish`, remote registry service
-runtime, remote registry client network behavior, package signing, namespace
-governance, semantic search, full dependency solving, SpecGraph graph reasoning,
-or ContextBuilder artifact generation.
+runtime, remote archive download/install/cache behavior, package signing,
+namespace governance, semantic search, full dependency solving, SpecGraph graph
+reasoning, or ContextBuilder artifact generation.
 
 ## References
 

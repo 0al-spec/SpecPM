@@ -8,10 +8,10 @@ Scope: local SpecPM package-manager behavior and post-MVP registry contract payl
 
 SpecPM conformance artifacts provide a small, portable test corpus for
 implementations and downstream SpecGraph tooling. They describe expected
-outcomes for package validation, local registry lifecycle behavior, and static
-remote registry contract payloads without requiring a remote registry service,
-package signing, semantic search, graph reasoning, artifact generation, or agent
-runtime behavior.
+outcomes for package validation, local registry lifecycle behavior, static
+remote registry contract payloads, and fixture-backed read-only client behavior
+without requiring a remote registry service, package signing, semantic search,
+graph reasoning, artifact generation, or agent runtime behavior.
 
 The current suite lives at:
 
@@ -90,6 +90,10 @@ checks stable payload shape fields:
 This case kind does not start a registry server, perform HTTP requests,
 download archives, or mutate registry state.
 
+Read-only client tests may reuse these payload fixtures behind HTTP fetch stubs.
+Those tests verify endpoint construction, response shape validation, and stable
+client reports without requiring a live registry service.
+
 ## Current Coverage
 
 The initial conformance suite covers:
@@ -102,6 +106,7 @@ The initial conformance suite covers:
 - local registry yank and unyank behavior.
 - remote registry package metadata, package version, exact capability search,
   yanked version, and not-found error payloads.
+- read-only remote registry client behavior using fixture-backed fetch stubs.
 
 ## Non-Goals
 
@@ -109,7 +114,8 @@ Conformance artifacts do not define:
 
 - `specpm publish`;
 - remote registry service implementation;
-- remote registry client network behavior;
+- live remote registry availability;
+- remote archive download, install, or cache behavior;
 - package signing or trust policy;
 - namespace governance;
 - semantic search;

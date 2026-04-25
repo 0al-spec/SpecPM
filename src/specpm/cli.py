@@ -10,12 +10,15 @@ from specpm import __version__
 from specpm.core import (
     add_package,
     diff_packages,
+    get_remote_package,
+    get_remote_package_version,
     index_package,
     inspect_inbox_bundle,
     inspect_package,
     list_inbox,
     pack_package,
     search_index,
+    search_remote_registry,
     unyank_index_package,
     validate_package,
     yank_index_package,
@@ -115,7 +118,40 @@ def build_parser() -> argparse.ArgumentParser:
     inbox_inspect.add_argument("--json", action="store_true", help="Emit stable JSON.")
     inbox_inspect.set_defaults(handler=handle_inbox_inspect)
 
+    remote = subparsers.add_parser("remote", help="Read remote registry metadata.")
+    remote_subparsers = remote.add_subparsers(dest="remote_command", required=True)
+
+    remote_package = remote_subparsers.add_parser("package", help="Fetch remote package metadata.")
+    remote_package.add_argument("package_id")
+    add_remote_registry_options(remote_package)
+    remote_package.set_defaults(handler=handle_remote_package)
+
+    remote_version = remote_subparsers.add_parser(
+        "version", help="Fetch one remote package version."
+    )
+    remote_version.add_argument("package_ref", help="Package reference in package_id@version form.")
+    add_remote_registry_options(remote_version)
+    remote_version.set_defaults(handler=handle_remote_version)
+
+    remote_search = remote_subparsers.add_parser(
+        "search", help="Search a remote registry by exact capability id."
+    )
+    remote_search.add_argument("capability_id")
+    add_remote_registry_options(remote_search)
+    remote_search.set_defaults(handler=handle_remote_search)
+
     return parser
+
+
+def add_remote_registry_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--registry", required=True, help="Remote registry base URL.")
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=10.0,
+        help="Remote registry request timeout in seconds.",
+    )
+    parser.add_argument("--json", action="store_true", help="Emit stable JSON.")
 
 
 def handle_validate(args: argparse.Namespace) -> int:
@@ -297,8 +333,69 @@ def handle_inbox_inspect(args: argparse.Namespace) -> int:
     return 0 if report["found"] else 1
 
 
+def handle_remote_package(args: argparse.Namespace) -> int:
+    report = get_remote_package(args.registry, args.package_id, args.timeout)
+    return emit_remote_registry_report(report, args.json)
+
+
+def handle_remote_version(args: argparse.Namespace) -> int:
+    report = get_remote_package_version(args.registry, args.package_ref, args.timeout)
+    return emit_remote_registry_report(report, args.json)
+
+
+def handle_remote_search(args: argparse.Namespace) -> int:
+    report = search_remote_registry(args.registry, args.capability_id, args.timeout)
+    return emit_remote_registry_report(report, args.json)
+
+
+def emit_remote_registry_report(report: dict[str, Any], json_output: bool) -> int:
+    if json_output:
+        print_json(report)
+    else:
+        print_remote_registry(report)
+    return 0 if report["status"] == "ok" else 1
+
+
 def print_json(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, indent=2, sort_keys=True))
+
+
+def print_remote_registry(report: dict[str, Any]) -> None:
+    if report["status"] != "ok":
+        print(f"remote {report['operation']} failed: {report['target']}", file=sys.stderr)
+        for issue in report.get("errors", []):
+            print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
+        return
+
+    payload = report.get("payload") or {}
+    kind = payload.get("kind")
+    if kind == "RemotePackage":
+        package = payload["package"]
+        print(f"{package['package_id']} [{len(package['versions'])} versions]")
+        return
+    if kind == "RemotePackageVersion":
+        package = payload["package"]
+        state = package["state"]
+        flags = []
+        if state["yanked"]:
+            flags.append("yanked")
+        if state["deprecated"]:
+            flags.append("deprecated")
+        suffix = f" [{', '.join(flags)}]" if flags else ""
+        print(f"{package['package_id']} {package['version']}{suffix}")
+        return
+    if kind == "RemoteCapabilitySearch":
+        if not payload["results"]:
+            print(f"No remote packages found for capability: {payload['query']['capability_id']}")
+            return
+        for result in payload["results"]:
+            suffix = " [yanked]" if result["yanked"] else ""
+            print(
+                f"{result['package_id']} {result['version']} "
+                f"[{result['matched_capability']}]{suffix}"
+            )
+        return
+    print(f"remote {report['operation']}: {kind}")
 
 
 def print_index_lifecycle(report: dict[str, Any]) -> None:

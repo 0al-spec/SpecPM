@@ -1,0 +1,45 @@
+{
+  "endpoint": "https://registry.example.invalid/v0/capabilities/document_conversion.email_to_markdown/packages",
+  "errors": [],
+  "operation": "search",
+  "payload": {
+    "apiVersion": "specpm.registry/v0",
+    "kind": "RemoteCapabilitySearch",
+    "query": {
+      "capability_id": "document_conversion.email_to_markdown",
+      "match": "exact"
+    },
+    "result_count": 1,
+    "results": [
+      {
+        "deprecated": false,
+        "matched_capability": "document_conversion.email_to_markdown",
+        "package_id": "document_conversion.email_tools",
+        "provided_capabilities": [
+          "document_conversion.email_to_markdown"
+        ],
+        "required_capabilities": [],
+        "source": {
+          "digest": {
+            "algorithm": "sha256",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "format": "specpm-tar-gzip-v0",
+          "kind": "archive",
+          "size": 4096,
+          "url": "https://registry.example.invalid/v0/packages/document_conversion.email_tools/versions/0.1.0/archive"
+        },
+        "summary": "Boundary specifications for email document conversion.",
+        "version": "0.1.0",
+        "yanked": false
+      }
+    ],
+    "schemaVersion": 1,
+    "status": "ok"
+  },
+  "registry": "https://registry.example.invalid",
+  "status": "ok",
+  "target": {
+    "capability_id": "document_conversion.email_to_markdown"
+  }
+}
