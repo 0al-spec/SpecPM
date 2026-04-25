@@ -19,21 +19,21 @@ tests/fixtures/conformance/packages/
 
 The suite is JSON so non-Python implementations can consume it directly:
 
-```text
+```json
 {
-  schemaVersion: 1,
-  suite: string,
-  cases: ConformanceCase[]
+  "schemaVersion": 1,
+  "suite": "specpm-conformance-v0",
+  "cases": []
 }
 ```
 
 Each case has:
 
-```text
+```json
 {
-  id: string,
-  kind: string,
-  expected: object
+  "id": "valid-package",
+  "kind": "validate_package",
+  "expected": {}
 }
 ```
 
