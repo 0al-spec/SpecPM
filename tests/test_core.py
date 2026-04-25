@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
 GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
+ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
 CONFORMANCE_CASE_KINDS = {
     "registry_lifecycle",
     "remote_registry_payload",
@@ -287,6 +288,32 @@ def test_json_contract_subset_allows_additive_fields() -> None:
     expected = {"status": "ok", "nested": {"stable": 1}, "items": [{"id": "first"}]}
 
     assert_json_contract_contains(actual, expected)
+
+
+def test_add_specpackages_issue_template_matches_public_index_contract() -> None:
+    loaded = yaml.safe_load(ADD_SPECPACKAGES_ISSUE_TEMPLATE.read_text(encoding="utf-8"))
+
+    assert isinstance(loaded, dict)
+    assert loaded["name"] == "Add SpecPackage(s)"
+    assert "package-submission" in loaded["labels"]
+
+    body = loaded["body"]
+    assert isinstance(body, list)
+    fields = {item.get("id"): item for item in body if isinstance(item, dict) and "id" in item}
+    assert fields["package_urls"]["type"] == "textarea"
+    assert fields["package_urls"]["validations"]["required"] is True
+    assert fields["package_path"]["validations"]["required"] is False
+    assert fields["acknowledgements"]["type"] == "checkboxes"
+
+    acknowledgements = fields["acknowledgements"]["attributes"]["options"]
+    assert len(acknowledgements) >= 4
+    assert all(option["required"] is True for option in acknowledgements)
+
+    template_text = ADD_SPECPACKAGES_ISSUE_TEMPLATE.read_text(encoding="utf-8").lower()
+    assert "specpm publish" in template_text
+    assert "does not define" in template_text
+    for forbidden in ("password", "token", "private key", "signing key", "secret"):
+        assert forbidden not in template_text
 
 
 def test_rfc_example_validates() -> None:

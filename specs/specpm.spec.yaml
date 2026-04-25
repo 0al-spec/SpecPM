@@ -27,6 +27,7 @@ scope:
     - Publish static conformance fixtures for remote registry payload shape.
     - Fetch read-only remote registry metadata for package lookup, package version lookup, and exact capability search.
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
+    - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
@@ -306,6 +307,11 @@ evidence:
     supports:
       - specpm.registry.index_submission_flow
       - specpm.registry.remote_api_contract
+  - id: add_specpackages_issue_template
+    kind: documentation
+    path: .github/ISSUE_TEMPLATE/add-specpackages.yml
+    supports:
+      - specpm.registry.index_submission_flow
   - id: rfc_coverage
     kind: documentation
     path: specs/RFC_0001_COVERAGE.md

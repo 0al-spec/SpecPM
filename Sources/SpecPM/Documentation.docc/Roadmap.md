@@ -47,9 +47,11 @@ The next useful remote increment is to split public-index and enterprise
 registry work explicitly.
 
 The public index can start as an issue-based submission queue with GitHub
-Actions validation and GitHub Pages static `/v0` metadata. Enterprise registry
-work should remain available for private packages, auth, audit, policy, and
-internal namespace ownership.
+Actions validation and GitHub Pages static `/v0` metadata. The reference
+`Add SpecPackage(s)` issue form is available in
+`.github/ISSUE_TEMPLATE/add-specpackages.yml`. Enterprise registry work should
+remain available for private packages, auth, audit, policy, and internal
+namespace ownership.
 
 `specpm publish`, auth, signing, namespace governance, and remote yanking
 mutation workflows remain separate follow-up tracks unless they are scoped to

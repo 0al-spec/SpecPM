@@ -1,0 +1,63 @@
+name: Add SpecPackage(s)
+description: Submit public SpecPackage repositories for indexing.
+title: "Add SpecPackage(s): "
+labels:
+  - package-submission
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Anyone may submit public SpecPackage repositories for future SpecPM Index inclusion.
+
+        Initial requirements:
+        - repositories must be publicly accessible;
+        - repository URLs must include a protocol, usually `https://`;
+        - repositories must contain `specpm.yaml` at the root or at a declared package path;
+        - referenced `specs/*.spec.yaml` files must exist;
+        - `specpm validate` must pass;
+        - `metadata.id` must be valid and stable;
+        - `metadata.version` must be SemVer;
+        - `metadata.license` must be present;
+        - package content must be data and must not require execution during validation;
+        - package content must comply with the index policy and code of conduct.
+
+        The public index is a submission queue and read-only metadata index. This form does not define `specpm publish`, remote mutation APIs, enterprise authentication, archive download/install behavior, or package content execution.
+  - type: textarea
+    id: package_urls
+    attributes:
+      label: New SpecPackage repositories
+      description: List one public Git repository URL per line.
+      placeholder: |
+        https://github.com/example/email-tools.git
+        https://github.com/example/specgraph-bridge.git
+    validations:
+      required: true
+  - type: input
+    id: package_path
+    attributes:
+      label: Package path
+      description: If packages are not at repository root, provide the relative package path. Leave blank for repository root.
+      placeholder: "."
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Add maintainer context, package scope, related docs, or known validation caveats.
+      placeholder: "Optional context for reviewers."
+    validations:
+      required: false
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Submission acknowledgements
+      options:
+        - label: The repositories are public and reviewable.
+          required: true
+        - label: The submitted packages contain `specpm.yaml` and referenced `specs/*.spec.yaml` files.
+          required: true
+        - label: The package content is data and does not require execution during validation.
+          required: true
+        - label: The package content complies with the index policy and code of conduct.
+          required: true
