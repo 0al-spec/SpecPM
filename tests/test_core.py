@@ -104,14 +104,14 @@ def assert_sha256_digest(value: dict[str, Any]) -> None:
     int(value["value"], 16)
 
 
-def assert_remote_registry_source(value: dict[str, Any], *, require_url: bool = False) -> None:
+def assert_remote_registry_source(value: dict[str, Any]) -> None:
     assert value["kind"] == "archive"
     assert value["format"] == "specpm-tar-gzip-v0"
     assert_sha256_digest(value["digest"])
-    if require_url:
-        assert isinstance(value["size"], int)
-        assert value["size"] > 0
-        assert value["url"].startswith("https://registry.example.invalid/")
+    assert isinstance(value["size"], int)
+    assert value["size"] > 0
+    assert isinstance(value["url"], str)
+    assert value["url"].startswith("https://registry.example.invalid/")
 
 
 def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
@@ -141,7 +141,7 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
         assert isinstance(package["required_capabilities"], list)
         assert isinstance(package["state"]["yanked"], bool)
         assert isinstance(package["state"]["deprecated"], bool)
-        assert_remote_registry_source(package["source"], require_url=True)
+        assert_remote_registry_source(package["source"])
         return
 
     if payload["kind"] == "RemoteCapabilitySearch":
@@ -427,9 +427,9 @@ def test_conformance_remote_registry_payload_cases() -> None:
     remote_cases = [case for case in suite["cases"] if case["kind"] == "remote_registry_payload"]
     assert remote_cases
 
-    fixture_root = ROOT / "tests/fixtures/conformance/remote_registry"
+    fixture_root = (ROOT / "tests/fixtures/conformance/remote_registry").resolve()
     for case in remote_cases:
-        payload_path = ROOT / case["payload"]
+        payload_path = (ROOT / case["payload"]).resolve()
         assert payload_path.is_relative_to(fixture_root), case["id"]
         payload = json.loads(payload_path.read_text(encoding="utf-8"))
         assert isinstance(payload, dict), case["id"]

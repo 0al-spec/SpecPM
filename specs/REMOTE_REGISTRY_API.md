@@ -164,13 +164,15 @@ Source = {
   kind: "archive",
   format: "specpm-tar-gzip-v0",
   digest: Digest,
-  size: number,
+  size: integer,
   url: string
 }
 ```
 
 `url` is package data. Downloading it is future client behavior and is outside
 the current MVP implementation.
+
+`size` is the archive size in bytes.
 
 ## Status Vocabularies
 

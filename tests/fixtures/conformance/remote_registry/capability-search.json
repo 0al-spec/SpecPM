@@ -28,7 +28,9 @@
         "digest": {
           "algorithm": "sha256",
           "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        }
+        },
+        "size": 4096,
+        "url": "https://registry.example.invalid/v0/packages/document_conversion.email_tools/versions/0.1.0/archive"
       }
     }
   ]
