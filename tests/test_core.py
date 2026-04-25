@@ -291,9 +291,7 @@ def test_json_contract_subset_allows_additive_fields() -> None:
 
 
 def test_add_specpackages_issue_template_matches_public_index_contract() -> None:
-    loaded = yaml.safe_load(ADD_SPECPACKAGES_ISSUE_TEMPLATE.read_text(encoding="utf-8"))
-
-    assert isinstance(loaded, dict)
+    loaded = load_yaml_file(ADD_SPECPACKAGES_ISSUE_TEMPLATE)
     assert loaded["name"] == "Add SpecPackage(s)"
     assert "package-submission" in loaded["labels"]
 
