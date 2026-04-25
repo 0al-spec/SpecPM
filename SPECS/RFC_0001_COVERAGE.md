@@ -61,19 +61,36 @@ The following capabilities are deferred:
 - Onboarding document generation.
 - Issue breakdown generation.
 - Test plan generation.
+- Review report generation.
 - Artifact eval execution.
-- Package-provided generation instructions.
 - Package-provided prompt execution.
+- Package-provided generation workflow execution.
 - Stable JSON contract for derived artifact metadata.
+- Stable JSON contract for artifact evaluation profiles.
 
-Rationale:
+### Rationale
 
-SpecPM is the package substrate for SpecGraph. Adding artifact generation or
-eval runtime to SpecPM core would blur the boundary between SpecPM, SpecGraph,
-and ContextBuilder.
+SpecPM is the package substrate for SpecGraph.
 
-SpecPM should preserve reusable specification intent. SpecGraph and downstream
-tools should decide how to derive artifacts from that intent.
+Adding artifact generation, prompt execution, or eval runtime to SpecPM core
+would blur the boundary between SpecPM, SpecGraph, and ContextBuilder.
+
+SpecPM should preserve reusable specification intent. SpecGraph should decide
+meaning. ContextBuilder and downstream tools should derive artifacts from that
+intent.
+
+SpecPM may carry intent; SpecGraph decides meaning.
+
+Package content can describe desired outputs. Package content cannot command the host.
+
+### Coverage Decision
+
+Derived artifact generation and artifact evals are out of scope for MVP
+coverage.
+
+Any future support for derived artifact metadata or artifact evaluation profiles
+must be introduced as a post-MVP profile and must not redefine SpecPM as an
+artifact generator, eval runner, or agent runtime.
 
 ## Verification Links
 

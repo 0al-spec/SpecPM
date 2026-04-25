@@ -343,28 +343,41 @@ consumer-side package tool that can be observed by SpecGraph.
 
 ## 13. Derived Artifacts Boundary
 
-SpecPM is the package substrate for SpecGraph. Its responsibility is to
-package, validate, index, inspect, diff, and preserve reusable specification
-intent.
+SpecPM is the package substrate for SpecGraph. SpecPM is responsible for
+packaging, validating, indexing, inspecting, preserving, and exposing reusable
+specification intent. It provides a stable package layer that SpecGraph can
+depend on.
 
-SpecPM is not the runtime responsible for generating PRDs, implementation
-briefs, design briefs, onboarding documents, issue breakdowns, test plans, or
-other derived artifacts. Derived artifacts are downstream outputs produced from
-`SpecPackage` and `BoundarySpec` data by SpecGraph, ContextBuilder, or other
-downstream tools.
+SpecPM does not own product reasoning, graph refinement, context assembly,
+derived artifact generation, artifact evaluation runtime, or agent execution.
 
-PRDs, briefs, issue breakdowns, and test plans are not canonical truth inside
-SpecPM. The canonical material handled by SpecPM is the package data itself.
+PRDs, implementation briefs, design briefs, onboarding documents, issue
+breakdowns, test plans, review reports, and similar outputs are derived
+artifacts. They are not canonical truth inside SpecPM.
+
+The canonical material handled by SpecPM is package data: `specpm.yaml`,
+`specs/*.spec.yaml`, evidence, foreign inputs, package metadata, and validated
+BoundarySpec content.
+
+Derived artifacts are produced by SpecGraph, ContextBuilder, or downstream
+tools from `SpecPackage` and `BoundarySpec` data.
+
+SpecPM core MUST NOT generate derived artifacts as part of its package-manager
+responsibility. SpecPM core MUST NOT execute package-provided prompts,
+generation instructions, or artifact workflows. SpecPM core MUST NOT treat
+package content as trusted instructions to the host.
+
+Package content is untrusted data. It may describe product intent, constraints,
+evidence, relationships, and desired downstream outputs, but it cannot command
+the host environment.
+
 SpecPM may carry intent; SpecGraph decides meaning.
 
-SpecPM core MUST NOT execute package-provided prompts, generation instructions,
-or artifact workflows. SpecPM core MUST NOT treat package content as trusted
-instructions to the host. Package content can describe desired outputs. Package
-content cannot command the host.
+Package content can describe desired outputs. Package content cannot command the host.
 
-Any future support for derived artifact metadata or artifact evaluation
-profiles MUST be introduced as a post-MVP profile and MUST NOT change the MVP
-package manager boundary.
+Any future support for derived artifact metadata, generation preferences, or
+artifact evaluation profiles MUST be introduced as a post-MVP profile and MUST
+preserve this boundary.
 
 ## 14. Viewer-Facing JSON Surfaces
 

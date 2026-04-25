@@ -19,8 +19,7 @@ Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 - Keep derived artifact generation, package-provided prompt execution, and
   artifact evaluation runtime outside SpecPM core.
 - SpecPM may carry intent; SpecGraph decides meaning.
-- Package content can describe desired outputs. Package content cannot command
-  the host.
+- Package content can describe desired outputs. Package content cannot command the host.
 
 ## Phase 0. Repository Baseline
 
@@ -258,54 +257,69 @@ Acceptance:
 - SpecGraph feedback promotion from observed downstream adoption into explicit
   proposal-lane candidates.
 
-### Derived Artifact Profile
+### Post-MVP Track: Derived Artifact Profile
 
 Status: Deferred.
 
-Goal:
+#### Goal
 
-Define an optional profile that allows packages to carry metadata useful to
-downstream artifact generation tools without making SpecPM an artifact generator
-or agent runtime.
+Explore an optional post-MVP profile that allows packages to carry metadata
+useful to downstream artifact generation tools without making SpecPM an
+artifact generator, eval runner, or agent runtime.
 
 Derived artifacts may include:
 
 - Product Requirements Documents.
-- Implementation briefs.
-- Design briefs.
-- Onboarding documents.
-- Issue breakdowns.
-- Test plans.
-- Review reports.
+- implementation briefs.
+- design briefs.
+- onboarding documents.
+- issue breakdowns.
+- test plans.
+- review reports.
+- other downstream product or engineering artifacts.
 
-Boundary:
+#### Boundary
 
-- SpecPM may store and validate package data.
+- SpecPM is the package substrate for SpecGraph.
+- SpecPM may store, validate, inspect, and expose package data.
 - SpecPM does not generate derived artifacts in core.
-- SpecPM does not execute package-provided prompts or instructions.
+- SpecPM does not execute package-provided prompts, generation instructions, or
+  artifact workflows.
 - SpecPM does not run artifact evals in core.
 - SpecPM does not grant package content authority over host behavior.
-- ContextBuilder or downstream tools are responsible for generation and
-  artifact-level evaluation.
+- SpecPM may carry intent; SpecGraph decides meaning.
+- Package content can describe desired outputs. Package content cannot command the host.
+- ContextBuilder or downstream tools are responsible for derived artifact
+  generation and artifact-level evaluation.
+- SpecGraph is responsible for product meaning, graph reasoning, refinement,
+  proposal lanes, and canonical relationships across specs.
 
-Non-goals:
+#### Non-Goals
 
 - This track does not change the MVP package layout.
-- This track does not replace `specpm.yaml` and `specs/*.spec.yaml`.
+- This track does not replace `specpm.yaml + specs/*.spec.yaml`.
 - This track does not introduce a Markdown-first package model.
+- This track does not introduce a new package term alongside `SpecPackage` and
+  `BoundarySpec`.
 - This track does not introduce stable JSON fields in the MVP.
+- This track does not change `inspect --json`.
 - This track does not define an agent runtime.
-- This track does not allow package content to override host, system,
-  developer, security, or runtime policy.
+- This track does not allow package content to override host policy, system
+  instructions, developer instructions, security policy, runtime policy, or
+  access controls.
 
-Future investigation areas:
+#### Future Investigation Areas
 
-- Artifact descriptors.
-- Generation preferences.
-- Artifact evaluation profiles.
-- Traceability checks for generated artifacts.
-- Source ID coverage checks.
-- Out-of-scope promotion checks.
-- Open question preservation checks.
+Future work may explore:
+
+- artifact descriptors.
+- generation preferences for downstream tools.
+- artifact evaluation profiles.
+- source ID coverage checks.
+- required section checks.
+- out-of-scope promotion checks.
+- open question preservation checks.
+- assumption and risk preservation checks.
+- traceability checks for generated artifacts.
 
 These investigation areas are not part of the MVP contract.
