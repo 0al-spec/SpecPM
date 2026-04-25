@@ -1,6 +1,8 @@
 .pytest_cache/
 .ruff_cache/
 .venv/
+.build/
+.docc-build/
 .specgraph_exports/
 .DS_Store
 __pycache__/

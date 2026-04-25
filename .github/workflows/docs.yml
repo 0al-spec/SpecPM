@@ -1,0 +1,102 @@
+name: Deploy DocC Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Package.swift"
+      - "Package.resolved"
+      - "Makefile"
+      - "Sources/SpecPM/**"
+      - "Sources/SpecPM-docs/**"
+      - "README.md"
+      - "SPECS/**"
+      - "RFC/**"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "Package.swift"
+      - "Package.resolved"
+      - "Makefile"
+      - "Sources/SpecPM/**"
+      - "Sources/SpecPM-docs/**"
+      - "README.md"
+      - "SPECS/**"
+      - "RFC/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build Documentation
+        run: |
+          swift package --allow-writing-to-directory ./.docc-build \
+            generate-documentation \
+            --target SpecPM \
+            --output-path ./.docc-build \
+            --transform-for-static-hosting \
+            --hosting-base-path SpecPM
+
+      - name: Add .nojekyll and index.html redirect
+        run: |
+          touch .docc-build/.nojekyll
+          cat > .docc-build/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Redirecting to SpecPM Documentation</title>
+            <meta http-equiv="refresh" content="0; url=./documentation/specpm/">
+            <link rel="canonical" href="./documentation/specpm/">
+          </head>
+          <body>
+            <p>Redirecting to <a href="./documentation/specpm/">SpecPM Documentation</a>...</p>
+            <script>
+              window.location.href = "./documentation/specpm/";
+            </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./.docc-build"
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
