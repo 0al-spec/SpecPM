@@ -83,6 +83,22 @@ Remote service implementation, publish flows, auth, signing, namespace
 governance, remote yanking mutation, archive download, and remote install/cache
 behavior remain deferred.
 
+## Post-MVP Track: Public Index and Enterprise Registry
+
+The remote registry contract can support two different deployment tracks:
+
+- public SpecPM Index using GitHub Issues for submissions, GitHub Actions for
+  validation, and GitHub Pages for generated static `/v0` metadata;
+- enterprise remote registry using private auth, audit, policy, namespace
+  ownership, and private storage.
+
+These tracks should share read-only metadata payloads where possible, but they
+should not be collapsed into one operational model. The public index can remain
+simple and reviewable. Enterprise registries can add private infrastructure
+requirements without forcing those requirements into the public index MVP.
+
+The submission flow is tracked in `specs/INDEX_SUBMISSION_FLOW.md`.
+
 ## Deferred: Derived Artifact Generation and Artifact Evals
 
 RFC 0001 coverage intentionally excludes derived artifact generation and

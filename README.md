@@ -95,6 +95,9 @@ The post-MVP remote registry API contract is documented in
 metadata clients for that contract; they do not download package archives,
 publish packages, mutate remote state, or execute package content.
 
+Public index and enterprise registry deployment options are tracked in
+`specs/INDEX_SUBMISSION_FLOW.md`.
+
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.
 

@@ -17,6 +17,12 @@ SpecPM remains local-first for the MVP. The remote registry API is a post-MVP
 contract that downstream services and SpecPM read-only metadata clients can
 implement.
 
+The contract supports more than one deployment model. A public SpecPM Index may
+serve generated static registry JSON through GitHub Pages after validating
+community submissions through GitHub Issues and Actions. An enterprise remote
+registry may implement the same read-only metadata surfaces behind private
+auth, internal policy, audit, and private storage.
+
 ## Boundary
 
 The remote registry API contract defines read-only discovery surfaces:
@@ -42,6 +48,49 @@ The contract does not define:
 
 Package content remains untrusted data. A registry may describe packages and
 desired downstream outputs, but package content cannot command the host.
+
+## Deployment Models
+
+### Public Static Index
+
+A public community index can be implemented without a custom registry server:
+
+```text
+GitHub Issue submission
+        |
+        v
+GitHub Actions validation
+        |
+        v
+Generated /v0 JSON
+        |
+        v
+GitHub Pages static registry
+```
+
+This model is optimized for public packages, reviewable submissions, simple
+operations, and compatibility with `specpm remote` metadata commands.
+
+The public static index should not define enterprise auth, private package
+visibility, remote mutation APIs, or package archive install/cache behavior.
+
+### Enterprise Registry
+
+An enterprise registry can implement the same read-only API contract while
+adding private operational controls:
+
+- authentication and authorization;
+- private package visibility;
+- internal namespace ownership;
+- audit logs;
+- retention policy;
+- private blob storage;
+- signing and trust policy;
+- approval workflows;
+- integration with internal Git hosting and CI.
+
+Enterprise registry behavior is useful for private deployments, but it should
+remain a separate track from the public GitHub-backed index flow.
 
 ## Read-Only Client Surface
 

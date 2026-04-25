@@ -26,6 +26,9 @@ Completed areas include:
 Current post-MVP tracks include:
 
 - remote registry API;
+- public SpecPM Index submission flow through GitHub Issues, Actions, and
+  GitHub Pages;
+- enterprise remote registry deployment;
 - `specpm publish`;
 - remote package yanking governance;
 - package signing and trust policies;
@@ -40,15 +43,21 @@ Current post-MVP tracks include:
 ## Recommended Next Track
 
 The read-only remote registry API contract and metadata client are implemented.
-The next useful remote increment is service-side behavior or a controlled
-download/cache design that still avoids publish, signing, namespace governance,
-and remote mutation semantics.
+The next useful remote increment is to split public-index and enterprise
+registry work explicitly.
+
+The public index can start as an issue-based submission queue with GitHub
+Actions validation and GitHub Pages static `/v0` metadata. Enterprise registry
+work should remain available for private packages, auth, audit, policy, and
+internal namespace ownership.
 
 `specpm publish`, auth, signing, namespace governance, and remote yanking
-mutation workflows remain separate follow-up tracks.
+mutation workflows remain separate follow-up tracks unless they are scoped to
+the enterprise registry model.
 
 ## References
 
 - `specs/WORKPLAN.md`
 - `specs/RFC_0001_COVERAGE.md`
+- `specs/INDEX_SUBMISSION_FLOW.md`
 - <doc:Conformance>
