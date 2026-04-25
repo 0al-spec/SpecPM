@@ -44,6 +44,36 @@ intentionally left for post-MVP tracks.
 | Foreign artifact semantic understanding | Post-MVP | Foreign artifacts are preserved as data and never override validation behavior. |
 | Redaction warnings for private data | Post-MVP | Privacy guidance is documented in the RFC, but automated secret/PII detection is not part of the local MVP. |
 | Standardized lockfile RFC | Post-MVP | The MVP lockfile is small, deterministic, and local to SpecPM. |
+| Derived artifact generation and artifact evals | Post-MVP | SpecPM is the package substrate for SpecGraph, not an artifact generator or eval runtime. |
+| Package-provided prompt execution | Post-MVP / rejected for core | Package content is untrusted data and cannot command the host. |
+| Stable JSON contract for derived artifact metadata | Post-MVP | No derived artifact fields are part of the MVP JSON contract. |
+
+## Deferred: Derived Artifact Generation and Artifact Evals
+
+RFC 0001 coverage intentionally excludes derived artifact generation and
+artifact-level evaluation from the MVP core.
+
+The following capabilities are deferred:
+
+- PRD generation.
+- Implementation brief generation.
+- Design brief generation.
+- Onboarding document generation.
+- Issue breakdown generation.
+- Test plan generation.
+- Artifact eval execution.
+- Package-provided generation instructions.
+- Package-provided prompt execution.
+- Stable JSON contract for derived artifact metadata.
+
+Rationale:
+
+SpecPM is the package substrate for SpecGraph. Adding artifact generation or
+eval runtime to SpecPM core would blur the boundary between SpecPM, SpecGraph,
+and ContextBuilder.
+
+SpecPM should preserve reusable specification intent. SpecGraph and downstream
+tools should decide how to derive artifacts from that intent.
 
 ## Verification Links
 

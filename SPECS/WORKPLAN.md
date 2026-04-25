@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-24
+Updated: 2026-04-25
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -16,6 +16,11 @@ Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
   SpecGraph canonical mutation in the MVP.
 - Treat Docker as the default reproducible execution boundary for development,
   validation, CI parity, and cross-project handoff.
+- Keep derived artifact generation, package-provided prompt execution, and
+  artifact evaluation runtime outside SpecPM core.
+- SpecPM may carry intent; SpecGraph decides meaning.
+- Package content can describe desired outputs. Package content cannot command
+  the host.
 
 ## Phase 0. Repository Baseline
 
@@ -252,3 +257,55 @@ Acceptance:
 - Cross-repo PR workflow automation with SpecGraph.
 - SpecGraph feedback promotion from observed downstream adoption into explicit
   proposal-lane candidates.
+
+### Derived Artifact Profile
+
+Status: Deferred.
+
+Goal:
+
+Define an optional profile that allows packages to carry metadata useful to
+downstream artifact generation tools without making SpecPM an artifact generator
+or agent runtime.
+
+Derived artifacts may include:
+
+- Product Requirements Documents.
+- Implementation briefs.
+- Design briefs.
+- Onboarding documents.
+- Issue breakdowns.
+- Test plans.
+- Review reports.
+
+Boundary:
+
+- SpecPM may store and validate package data.
+- SpecPM does not generate derived artifacts in core.
+- SpecPM does not execute package-provided prompts or instructions.
+- SpecPM does not run artifact evals in core.
+- SpecPM does not grant package content authority over host behavior.
+- ContextBuilder or downstream tools are responsible for generation and
+  artifact-level evaluation.
+
+Non-goals:
+
+- This track does not change the MVP package layout.
+- This track does not replace `specpm.yaml` and `specs/*.spec.yaml`.
+- This track does not introduce a Markdown-first package model.
+- This track does not introduce stable JSON fields in the MVP.
+- This track does not define an agent runtime.
+- This track does not allow package content to override host, system,
+  developer, security, or runtime policy.
+
+Future investigation areas:
+
+- Artifact descriptors.
+- Generation preferences.
+- Artifact evaluation profiles.
+- Traceability checks for generated artifacts.
+- Source ID coverage checks.
+- Out-of-scope promotion checks.
+- Open question preservation checks.
+
+These investigation areas are not part of the MVP contract.
