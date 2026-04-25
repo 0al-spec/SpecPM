@@ -52,6 +52,6 @@ fields in runtime payloads.
 
 ## References
 
-- `SPECS/JSON_CONTRACTS.md`
+- `specs/JSON_CONTRACTS.md`
 - `tests/fixtures/golden/`
 - <doc:Conformance>

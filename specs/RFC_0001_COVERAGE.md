@@ -96,9 +96,9 @@ artifact generator, eval runner, or agent runtime.
 
 ## Verification Links
 
-- CLI exit code contract: `SPECS/CLI_EXIT_CODES.md`
-- Viewer JSON contracts: `SPECS/JSON_CONTRACTS.md`
-- Conformance artifacts: `SPECS/CONFORMANCE.md`
+- CLI exit code contract: `specs/CLI_EXIT_CODES.md`
+- Viewer JSON contracts: `specs/JSON_CONTRACTS.md`
+- Conformance artifacts: `specs/CONFORMANCE.md`
 - Golden JSON fixtures: `tests/fixtures/golden/`
 - End-to-end and hardening tests: `tests/test_core.py`
 - MVP example package: `examples/email_tools/`

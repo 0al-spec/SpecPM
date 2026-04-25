@@ -1,0 +1,342 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: specpm.core
+  title: SpecPM Core Package Manager
+  version: 0.1.0
+  status: draft
+  authors:
+    - name: 0AL Spec
+    - name: Egor Merkushev
+intent:
+  summary: Provide local-first package management for reusable SpecPackage and BoundarySpec bundles without executing package content.
+scope:
+  boundedContext: specpm
+  includes:
+    - Validate restricted YAML SpecPackage directories.
+    - Inspect package metadata, BoundarySpec summaries, evidence, provenance, effects, and contract warnings.
+    - Pack packages into deterministic specpm-tar-gzip-v0 archives.
+    - Maintain a local file-backed registry index.
+    - Search the local registry by exact capability IDs.
+    - Add selected packages into deterministic local project state.
+    - Mark local indexed packages as yanked or unyanked.
+    - Diff package versions using conservative structural classification.
+    - Inspect local SpecGraph export inbox bundles.
+    - Publish portable conformance artifacts for local implementation behavior.
+    - Build and deploy DocC documentation for the package contract.
+    - Document the public CLI command surface exposed by src/specpm/cli.py.
+    - Document the importable public core functions exposed by src/specpm/core.py.
+  excludes:
+    - Remote registry hosting.
+    - specpm publish.
+    - Remote package yanking governance.
+    - Package signing and trust policy.
+    - Namespace governance.
+    - Natural-language, fuzzy, or semantic search as normative resolution.
+    - Full dependency solving.
+    - PRD, brief, issue breakdown, test plan, or review report generation.
+    - Artifact evaluation runtime.
+    - Package-provided prompt or workflow execution.
+    - SpecGraph canonical graph reasoning, refinement, or proposal lanes.
+provides:
+  capabilities:
+    - id: specpm.package.validate
+      role: primary
+      summary: Validate SpecPackage directories and emit structured validation reports.
+    - id: specpm.package.inspect
+      role: secondary
+      summary: Inspect package identity, specs, evidence, provenance, effects, compatibility, and contract warnings.
+    - id: specpm.package.pack
+      role: secondary
+      summary: Create deterministic specpm-tar-gzip-v0 archives from valid package directories.
+    - id: specpm.registry.index
+      role: secondary
+      summary: Add directory or archive packages to a local file-backed registry index.
+    - id: specpm.registry.search
+      role: secondary
+      summary: Search indexed packages by exact capability ID.
+    - id: specpm.registry.add
+      role: secondary
+      summary: Add exact package references or uniquely resolved capabilities to local project state.
+    - id: specpm.registry.local_lifecycle
+      role: secondary
+      summary: Mark indexed local package versions as yanked or unyanked without deleting package metadata.
+    - id: specpm.package.diff
+      role: secondary
+      summary: Compare two package directories and classify structural capability, interface, constraint, and compatibility changes.
+    - id: specpm.specgraph.inbox
+      role: secondary
+      summary: List and inspect local SpecGraph export bundles as reviewable package candidates.
+    - id: specpm.conformance.local_suite
+      role: secondary
+      summary: Provide repository-relative conformance fixtures for validation and local registry lifecycle behavior.
+    - id: specpm.documentation.docc_site
+      role: secondary
+      summary: Build a DocC documentation site for SpecPM contracts and package-manager boundaries.
+    - id: specpm.cli.public_surface
+      role: secondary
+      summary: Expose the implemented CLI commands as the stable user-facing surface for the MVP.
+    - id: specpm.public_api.core_functions
+      role: secondary
+      summary: Expose importable Python functions for validation, inspection, packing, indexing, search, add, lifecycle, diff, and inbox flows.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: cli_validate
+      kind: cli
+      summary: specpm validate <package-dir> [--json]
+      outputs:
+        - name: validation_report
+          mediaTypes:
+            - application/json
+            - text/plain
+    - id: cli_inspect
+      kind: cli
+      summary: specpm inspect <package-dir> [--json]
+      outputs:
+        - name: inspection_report
+          mediaTypes:
+            - application/json
+            - text/plain
+    - id: cli_pack
+      kind: cli
+      summary: specpm pack <package-dir> [-o <archive>] [--json]
+      outputs:
+        - name: pack_result
+          mediaTypes:
+            - application/json
+            - application/gzip
+    - id: cli_index
+      kind: cli
+      summary: specpm index <package-dir-or-archive> [--index <path>] [--json]
+      outputs:
+        - name: index_report
+          mediaTypes:
+            - application/json
+    - id: cli_search
+      kind: cli
+      summary: specpm search <capability-id> [--index <path>] [--json]
+      outputs:
+        - name: search_report
+          mediaTypes:
+            - application/json
+            - text/plain
+    - id: cli_add
+      kind: cli
+      summary: specpm add <capability-id-or-package-ref> [--index <path>] [--project <dir>] [--json]
+      outputs:
+        - name: add_report
+          mediaTypes:
+            - application/json
+    - id: cli_yank
+      kind: cli
+      summary: specpm yank <package-id@version> [--index <path>] --reason <reason> [--json]
+      outputs:
+        - name: yank_report
+          mediaTypes:
+            - application/json
+    - id: cli_unyank
+      kind: cli
+      summary: specpm unyank <package-id@version> [--index <path>] [--json]
+      outputs:
+        - name: unyank_report
+          mediaTypes:
+            - application/json
+    - id: cli_diff
+      kind: cli
+      summary: specpm diff <old-package-dir> <new-package-dir> [--json]
+      outputs:
+        - name: diff_report
+          mediaTypes:
+            - application/json
+            - text/plain
+    - id: cli_inbox
+      kind: cli
+      summary: specpm inbox list and specpm inbox inspect for local SpecGraph export bundles.
+      outputs:
+        - name: inbox_report
+          mediaTypes:
+            - application/json
+            - text/plain
+    - id: python_core_api
+      kind: library
+      summary: Importable functions in specpm.core for automation and tests.
+      functions:
+        - validate_package
+        - inspect_package
+        - pack_package
+        - index_package
+        - search_index
+        - add_package
+        - yank_index_package
+        - unyank_index_package
+        - diff_packages
+        - list_inbox
+        - inspect_inbox_bundle
+      outputs:
+        - name: structured_reports
+          mediaTypes:
+            - application/json
+  outbound:
+    - id: package_archive
+      kind: file
+      summary: Deterministic .specpm.tgz package archives.
+    - id: local_index
+      kind: file
+      summary: Local .specpm/index.json registry metadata.
+    - id: project_state
+      kind: file
+      summary: Local specpm.lock and .specpm package metadata in consuming projects.
+    - id: conformance_suite
+      kind: file
+      summary: Repository-relative JSON conformance suite and fixture packages.
+    - id: docc_static_site
+      kind: file
+      summary: Static DocC documentation output deployed to GitHub Pages.
+effects:
+  sideEffects:
+    - id: read_package_data
+      kind: filesystem_read
+      summary: Reads manifests, BoundarySpecs, evidence, foreign artifacts, implementation bindings, indexes, locks, and inbox bundles.
+    - id: write_local_artifacts
+      kind: filesystem_write
+      summary: Writes deterministic archives, local index files, lockfiles, package cache metadata, and DocC build output.
+    - id: no_package_execution
+      kind: unknown
+      summary: Package content is treated as data and is not executed by SpecPM core.
+constraints:
+  - id: package_content_untrusted
+    level: MUST
+    statement: SpecPM must treat package content as untrusted data.
+  - id: no_package_execution
+    level: MUST
+    statement: SpecPM must not execute package-provided prompts, scripts, generation instructions, or artifact workflows.
+  - id: exact_search_normative
+    level: MUST
+    statement: MVP search must use exact capability ID matching for normative resolution.
+  - id: deterministic_outputs
+    level: MUST
+    statement: Archives, local index updates, lockfiles, and JSON reports must remain deterministic for stable inputs.
+  - id: public_surface_tracked
+    level: MUST
+    statement: This self-spec must cover at least the implemented public CLI commands and importable core functions.
+  - id: derived_artifacts_downstream
+    level: MUST
+    statement: PRDs, briefs, issue breakdowns, test plans, and review reports are downstream derived artifacts, not SpecPM core outputs.
+evidence:
+  - id: license
+    kind: documentation
+    path: LICENSE
+    supports:
+      - metadata.license
+  - id: readme
+    kind: documentation
+    path: README.md
+    supports:
+      - intent.summary
+      - provides.capabilities
+  - id: prd
+    kind: documentation
+    path: specs/PRD.md
+    supports:
+      - scope.includes
+      - scope.excludes
+      - provides.capabilities
+  - id: json_contracts
+    kind: schema
+    path: specs/JSON_CONTRACTS.md
+    supports:
+      - interfaces.inbound
+      - interfaces.outbound
+  - id: conformance_docs
+    kind: documentation
+    path: specs/CONFORMANCE.md
+    supports:
+      - specpm.conformance.local_suite
+  - id: rfc_coverage
+    kind: documentation
+    path: specs/RFC_0001_COVERAGE.md
+    supports:
+      - scope.includes
+      - scope.excludes
+  - id: derived_boundary
+    kind: adr
+    path: specs/0001_Derived_Artifact_Profile_Decision.md
+    supports:
+      - derived_artifacts_downstream
+      - no_package_execution
+  - id: cli_source
+    kind: source
+    path: src/specpm/cli.py
+    supports:
+      - specpm.cli.public_surface
+      - interfaces.inbound
+  - id: core_source
+    kind: source
+    path: src/specpm/core.py
+    supports:
+      - specpm.public_api.core_functions
+      - provides.capabilities
+  - id: core_tests
+    kind: test
+    path: tests/test_core.py
+    supports:
+      - provides.capabilities
+      - constraints
+  - id: docc_overview
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/SpecPM.md
+    supports:
+      - specpm.documentation.docc_site
+implementationBindings:
+  - id: cli
+    path: src/specpm/cli.py
+    files:
+      owned:
+        - src/specpm/cli.py
+      border:
+        - README.md
+        - specs/CLI_EXIT_CODES.md
+  - id: core
+    path: src/specpm/core.py
+    files:
+      owned:
+        - src/specpm/core.py
+      border:
+        - specs/JSON_CONTRACTS.md
+        - specs/CONFORMANCE.md
+  - id: tests
+    path: tests/test_core.py
+    files:
+      owned:
+        - tests/test_core.py
+  - id: docc
+    path: Sources/SpecPM/Documentation.docc/SpecPM.md
+    files:
+      owned:
+        - Sources/SpecPM/Documentation.docc/SpecPM.md
+        - Sources/SpecPM/Documentation.docc/PackageModel.md
+        - Sources/SpecPM/Documentation.docc/CLIReference.md
+        - Sources/SpecPM/Documentation.docc/JSONContracts.md
+        - Sources/SpecPM/Documentation.docc/Conformance.md
+        - Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
+        - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
+        - Sources/SpecPM/Documentation.docc/Roadmap.md
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: high
+    behavior: high
+keywords:
+  - specpackage
+  - boundaryspec
+  - local-registry
+  - conformance
+  - specgraph
+compatibility:
+  platforms:
+    - any
+  languages:
+    - python
+    - swift

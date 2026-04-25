@@ -28,11 +28,11 @@ The local MVP supports:
 The canonical source files remain in the repository:
 
 - `README.md`
-- `SPECS/PRD.md`
-- `SPECS/WORKPLAN.md`
-- `SPECS/JSON_CONTRACTS.md`
-- `SPECS/CONFORMANCE.md`
-- `SPECS/RFC_0001_COVERAGE.md`
+- `specs/PRD.md`
+- `specs/WORKPLAN.md`
+- `specs/JSON_CONTRACTS.md`
+- `specs/CONFORMANCE.md`
+- `specs/RFC_0001_COVERAGE.md`
 - `RFC/SpecGraph-RFC-0001.md`
 
 This DocC site is a navigable documentation package built from those contracts.

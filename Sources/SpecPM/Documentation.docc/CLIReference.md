@@ -68,10 +68,10 @@ SpecGraph state.
 
 ## Exit Codes
 
-The CLI exit code contract is documented in `SPECS/CLI_EXIT_CODES.md`.
+The CLI exit code contract is documented in `specs/CLI_EXIT_CODES.md`.
 
 ## References
 
 - `README.md`
-- `SPECS/CLI_EXIT_CODES.md`
+- `specs/CLI_EXIT_CODES.md`
 - <doc:JSONContracts>

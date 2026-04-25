@@ -60,6 +60,6 @@ SpecGraph graph reasoning, or ContextBuilder artifact generation.
 
 ## References
 
-- `SPECS/CONFORMANCE.md`
+- `specs/CONFORMANCE.md`
 - `tests/fixtures/conformance/specpm-conformance-v0.json`
 - <doc:BoundariesAndTrust>

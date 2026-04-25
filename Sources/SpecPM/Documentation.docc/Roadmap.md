@@ -52,6 +52,6 @@ implementation should follow after the remote API contract is stable.
 
 ## References
 
-- `SPECS/WORKPLAN.md`
-- `SPECS/RFC_0001_COVERAGE.md`
+- `specs/WORKPLAN.md`
+- `specs/RFC_0001_COVERAGE.md`
 - <doc:Conformance>
