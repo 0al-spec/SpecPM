@@ -27,6 +27,8 @@ from specpm.core import (
 ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
 GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
+CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
+CONFORMANCE_CASE_KINDS = {"validate_package", "registry_lifecycle"}
 
 
 def write_index_payload(index_path: Path, packages: list[dict[str, Any]]) -> None:
@@ -65,6 +67,20 @@ def load_yaml_file(path: Path) -> dict[str, Any]:
 
 def write_yaml_file(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+
+def issue_codes(issues: list[dict[str, Any]]) -> set[str]:
+    return {issue["code"] for issue in issues}
+
+
+def load_conformance_suite() -> dict[str, Any]:
+    suite = json.loads(CONFORMANCE_SUITE.read_text(encoding="utf-8"))
+    assert suite["schemaVersion"] == 1
+    case_ids = [case["id"] for case in suite["cases"]]
+    assert len(case_ids) == len(set(case_ids))
+    case_kinds = {case["kind"] for case in suite["cases"]}
+    assert case_kinds <= CONFORMANCE_CASE_KINDS
+    return suite
 
 
 def copy_email_package(tmp_path: Path, name: str) -> Path:
@@ -240,6 +256,47 @@ def test_golden_diff_json_contract() -> None:
         "diff-email-tools-unchanged.json",
         diff_packages(ROOT / "examples/email_tools", ROOT / "examples/email_tools"),
     )
+
+
+def test_conformance_validate_cases() -> None:
+    suite = load_conformance_suite()
+
+    validate_cases = [case for case in suite["cases"] if case["kind"] == "validate_package"]
+    assert validate_cases
+    for case in validate_cases:
+        report = validate_package(ROOT / case["package"])
+        expected = case["expected"]
+        assert report["status"] == expected["status"], case["id"]
+        if "capabilities" in expected:
+            assert report["capabilities"] == expected["capabilities"], case["id"]
+        assert issue_codes(report["errors"]) == set(expected.get("error_codes", [])), case["id"]
+        assert issue_codes(report["warnings"]) == set(expected.get("warning_codes", [])), case["id"]
+
+
+def test_conformance_registry_lifecycle_cases(tmp_path: Path) -> None:
+    suite = load_conformance_suite()
+    lifecycle_cases = [case for case in suite["cases"] if case["kind"] == "registry_lifecycle"]
+    assert lifecycle_cases
+
+    for case in lifecycle_cases:
+        expected = case["expected"]
+        index_path = tmp_path / f"{case['id']}.index.json"
+        project = tmp_path / case["id"]
+
+        indexed = index_package(ROOT / case["package"], index_path)
+        yanked = yank_index_package(case["package_ref"], index_path, case["yank_reason"])
+        search_yanked = search_index(case["capability"], index_path)
+        add_yanked = add_package(case["package_ref"], index_path, project)
+        unyanked = unyank_index_package(case["package_ref"], index_path)
+        add_unyanked = add_package(case["capability"], index_path, project)
+
+        assert indexed["status"] == expected["index_status"], case["id"]
+        assert yanked["status"] == expected["yank_status"], case["id"]
+        assert search_yanked["results"][0]["yanked"] is expected["search_yanked"], case["id"]
+        assert add_yanked["status"] == expected["add_yanked_status"], case["id"]
+        assert issue_codes(add_yanked["errors"]) == set(expected["add_yanked_error_codes"])
+        assert unyanked["status"] == expected["unyank_status"], case["id"]
+        assert add_unyanked["status"] == expected["add_unyanked_status"], case["id"]
 
 
 def test_inbox_lists_specgraph_export() -> None:

@@ -1,0 +1,21 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: conformance.manual_assertion_warning
+  name: Manual Assertion Warning
+  version: 0.1.0
+  summary: Conformance package that validates with a manual assertion evidence warning.
+  license: MIT
+specs:
+  - path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+      - conformance.manual_assertion_warning
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - any
+  languages: []
+foreignArtifacts: []

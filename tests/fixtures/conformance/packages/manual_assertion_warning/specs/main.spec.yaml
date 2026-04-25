@@ -1,0 +1,43 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: conformance.manual_assertion_warning
+  title: Manual Assertion Warning
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Demonstrate a warning-only package backed only by manual assertion evidence.
+scope:
+  boundedContext: conformance_manual_assertion
+  includes:
+    - Emit a warning-only validation report.
+  excludes: []
+provides:
+  capabilities:
+    - id: conformance.manual_assertion_warning
+      role: primary
+      summary: Demonstrate warning-only validation.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: conformance_input
+      kind: file
+      summary: Reads local fixture data.
+  outbound: []
+effects:
+  sideEffects: []
+constraints:
+  - id: no_execution
+    level: MUST
+    statement: This fixture must not require package code execution.
+evidence:
+  - id: manual
+    kind: manual_assertion
+    supports:
+      - intent.summary
+provenance:
+  sourceConfidence:
+    intent: low
+    boundary: low
+    behavior: low
