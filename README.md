@@ -24,7 +24,7 @@ PYTHONPATH=src python3 -m specpm.cli index examples/email_tools --index /tmp/spe
 PYTHONPATH=src python3 -m specpm.cli search document_conversion.email_to_markdown --index /tmp/specpm-index.json --json
 PYTHONPATH=src python3 -m specpm.cli add document_conversion.email_to_markdown --index /tmp/specpm-index.json --project /tmp/specpm-project --json
 PYTHONPATH=src python3 -m specpm.cli diff examples/email_tools examples/email_tools --json
-PYTHONPATH=src python3 -m specpm.cli inbox list --json
+PYTHONPATH=src python3 -m specpm.cli inbox list --root tests/fixtures/specgraph_exports --json
 PYTHONPATH=src python3 -m specpm.cli inbox inspect specgraph.core_repository_facade --root tests/fixtures/specgraph_exports --json
 ```
 
@@ -39,7 +39,7 @@ docker compose run --rm specpm index examples/email_tools --index /tmp/specpm-in
 docker compose run --rm specpm search document_conversion.email_to_markdown --index /tmp/specpm-index.json --json
 docker compose run --rm specpm add document_conversion.email_to_markdown --index /tmp/specpm-index.json --project /tmp/specpm-project --json
 docker compose run --rm specpm diff examples/email_tools examples/email_tools --json
-docker compose run --rm specpm inbox list --json
+docker compose run --rm specpm inbox list --root tests/fixtures/specgraph_exports --json
 docker compose run --rm specpm inbox inspect specgraph.core_repository_facade --root tests/fixtures/specgraph_exports --json
 ```
 
