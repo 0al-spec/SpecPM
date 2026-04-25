@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-24
+Updated: 2026-04-25
 Owner: SpecPM
 Primary source: `RFC/SpecGraph-RFC-0001.md`
 
@@ -10,6 +10,9 @@ Primary source: `RFC/SpecGraph-RFC-0001.md`
 
 SpecPM is a package manager for reusable software intent. The MVP manages
 boundary-first specification packages, not implementation packages.
+SpecPM is the package substrate for SpecGraph: it packages, validates, indexes,
+and exposes reusable specification intent. It does not own graph reasoning,
+artifact generation, prompt execution, or artifact evaluation runtime.
 
 The first useful product loop is:
 
@@ -73,6 +76,9 @@ The MVP must solve the practical local workflow first:
 - Marketplace governance.
 - Full semantic diffing.
 - Running tests or package scripts during validation.
+- PRD, brief, issue breakdown, test plan, or other derived artifact generation.
+- Artifact evaluation runtime.
+- Package-provided prompt or generation instruction execution.
 
 These can be post-MVP tracks once the local package loop is stable.
 
@@ -335,7 +341,45 @@ SpecGraph-side artifacts that shaped this contract:
 SpecPM should not reimplement SpecGraph governance. It should provide a stable
 consumer-side package tool that can be observed by SpecGraph.
 
-## 13. Viewer-Facing JSON Surfaces
+## 13. Derived Artifacts Boundary
+
+SpecPM is the package substrate for SpecGraph. SpecPM is responsible for
+packaging, validating, indexing, inspecting, preserving, and exposing reusable
+specification intent. It provides a stable package layer that SpecGraph can
+depend on.
+
+SpecPM does not own product reasoning, graph refinement, context assembly,
+derived artifact generation, artifact evaluation runtime, or agent execution.
+
+PRDs, implementation briefs, design briefs, onboarding documents, issue
+breakdowns, test plans, review reports, and similar outputs are derived
+artifacts. They are not canonical truth inside SpecPM.
+
+The canonical material handled by SpecPM is package data: `specpm.yaml`,
+`specs/*.spec.yaml`, evidence, foreign inputs, package metadata, and validated
+BoundarySpec content.
+
+Derived artifacts are produced by SpecGraph, ContextBuilder, or downstream
+tools from `SpecPackage` and `BoundarySpec` data.
+
+SpecPM core MUST NOT generate derived artifacts as part of its package manager
+responsibility. SpecPM core MUST NOT execute package-provided prompts,
+generation instructions, or artifact workflows. SpecPM core MUST NOT treat
+package content as trusted instructions to the host.
+
+Package content is untrusted data. It may describe product intent, constraints,
+evidence, relationships, and desired downstream outputs, but it cannot command
+the host environment.
+
+SpecPM may carry intent; SpecGraph decides meaning.
+
+Package content can describe desired outputs. Package content cannot command the host.
+
+Any future support for derived artifact metadata, generation preferences, or
+artifact evaluation profiles MUST be introduced as a post-MVP profile and MUST
+preserve this boundary.
+
+## 14. Viewer-Facing JSON Surfaces
 
 Every command that can drive a viewer should support `--json`.
 
@@ -358,7 +402,7 @@ Status names should be explicit and stable enough for UI badges, for example:
 - `ready_for_review`
 - `blocked`
 
-## 14. Success Metrics
+## 15. Success Metrics
 
 The MVP is successful when:
 
@@ -371,7 +415,7 @@ The MVP is successful when:
 - invalid packages produce actionable JSON errors without crashing;
 - no command executes package-provided code.
 
-## 15. Release Boundary
+## 16. Release Boundary
 
 The first MVP release should be local-first:
 
@@ -384,9 +428,10 @@ The first MVP release should be local-first:
 - no remote service dependency.
 
 The next release can consider remote publish/search, package signing, richer
-dependency solving, and formal registry APIs.
+dependency solving, formal registry APIs, and explicitly deferred derived
+artifact profiles.
 
-## 16. Implementation Environment
+## 17. Implementation Environment
 
 The MVP implementation should maintain two supported execution paths:
 

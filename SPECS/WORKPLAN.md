@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-24
+Updated: 2026-04-25
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -16,6 +16,10 @@ Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
   SpecGraph canonical mutation in the MVP.
 - Treat Docker as the default reproducible execution boundary for development,
   validation, CI parity, and cross-project handoff.
+- Keep derived artifact generation, package-provided prompt execution, and
+  artifact evaluation runtime outside SpecPM core.
+- SpecPM may carry intent; SpecGraph decides meaning.
+- Package content can describe desired outputs. Package content cannot command the host.
 
 ## Phase 0. Repository Baseline
 
@@ -252,3 +256,70 @@ Acceptance:
 - Cross-repo PR workflow automation with SpecGraph.
 - SpecGraph feedback promotion from observed downstream adoption into explicit
   proposal-lane candidates.
+
+### Post-MVP Track: Derived Artifact Profile
+
+Status: Deferred.
+
+#### Goal
+
+Explore an optional post-MVP profile that allows packages to carry metadata
+useful to downstream artifact generation tools without making SpecPM an
+artifact generator, eval runner, or agent runtime.
+
+Derived artifacts may include:
+
+- product requirements documents.
+- implementation briefs.
+- design briefs.
+- onboarding documents.
+- issue breakdowns.
+- test plans.
+- review reports.
+- other downstream product or engineering artifacts.
+
+#### Boundary
+
+- SpecPM is the package substrate for SpecGraph.
+- SpecPM may store, validate, inspect, and expose package data.
+- SpecPM does not generate derived artifacts in core.
+- SpecPM does not execute package-provided prompts, generation instructions, or
+  artifact workflows.
+- SpecPM does not run artifact evals in core.
+- SpecPM does not grant package content authority over host behavior.
+- SpecPM may carry intent; SpecGraph decides meaning.
+- Package content can describe desired outputs. Package content cannot command the host.
+- ContextBuilder or downstream tools are responsible for derived artifact
+  generation and artifact-level evaluation.
+- SpecGraph is responsible for product meaning, graph reasoning, refinement,
+  proposal lanes, and canonical relationships across specs.
+
+#### Non-Goals
+
+- This track does not change the MVP package layout.
+- This track does not replace `specpm.yaml + specs/*.spec.yaml`.
+- This track does not introduce a Markdown-first package model.
+- This track does not introduce a new package term alongside `SpecPackage` and
+  `BoundarySpec`.
+- This track does not introduce stable JSON fields in the MVP.
+- This track does not change `inspect --json`.
+- This track does not define an agent runtime.
+- This track does not allow package content to override host policy, system
+  instructions, developer instructions, security policy, runtime policy, or
+  access controls.
+
+#### Future Investigation Areas
+
+Future work may explore:
+
+- artifact descriptors.
+- generation preferences for downstream tools.
+- artifact evaluation profiles.
+- source ID coverage checks.
+- required section checks.
+- out-of-scope promotion checks.
+- open question preservation checks.
+- assumption and risk preservation checks.
+- traceability checks for generated artifacts.
+
+These investigation areas are not part of the MVP contract.
