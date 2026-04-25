@@ -8,6 +8,7 @@ metadata:
   license: MIT
   authors:
     - name: 0AL Spec
+    - name: Egor Merkushev
 specs:
   - path: specs/specpm.spec.yaml
 index:
