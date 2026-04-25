@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import io
 import json
 import shutil
@@ -9,7 +10,8 @@ from typing import Any
 
 import yaml
 
-from specpm.cli import main
+from specpm import core as core_module
+from specpm.cli import build_parser, main
 from specpm.core import (
     add_package,
     diff_packages,
@@ -81,6 +83,14 @@ def load_conformance_suite() -> dict[str, Any]:
     case_kinds = {case["kind"] for case in suite["cases"]}
     assert case_kinds <= CONFORMANCE_CASE_KINDS
     return suite
+
+
+def cli_command_names() -> set[str]:
+    parser = build_parser()
+    for action in parser._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            return set(action.choices)
+    raise AssertionError("SpecPM CLI parser does not expose subcommands")
 
 
 def copy_email_package(tmp_path: Path, name: str) -> Path:
@@ -197,6 +207,39 @@ def test_golden_validation_json_contract() -> None:
         "validate-email-tools.json",
         validate_package(ROOT / "examples/email_tools"),
     )
+
+
+def test_repository_root_is_self_describing_specpackage() -> None:
+    report = validate_package(ROOT)
+    assert report["status"] == "valid"
+    assert report["package_identity"] == {
+        "package_id": "specpm.core",
+        "name": "SpecPM",
+        "version": "0.1.0",
+    }
+    assert report["errors"] == []
+    assert report["warnings"] == []
+
+    inspection = inspect_package(ROOT)
+    capabilities = set(inspection["package"]["capabilities"])
+    assert {
+        "specpm.cli.public_surface",
+        "specpm.public_api.core_functions",
+        "specpm.package.validate",
+        "specpm.documentation.docc_site",
+    } <= capabilities
+
+    boundary_spec = inspection["boundary_specs"][0]
+    inbound_interfaces = {item["id"]: item for item in boundary_spec["interfaces"]["inbound"]}
+    expected_cli_interface_ids = {f"cli_{command}" for command in cli_command_names()}
+    documented_cli_interface_ids = {
+        interface_id for interface_id in inbound_interfaces if interface_id.startswith("cli_")
+    }
+    assert documented_cli_interface_ids == expected_cli_interface_ids
+    assert "python_core_api" in inbound_interfaces
+    assert set(inbound_interfaces["python_core_api"]["functions"]) == {
+        *core_module.__all__,
+    }
 
 
 def test_golden_inspect_json_contract() -> None:

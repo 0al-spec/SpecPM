@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Local package manager for SpecPackage and BoundarySpec bundles."
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
 dependencies = [
   "PyYAML>=6.0",
 ]

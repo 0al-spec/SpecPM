@@ -14,6 +14,25 @@ my-package/
   foreign/
 ```
 
+## Self-Describing Repository
+
+SpecPM dogfoods its own package model. The repository root contains
+`specpm.yaml` and `specs/specpm.spec.yaml`, which describe the implemented
+public CLI command surface and importable core functions as a `SpecPackage`.
+
+The self-spec is intentionally limited to implemented local-first behavior. It
+does not claim remote registry hosting, `specpm publish`, signing, semantic
+search, derived artifact generation, or SpecGraph graph reasoning.
+
+The repository documentation directory is lowercase `specs/`. This avoids a
+fragile uppercase/lowercase directory split on case-insensitive filesystems and
+keeps the self-spec in the same documentation namespace as the PRD, Workplan,
+coverage notes, and JSON contracts.
+
+CI validates the root package and compares the self-spec against the live CLI
+parser and exported `specpm.core.__all__` API. Changes to the public command or
+core function surface must update `specs/specpm.spec.yaml`.
+
 ## Manifest
 
 `specpm.yaml` declares package identity, package metadata, referenced
@@ -68,6 +87,6 @@ instructions and do not grant authority over host behavior.
 
 ## References
 
-- `SPECS/PRD.md`
+- `specs/PRD.md`
 - `RFC/SpecGraph-RFC-0001.md`
 - <doc:BoundariesAndTrust>

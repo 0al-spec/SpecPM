@@ -75,6 +75,19 @@ KNOWN_FOREIGN_ARTIFACT_ROLES = {
 }
 KNOWN_CONSTRAINT_LEVELS = {"MUST", "SHOULD", "MAY"}
 KNOWN_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
+__all__ = [
+    "add_package",
+    "diff_packages",
+    "index_package",
+    "inspect_inbox_bundle",
+    "inspect_package",
+    "list_inbox",
+    "pack_package",
+    "search_index",
+    "unyank_index_package",
+    "validate_package",
+    "yank_index_package",
+]
 SECURITY_SENSITIVE_EFFECT_KINDS = {
     "filesystem_read",
     "filesystem_write",

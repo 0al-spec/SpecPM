@@ -58,6 +58,6 @@ Package content can describe desired outputs. Package content cannot command the
 
 ## References
 
-- `SPECS/PRD.md`
-- `SPECS/0001_Derived_Artifact_Profile_Decision.md`
+- `specs/PRD.md`
+- `specs/0001_Derived_Artifact_Profile_Decision.md`
 - <doc:BoundariesAndTrust>

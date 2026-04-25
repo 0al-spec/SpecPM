@@ -5,6 +5,8 @@ bundles.
 
 [The first draft of RFC with Specification Package format](https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md)
 
+License: MIT. See `LICENSE`.
+
 ## MVP baseline
 
 Install locally:
@@ -74,12 +76,18 @@ Inbox JSON includes bundle layout checks, validation status, handoff continuity
 fields, and actionable gaps for incomplete SpecGraph export bundles.
 
 Viewer-facing JSON contracts and golden fixtures are documented in
-`SPECS/JSON_CONTRACTS.md`.
+`specs/JSON_CONTRACTS.md`.
 
-Portable conformance artifacts are documented in `SPECS/CONFORMANCE.md`.
+Portable conformance artifacts are documented in `specs/CONFORMANCE.md`.
 
-CLI exit code behavior is documented in `SPECS/CLI_EXIT_CODES.md`. RFC 0001
-implementation coverage is tracked in `SPECS/RFC_0001_COVERAGE.md`.
+CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
+implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.
+
+This repository is also a self-describing SpecPM package. The root
+`specpm.yaml` and `specs/specpm.spec.yaml` describe the implemented public CLI
+surface and importable core functions as a `SpecPackage`. CI validates this
+self-spec and checks that it tracks the current CLI commands and exported core
+API.
 
 Build the DocC documentation site locally:
 

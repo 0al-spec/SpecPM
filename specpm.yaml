@@ -1,0 +1,42 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: specpm.core
+  name: SpecPM
+  version: 0.1.0
+  summary: Local package manager for SpecPackage and BoundarySpec bundles.
+  license: MIT
+  authors:
+    - name: 0AL Spec
+specs:
+  - path: specs/specpm.spec.yaml
+index:
+  provides:
+    capabilities:
+      - specpm.package.validate
+      - specpm.package.inspect
+      - specpm.package.pack
+      - specpm.registry.index
+      - specpm.registry.search
+      - specpm.registry.add
+      - specpm.registry.local_lifecycle
+      - specpm.package.diff
+      - specpm.specgraph.inbox
+      - specpm.conformance.local_suite
+      - specpm.documentation.docc_site
+      - specpm.cli.public_surface
+      - specpm.public_api.core_functions
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - any
+  languages:
+    - python
+    - swift
+keywords:
+  - specpackage
+  - boundaryspec
+  - specgraph
+  - package-manager
+foreignArtifacts: []

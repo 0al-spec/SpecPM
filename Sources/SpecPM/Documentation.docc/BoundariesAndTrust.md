@@ -46,6 +46,6 @@ Package content can describe desired outputs. Package content cannot command the
 
 ## References
 
-- `SPECS/0001_Derived_Artifact_Profile_Decision.md`
-- `SPECS/RFC_0001_COVERAGE.md`
+- `specs/0001_Derived_Artifact_Profile_Decision.md`
+- `specs/RFC_0001_COVERAGE.md`
 - <doc:SpecGraphIntegration>
