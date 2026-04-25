@@ -11,6 +11,7 @@ from typing import Any
 import yaml
 
 from specpm import core as core_module
+from specpm import index_submission as index_submission_module
 from specpm.cli import build_parser, main
 from specpm.core import (
     add_package,
@@ -29,12 +30,18 @@ from specpm.core import (
     validate_remote_registry_payload,
     yank_index_package,
 )
+from specpm.index_submission import (
+    parse_submission_issue_body,
+    render_submission_report_markdown,
+    validate_submission_body,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
 GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
 ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
+PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 CONFORMANCE_CASE_KINDS = {
     "registry_lifecycle",
     "remote_registry_payload",
@@ -312,6 +319,168 @@ def test_add_specpackages_issue_template_matches_public_index_contract() -> None
     assert "does not define" in template_text
     for forbidden in ("password", "token", "private key", "signing key", "secret"):
         assert forbidden not in template_text
+
+
+def test_package_submission_workflow_runs_only_for_submission_label() -> None:
+    loaded = load_yaml_file(PACKAGE_SUBMISSION_WORKFLOW)
+
+    assert loaded["name"] == "Package Submission Check"
+    assert loaded["permissions"] == {"contents": "read", "issues": "write"}
+    assert loaded["on"]["issues"]["types"] == ["opened", "edited", "reopened", "labeled"]
+
+    job = loaded["jobs"]["validate-submission"]
+    assert "package-submission" in job["if"]
+    steps = {step["name"]: step for step in job["steps"] if "name" in step}
+    assert "Validate submitted packages" in steps
+    assert "Comment validation report" in steps
+    assert "Fail invalid submissions" in steps
+    validate_run = steps["Validate submitted packages"]["run"]
+    assert "scripts/validate_index_submission.py" in validate_run
+    assert "--issue-body-file submission-issue.md" in validate_run
+    assert "--markdown-output submission-report.md" in validate_run
+
+
+def sample_submission_issue_body(
+    urls: str = "https://github.com/example/email-tools.git",
+    package_path: str = ".",
+) -> str:
+    return f"""
+### New SpecPackage repositories
+
+{urls}
+
+### Package path
+
+{package_path}
+
+### Notes
+
+Optional maintainer context.
+
+### Submission acknowledgements
+
+- [x] The repositories are public and reviewable.
+- [x] The submitted packages contain `specpm.yaml` and referenced `specs/*.spec.yaml` files.
+- [x] The package content is data and does not require execution during validation.
+- [x] The package content complies with the index policy and code of conduct.
+""".strip()
+
+
+def test_submission_issue_body_parser_extracts_urls_and_package_path() -> None:
+    issue = parse_submission_issue_body(
+        sample_submission_issue_body(
+            urls=(
+                "https://github.com/example/email-tools.git\n"
+                "https://github.com/example/specgraph-bridge.git"
+            ),
+            package_path="packages/email-tools",
+        )
+    )
+
+    assert issue.errors == []
+    assert issue.package_urls == [
+        "https://github.com/example/email-tools.git",
+        "https://github.com/example/specgraph-bridge.git",
+    ]
+    assert issue.package_path == "packages/email-tools"
+
+
+def test_submission_issue_body_treats_no_response_package_path_as_root() -> None:
+    issue = parse_submission_issue_body(sample_submission_issue_body(package_path="_No response_"))
+
+    assert issue.errors == []
+    assert issue.package_path == "."
+
+
+def test_submission_issue_body_rejects_insecure_url_and_path_escape() -> None:
+    issue = parse_submission_issue_body(
+        sample_submission_issue_body(
+            urls="http://github.com/example/email-tools.git",
+            package_path="../outside",
+        )
+    )
+
+    assert {error["code"] for error in issue.errors} == {
+        "package_path_escape",
+        "repository_url_invalid",
+    }
+
+
+def test_submission_validation_uses_specpm_validate_without_package_execution(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    def fake_clone_repository(url: str, checkout: Path) -> dict[str, Any]:
+        shutil.copytree(ROOT / "examples/email_tools", checkout)
+        return {"status": "cloned", "errors": []}
+
+    monkeypatch.setattr(index_submission_module, "clone_repository", fake_clone_repository)
+
+    report = validate_submission_body(sample_submission_issue_body(), clone_root=tmp_path)
+
+    assert report["status"] == "valid"
+    assert report["repository_count"] == 1
+    assert report["repositories"][0]["status"] == "valid"
+    assert report["repositories"][0]["validation_status"] == "valid"
+    assert report["repositories"][0]["package_identity"]["package_id"] == (
+        "document_conversion.email_tools"
+    )
+
+
+def test_submission_cli_uses_temporary_clone_root_by_default(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:  # type: ignore[no-untyped-def]
+    issue_body = tmp_path / "issue.md"
+    issue_body.write_text(sample_submission_issue_body(), encoding="utf-8")
+    clone_roots: list[Path | None] = []
+
+    def fake_validate_submission_body(body: str, *, clone_root: Path | None) -> dict[str, Any]:
+        clone_roots.append(clone_root)
+        return {
+            "schemaVersion": 1,
+            "status": "valid",
+            "package_path": ".",
+            "repository_count": 0,
+            "repositories": [],
+            "errors": [],
+        }
+
+    monkeypatch.setattr(
+        index_submission_module,
+        "validate_submission_body",
+        fake_validate_submission_body,
+    )
+
+    exit_code = index_submission_module.main(["--issue-body-file", str(issue_body)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert json.loads(captured.out)["status"] == "valid"
+    assert clone_roots == [None]
+
+
+def test_submission_report_markdown_is_reviewable() -> None:
+    report = {
+        "status": "invalid",
+        "package_path": ".",
+        "repository_count": 0,
+        "repositories": [],
+        "errors": [
+            {
+                "severity": "error",
+                "code": "package_urls_missing",
+                "message": "At least one package URL is required.",
+            }
+        ],
+    }
+
+    markdown = render_submission_report_markdown(report)
+
+    assert "SpecPM Index Submission Check" in markdown
+    assert "package_urls_missing" in markdown
+    assert "does not execute package content" in markdown
 
 
 def test_rfc_example_validates() -> None:
