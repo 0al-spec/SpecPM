@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import shutil
 import tarfile
@@ -68,6 +69,15 @@ def copy_email_package(tmp_path: Path, name: str) -> Path:
     package = tmp_path / name
     shutil.copytree(ROOT / "examples/email_tools", package)
     return package
+
+
+def run_cli_json(args: list[str], capsys, expected_exit: int = 0) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+    exit_code = main(args)
+    captured = capsys.readouterr()
+    assert exit_code == expected_exit, captured.err
+    loaded = json.loads(captured.out)
+    assert isinstance(loaded, dict)
+    return loaded
 
 
 def assert_golden_json(
@@ -374,6 +384,188 @@ def test_cli_inbox_list_handles_invalid_manifest_identity(tmp_path: Path, capsys
     assert "broken.bundle unknown [invalid]" in captured.out
 
 
+def test_cli_exit_code_contract_for_success_and_failure_paths(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+    invalid_package = tmp_path / "invalid-package"
+    invalid_package.mkdir()
+    (invalid_package / "specpm.yaml").write_text("apiVersion: [", encoding="utf-8")
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    valid_commands = [
+        ["validate", str(ROOT / "examples/email_tools"), "--json"],
+        ["inspect", str(ROOT / "examples/email_tools"), "--json"],
+        [
+            "pack",
+            str(ROOT / "examples/email_tools"),
+            "-o",
+            str(tmp_path / "email_tools.specpm.tgz"),
+            "--json",
+        ],
+        ["index", str(ROOT / "examples/email_tools"), "--index", str(index_path), "--json"],
+        [
+            "search",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        [
+            "add",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--project",
+            str(project),
+            "--json",
+        ],
+        ["diff", str(ROOT / "examples/email_tools"), str(ROOT / "examples/email_tools"), "--json"],
+        ["inbox", "list", "--root", str(SPECGRAPH_FIXTURE_ROOT), "--json"],
+        [
+            "inbox",
+            "inspect",
+            "specgraph.core_repository_facade",
+            "--root",
+            str(SPECGRAPH_FIXTURE_ROOT),
+            "--json",
+        ],
+    ]
+    invalid_commands = [
+        ["validate", str(invalid_package), "--json"],
+        ["inspect", str(invalid_package), "--json"],
+        ["pack", str(invalid_package), "-o", str(tmp_path / "invalid.specpm.tgz"), "--json"],
+        ["index", str(tmp_path / "missing-package"), "--index", str(index_path), "--json"],
+        [
+            "search",
+            "BadCapability",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        [
+            "add",
+            "BadCapability",
+            "--index",
+            str(index_path),
+            "--project",
+            str(project),
+            "--json",
+        ],
+        ["diff", str(invalid_package), str(ROOT / "examples/email_tools"), "--json"],
+        [
+            "inbox",
+            "inspect",
+            "missing.bundle",
+            "--root",
+            str(SPECGRAPH_FIXTURE_ROOT),
+            "--json",
+        ],
+    ]
+
+    for command in valid_commands:
+        assert main(command) == 0, command
+        capsys.readouterr()
+    for command in invalid_commands:
+        assert main(command) == 1, command
+        capsys.readouterr()
+
+
+def test_cli_add_ambiguity_returns_nonzero_exit_code(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    index_path = tmp_path / "index.json"
+    first_entry = indexed_email_entry(tmp_path)
+    second_entry = dict(first_entry)
+    second_entry["package_id"] = "document_conversion.alt_email_tools"
+    second_entry["name"] = "Alt Email Tools"
+    second_entry["source"] = {
+        **first_entry["source"],
+        "digest": {"algorithm": "sha256", "value": "e" * 64},
+    }
+    write_index_payload(index_path, [first_entry, second_entry])
+
+    exit_code = main(
+        [
+            "add",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--project",
+            str(tmp_path / "project"),
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 1
+    assert payload["status"] == "ambiguous"
+
+
+def test_cli_end_to_end_local_package_workflow(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    package = ROOT / "examples/email_tools"
+    archive = tmp_path / "email_tools.specpm.tgz"
+    index_path = tmp_path / "index.json"
+    project = tmp_path / "project"
+
+    validation = run_cli_json(["validate", str(package), "--json"], capsys)
+    inspection = run_cli_json(["inspect", str(package), "--json"], capsys)
+    pack = run_cli_json(["pack", str(package), "-o", str(archive), "--json"], capsys)
+    indexed = run_cli_json(
+        ["index", str(archive), "--index", str(index_path), "--json"],
+        capsys,
+    )
+    search = run_cli_json(
+        [
+            "search",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        capsys,
+    )
+    added = run_cli_json(
+        [
+            "add",
+            "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--project",
+            str(project),
+            "--json",
+        ],
+        capsys,
+    )
+    inbox_list = run_cli_json(
+        ["inbox", "list", "--root", str(SPECGRAPH_FIXTURE_ROOT), "--json"],
+        capsys,
+    )
+    inbox_inspect = run_cli_json(
+        [
+            "inbox",
+            "inspect",
+            "specgraph.core_repository_facade",
+            "--root",
+            str(SPECGRAPH_FIXTURE_ROOT),
+            "--json",
+        ],
+        capsys,
+    )
+    diff = run_cli_json(["diff", str(package), str(package), "--json"], capsys)
+
+    assert validation["status"] == "valid"
+    assert inspection["package"]["identity"]["package_id"] == "document_conversion.email_tools"
+    assert pack["status"] == "packed"
+    assert archive.is_file()
+    assert indexed["status"] == "indexed"
+    assert indexed["entry"]["source"]["kind"] == "archive"
+    assert search["result_count"] == 1
+    assert added["status"] == "added"
+    assert (project / "specpm.lock").is_file()
+    assert inbox_list["bundle_count"] == 1
+    assert inbox_inspect["inbox_status"] == "draft_visible"
+    assert diff["classification"] == "unchanged"
+
+
 def test_manifest_rejects_malformed_capability_entries(tmp_path: Path) -> None:
     package = tmp_path / "malformed"
     shutil.copytree(ROOT / "examples/email_tools", package)
@@ -401,6 +593,82 @@ index:
 
     assert report["status"] == "invalid"
     assert any(issue["code"] == "manifest_capability_entry_invalid" for issue in report["errors"])
+
+
+def test_validator_rejects_missing_manifest(tmp_path: Path) -> None:
+    package = tmp_path / "missing-manifest"
+    package.mkdir()
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "manifest_missing" for issue in report["errors"])
+
+
+def test_validator_rejects_missing_referenced_spec(tmp_path: Path) -> None:
+    package = tmp_path / "missing-spec"
+    package.mkdir()
+    (package / "specpm.yaml").write_text(
+        """
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: missing.spec
+  name: Missing Spec
+  version: 0.1.0
+  summary: Package with missing referenced spec.
+  license: MIT
+specs:
+  - path: specs/missing.spec.yaml
+index:
+  provides:
+    capabilities:
+      - missing.spec
+""".strip(),
+        encoding="utf-8",
+    )
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "spec_missing" for issue in report["errors"])
+
+
+def test_validator_rejects_spec_path_traversal(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "spec-traversal")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["specs"] = [{"path": "../outside.spec.yaml"}]
+    write_yaml_file(manifest_path, manifest)
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "path_escape" for issue in report["errors"])
+
+
+def test_validator_rejects_evidence_path_escape(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "evidence-traversal")
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["evidence"][0]["path"] = "../outside.md"
+    write_yaml_file(spec_path, spec)
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "path_escape" for issue in report["errors"])
+
+
+def test_validator_rejects_malformed_boundary_spec_yaml(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "malformed-spec")
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec_path.write_text("apiVersion: [", encoding="utf-8")
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "yaml_parse_error" for issue in report["errors"])
 
 
 def test_validator_rejects_unknown_top_level_fields(tmp_path: Path) -> None:
@@ -594,6 +862,29 @@ def test_search_reports_invalid_index(tmp_path: Path) -> None:
     assert any(issue["code"] == "index_read_failed" for issue in report["errors"])
 
 
+def test_search_reports_corrupted_index_json(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_path.write_text("{", encoding="utf-8")
+
+    report = search_index("document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "index_json_invalid" for issue in report["errors"])
+
+
+def test_search_reports_unsupported_index_schema(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_path.write_text(
+        json.dumps({"schemaVersion": 999, "packages": [], "capabilities": {}}),
+        encoding="utf-8",
+    )
+
+    report = search_index("document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "index_schema_unsupported" for issue in report["errors"])
+
+
 def test_search_finds_specgraph_fixture_capability(tmp_path: Path) -> None:
     index_path = tmp_path / "index.json"
     index_package(SPECGRAPH_FIXTURE_ROOT / "specgraph.core_repository_facade", index_path)
@@ -772,6 +1063,32 @@ def test_add_exact_package_ref_rejects_yanked_package(tmp_path: Path) -> None:
     assert report["status"] == "invalid"
     assert any(issue["code"] == "package_yanked" for issue in report["errors"])
     assert not (project / "specpm.lock").exists()
+
+
+def test_add_rejects_corrupted_index_package_entry(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    write_index_payload(
+        index_path,
+        [
+            {
+                "package_id": "document_conversion.email_tools",
+                "version": "0.1.0",
+                "provided_capabilities": "not-a-list",
+                "source": {},
+            }
+        ],
+    )
+
+    report = add_package(
+        "document_conversion.email_tools@0.1.0",
+        index_path,
+        tmp_path / "project",
+    )
+
+    assert report["status"] == "invalid"
+    error_codes = {issue["code"] for issue in report["errors"]}
+    assert "package_digest_missing" in error_codes
+    assert "package_capabilities_invalid" in error_codes
 
 
 def test_add_package_path_without_source_index(tmp_path: Path) -> None:
@@ -1032,6 +1349,30 @@ def test_cli_pack_rejects_invalid_packages(tmp_path: Path) -> None:
     assert not archive.exists()
 
 
+def test_index_rejects_corrupted_archive(tmp_path: Path) -> None:
+    archive = tmp_path / "corrupted.specpm.tgz"
+    archive.write_bytes(b"not a gzip tar archive")
+
+    report = index_package(archive, tmp_path / "index.json")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "archive_extract_failed" for issue in report["errors"])
+
+
+def test_index_rejects_archive_member_path_traversal(tmp_path: Path) -> None:
+    archive = tmp_path / "unsafe.specpm.tgz"
+    with tarfile.open(archive, "w:gz") as tar:
+        member = tarfile.TarInfo("../evil.txt")
+        payload = b"escape"
+        member.size = len(payload)
+        tar.addfile(member, fileobj=io.BytesIO(payload))
+
+    report = index_package(archive, tmp_path / "index.json")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "archive_extract_failed" for issue in report["errors"])
+
+
 def test_cli_pack_failure_prints_validation_details(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     package = tmp_path / "invalid"
     package.mkdir()
@@ -1085,6 +1426,77 @@ def test_pack_rejects_symlinks(tmp_path: Path) -> None:
 
     assert report["status"] == "invalid"
     assert any(issue["code"] == "pack_symlink_unsupported" for issue in report["errors"])
+
+
+def test_pack_rejects_nested_symlink_in_artifact_directory(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "nested-symlink")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["foreignArtifacts"] = [
+        {
+            "id": "foreign_docs",
+            "format": "docs",
+            "path": "foreign",
+            "role": "documentation",
+        }
+    ]
+    write_yaml_file(manifest_path, manifest)
+    foreign_dir = package / "foreign"
+    foreign_dir.mkdir()
+    (tmp_path / "outside.md").write_text("outside", encoding="utf-8")
+    (foreign_dir / "outside.md").symlink_to(tmp_path / "outside.md")
+
+    report = pack_package(package, tmp_path / "nested-symlink.specpm.tgz")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "pack_symlink_unsupported" for issue in report["errors"])
+
+
+def test_pack_rejects_foreign_artifact_path_traversal(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "foreign-traversal")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["foreignArtifacts"] = [
+        {
+            "id": "outside",
+            "format": "docs",
+            "path": "../outside.md",
+            "role": "documentation",
+        }
+    ]
+    write_yaml_file(manifest_path, manifest)
+
+    report = pack_package(package, tmp_path / "foreign-traversal.specpm.tgz")
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "validation_failed" for issue in report["errors"])
+    assert any(issue["code"] == "path_escape" for issue in report["validation"]["errors"])
+
+
+def test_pack_includes_large_evidence_file(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "large-evidence")
+    evidence_path = package / "evidence/large.bin"
+    evidence_path.write_bytes(b"specpm-large-evidence\n" * 65536)
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["evidence"].append(
+        {
+            "id": "large_fixture",
+            "kind": "documentation",
+            "path": "evidence/large.bin",
+            "supports": ["intent.summary"],
+        }
+    )
+    write_yaml_file(spec_path, spec)
+    archive = tmp_path / "large-evidence.specpm.tgz"
+
+    report = pack_package(package, archive)
+
+    assert report["status"] == "packed"
+    assert "evidence/large.bin" in report["included_files"]
+    with tarfile.open(archive, "r:gz") as tar:
+        member = tar.getmember("evidence/large.bin")
+        assert member.size == evidence_path.stat().st_size
 
 
 def test_restricted_yaml_rejects_anchors(tmp_path: Path) -> None:
