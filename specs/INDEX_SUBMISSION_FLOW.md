@@ -65,6 +65,27 @@ This lets anyone propose a package without granting write access to the index.
 It also keeps validation evidence, maintainer discussion, and acceptance
 history in GitHub.
 
+## Issue Template
+
+The first reference issue form lives at:
+
+```text
+.github/ISSUE_TEMPLATE/add-specpackages.yml
+```
+
+The form collects:
+
+- one or more public Git repository URLs;
+- an optional package path when `specpm.yaml` is not at the repository root;
+- free-form maintainer notes;
+- acknowledgements that the repositories are public, contain SpecPM package
+  files, do not require package execution during validation, and comply with
+  index policy.
+
+The template intentionally does not collect enterprise credentials, private
+repository access, signing keys, upload tokens, or publish permissions. Public
+index submission is reviewable metadata intake, not a remote mutation API.
+
 ## Public Index Requirements
 
 Initial public submissions should meet these requirements:
@@ -152,7 +173,6 @@ intent. A submission cannot command the index, the registry, or the host.
 
 Future work may add:
 
-- GitHub Issue templates for package submissions;
 - GitHub Actions validation for submitted repositories;
 - generated static registry JSON;
 - GitHub Pages deployment for the public index;

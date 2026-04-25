@@ -331,6 +331,29 @@ Acceptance:
 - The client never executes package content and never downloads package
   archives as a side effect of reading metadata.
 
+## Phase 16. Public Index Submission Template
+
+- [x] Add a GitHub Issue form for `Add SpecPackage(s)` submissions.
+- [x] Collect one public Git repository URL per line.
+- [x] Allow an optional package path for repositories where `specpm.yaml` is
+  not at the repository root.
+- [x] Include submission acknowledgements for public visibility, SpecPM package
+  files, no package execution during validation, and policy compliance.
+- [x] Document that the issue form is public index intake, not `specpm publish`,
+  remote mutation, enterprise auth, archive download/install, or package
+  execution behavior.
+- [x] Add lightweight tests that keep the issue form aligned with the documented
+  public index submission contract.
+
+Acceptance:
+
+- The issue template is valid YAML and uses GitHub Issue Forms structure.
+- The form requires repository URLs and submission acknowledgements.
+- The form does not ask for credentials, tokens, private repository access,
+  signing keys, or upload permissions.
+- Documentation links the issue template to the public index flow while keeping
+  enterprise registry deployment separate.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -380,7 +403,6 @@ and publishes generated read-only registry metadata through GitHub Pages.
 
 Future work may explore:
 
-- GitHub Issue templates for `Add SpecPackage(s)` submissions.
 - GitHub Actions that clone submitted repositories and run `specpm validate`.
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
