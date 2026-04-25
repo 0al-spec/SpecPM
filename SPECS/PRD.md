@@ -152,6 +152,8 @@ specpm pack <package-dir> [-o <archive>]
 specpm index <package-dir-or-archive> [--index <path>]
 specpm search <capability-id> [--index <path>] [--json]
 specpm add <capability-id-or-package-ref> [--index <path>] [--project <dir>]
+specpm yank <package-id@version> [--index <path>] --reason <reason> [--json]
+specpm unyank <package-id@version> [--index <path>] [--json]
 specpm diff <old-package-dir> <new-package-dir> [--json]
 specpm inbox list [--root .specgraph_exports] [--json]
 specpm inbox inspect <package-id> [--root .specgraph_exports] [--json]
@@ -254,6 +256,13 @@ The initial project metadata can be:
 - `.specpm/packages/<package_id>/<version>/`
 
 The lockfile format should stay small and deterministic.
+
+Local registry lifecycle commands should support yanking and unyanking indexed
+package versions without deleting package metadata. `specpm yank` should require
+a human-readable reason, set the indexed package `yanked` flag to true, preserve
+the reason as local index metadata, and keep the package visible in exact search
+results. `specpm unyank` should clear the local yanked state. `specpm add` must
+continue to reject yanked packages.
 
 ## 11. Inspect and Diff Requirements
 

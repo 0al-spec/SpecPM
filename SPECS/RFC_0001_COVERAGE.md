@@ -24,6 +24,7 @@ intentionally left for post-MVP tracks.
 | Compatibility metadata | Implemented | Compatibility metadata is preserved, indexed, inspected, searched, and diffed. |
 | Deterministic pack | Implemented | `.specpm.tgz` archives use stable file ordering, ownership, modes, and timestamps. Package code is never executed. |
 | Local registry index | Implemented | File-backed local index stores package identity, digest, capabilities, requirements, license, compatibility, evidence summary, source, and yanked state. |
+| Local registry lifecycle | Implemented | `specpm yank` and `specpm unyank` update local yanked state without removing packages from exact search. |
 | Exact capability search | Implemented | Search is exact-match only for normative resolution. Missing local indexes return empty results. |
 | Add / local project state | Implemented | `specpm.lock`, `.specpm/index.json`, and `.specpm/packages/.../package.json` are deterministic local metadata. |
 | Inspect | Implemented | Package, BoundarySpec, evidence, effects, compatibility, provenance, implementation binding, and contract warning summaries are exposed. |

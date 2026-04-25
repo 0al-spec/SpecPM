@@ -482,6 +482,154 @@ def index_package(package_ref: Path, index_path: Path) -> dict[str, Any]:
     }
 
 
+def yank_index_package(package_ref: str, index_path: Path, reason: str) -> dict[str, Any]:
+    reason = reason.strip() if isinstance(reason, str) else ""
+    if not reason:
+        return index_lifecycle_invalid_report(
+            "yank",
+            package_ref,
+            index_path,
+            [
+                Issue(
+                    "error",
+                    "yank_reason_required",
+                    "Yanking an indexed package requires a non-empty reason.",
+                    "yank",
+                    "reason",
+                )
+            ],
+        )
+    return update_index_yank_state("yank", package_ref, index_path, yanked=True, reason=reason)
+
+
+def unyank_index_package(package_ref: str, index_path: Path) -> dict[str, Any]:
+    return update_index_yank_state("unyank", package_ref, index_path, yanked=False)
+
+
+def update_index_yank_state(
+    action: str,
+    package_ref: str,
+    index_path: Path,
+    *,
+    yanked: bool,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    package_id, version, parse_errors = parse_package_ref(package_ref, action)
+    if parse_errors:
+        return index_lifecycle_invalid_report(action, package_ref, index_path, parse_errors)
+
+    resolved_index = index_path.resolve()
+    index_data, load_errors = load_index(resolved_index)
+    if load_errors:
+        return index_lifecycle_invalid_report(action, package_ref, resolved_index, load_errors)
+
+    package = find_index_package(index_data, package_id, version)
+    if package is None:
+        return index_lifecycle_invalid_report(
+            action,
+            package_ref,
+            resolved_index,
+            [
+                Issue(
+                    "error",
+                    "package_ref_not_found",
+                    f"Package reference not found in index: {package_id}@{version}",
+                    str(resolved_index),
+                )
+            ],
+        )
+
+    if yanked:
+        previous_yanked = package.get("yanked") is True
+        previous_reason = get_field(package, "yank.reason")
+        package["yanked"] = True
+        package["yank"] = {"reason": reason}
+        status = "unchanged" if previous_yanked and previous_reason == reason else "yanked"
+    else:
+        previous_yanked = package.get("yanked") is True
+        previous_metadata = "yank" in package
+        package["yanked"] = False
+        package.pop("yank", None)
+        status = "unyanked" if previous_yanked or previous_metadata else "unchanged"
+
+    if status != "unchanged":
+        index_data["capabilities"] = build_capability_index(index_data["packages"])
+        try:
+            write_json_file(resolved_index, index_data)
+        except OSError as exc:
+            return index_lifecycle_invalid_report(
+                action,
+                package_ref,
+                resolved_index,
+                [
+                    Issue(
+                        "error",
+                        "index_write_failed",
+                        f"Index could not be written: {exc}",
+                        str(resolved_index),
+                    )
+                ],
+            )
+
+    return {
+        "status": status,
+        "action": action,
+        "target": package_ref,
+        "index": str(resolved_index),
+        "package": package,
+        "errors": [],
+    }
+
+
+def parse_package_ref(package_ref: str, command: str) -> tuple[str, str, list[Issue]]:
+    if "@" not in package_ref:
+        return (
+            "",
+            "",
+            [
+                Issue(
+                    "error",
+                    "package_ref_invalid",
+                    "Package reference must use package_id@version.",
+                    command,
+                    "package_ref",
+                )
+            ],
+        )
+    package_id, version = package_ref.rsplit("@", 1)
+    errors: list[Issue] = []
+    validate_id(package_id, "package_id_invalid", errors, command)
+    validate_semver(version, "package_version_invalid", errors, command)
+    return package_id, version, errors
+
+
+def find_index_package(
+    index_data: dict[str, Any], package_id: str, version: str
+) -> dict[str, Any] | None:
+    for package in index_data["packages"]:
+        if not isinstance(package, dict):
+            continue
+        if package.get("package_id") == package_id and package.get("version") == version:
+            return package
+    return None
+
+
+def index_lifecycle_invalid_report(
+    action: str,
+    package_ref: str,
+    index_path: Path,
+    errors: list[Issue],
+) -> dict[str, Any]:
+    return {
+        "status": "invalid",
+        "action": action,
+        "target": package_ref,
+        "index": str(index_path.resolve()),
+        "package": None,
+        "errors": [issue.to_dict() for issue in errors],
+    }
+
+
 def search_index(capability_id: str, index_path: Path) -> dict[str, Any]:
     errors: list[Issue] = []
     validate_id(capability_id, "capability_id_invalid", errors, "search")

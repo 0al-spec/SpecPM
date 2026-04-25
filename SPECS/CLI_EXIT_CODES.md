@@ -28,6 +28,8 @@ ContextBuilder automation can treat command outcomes consistently.
 | `specpm index` | index status is `indexed` or `unchanged` | index status is `invalid` |
 | `specpm search` | search status is `ok`, including empty or missing local index results | search status is `invalid` |
 | `specpm add` | add status is `added` or `unchanged` | add status is `invalid` or `ambiguous` |
+| `specpm yank` | yank status is `yanked` or `unchanged` | yank status is `invalid` |
+| `specpm unyank` | unyank status is `unyanked` or `unchanged` | unyank status is `invalid` |
 | `specpm diff` | diff status is `ok` | diff status is `invalid` |
 | `specpm inbox list` | always returns a list report, even when empty | reserved for future unrecoverable command errors |
 | `specpm inbox inspect` | bundle is found | bundle is missing |

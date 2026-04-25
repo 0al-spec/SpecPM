@@ -61,6 +61,7 @@ Digest = {
 - Index status: `indexed`, `unchanged`, `invalid`.
 - Search status: `ok`, `invalid`.
 - Add status: `added`, `unchanged`, `ambiguous`, `invalid`.
+- Registry lifecycle status: `yanked`, `unyanked`, `unchanged`, `invalid`.
 - Inbox bundle status: `draft_visible`, `ready_for_review`, `invalid`,
   `blocked`.
 - Diff status: `ok`, `invalid`.
@@ -249,6 +250,31 @@ AddReport = {
 ```
 
 Golden fixture: `tests/fixtures/golden/add-email-tools.json`.
+
+## Registry Lifecycle Result
+
+Commands:
+
+```bash
+specpm yank <package-id@version> --index <path> --reason <reason> --json
+specpm unyank <package-id@version> --index <path> --json
+```
+
+Contract:
+
+```text
+RegistryLifecycleReport = {
+  status: "yanked" | "unyanked" | "unchanged" | "invalid",
+  action: "yank" | "unyank",
+  target: string,
+  index: string,
+  package: object | null,
+  errors: Issue[]
+}
+```
+
+Yanked packages remain visible in exact search results with `yanked: true`.
+`specpm add` must reject yanked packages.
 
 ## Inbox List
 
