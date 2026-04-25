@@ -260,6 +260,27 @@ Acceptance:
 - Invalid package refs and missing index entries produce structured errors.
 - The lifecycle commands work through Docker and local Python execution.
 
+## Phase 13. Conformance Test Artifacts
+
+- [x] Define the first local conformance suite format.
+- [x] Add a portable JSON suite manifest.
+- [x] Add fixture packages for valid, invalid, and warning-only validation
+  outcomes.
+- [x] Add a registry lifecycle conformance case for index, search, yank, add
+  rejection, unyank, and add success.
+- [x] Add tests that verify the conformance artifacts remain aligned with
+  implementation behavior.
+- [x] Document conformance artifact scope and non-goals.
+
+Acceptance:
+
+- The conformance suite is data-only and repository-relative.
+- The conformance fixtures do not require package code execution.
+- Tests fail if the documented conformance expected outcomes drift from current
+  SpecPM behavior.
+- The conformance artifacts do not introduce remote registry, signing, graph
+  reasoning, artifact generation, or agent runtime behavior.
+
 ## Post-MVP Tracks
 
 - Remote registry API.
@@ -269,7 +290,7 @@ Acceptance:
 - Namespace governance.
 - Natural-language or semantic capability search.
 - Full dependency solving.
-- Conformance test artifacts.
+- Expanded conformance suites for additional post-MVP tracks.
 - Richer import adapters for CodeSpeak, OpenAPI, GraphQL, protobuf, AsyncAPI,
   README, ADR, package manifests, test metadata, and source-level public API
   summaries.

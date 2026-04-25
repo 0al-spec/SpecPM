@@ -76,5 +76,7 @@ fields, and actionable gaps for incomplete SpecGraph export bundles.
 Viewer-facing JSON contracts and golden fixtures are documented in
 `SPECS/JSON_CONTRACTS.md`.
 
+Portable conformance artifacts are documented in `SPECS/CONFORMANCE.md`.
+
 CLI exit code behavior is documented in `SPECS/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `SPECS/RFC_0001_COVERAGE.md`.

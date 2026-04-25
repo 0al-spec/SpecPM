@@ -1,0 +1,14 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: conformance.missing_referenced_spec
+  name: Missing Referenced Spec
+  version: 0.1.0
+  summary: Conformance package with a missing BoundarySpec.
+  license: MIT
+specs:
+  - path: specs/missing.spec.yaml
+index:
+  provides:
+    capabilities:
+      - conformance.missing_referenced_spec

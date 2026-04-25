@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "suite": "specpm-local-conformance-v0",
+  "cases": [
+    {
+      "id": "validate.valid_email_tools",
+      "kind": "validate_package",
+      "package": "examples/email_tools",
+      "expected": {
+        "status": "valid",
+        "capabilities": [
+          "document_conversion.email_to_markdown"
+        ],
+        "error_codes": [],
+        "warning_codes": []
+      }
+    },
+    {
+      "id": "validate.missing_manifest",
+      "kind": "validate_package",
+      "package": "tests/fixtures/conformance/packages/missing_manifest",
+      "expected": {
+        "status": "invalid",
+        "error_codes": [
+          "manifest_missing"
+        ]
+      }
+    },
+    {
+      "id": "validate.missing_referenced_spec",
+      "kind": "validate_package",
+      "package": "tests/fixtures/conformance/packages/missing_referenced_spec",
+      "expected": {
+        "status": "invalid",
+        "error_codes": [
+          "spec_missing"
+        ]
+      }
+    },
+    {
+      "id": "validate.spec_path_escape",
+      "kind": "validate_package",
+      "package": "tests/fixtures/conformance/packages/spec_path_escape",
+      "expected": {
+        "status": "invalid",
+        "error_codes": [
+          "path_escape"
+        ]
+      }
+    },
+    {
+      "id": "validate.manual_assertion_warning",
+      "kind": "validate_package",
+      "package": "tests/fixtures/conformance/packages/manual_assertion_warning",
+      "expected": {
+        "status": "warning_only",
+        "warning_codes": [
+          "manual_assertion_only_evidence"
+        ]
+      }
+    },
+    {
+      "id": "registry.yank_blocks_add_and_unyank_restores_add",
+      "kind": "registry_lifecycle",
+      "package": "examples/email_tools",
+      "package_ref": "document_conversion.email_tools@0.1.0",
+      "capability": "document_conversion.email_to_markdown",
+      "yank_reason": "conformance lifecycle smoke",
+      "expected": {
+        "index_status": "indexed",
+        "yank_status": "yanked",
+        "search_yanked": true,
+        "add_yanked_status": "invalid",
+        "add_yanked_error_codes": [
+          "package_yanked"
+        ],
+        "unyank_status": "unyanked",
+        "add_unyanked_status": "added"
+      }
+    }
+  ]
+}

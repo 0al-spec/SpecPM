@@ -29,6 +29,7 @@ intentionally left for post-MVP tracks.
 | Add / local project state | Implemented | `specpm.lock`, `.specpm/index.json`, and `.specpm/packages/.../package.json` are deterministic local metadata. |
 | Inspect | Implemented | Package, BoundarySpec, evidence, effects, compatibility, provenance, implementation binding, and contract warning summaries are exposed. |
 | Structural diff | Implemented | Diff detects capability, required capability, interface, MUST constraint, package metadata, and compatibility changes with conservative classification. |
+| Conformance artifacts | Implemented | `tests/fixtures/conformance/specpm-conformance-v0.json` covers validation outcomes and local registry lifecycle behavior. |
 | Security handling | Implemented for MVP | Packages are untrusted data; path traversal, symlinks, unsafe archive members, malformed YAML/JSON, and script execution are blocked or avoided. |
 | SpecGraph inbox | Implemented as local bridge | `.specgraph_exports/` bundles are listed and inspected without mutating canonical SpecGraph files. This extends the local MVP bridge. |
 
@@ -97,6 +98,7 @@ artifact generator, eval runner, or agent runtime.
 
 - CLI exit code contract: `SPECS/CLI_EXIT_CODES.md`
 - Viewer JSON contracts: `SPECS/JSON_CONTRACTS.md`
+- Conformance artifacts: `SPECS/CONFORMANCE.md`
 - Golden JSON fixtures: `tests/fixtures/golden/`
 - End-to-end and hardening tests: `tests/test_core.py`
 - MVP example package: `examples/email_tools/`

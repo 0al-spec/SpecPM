@@ -1,0 +1,14 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: conformance.spec_path_escape
+  name: Spec Path Escape
+  version: 0.1.0
+  summary: Conformance package with a spec path escaping the package root.
+  license: MIT
+specs:
+  - path: ../outside.spec.yaml
+index:
+  provides:
+    capabilities:
+      - conformance.spec_path_escape
