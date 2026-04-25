@@ -362,7 +362,7 @@ BoundarySpec content.
 Derived artifacts are produced by SpecGraph, ContextBuilder, or downstream
 tools from `SpecPackage` and `BoundarySpec` data.
 
-SpecPM core MUST NOT generate derived artifacts as part of its package-manager
+SpecPM core MUST NOT generate derived artifacts as part of its package manager
 responsibility. SpecPM core MUST NOT execute package-provided prompts,
 generation instructions, or artifact workflows. SpecPM core MUST NOT treat
 package content as trusted instructions to the host.

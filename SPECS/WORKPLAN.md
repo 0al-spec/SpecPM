@@ -269,7 +269,7 @@ artifact generator, eval runner, or agent runtime.
 
 Derived artifacts may include:
 
-- Product Requirements Documents.
+- product requirements documents.
 - implementation briefs.
 - design briefs.
 - onboarding documents.
