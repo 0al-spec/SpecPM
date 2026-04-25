@@ -5,6 +5,9 @@ metadata:
   title: SpecPM Core Package Manager
   version: 0.1.0
   status: draft
+  authors:
+    - name: 0AL Spec
+    - name: Egor Merkushev
 intent:
   summary: Provide local-first package management for reusable SpecPackage and BoundarySpec bundles without executing package content.
 scope:
