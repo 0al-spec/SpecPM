@@ -110,6 +110,15 @@ Remote client commands MUST validate package IDs, package refs, capability IDs,
 registry URLs, timeouts, and response payload shape before returning a
 successful machine-readable report.
 
+Remote client commands MUST also validate response target consistency before
+returning success:
+
+- package metadata responses must match the requested `package_id`;
+- package version responses must match the requested `package_id` and
+  `version`;
+- exact capability search responses must echo the requested `capability_id` and
+  each result `matched_capability` must equal that capability ID.
+
 ## Transport
 
 The initial transport model is HTTPS with JSON payloads.

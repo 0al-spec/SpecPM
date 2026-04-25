@@ -569,6 +569,63 @@ def test_remote_registry_error_payload_returns_not_found(monkeypatch) -> None:  
     assert issue_codes(report["errors"]) == {"package_not_found"}
 
 
+def test_remote_registry_rejects_package_target_mismatch(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payload = load_remote_registry_fixture("package-version.json")
+    payload["package"]["package_id"] = "document_conversion.other_tools"
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payload)
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = get_remote_package_version(
+        "https://registry.example.invalid",
+        "document_conversion.email_tools@0.1.0",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"remote_registry_target_mismatch"}
+    assert report["errors"][0]["field"] == "package.package_id"
+
+
+def test_remote_registry_rejects_version_target_mismatch(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payload = load_remote_registry_fixture("package-version.json")
+    payload["package"]["version"] = "0.2.0"
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payload)
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = get_remote_package_version(
+        "https://registry.example.invalid",
+        "document_conversion.email_tools@0.1.0",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"remote_registry_target_mismatch"}
+    assert report["errors"][0]["field"] == "package.version"
+
+
+def test_remote_registry_rejects_capability_target_mismatch(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payload = load_remote_registry_fixture("capability-search.json")
+    payload["results"][0]["matched_capability"] = "document_conversion.other"
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payload)
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = search_remote_registry(
+        "https://registry.example.invalid",
+        "document_conversion.email_to_markdown",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"remote_registry_target_mismatch"}
+    assert report["errors"][0]["field"] == "results.0.matched_capability"
+
+
 def test_remote_registry_invalid_input_does_not_fetch(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     def fail_urlopen(request, timeout):  # type: ignore[no-untyped-def]
         raise AssertionError("remote registry client should not fetch invalid input")

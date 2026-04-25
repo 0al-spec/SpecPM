@@ -1001,6 +1001,17 @@ def read_remote_registry_endpoint(
             payload=payload,
         )
 
+    target_errors = validate_remote_registry_target(payload, target, endpoint)
+    if target_errors:
+        return remote_registry_invalid_report(
+            operation,
+            registry_url,
+            endpoint,
+            target,
+            target_errors,
+            payload=payload,
+        )
+
     return remote_registry_client_report(
         "ok",
         operation,
@@ -1155,6 +1166,105 @@ def remote_registry_error_issue(payload: dict[str, Any], endpoint: str) -> dict[
         else "Remote registry returned an error."
     )
     return Issue("error", code, message, endpoint, "error").to_dict()
+
+
+def validate_remote_registry_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    kind = payload["kind"]
+    if kind == "RemotePackage":
+        return validate_remote_package_target(payload, target, endpoint)
+    if kind == "RemotePackageVersion":
+        return validate_remote_package_version_target(payload, target, endpoint)
+    if kind == "RemoteCapabilitySearch":
+        return validate_remote_capability_search_target(payload, target, endpoint)
+    return []
+
+
+def validate_remote_package_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    package = payload["package"]
+    package_id = target.get("package_id")
+    if package_id is not None and package.get("package_id") != package_id:
+        return [
+            remote_target_mismatch(
+                endpoint,
+                "package.package_id",
+                f"Remote registry returned package_id {package.get('package_id')!r}, "
+                f"expected {package_id!r}.",
+            )
+        ]
+    return []
+
+
+def validate_remote_package_version_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    errors = validate_remote_package_target(payload, target, endpoint)
+    package = payload["package"]
+    version = target.get("version")
+    if version is not None and package.get("version") != version:
+        errors.append(
+            remote_target_mismatch(
+                endpoint,
+                "package.version",
+                f"Remote registry returned version {package.get('version')!r}, "
+                f"expected {version!r}.",
+            )
+        )
+    return errors
+
+
+def validate_remote_capability_search_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    capability_id = target.get("capability_id")
+    if capability_id is None:
+        return []
+
+    errors: list[Issue] = []
+    query_capability_id = payload["query"].get("capability_id")
+    if query_capability_id != capability_id:
+        errors.append(
+            remote_target_mismatch(
+                endpoint,
+                "query.capability_id",
+                f"Remote registry returned query capability_id {query_capability_id!r}, "
+                f"expected {capability_id!r}.",
+            )
+        )
+
+    for index, result in enumerate(payload["results"]):
+        matched_capability = result.get("matched_capability")
+        if matched_capability != capability_id:
+            errors.append(
+                remote_target_mismatch(
+                    endpoint,
+                    f"results.{index}.matched_capability",
+                    f"Remote registry returned matched_capability {matched_capability!r}, "
+                    f"expected {capability_id!r}.",
+                )
+            )
+    return errors
+
+
+def remote_target_mismatch(endpoint: str, field: str, message: str) -> Issue:
+    return Issue(
+        "error",
+        "remote_registry_target_mismatch",
+        message,
+        endpoint,
+        field,
+    )
 
 
 def validate_remote_registry_payload(payload: Any) -> list[Issue]:
