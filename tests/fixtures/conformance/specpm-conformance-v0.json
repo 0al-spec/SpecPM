@@ -33,6 +33,7 @@
       "expected": {
         "status": "invalid",
         "error_codes": [
+          "manifest_capability_not_declared",
           "spec_missing"
         ]
       }
@@ -44,6 +45,7 @@
       "expected": {
         "status": "invalid",
         "error_codes": [
+          "manifest_capability_not_declared",
           "path_escape"
         ]
       }
