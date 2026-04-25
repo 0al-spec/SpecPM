@@ -49,6 +49,13 @@ docker compose run --rm specpm inbox list --root tests/fixtures/specgraph_export
 docker compose run --rm specpm inbox inspect specgraph.core_repository_facade --root tests/fixtures/specgraph_exports --json
 ```
 
+Run the post-MVP read-only remote metadata client against a compatible registry:
+
+```bash
+PYTHONPATH=src python3 -m specpm.cli remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
+docker compose run --rm specpm remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
+```
+
 Quality gates:
 
 ```bash
@@ -71,6 +78,9 @@ Implemented first slice:
 - `specpm diff <old-package-dir> <new-package-dir> [--json]`
 - `specpm inbox list [--root .specgraph_exports] [--json]`
 - `specpm inbox inspect <package-id> [--root .specgraph_exports] [--json]`
+- `specpm remote package <package-id> --registry <url> [--json]`
+- `specpm remote version <package-id@version> --registry <url> [--json]`
+- `specpm remote search <capability-id> --registry <url> [--json]`
 
 Inbox JSON includes bundle layout checks, validation status, handoff continuity
 fields, and actionable gaps for incomplete SpecGraph export bundles.
@@ -81,7 +91,12 @@ Viewer-facing JSON contracts and golden fixtures are documented in
 Portable conformance artifacts are documented in `specs/CONFORMANCE.md`.
 
 The post-MVP remote registry API contract is documented in
-`specs/REMOTE_REGISTRY_API.md`.
+`specs/REMOTE_REGISTRY_API.md`. The `specpm remote` commands are read-only
+metadata clients for that contract; they do not download package archives,
+publish packages, mutate remote state, or execute package content.
+
+Public index and enterprise registry deployment options are tracked in
+`specs/INDEX_SUBMISSION_FLOW.md`.
 
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.

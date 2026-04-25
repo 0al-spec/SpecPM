@@ -305,9 +305,39 @@ Acceptance:
 - Tests fail if documented remote registry payload fixtures drift from the
   expected contract shape.
 
+## Phase 15. Read-Only Remote Registry Client
+
+- [x] Add `specpm remote package <package-id> --registry <url>`.
+- [x] Add `specpm remote version <package-id@version> --registry <url>`.
+- [x] Add `specpm remote search <capability-id> --registry <url>`.
+- [x] Fetch only explicit read-only registry metadata endpoints.
+- [x] Validate remote registry payload shape before returning a successful
+  report.
+- [x] Return stable JSON client reports for `ok`, `not_found`, and `invalid`
+  outcomes.
+- [x] Reject invalid package IDs, package refs, capability IDs, registry URLs,
+  and timeouts before network access.
+- [x] Keep archive download, local install/cache, publish, auth, signing,
+  namespace governance, remote yanking mutation, and semantic search out of
+  scope.
+
+Acceptance:
+
+- Remote package, version, and exact capability search commands produce stable
+  JSON reports.
+- Remote error payloads remain machine-readable and produce non-zero CLI exits.
+- Client tests use fixture-backed HTTP fetch stubs and do not require a live
+  registry service.
+- The client never executes package content and never downloads package
+  archives as a side effect of reading metadata.
+
 ## Post-MVP Tracks
 
-- Remote registry service and client implementation.
+- Remote registry service implementation.
+- Public SpecPM Index submission flow through GitHub Issues, Actions, and
+  GitHub Pages.
+- Enterprise remote registry deployment with private access control, audit, and
+  policy enforcement.
 - `specpm publish`.
 - Remote package yanking governance.
 - Package signing and trust policies.
@@ -321,6 +351,65 @@ Acceptance:
 - Cross-repo PR workflow automation with SpecGraph.
 - SpecGraph feedback promotion from observed downstream adoption into explicit
   proposal-lane candidates.
+
+### Post-MVP Track: Public SpecPM Index Submission Flow
+
+Status: Deferred.
+
+#### Goal
+
+Define a public package-index workflow where anyone can submit public
+SpecPackage repositories through a GitHub Issue form. The index validates
+submitted repositories through GitHub Actions, records review history in GitHub,
+and publishes generated read-only registry metadata through GitHub Pages.
+
+#### Boundary
+
+- The public index is a submission queue, validation gate, and generated
+  read-only metadata registry.
+- The public index may store package references and generated registry JSON
+  before it stores package archives.
+- The public index should use the remote registry API contract for generated
+  `/v0` metadata.
+- The public index does not require a custom backend for the first iteration.
+- The public index does not define enterprise authentication, private package
+  visibility, package signing, remote mutation APIs, or archive install/cache
+  behavior.
+
+#### Future Investigation Areas
+
+Future work may explore:
+
+- GitHub Issue templates for `Add SpecPackage(s)` submissions.
+- GitHub Actions that clone submitted repositories and run `specpm validate`.
+- Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
+  submissions.
+- A generator that emits static `/v0/packages/...` and
+  `/v0/capabilities/...` JSON for GitHub Pages.
+- Package removal request workflow.
+- Namespace claim workflow.
+- Optional deterministic `.specpm.tgz` archive mirroring.
+
+### Post-MVP Track: Enterprise Remote Registry
+
+Status: Deferred.
+
+#### Goal
+
+Preserve the remote registry path for enterprise deployments that need private
+packages, access control, audit, policy enforcement, internal namespace
+ownership, and integration with company infrastructure.
+
+#### Boundary
+
+- Enterprise registry deployments may implement the same read-only metadata
+  contract as the public index.
+- Enterprise registry deployments may add authentication, authorization,
+  private blob storage, signing policy, audit logs, retention policy, and
+  approval workflows.
+- These enterprise features should not be required for the public index MVP.
+- Enterprise registry work must not turn SpecPM core into a package content
+  execution runtime.
 
 ### Post-MVP Track: Derived Artifact Profile
 

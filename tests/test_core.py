@@ -15,14 +15,18 @@ from specpm.cli import build_parser, main
 from specpm.core import (
     add_package,
     diff_packages,
+    get_remote_package,
+    get_remote_package_version,
     index_package,
     inspect_inbox_bundle,
     inspect_package,
     list_inbox,
     pack_package,
     search_index,
+    search_remote_registry,
     unyank_index_package,
     validate_package,
+    validate_remote_registry_payload,
     yank_index_package,
 )
 
@@ -95,6 +99,28 @@ def load_conformance_suite() -> dict[str, Any]:
     case_kinds = {case["kind"] for case in suite["cases"]}
     assert case_kinds <= CONFORMANCE_CASE_KINDS
     return suite
+
+
+def load_remote_registry_fixture(name: str) -> dict[str, Any]:
+    loaded = json.loads(
+        (ROOT / "tests/fixtures/conformance/remote_registry" / name).read_text(encoding="utf-8")
+    )
+    assert isinstance(loaded, dict)
+    return loaded
+
+
+class FakeRemoteResponse:
+    def __init__(self, payload: dict[str, Any]):
+        self.payload = payload
+
+    def __enter__(self) -> FakeRemoteResponse:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return json.dumps(self.payload).encode("utf-8")
 
 
 def assert_sha256_digest(value: dict[str, Any]) -> None:
@@ -450,6 +476,191 @@ def test_conformance_remote_registry_payload_cases() -> None:
             assert payload["query"]["capability_id"] == expected["capability_id"], case["id"]
         if "result_count" in expected:
             assert payload["result_count"] == expected["result_count"], case["id"]
+
+
+def test_remote_registry_payload_validator_rejects_incomplete_source() -> None:
+    payload = load_remote_registry_fixture("capability-search.json")
+    del payload["results"][0]["source"]["size"]
+
+    errors = validate_remote_registry_payload(payload)
+
+    assert any(
+        issue.code == "remote_registry_field_invalid" and issue.field == "results.0.source.size"
+        for issue in errors
+    )
+
+
+def test_remote_registry_search_fetches_exact_capability(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    captured: dict[str, Any] = {}
+    payload = load_remote_registry_fixture("capability-search.json")
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        captured["url"] = request.full_url
+        captured["accept"] = request.get_header("Accept")
+        captured["timeout"] = timeout
+        return FakeRemoteResponse(payload)
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = search_remote_registry(
+        "https://registry.example.invalid",
+        "document_conversion.email_to_markdown",
+        timeout=2.5,
+    )
+
+    assert_golden_json("remote-search-email-tools.json", report)
+    assert captured == {
+        "url": (
+            "https://registry.example.invalid/v0/capabilities/"
+            "document_conversion.email_to_markdown/packages"
+        ),
+        "accept": "application/json",
+        "timeout": 2.5,
+    }
+
+
+def test_remote_registry_package_and_version_fetch_expected_endpoints(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payloads = {
+        "https://registry.example.invalid/v0/packages/document_conversion.email_tools": (
+            load_remote_registry_fixture("package-metadata.json")
+        ),
+        (
+            "https://registry.example.invalid/v0/packages/"
+            "document_conversion.email_tools/versions/0.1.0"
+        ): load_remote_registry_fixture("package-version.json"),
+    }
+    seen: list[str] = []
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        seen.append(request.full_url)
+        return FakeRemoteResponse(payloads[request.full_url])
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    package = get_remote_package(
+        "https://registry.example.invalid",
+        "document_conversion.email_tools",
+    )
+    version = get_remote_package_version(
+        "https://registry.example.invalid",
+        "document_conversion.email_tools@0.1.0",
+    )
+
+    assert package["status"] == "ok"
+    assert package["payload"]["kind"] == "RemotePackage"
+    assert version["status"] == "ok"
+    assert version["payload"]["kind"] == "RemotePackageVersion"
+    assert seen == list(payloads)
+
+
+def test_remote_registry_error_payload_returns_not_found(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(load_remote_registry_fixture("error-not-found.json"))
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = get_remote_package(
+        "https://registry.example.invalid",
+        "missing.package",
+    )
+
+    assert report["status"] == "not_found"
+    assert report["payload"]["kind"] == "RemoteRegistryError"
+    assert issue_codes(report["errors"]) == {"package_not_found"}
+
+
+def test_remote_registry_rejects_package_target_mismatch(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payload = load_remote_registry_fixture("package-version.json")
+    payload["package"]["package_id"] = "document_conversion.other_tools"
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payload)
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = get_remote_package_version(
+        "https://registry.example.invalid",
+        "document_conversion.email_tools@0.1.0",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"remote_registry_target_mismatch"}
+    assert report["errors"][0]["field"] == "package.package_id"
+
+
+def test_remote_registry_rejects_version_target_mismatch(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payload = load_remote_registry_fixture("package-version.json")
+    payload["package"]["version"] = "0.2.0"
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payload)
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = get_remote_package_version(
+        "https://registry.example.invalid",
+        "document_conversion.email_tools@0.1.0",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"remote_registry_target_mismatch"}
+    assert report["errors"][0]["field"] == "package.version"
+
+
+def test_remote_registry_rejects_capability_target_mismatch(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payload = load_remote_registry_fixture("capability-search.json")
+    payload["results"][0]["matched_capability"] = "document_conversion.other"
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payload)
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = search_remote_registry(
+        "https://registry.example.invalid",
+        "document_conversion.email_to_markdown",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"remote_registry_target_mismatch"}
+    assert report["errors"][0]["field"] == "results.0.matched_capability"
+
+
+def test_remote_registry_invalid_input_does_not_fetch(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    def fail_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        raise AssertionError("remote registry client should not fetch invalid input")
+
+    monkeypatch.setattr(core_module, "urlopen", fail_urlopen)
+
+    report = search_remote_registry("https://registry.example.invalid", "BadCapability")
+
+    assert report["status"] == "invalid"
+    assert report["endpoint"] is None
+    assert issue_codes(report["errors"]) == {"capability_id_invalid"}
+
+
+def test_cli_remote_search_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(load_remote_registry_fixture("capability-search.json"))
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    exit_code = main(
+        [
+            "remote",
+            "search",
+            "document_conversion.email_to_markdown",
+            "--registry",
+            "https://registry.example.invalid",
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["status"] == "ok"
+    assert payload["payload"]["kind"] == "RemoteCapabilitySearch"
 
 
 def test_inbox_lists_specgraph_export() -> None:

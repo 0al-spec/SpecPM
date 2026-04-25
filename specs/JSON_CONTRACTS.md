@@ -62,6 +62,7 @@ Digest = {
 - Search status: `ok`, `invalid`.
 - Add status: `added`, `unchanged`, `ambiguous`, `invalid`.
 - Registry lifecycle status: `yanked`, `unyanked`, `unchanged`, `invalid`.
+- Remote registry client status: `ok`, `not_found`, `invalid`.
 - Inbox bundle status: `draft_visible`, `ready_for_review`, `invalid`,
   `blocked`.
 - Diff status: `ok`, `invalid`.
@@ -275,6 +276,38 @@ RegistryLifecycleReport = {
 
 Yanked packages remain visible in exact search results with `yanked: true`.
 `specpm add` must reject yanked packages.
+
+## Remote Registry Client Result
+
+Commands:
+
+```bash
+specpm remote package <package-id> --registry <url> --json
+specpm remote version <package-id@version> --registry <url> --json
+specpm remote search <capability-id> --registry <url> --json
+```
+
+Contract:
+
+```text
+RemoteRegistryClientReport = {
+  status: "ok" | "not_found" | "invalid",
+  operation: "package" | "version" | "search",
+  registry: string,
+  endpoint: string | null,
+  target: object,
+  payload: RemotePackage | RemotePackageVersion | RemoteCapabilitySearch |
+    RemoteRegistryError | null,
+  errors: Issue[]
+}
+```
+
+The client fetches metadata only. It does not download package archives, mutate
+local state, publish packages, authenticate, sign packages, or execute package
+content. A remote registry error payload remains available under `payload` and
+is reflected as `not_found` or `invalid` with a non-zero CLI exit.
+
+Golden fixture: `tests/fixtures/golden/remote-search-email-tools.json`.
 
 ## Inbox List
 

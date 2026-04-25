@@ -21,6 +21,7 @@ The local MVP supports:
 - local yank and unyank lifecycle state;
 - structural diff;
 - SpecGraph inbox inspection for `.specgraph_exports/` bundles;
+- read-only remote registry metadata lookup;
 - viewer-facing JSON contracts and portable conformance artifacts.
 
 ## Source Documents
@@ -33,6 +34,7 @@ The canonical source files remain in the repository:
 - `specs/JSON_CONTRACTS.md`
 - `specs/CONFORMANCE.md`
 - `specs/REMOTE_REGISTRY_API.md`
+- `specs/INDEX_SUBMISSION_FLOW.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `RFC/SpecGraph-RFC-0001.md`
 

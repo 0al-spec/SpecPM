@@ -401,6 +401,7 @@ Minimum JSON surfaces:
 - add/import result;
 - inbox bundle list;
 - inbox bundle inspection.
+- explicit read-only remote registry metadata reports.
 
 Status names should be explicit and stable enough for UI badges, for example:
 
@@ -440,6 +441,13 @@ The next release can consider remote publish/search, package signing, richer
 dependency solving, formal registry APIs, and explicitly deferred derived
 artifact profiles.
 
+The first post-MVP remote increment is limited to a read-only registry metadata
+client. It may fetch package metadata, package version metadata, and exact
+capability search payloads from an explicitly provided registry URL. It MUST NOT
+download archives, install remote packages, publish packages, mutate remote
+state, execute package content, define authentication, define namespace
+governance, or treat remote metadata as trusted host instructions.
+
 ## 17. Implementation Environment
 
 The MVP implementation should maintain two supported execution paths:
@@ -448,5 +456,7 @@ The MVP implementation should maintain two supported execution paths:
 - Docker execution with `docker compose run --rm specpm <command>`.
 
 Docker is the preferred reproducibility boundary for task execution, CI parity,
-and handoff between SpecPM, SpecGraph, and ContextBuilder workspaces. Runtime
-commands must not require network access after the image has been built.
+and handoff between SpecPM, SpecGraph, and ContextBuilder workspaces. MVP/local
+runtime commands must not require network access after the image has been built;
+post-MVP `specpm remote` commands are explicit network clients and remain
+outside local validation, packing, indexing, add, diff, and inbox behavior.

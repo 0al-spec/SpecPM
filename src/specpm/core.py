@@ -11,6 +11,9 @@ import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote, urlparse, urlunparse
+from urllib.request import Request, urlopen
 
 import yaml
 from yaml.tokens import AliasToken, AnchorToken, TagToken
@@ -18,6 +21,8 @@ from yaml.tokens import AliasToken, AnchorToken, TagToken
 SUPPORTED_API_VERSION = "specpm.dev/v0.1"
 INDEX_SCHEMA_VERSION = 1
 LOCK_SCHEMA_VERSION = 1
+REMOTE_REGISTRY_API_VERSION = "specpm.registry/v0"
+REMOTE_REGISTRY_SCHEMA_VERSION = 1
 ID_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
@@ -75,17 +80,28 @@ KNOWN_FOREIGN_ARTIFACT_ROLES = {
 }
 KNOWN_CONSTRAINT_LEVELS = {"MUST", "SHOULD", "MAY"}
 KNOWN_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
+REMOTE_REGISTRY_PAYLOAD_KINDS = {
+    "RemoteCapabilitySearch",
+    "RemotePackage",
+    "RemotePackageVersion",
+    "RemoteRegistryError",
+}
+REMOTE_REGISTRY_STATUS_VALUES = {"ok", "not_found", "invalid"}
 __all__ = [
     "add_package",
     "diff_packages",
+    "get_remote_package",
+    "get_remote_package_version",
     "index_package",
     "inspect_inbox_bundle",
     "inspect_package",
     "list_inbox",
     "pack_package",
     "search_index",
+    "search_remote_registry",
     "unyank_index_package",
     "validate_package",
+    "validate_remote_registry_payload",
     "yank_index_package",
 ]
 SECURITY_SENSITIVE_EFFECT_KINDS = {
@@ -684,6 +700,119 @@ def search_index(capability_id: str, index_path: Path) -> dict[str, Any]:
     }
 
 
+def get_remote_package(
+    registry_url: str,
+    package_id: str,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    errors: list[Issue] = []
+    validate_id(package_id, "package_id_invalid", errors, "remote package")
+    if errors:
+        return remote_registry_invalid_report(
+            "package",
+            registry_url,
+            None,
+            {"package_id": package_id},
+            errors,
+        )
+    endpoint, endpoint_errors = build_remote_registry_endpoint(
+        registry_url,
+        ["v0", "packages", package_id],
+    )
+    if endpoint_errors:
+        return remote_registry_invalid_report(
+            "package",
+            registry_url,
+            endpoint,
+            {"package_id": package_id},
+            endpoint_errors,
+        )
+    assert endpoint is not None
+    return read_remote_registry_endpoint(
+        "package",
+        registry_url,
+        endpoint,
+        "RemotePackage",
+        {"package_id": package_id},
+        timeout,
+    )
+
+
+def get_remote_package_version(
+    registry_url: str,
+    package_ref: str,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    package_id, version, parse_errors = parse_package_ref(package_ref, "remote version")
+    if parse_errors:
+        return remote_registry_invalid_report(
+            "version",
+            registry_url,
+            None,
+            {"package_ref": package_ref},
+            parse_errors,
+        )
+    endpoint, endpoint_errors = build_remote_registry_endpoint(
+        registry_url,
+        ["v0", "packages", package_id, "versions", version],
+    )
+    if endpoint_errors:
+        return remote_registry_invalid_report(
+            "version",
+            registry_url,
+            endpoint,
+            {"package_ref": package_ref},
+            endpoint_errors,
+        )
+    assert endpoint is not None
+    return read_remote_registry_endpoint(
+        "version",
+        registry_url,
+        endpoint,
+        "RemotePackageVersion",
+        {"package_id": package_id, "version": version, "package_ref": package_ref},
+        timeout,
+    )
+
+
+def search_remote_registry(
+    registry_url: str,
+    capability_id: str,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    errors: list[Issue] = []
+    validate_id(capability_id, "capability_id_invalid", errors, "remote search")
+    if errors:
+        return remote_registry_invalid_report(
+            "search",
+            registry_url,
+            None,
+            {"capability_id": capability_id},
+            errors,
+        )
+    endpoint, endpoint_errors = build_remote_registry_endpoint(
+        registry_url,
+        ["v0", "capabilities", capability_id, "packages"],
+    )
+    if endpoint_errors:
+        return remote_registry_invalid_report(
+            "search",
+            registry_url,
+            endpoint,
+            {"capability_id": capability_id},
+            endpoint_errors,
+        )
+    assert endpoint is not None
+    return read_remote_registry_endpoint(
+        "search",
+        registry_url,
+        endpoint,
+        "RemoteCapabilitySearch",
+        {"capability_id": capability_id},
+        timeout,
+    )
+
+
 def search_result_from_package(package: dict[str, Any], capability_id: str) -> dict[str, Any]:
     return {
         "package_id": package.get("package_id"),
@@ -725,6 +854,700 @@ def packages_for_capability(index_data: dict[str, Any], capability_id: str) -> l
             continue
         packages.append(package)
     return packages
+
+
+def build_remote_registry_endpoint(
+    registry_url: str,
+    path_segments: list[str],
+) -> tuple[str | None, list[Issue]]:
+    base_url, errors = normalize_remote_registry_base_url(registry_url)
+    if base_url is None:
+        return None, errors
+    encoded_path = "/".join(quote(segment, safe="") for segment in path_segments)
+    return f"{base_url}/{encoded_path}", errors
+
+
+def normalize_remote_registry_base_url(registry_url: str) -> tuple[str | None, list[Issue]]:
+    errors: list[Issue] = []
+    if not isinstance(registry_url, str) or not registry_url.strip():
+        return (
+            None,
+            [
+                Issue(
+                    "error",
+                    "remote_registry_url_invalid",
+                    "Remote registry URL must be a non-empty URL.",
+                    "remote",
+                    "registry",
+                )
+            ],
+        )
+
+    parsed = urlparse(registry_url.strip())
+    if parsed.scheme not in {"https", "http"} or not parsed.netloc:
+        errors.append(
+            Issue(
+                "error",
+                "remote_registry_url_invalid",
+                "Remote registry URL must include an https:// host.",
+                "remote",
+                "registry",
+            )
+        )
+    if parsed.username or parsed.password:
+        errors.append(
+            Issue(
+                "error",
+                "remote_registry_url_credentials",
+                "Remote registry URL must not embed credentials.",
+                "remote",
+                "registry",
+            )
+        )
+    if parsed.scheme == "http" and parsed.hostname not in {"localhost", "127.0.0.1", "::1"}:
+        errors.append(
+            Issue(
+                "error",
+                "remote_registry_url_insecure",
+                "Remote registry URL must use https, except localhost development endpoints.",
+                "remote",
+                "registry",
+            )
+        )
+    if errors:
+        return None, errors
+
+    path = parsed.path.rstrip("/")
+    base_url = urlunparse((parsed.scheme, parsed.netloc, path, "", "", ""))
+    return base_url, []
+
+
+def read_remote_registry_endpoint(
+    operation: str,
+    registry_url: str,
+    endpoint: str,
+    expected_kind: str,
+    target: dict[str, str],
+    timeout: float,
+) -> dict[str, Any]:
+    timeout_errors = validate_remote_registry_timeout(timeout)
+    if timeout_errors:
+        return remote_registry_invalid_report(
+            operation, registry_url, endpoint, target, timeout_errors
+        )
+
+    payload, fetch_errors = fetch_remote_registry_json(endpoint, timeout)
+    if fetch_errors:
+        return remote_registry_invalid_report(
+            operation, registry_url, endpoint, target, fetch_errors
+        )
+
+    payload_errors = validate_remote_registry_payload(payload)
+    if payload_errors:
+        return remote_registry_invalid_report(
+            operation,
+            registry_url,
+            endpoint,
+            target,
+            payload_errors,
+            payload=payload if isinstance(payload, dict) else None,
+        )
+
+    assert isinstance(payload, dict)
+    payload_kind = payload["kind"]
+    payload_status = payload["status"]
+    if payload_kind == "RemoteRegistryError":
+        return remote_registry_client_report(
+            payload_status,
+            operation,
+            registry_url,
+            endpoint,
+            target,
+            payload,
+            [remote_registry_error_issue(payload, endpoint)],
+        )
+    if payload_kind != expected_kind:
+        return remote_registry_invalid_report(
+            operation,
+            registry_url,
+            endpoint,
+            target,
+            [
+                Issue(
+                    "error",
+                    "remote_registry_payload_kind_mismatch",
+                    f"Remote registry returned {payload_kind}, expected {expected_kind}.",
+                    endpoint,
+                    "kind",
+                )
+            ],
+            payload=payload,
+        )
+    if payload_status != "ok":
+        return remote_registry_invalid_report(
+            operation,
+            registry_url,
+            endpoint,
+            target,
+            [
+                Issue(
+                    "error",
+                    "remote_registry_payload_status_invalid",
+                    f"Remote registry returned non-ok status for {payload_kind}: {payload_status}.",
+                    endpoint,
+                    "status",
+                )
+            ],
+            payload=payload,
+        )
+
+    target_errors = validate_remote_registry_target(payload, target, endpoint)
+    if target_errors:
+        return remote_registry_invalid_report(
+            operation,
+            registry_url,
+            endpoint,
+            target,
+            target_errors,
+            payload=payload,
+        )
+
+    return remote_registry_client_report(
+        "ok",
+        operation,
+        registry_url,
+        endpoint,
+        target,
+        payload,
+        [],
+    )
+
+
+def validate_remote_registry_timeout(timeout: float) -> list[Issue]:
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, int | float)
+        or not math.isfinite(timeout)
+    ):
+        return [
+            Issue(
+                "error",
+                "remote_registry_timeout_invalid",
+                "Remote registry timeout must be a finite positive number.",
+                "remote",
+                "timeout",
+            )
+        ]
+    if timeout <= 0:
+        return [
+            Issue(
+                "error",
+                "remote_registry_timeout_invalid",
+                "Remote registry timeout must be greater than zero.",
+                "remote",
+                "timeout",
+            )
+        ]
+    return []
+
+
+def fetch_remote_registry_json(
+    endpoint: str,
+    timeout: float,
+) -> tuple[dict[str, Any] | None, list[Issue]]:
+    request = Request(endpoint, headers={"Accept": "application/json"})
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            body = response.read()
+    except HTTPError as exc:
+        body = exc.read()
+    except (OSError, TimeoutError, URLError) as exc:
+        return (
+            None,
+            [
+                Issue(
+                    "error",
+                    "remote_registry_request_failed",
+                    f"Remote registry request failed: {exc}",
+                    endpoint,
+                )
+            ],
+        )
+
+    try:
+        loaded = json.loads(body.decode("utf-8"))
+    except UnicodeDecodeError as exc:
+        return (
+            None,
+            [
+                Issue(
+                    "error",
+                    "remote_registry_response_not_utf8",
+                    f"Remote registry response is not UTF-8 JSON: {exc}",
+                    endpoint,
+                )
+            ],
+        )
+    except json.JSONDecodeError as exc:
+        return (
+            None,
+            [
+                Issue(
+                    "error",
+                    "remote_registry_json_invalid",
+                    f"Remote registry response is not valid JSON: {exc}",
+                    endpoint,
+                )
+            ],
+        )
+    if not isinstance(loaded, dict):
+        return (
+            None,
+            [
+                Issue(
+                    "error",
+                    "remote_registry_payload_not_object",
+                    "Remote registry response must be a JSON object.",
+                    endpoint,
+                )
+            ],
+        )
+    return loaded, []
+
+
+def remote_registry_client_report(
+    status: str,
+    operation: str,
+    registry_url: str,
+    endpoint: str | None,
+    target: dict[str, str],
+    payload: dict[str, Any] | None,
+    errors: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "operation": operation,
+        "registry": registry_url,
+        "endpoint": endpoint,
+        "target": target,
+        "payload": payload,
+        "errors": errors,
+    }
+
+
+def remote_registry_invalid_report(
+    operation: str,
+    registry_url: str,
+    endpoint: str | None,
+    target: dict[str, str],
+    errors: list[Issue],
+    *,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return remote_registry_client_report(
+        "invalid",
+        operation,
+        registry_url,
+        endpoint,
+        target,
+        payload,
+        [issue.to_dict() for issue in errors],
+    )
+
+
+def remote_registry_error_issue(payload: dict[str, Any], endpoint: str) -> dict[str, Any]:
+    error = payload.get("error", {})
+    if not isinstance(error, dict):
+        error = {}
+    code = error.get("code") if isinstance(error.get("code"), str) else "remote_registry_error"
+    message = (
+        error.get("message")
+        if isinstance(error.get("message"), str)
+        else "Remote registry returned an error."
+    )
+    return Issue("error", code, message, endpoint, "error").to_dict()
+
+
+def validate_remote_registry_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    kind = payload["kind"]
+    if kind == "RemotePackage":
+        return validate_remote_package_target(payload, target, endpoint)
+    if kind == "RemotePackageVersion":
+        return validate_remote_package_version_target(payload, target, endpoint)
+    if kind == "RemoteCapabilitySearch":
+        return validate_remote_capability_search_target(payload, target, endpoint)
+    return []
+
+
+def validate_remote_package_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    package = payload["package"]
+    package_id = target.get("package_id")
+    if package_id is not None and package.get("package_id") != package_id:
+        return [
+            remote_target_mismatch(
+                endpoint,
+                "package.package_id",
+                f"Remote registry returned package_id {package.get('package_id')!r}, "
+                f"expected {package_id!r}.",
+            )
+        ]
+    return []
+
+
+def validate_remote_package_version_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    errors = validate_remote_package_target(payload, target, endpoint)
+    package = payload["package"]
+    version = target.get("version")
+    if version is not None and package.get("version") != version:
+        errors.append(
+            remote_target_mismatch(
+                endpoint,
+                "package.version",
+                f"Remote registry returned version {package.get('version')!r}, "
+                f"expected {version!r}.",
+            )
+        )
+    return errors
+
+
+def validate_remote_capability_search_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    capability_id = target.get("capability_id")
+    if capability_id is None:
+        return []
+
+    errors: list[Issue] = []
+    query_capability_id = payload["query"].get("capability_id")
+    if query_capability_id != capability_id:
+        errors.append(
+            remote_target_mismatch(
+                endpoint,
+                "query.capability_id",
+                f"Remote registry returned query capability_id {query_capability_id!r}, "
+                f"expected {capability_id!r}.",
+            )
+        )
+
+    for index, result in enumerate(payload["results"]):
+        matched_capability = result.get("matched_capability")
+        if matched_capability != capability_id:
+            errors.append(
+                remote_target_mismatch(
+                    endpoint,
+                    f"results.{index}.matched_capability",
+                    f"Remote registry returned matched_capability {matched_capability!r}, "
+                    f"expected {capability_id!r}.",
+                )
+            )
+    return errors
+
+
+def remote_target_mismatch(endpoint: str, field: str, message: str) -> Issue:
+    return Issue(
+        "error",
+        "remote_registry_target_mismatch",
+        message,
+        endpoint,
+        field,
+    )
+
+
+def validate_remote_registry_payload(payload: Any) -> list[Issue]:
+    errors: list[Issue] = []
+    if not isinstance(payload, dict):
+        return [
+            Issue(
+                "error",
+                "remote_registry_payload_not_object",
+                "Remote registry payload must be a JSON object.",
+                "remote_registry_payload",
+            )
+        ]
+
+    if payload.get("apiVersion") != REMOTE_REGISTRY_API_VERSION:
+        errors.append(
+            Issue(
+                "error",
+                "remote_registry_api_version_invalid",
+                f"Remote registry apiVersion must be {REMOTE_REGISTRY_API_VERSION}.",
+                "remote_registry_payload",
+                "apiVersion",
+            )
+        )
+    if payload.get("schemaVersion") != REMOTE_REGISTRY_SCHEMA_VERSION:
+        errors.append(
+            Issue(
+                "error",
+                "remote_registry_schema_version_invalid",
+                f"Remote registry schemaVersion must be {REMOTE_REGISTRY_SCHEMA_VERSION}.",
+                "remote_registry_payload",
+                "schemaVersion",
+            )
+        )
+
+    kind = payload.get("kind")
+    status = payload.get("status")
+    if kind not in REMOTE_REGISTRY_PAYLOAD_KINDS:
+        errors.append(
+            Issue(
+                "error",
+                "remote_registry_kind_invalid",
+                "Remote registry payload kind is not supported.",
+                "remote_registry_payload",
+                "kind",
+            )
+        )
+    if status not in REMOTE_REGISTRY_STATUS_VALUES:
+        errors.append(
+            Issue(
+                "error",
+                "remote_registry_status_invalid",
+                "Remote registry payload status is not supported.",
+                "remote_registry_payload",
+                "status",
+            )
+        )
+    if errors:
+        return errors
+
+    if kind != "RemoteRegistryError" and status != "ok":
+        errors.append(remote_field_invalid("status", "must be ok for success payloads"))
+        return errors
+
+    if kind == "RemotePackage":
+        validate_remote_package_payload(payload, errors)
+    elif kind == "RemotePackageVersion":
+        validate_remote_package_version_payload(payload, errors)
+    elif kind == "RemoteCapabilitySearch":
+        validate_remote_capability_search_payload(payload, errors)
+    elif kind == "RemoteRegistryError":
+        validate_remote_registry_error_payload(payload, errors)
+    return errors
+
+
+def validate_remote_package_payload(payload: dict[str, Any], errors: list[Issue]) -> None:
+    package = require_remote_mapping(payload, "package", errors, "package")
+    if package is None:
+        return
+    require_remote_string(package, "package_id", errors, "package.package_id")
+    require_remote_string(package, "name", errors, "package.name")
+    require_remote_list(package, "capabilities", errors, "package.capabilities")
+    versions = require_remote_list(package, "versions", errors, "package.versions")
+    if versions is None:
+        return
+    for index, version in enumerate(versions):
+        if not isinstance(version, dict):
+            errors.append(remote_field_invalid(f"package.versions.{index}", "must be an object"))
+            continue
+        require_remote_string(version, "version", errors, f"package.versions.{index}.version")
+        require_remote_bool(version, "yanked", errors, f"package.versions.{index}.yanked")
+        require_remote_bool(
+            version,
+            "deprecated",
+            errors,
+            f"package.versions.{index}.deprecated",
+        )
+
+
+def validate_remote_package_version_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    package = require_remote_mapping(payload, "package", errors, "package")
+    if package is None:
+        return
+    require_remote_string(package, "package_id", errors, "package.package_id")
+    require_remote_string(package, "name", errors, "package.name")
+    require_remote_string(package, "version", errors, "package.version")
+    require_remote_list(package, "provided_capabilities", errors, "package.provided_capabilities")
+    require_remote_list(package, "required_capabilities", errors, "package.required_capabilities")
+    state = require_remote_mapping(package, "state", errors, "package.state")
+    if state is not None:
+        require_remote_bool(state, "yanked", errors, "package.state.yanked")
+        require_remote_bool(state, "deprecated", errors, "package.state.deprecated")
+    source = require_remote_mapping(package, "source", errors, "package.source")
+    if source is not None:
+        validate_remote_registry_source(source, errors, "package.source")
+
+
+def validate_remote_capability_search_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    query = require_remote_mapping(payload, "query", errors, "query")
+    if query is not None:
+        require_remote_string(query, "capability_id", errors, "query.capability_id")
+        match = require_remote_string(query, "match", errors, "query.match")
+        if match is not None and match != "exact":
+            errors.append(remote_field_invalid("query.match", "must be exact"))
+    result_count = require_remote_int(payload, "result_count", errors, "result_count")
+    results = require_remote_list(payload, "results", errors, "results")
+    if results is None:
+        return
+    if result_count is not None and result_count != len(results):
+        errors.append(remote_field_invalid("result_count", "must match results length"))
+    for index, result in enumerate(results):
+        field = f"results.{index}"
+        if not isinstance(result, dict):
+            errors.append(remote_field_invalid(field, "must be an object"))
+            continue
+        require_remote_string(result, "package_id", errors, f"{field}.package_id")
+        require_remote_string(result, "version", errors, f"{field}.version")
+        require_remote_string(result, "matched_capability", errors, f"{field}.matched_capability")
+        require_remote_list(
+            result,
+            "provided_capabilities",
+            errors,
+            f"{field}.provided_capabilities",
+        )
+        require_remote_list(
+            result,
+            "required_capabilities",
+            errors,
+            f"{field}.required_capabilities",
+        )
+        require_remote_bool(result, "yanked", errors, f"{field}.yanked")
+        require_remote_bool(result, "deprecated", errors, f"{field}.deprecated")
+        source = require_remote_mapping(result, "source", errors, f"{field}.source")
+        if source is not None:
+            validate_remote_registry_source(source, errors, f"{field}.source")
+
+
+def validate_remote_registry_error_payload(payload: dict[str, Any], errors: list[Issue]) -> None:
+    if payload.get("status") not in {"invalid", "not_found"}:
+        errors.append(remote_field_invalid("status", "must be invalid or not_found"))
+    error = require_remote_mapping(payload, "error", errors, "error")
+    if error is None:
+        return
+    require_remote_string(error, "code", errors, "error.code")
+    require_remote_string(error, "message", errors, "error.message")
+
+
+def validate_remote_registry_source(
+    source: dict[str, Any],
+    errors: list[Issue],
+    field: str,
+) -> None:
+    if source.get("kind") != "archive":
+        errors.append(remote_field_invalid(f"{field}.kind", "must be archive"))
+    if source.get("format") != "specpm-tar-gzip-v0":
+        errors.append(remote_field_invalid(f"{field}.format", "must be specpm-tar-gzip-v0"))
+    digest = require_remote_mapping(source, "digest", errors, f"{field}.digest")
+    if digest is not None:
+        validate_remote_registry_digest(digest, errors, f"{field}.digest")
+    size = require_remote_int(source, "size", errors, f"{field}.size")
+    if size is not None and size <= 0:
+        errors.append(remote_field_invalid(f"{field}.size", "must be greater than zero"))
+    require_remote_string(source, "url", errors, f"{field}.url")
+
+
+def validate_remote_registry_digest(
+    digest: dict[str, Any],
+    errors: list[Issue],
+    field: str,
+) -> None:
+    if digest.get("algorithm") != "sha256":
+        errors.append(remote_field_invalid(f"{field}.algorithm", "must be sha256"))
+    value = require_remote_string(digest, "value", errors, f"{field}.value")
+    if value is None:
+        return
+    if len(value) != 64:
+        errors.append(remote_field_invalid(f"{field}.value", "must be a 64-character hex digest"))
+        return
+    try:
+        int(value, 16)
+    except ValueError:
+        errors.append(remote_field_invalid(f"{field}.value", "must be hexadecimal"))
+
+
+def require_remote_mapping(
+    mapping: dict[str, Any],
+    key: str,
+    errors: list[Issue],
+    field: str,
+) -> dict[str, Any] | None:
+    value = mapping.get(key)
+    if not isinstance(value, dict):
+        errors.append(remote_field_invalid(field, "must be an object"))
+        return None
+    return value
+
+
+def require_remote_list(
+    mapping: dict[str, Any],
+    key: str,
+    errors: list[Issue],
+    field: str,
+) -> list[Any] | None:
+    value = mapping.get(key)
+    if not isinstance(value, list):
+        errors.append(remote_field_invalid(field, "must be an array"))
+        return None
+    return value
+
+
+def require_remote_string(
+    mapping: dict[str, Any],
+    key: str,
+    errors: list[Issue],
+    field: str,
+) -> str | None:
+    value = mapping.get(key)
+    if not isinstance(value, str) or not value:
+        errors.append(remote_field_invalid(field, "must be a non-empty string"))
+        return None
+    return value
+
+
+def require_remote_bool(
+    mapping: dict[str, Any],
+    key: str,
+    errors: list[Issue],
+    field: str,
+) -> bool | None:
+    value = mapping.get(key)
+    if not isinstance(value, bool):
+        errors.append(remote_field_invalid(field, "must be a boolean"))
+        return None
+    return value
+
+
+def require_remote_int(
+    mapping: dict[str, Any],
+    key: str,
+    errors: list[Issue],
+    field: str,
+) -> int | None:
+    value = mapping.get(key)
+    if isinstance(value, bool) or not isinstance(value, int):
+        errors.append(remote_field_invalid(field, "must be an integer"))
+        return None
+    return value
+
+
+def remote_field_invalid(field: str, message: str) -> Issue:
+    return Issue(
+        "error",
+        "remote_registry_field_invalid",
+        f"Remote registry field {field} {message}.",
+        "remote_registry_payload",
+        field,
+    )
 
 
 def add_package(target: str, index_path: Path, project_dir: Path) -> dict[str, Any]:
