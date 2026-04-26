@@ -12,6 +12,7 @@ The MVP treats these output shapes as stable contracts:
 - add results;
 - registry lifecycle results;
 - remote registry client results;
+- public index generator results;
 - inbox list and inbox inspect payloads;
 - structural diff results.
 
@@ -38,6 +39,7 @@ Current status vocabularies include:
 - add: `added`, `unchanged`, `ambiguous`, `invalid`;
 - registry lifecycle: `yanked`, `unyanked`, `unchanged`, `invalid`;
 - remote registry client: `ok`, `not_found`, `invalid`;
+- public index generator: `ok`, `invalid`;
 - inbox bundle: `draft_visible`, `ready_for_review`, `invalid`, `blocked`;
 - diff: `ok`, `invalid`.
 

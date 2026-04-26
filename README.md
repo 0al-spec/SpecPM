@@ -30,6 +30,7 @@ PYTHONPATH=src python3 -m specpm.cli add document_conversion.email_to_markdown -
 PYTHONPATH=src python3 -m specpm.cli diff examples/email_tools examples/email_tools --json
 PYTHONPATH=src python3 -m specpm.cli inbox list --root tests/fixtures/specgraph_exports --json
 PYTHONPATH=src python3 -m specpm.cli inbox inspect specgraph.core_repository_facade --root tests/fixtures/specgraph_exports --json
+PYTHONPATH=src python3 -m specpm.cli public-index generate examples/email_tools --output /tmp/specpm-public-index --registry https://registry.example.invalid --json
 ```
 
 Run through Docker:
@@ -47,6 +48,29 @@ docker compose run --rm specpm add document_conversion.email_to_markdown --index
 docker compose run --rm specpm diff examples/email_tools examples/email_tools --json
 docker compose run --rm specpm inbox list --root tests/fixtures/specgraph_exports --json
 docker compose run --rm specpm inbox inspect specgraph.core_repository_facade --root tests/fixtures/specgraph_exports --json
+docker compose run --rm specpm public-index generate examples/email_tools --output /tmp/specpm-public-index --registry https://registry.example.invalid --json
+```
+
+Run the local public index service:
+
+```bash
+make public-index-up
+make public-index-smoke
+```
+
+The default registry URL is `http://localhost:8081`. The service regenerates
+`.specpm/public-index` from `examples/email_tools` and serves the static `/v0`
+tree through Docker Compose. Stop it with:
+
+```bash
+make public-index-down
+```
+
+For integration from another local runtime, override:
+
+```bash
+SPECPM_PUBLIC_INDEX_PORT=8082 make public-index-up
+SPECPM_PUBLIC_INDEX_REGISTRY_URL=http://localhost:8082 make public-index-smoke
 ```
 
 Run the post-MVP read-only remote metadata client against a compatible registry:
@@ -81,6 +105,7 @@ Implemented first slice:
 - `specpm remote package <package-id> --registry <url> [--json]`
 - `specpm remote version <package-id@version> --registry <url> [--json]`
 - `specpm remote search <capability-id> --registry <url> [--json]`
+- `specpm public-index generate <package-dir>... --output <dir> --registry <url> [--json]`
 
 Inbox JSON includes bundle layout checks, validation status, handoff continuity
 fields, and actionable gaps for incomplete SpecGraph export bundles.
@@ -99,6 +124,12 @@ Public index and enterprise registry deployment options are tracked in
 `specs/INDEX_SUBMISSION_FLOW.md`. The reference public-index issue form is
 `.github/ISSUE_TEMPLATE/add-specpackages.yml`, and the reference submission
 validation workflow is `.github/workflows/package-submission-check.yml`.
+`specpm public-index generate` emits static read-only `/v0` registry metadata
+and deterministic package archives for GitHub Pages-style hosting. It does not
+publish packages, mutate remote state, install packages, or execute package
+content.
+`docker compose up public-index` serves that generated registry locally for
+SpecGraph, ContextBuilder, and manual integration testing.
 
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.

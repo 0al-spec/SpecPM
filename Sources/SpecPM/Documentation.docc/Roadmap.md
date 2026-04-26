@@ -20,6 +20,8 @@ Completed areas include:
 - conformance test artifacts.
 - remote registry API contract documentation and static payload fixtures;
 - read-only remote registry metadata client.
+- public index submission issue form and validation workflow;
+- static public index `/v0` metadata generator.
 
 ## Post-MVP Tracks
 
@@ -42,16 +44,19 @@ Current post-MVP tracks include:
 
 ## Recommended Next Track
 
-The read-only remote registry API contract and metadata client are implemented.
-The next useful remote increment is to split public-index and enterprise
-registry work explicitly.
+The read-only remote registry API contract, metadata client, public submission
+intake, validation workflow, and static metadata generator are implemented. The
+next useful public-index increment is to wire accepted submissions into a
+GitHub Pages deployment workflow while keeping enterprise registry work
+separate.
 
 The public index can start as an issue-based submission queue with GitHub
 Actions validation and GitHub Pages static `/v0` metadata. The reference
 `Add SpecPackage(s)` issue form is available in
 `.github/ISSUE_TEMPLATE/add-specpackages.yml`, and the reference issue
 validation workflow is available in
-`.github/workflows/package-submission-check.yml`. Enterprise registry work
+`.github/workflows/package-submission-check.yml`. Static registry metadata can
+be generated with `specpm public-index generate`. Enterprise registry work
 should remain available for private packages, auth, audit, policy, and internal
 namespace ownership.
 

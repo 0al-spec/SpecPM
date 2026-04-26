@@ -3,6 +3,7 @@
 .venv/
 .build/
 .docc-build/
+.specpm/
 .specgraph_exports/
 .DS_Store
 __pycache__/

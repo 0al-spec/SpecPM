@@ -133,26 +133,71 @@ claim verification.
 
 ## Generated Public Registry
 
-After acceptance, the index can generate a static registry:
+After acceptance, the index can generate a static registry with:
+
+```bash
+specpm public-index generate <package-dir>... \
+  --output <generated-site-dir> \
+  --registry <public-registry-url> \
+  --json
+```
+
+The first generator writes metadata compatible with the read-only remote
+registry API contract:
 
 ```text
 index repo
-  submissions/
-  packages.json
   generated/
     v0/
-      packages/{package_id}.json
-      packages/{package_id}/versions/{version}.json
-      capabilities/{capability_id}/packages.json
+      packages/{package_id}/index.json
+      packages/{package_id}/index.html
+      packages/{package_id}/versions/{version}/index.json
+      packages/{package_id}/versions/{version}/index.html
+      packages/{package_id}/versions/{version}/{package_id}-{version}.specpm.tgz
+      capabilities/{capability_id}/packages/index.json
+      capabilities/{capability_id}/packages/index.html
 ```
 
 GitHub Pages can serve those generated files as the read-only registry API.
 The current `specpm remote` commands should be able to read this API without a
 custom server.
 
-The public index may store only references and generated metadata at first. A
-future mirror can additionally publish deterministic `.specpm.tgz` archives,
-but archive mirroring should be a separate explicit track.
+The generator validates package directories, creates deterministic
+`specpm-tar-gzip-v0` archives, validates generated package/version/capability
+payloads against the remote registry contract, and writes static files in
+deterministic order.
+
+`index.html` files contain the same JSON body as the adjacent `index.json`
+files. They exist so static hosts such as GitHub Pages can serve extensionless
+registry endpoints like `/v0/packages/{package_id}` without a custom backend.
+
+This command is still a static metadata generator. It does not accept public
+submissions, change issue labels, publish through a remote mutation API,
+install packages, fetch remote archives as a client, or execute package
+content.
+
+## Local Public Index Service
+
+The repository includes a Docker Compose service for local integration testing:
+
+```bash
+make public-index-up
+make public-index-smoke
+make public-index-down
+```
+
+The service:
+
+- generates `.specpm/public-index` from `examples/email_tools`;
+- serves the generated static `/v0` tree at `http://localhost:8081` by default;
+- can be pointed at another host-visible URL with
+  `SPECPM_PUBLIC_INDEX_REGISTRY_URL`;
+- can use another host port with `SPECPM_PUBLIC_INDEX_PORT`.
+
+This service is intended for local SpecGraph, ContextBuilder, and manual
+ecosystem testing. It is not a remote registry server implementation and does
+not add publish, auth, signing, issue mutation, package installation, or
+package execution behavior.
 
 ## Enterprise Remote Registry
 
@@ -198,11 +243,8 @@ intent. A submission cannot command the index, the registry, or the host.
 
 Future work may add:
 
-- GitHub Actions validation for submitted repositories;
-- generated static registry JSON;
 - GitHub Pages deployment for the public index;
 - package removal request workflow;
 - namespace claim workflow;
-- deterministic archive mirror;
 - enterprise registry reference implementation;
 - conformance suites for public index and enterprise registry deployments.

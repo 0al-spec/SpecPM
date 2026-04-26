@@ -70,6 +70,10 @@ GitHub Pages static registry
 
 This model is optimized for public packages, reviewable submissions, simple
 operations, and compatibility with `specpm remote` metadata commands.
+`specpm public-index generate` can produce the first static `/v0` tree from
+already-local accepted package directories. It writes both `index.json` files
+for review and JSON-body `index.html` files for static hosts that need directory
+index files to serve extensionless endpoints.
 
 The public static index should not define enterprise auth, private package
 visibility, remote mutation APIs, or package archive install/cache behavior.

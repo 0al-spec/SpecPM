@@ -23,6 +23,7 @@ from specpm.core import (
     validate_package,
     yank_index_package,
 )
+from specpm.public_index import generate_public_index
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -139,6 +140,22 @@ def build_parser() -> argparse.ArgumentParser:
     remote_search.add_argument("capability_id")
     add_remote_registry_options(remote_search)
     remote_search.set_defaults(handler=handle_remote_search)
+
+    public_index = subparsers.add_parser(
+        "public-index", help="Generate public static registry metadata."
+    )
+    public_index_subparsers = public_index.add_subparsers(
+        dest="public_index_command", required=True
+    )
+
+    public_index_generate = public_index_subparsers.add_parser(
+        "generate", help="Generate static /v0 registry metadata from package directories."
+    )
+    public_index_generate.add_argument("package_dirs", nargs="+")
+    public_index_generate.add_argument("--output", required=True)
+    public_index_generate.add_argument("--registry", required=True)
+    public_index_generate.add_argument("--json", action="store_true", help="Emit stable JSON.")
+    public_index_generate.set_defaults(handler=handle_public_index_generate)
 
     return parser
 
@@ -346,6 +363,24 @@ def handle_remote_version(args: argparse.Namespace) -> int:
 def handle_remote_search(args: argparse.Namespace) -> int:
     report = search_remote_registry(args.registry, args.capability_id, args.timeout)
     return emit_remote_registry_report(report, args.json)
+
+
+def handle_public_index_generate(args: argparse.Namespace) -> int:
+    report = generate_public_index(
+        [Path(package_dir) for package_dir in args.package_dirs],
+        Path(args.output),
+        args.registry,
+    )
+    if args.json:
+        print_json(report)
+    else:
+        if report["status"] == "ok":
+            print(f"generated public index: {report['output']} [{report['written_count']} files]")
+        else:
+            print("public index generation failed", file=sys.stderr)
+            for issue in report.get("errors", []):
+                print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
+    return 0 if report["status"] == "ok" else 1
 
 
 def emit_remote_registry_report(report: dict[str, Any], json_output: bool) -> int:

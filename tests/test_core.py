@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import shutil
@@ -36,6 +37,7 @@ from specpm.index_submission import (
     render_submission_report_markdown,
     validate_submission_body,
 )
+from specpm.public_index import generate_public_index
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
@@ -43,6 +45,7 @@ GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
 ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
+COMPOSE_FILE = ROOT / "compose.yaml"
 CONFORMANCE_CASE_KINDS = {
     "registry_lifecycle",
     "remote_registry_payload",
@@ -98,6 +101,14 @@ def write_yaml_file(path: Path, payload: dict[str, Any]) -> None:
 
 def issue_codes(issues: list[dict[str, Any]]) -> set[str]:
     return {issue["code"] for issue in issues}
+
+
+def sha256_path(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def load_conformance_suite() -> dict[str, Any]:
@@ -212,6 +223,36 @@ def copy_email_package(tmp_path: Path, name: str) -> Path:
     package = tmp_path / name
     shutil.copytree(ROOT / "examples/email_tools", package)
     return package
+
+
+def update_email_package(
+    package: Path,
+    *,
+    package_id: str | None = None,
+    package_name: str | None = None,
+    version: str | None = None,
+    capability_id: str | None = None,
+) -> None:
+    manifest_path = package / "specpm.yaml"
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    manifest = load_yaml_file(manifest_path)
+    spec = load_yaml_file(spec_path)
+
+    if package_id is not None:
+        manifest["metadata"]["id"] = package_id
+    if package_name is not None:
+        manifest["metadata"]["name"] = package_name
+    if version is not None:
+        manifest["metadata"]["version"] = version
+        spec["metadata"]["version"] = version
+    if capability_id is not None:
+        manifest["index"]["provides"]["capabilities"] = [capability_id]
+        spec["metadata"]["id"] = capability_id
+        spec["provides"]["capabilities"][0]["id"] = capability_id
+        spec["evidence"][0]["supports"] = [f"provides.capabilities.{capability_id}"]
+
+    write_yaml_file(manifest_path, manifest)
+    write_yaml_file(spec_path, spec)
 
 
 def run_cli_json(args: list[str], capsys, expected_exit: int = 0) -> dict[str, Any]:  # type: ignore[no-untyped-def]
@@ -344,6 +385,18 @@ def test_package_submission_workflow_runs_only_for_submission_label() -> None:
     assert "listComments" in comment_script
     assert "updateComment" in comment_script
     assert "createComment" in comment_script
+
+
+def test_public_index_compose_service_exposes_local_registry() -> None:
+    loaded = load_yaml_file(COMPOSE_FILE)
+    service = loaded["services"]["public-index"]
+
+    assert service["image"] == "specpm:dev"
+    assert "${SPECPM_PUBLIC_INDEX_PORT:-8081}:8081" in service["ports"]
+    assert service["entrypoint"] == ["python", "scripts/serve_public_index.py"]
+    assert service["environment"]["SPECPM_PUBLIC_INDEX_PORT"] == (
+        "${SPECPM_PUBLIC_INDEX_PORT:-8081}"
+    )
 
 
 def sample_submission_issue_body(
@@ -879,6 +932,175 @@ def test_remote_registry_invalid_input_does_not_fetch(monkeypatch) -> None:  # t
     assert issue_codes(report["errors"]) == {"capability_id_invalid"}
 
 
+def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: Path) -> None:
+    output = tmp_path / "site"
+
+    report = generate_public_index(
+        [ROOT / "examples/email_tools"],
+        output,
+        "https://registry.example.invalid",
+    )
+
+    assert report["status"] == "ok"
+    package_payload = json.loads(
+        (output / "v0/packages/document_conversion.email_tools/index.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    package_directory_index = json.loads(
+        (output / "v0/packages/document_conversion.email_tools/index.html").read_text(
+            encoding="utf-8"
+        )
+    )
+    version_payload = json.loads(
+        (
+            output / "v0/packages/document_conversion.email_tools/versions/0.1.0/index.json"
+        ).read_text(encoding="utf-8")
+    )
+    capability_payload = json.loads(
+        (
+            output / "v0/capabilities/document_conversion.email_to_markdown/packages/index.json"
+        ).read_text(encoding="utf-8")
+    )
+    archive = (
+        output
+        / "v0/packages/document_conversion.email_tools/versions/0.1.0/"
+        / "document_conversion.email_tools-0.1.0.specpm.tgz"
+    )
+
+    assert archive.is_file()
+    assert_remote_registry_payload_shape(package_payload)
+    assert package_directory_index == package_payload
+    assert_remote_registry_payload_shape(version_payload)
+    assert_remote_registry_payload_shape(capability_payload)
+    assert package_payload["package"]["latest_version"] == "0.1.0"
+    assert capability_payload["results"][0]["matched_capability"] == (
+        "document_conversion.email_to_markdown"
+    )
+    assert version_payload["package"]["source"]["url"] == (
+        "https://registry.example.invalid/v0/packages/"
+        "document_conversion.email_tools/versions/0.1.0/"
+        "document_conversion.email_tools-0.1.0.specpm.tgz"
+    )
+    assert version_payload["package"]["source"]["digest"]["value"] == sha256_path(archive)
+    assert version_payload["package"]["source"]["size"] == archive.stat().st_size
+    assert sorted(report["written_files"]) == report["written_files"]
+
+
+def test_public_index_generate_rejects_duplicate_version_conflict(tmp_path: Path) -> None:
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    output = tmp_path / "site"
+    shutil.copytree(ROOT / "examples/email_tools", first)
+    shutil.copytree(ROOT / "examples/email_tools", second)
+    (second / "evidence/README.md").write_text("Changed evidence.\n", encoding="utf-8")
+
+    report = generate_public_index(
+        [first, second],
+        output,
+        "https://0al-spec.github.io/SpecPM",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"public_index_duplicate_package_conflict"}
+    assert not output.exists()
+
+
+def test_public_index_generate_replaces_stale_v0_output(tmp_path: Path) -> None:
+    first = copy_email_package(tmp_path, "first")
+    second = copy_email_package(tmp_path, "second")
+    update_email_package(
+        second,
+        package_id="document_conversion.text_tools",
+        package_name="Text Tools",
+        capability_id="document_conversion.email_to_text",
+    )
+    output = tmp_path / "site"
+
+    first_report = generate_public_index([first], output, "https://registry.example.invalid")
+    second_report = generate_public_index([second], output, "https://registry.example.invalid")
+
+    assert first_report["status"] == "ok"
+    assert second_report["status"] == "ok"
+    assert not (output / "v0/packages/document_conversion.email_tools/index.json").exists()
+    assert not (
+        output / "v0/capabilities/document_conversion.email_to_markdown/packages/index.json"
+    ).exists()
+    assert (output / "v0/packages/document_conversion.text_tools/index.json").is_file()
+    assert (
+        output / "v0/capabilities/document_conversion.email_to_text/packages/index.json"
+    ).is_file()
+
+
+def test_public_index_generate_rejects_malformed_registry_urls(tmp_path: Path) -> None:
+    package = ROOT / "examples/email_tools"
+    bad_urls = [
+        "https://",
+        "https://user:secret@registry.example.invalid",
+        "https://registry.example.invalid?token=secret-value",
+        "https://registry.example.invalid#fragment",
+        "http://registry.example.invalid",
+    ]
+
+    for index, registry_url in enumerate(bad_urls):
+        output = tmp_path / f"site-{index}"
+        report = generate_public_index([package], output, registry_url)
+
+        assert report["status"] == "invalid", registry_url
+        assert issue_codes(report["errors"]) == {"public_index_registry_url_invalid"}
+        assert not output.exists()
+        assert all("secret-value" not in error["message"] for error in report["errors"])
+
+
+def test_public_index_generate_prefers_stable_release_for_latest_version(
+    tmp_path: Path,
+) -> None:
+    prerelease = copy_email_package(tmp_path, "prerelease")
+    stable = copy_email_package(tmp_path, "stable")
+    update_email_package(prerelease, version="1.0.0-rc.1")
+    update_email_package(stable, version="1.0.0")
+    output = tmp_path / "site"
+
+    report = generate_public_index(
+        [prerelease, stable],
+        output,
+        "https://registry.example.invalid",
+    )
+
+    package_payload = json.loads(
+        (output / "v0/packages/document_conversion.email_tools/index.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert report["status"] == "ok"
+    assert package_payload["package"]["latest_version"] == "1.0.0"
+    assert [item["version"] for item in package_payload["package"]["versions"]] == [
+        "1.0.0-rc.1",
+        "1.0.0",
+    ]
+
+
+def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(
+        [
+            "public-index",
+            "generate",
+            str(ROOT / "examples/email_tools"),
+            "--output",
+            str(tmp_path / "site"),
+            "--registry",
+            "http://localhost:8081",
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["status"] == "ok"
+    assert payload["written_count"] == 7
+
+
 def test_cli_remote_search_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
     def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
         return FakeRemoteResponse(load_remote_registry_fixture("capability-search.json"))
@@ -1108,6 +1330,16 @@ def test_cli_exit_code_contract_for_success_and_failure_paths(tmp_path: Path, ca
             str(SPECGRAPH_FIXTURE_ROOT),
             "--json",
         ],
+        [
+            "public-index",
+            "generate",
+            str(ROOT / "examples/email_tools"),
+            "--output",
+            str(tmp_path / "public-index"),
+            "--registry",
+            "https://registry.example.invalid",
+            "--json",
+        ],
     ]
     invalid_commands = [
         ["validate", str(invalid_package), "--json"],
@@ -1153,6 +1385,16 @@ def test_cli_exit_code_contract_for_success_and_failure_paths(tmp_path: Path, ca
             "missing.bundle",
             "--root",
             str(SPECGRAPH_FIXTURE_ROOT),
+            "--json",
+        ],
+        [
+            "public-index",
+            "generate",
+            str(ROOT / "examples/email_tools"),
+            "--output",
+            str(tmp_path / "invalid-public-index"),
+            "--registry",
+            "http://registry.example.invalid",
             "--json",
         ],
     ]

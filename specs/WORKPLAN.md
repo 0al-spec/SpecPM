@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-25
+Updated: 2026-04-26
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -378,6 +378,60 @@ Acceptance:
   registry state, download package archives, or install submitted packages.
 - Invalid submissions produce an issue comment and a failing validation check.
 
+## Phase 18. Public Static Index Generator
+
+- [x] Add a `specpm public-index generate` command for static public registry
+  metadata generation.
+- [x] Accept one or more already-local package directories as generator inputs.
+- [x] Validate and deterministically pack each package before publication into
+  static output.
+- [x] Emit remote registry API compatible package metadata, package version,
+  and exact capability search payloads under `/v0`.
+- [x] Emit JSON-body `index.html` copies so static hosts can serve
+  extensionless registry endpoints.
+- [x] Validate generated payloads against the remote registry contract before
+  returning success.
+- [x] Reject duplicate `package_id@version` inputs when archive digests differ.
+- [x] Add tests for generated payload shape, archive digest/size/URL,
+  duplicate conflict handling, and CLI JSON output.
+- [x] Document that the generator is static metadata output, not `publish`,
+  issue mutation, archive install/cache, or package execution behavior.
+
+Acceptance:
+
+- Generated `/v0` package, version, and capability payloads validate against
+  the existing remote registry API contract.
+- Output file order is deterministic and reviewable.
+- Deterministic `.specpm.tgz` archives are generated only as static hosted
+  source artifacts for metadata payloads.
+- The command does not contact a remote registry, change GitHub issues, publish
+  through a mutation API, install packages, or execute package content.
+
+## Phase 19. Local Public Index Service
+
+- [x] Add a Docker Compose `public-index` service for local read-only registry
+  testing.
+- [x] Generate `.specpm/public-index` before serving the static `/v0` tree.
+- [x] Serve the generated public index at `http://localhost:8081` by default.
+- [x] Add Make targets for `public-index-generate`, `public-index-up`,
+  `public-index-smoke`, and `public-index-down`.
+- [x] Allow local endpoint overrides with `SPECPM_PUBLIC_INDEX_PORT` and
+  `SPECPM_PUBLIC_INDEX_REGISTRY_URL`.
+- [x] Allow the generator to use localhost HTTP development registry URLs while
+  still rejecting non-local insecure HTTP URLs.
+- [x] Add tests for the compose service contract and localhost generator
+  behavior.
+- [x] Document the local service as an integration point for SpecGraph,
+  ContextBuilder, and manual ecosystem testing.
+
+Acceptance:
+
+- `make public-index-up` starts a local static registry service.
+- `make public-index-smoke` can read the service through the existing
+  read-only remote metadata client.
+- The generated local service remains read-only and does not add publish, auth,
+  signing, issue mutation, package installation, or package execution behavior.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -429,11 +483,11 @@ Future work may explore:
 
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
-- A generator that emits static `/v0/packages/...` and
-  `/v0/capabilities/...` JSON for GitHub Pages.
 - Package removal request workflow.
 - Namespace claim workflow.
-- Optional deterministic `.specpm.tgz` archive mirroring.
+- GitHub Pages deployment automation for generated public index output.
+- SpecGraph and ContextBuilder local ecosystem smoke flow against the local
+  public index service.
 
 ### Post-MVP Track: Enterprise Remote Registry
 
