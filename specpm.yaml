@@ -27,6 +27,7 @@ index:
       - specpm.registry.remote_api_contract
       - specpm.registry.index_submission_flow
       - specpm.registry.remote_readonly_client
+      - specpm.registry.public_static_index
       - specpm.conformance.remote_registry_payloads
       - specpm.documentation.docc_site
       - specpm.cli.public_surface

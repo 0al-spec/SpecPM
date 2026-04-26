@@ -29,6 +29,7 @@ scope:
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
     - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
+    - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
@@ -36,6 +37,7 @@ scope:
     - Remote registry service implementation.
     - specpm publish.
     - Remote package archive download, install, or cache behavior.
+    - Remote registry mutation APIs.
     - Remote package yanking governance.
     - Package signing and trust policy.
     - Namespace governance.
@@ -86,6 +88,9 @@ provides:
     - id: specpm.registry.remote_readonly_client
       role: secondary
       summary: Fetch and validate read-only remote registry metadata without downloading archives or mutating local state.
+    - id: specpm.registry.public_static_index
+      role: secondary
+      summary: Generate static /v0 public index metadata and deterministic archives for read-only hosting.
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
@@ -186,6 +191,14 @@ interfaces:
           mediaTypes:
             - application/json
             - text/plain
+    - id: cli_public-index
+      kind: cli
+      summary: specpm public-index generate for static read-only /v0 registry metadata output.
+      outputs:
+        - name: public_index_generator_report
+          mediaTypes:
+            - application/json
+            - text/plain
     - id: python_core_api
       kind: library
       summary: Importable functions in specpm.core for automation and tests.
@@ -225,6 +238,9 @@ interfaces:
     - id: docc_static_site
       kind: file
       summary: Static DocC documentation output deployed to GitHub Pages.
+    - id: public_index_static_site
+      kind: file
+      summary: Static /v0 public index metadata and deterministic package archives.
 effects:
   sideEffects:
     - id: read_package_data
@@ -323,6 +339,12 @@ evidence:
     path: src/specpm/index_submission.py
     supports:
       - specpm.registry.index_submission_flow
+  - id: public_index_generator
+    kind: source
+    path: src/specpm/public_index.py
+    supports:
+      - specpm.registry.public_static_index
+      - specpm.registry.remote_api_contract
   - id: rfc_coverage
     kind: documentation
     path: specs/RFC_0001_COVERAGE.md
@@ -392,6 +414,16 @@ implementationBindings:
       border:
         - .github/ISSUE_TEMPLATE/add-specpackages.yml
         - specs/INDEX_SUBMISSION_FLOW.md
+  - id: public_index_generator
+    path: src/specpm/public_index.py
+    files:
+      owned:
+        - src/specpm/public_index.py
+      border:
+        - src/specpm/cli.py
+        - specs/INDEX_SUBMISSION_FLOW.md
+        - specs/REMOTE_REGISTRY_API.md
+        - specs/JSON_CONTRACTS.md
   - id: docc
     path: Sources/SpecPM/Documentation.docc/SpecPM.md
     files:

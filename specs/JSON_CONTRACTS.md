@@ -63,6 +63,7 @@ Digest = {
 - Add status: `added`, `unchanged`, `ambiguous`, `invalid`.
 - Registry lifecycle status: `yanked`, `unyanked`, `unchanged`, `invalid`.
 - Remote registry client status: `ok`, `not_found`, `invalid`.
+- Public index generator status: `ok`, `invalid`.
 - Inbox bundle status: `draft_visible`, `ready_for_review`, `invalid`,
   `blocked`.
 - Diff status: `ok`, `invalid`.
@@ -308,6 +309,47 @@ content. A remote registry error payload remains available under `payload` and
 is reflected as `not_found` or `invalid` with a non-zero CLI exit.
 
 Golden fixture: `tests/fixtures/golden/remote-search-email-tools.json`.
+
+## Public Index Generator Result
+
+Command:
+
+```bash
+specpm public-index generate <package-dir>... --output <dir> --registry <url> --json
+```
+
+Contract:
+
+```text
+PublicIndexGeneratorReport = {
+  schemaVersion: 1,
+  status: "ok" | "invalid",
+  output: string,
+  registry: string,
+  written_count: number,
+  written_files: string[],
+  errors: Issue[]
+}
+```
+
+The generator writes static remote registry payloads under `v0/`:
+
+```text
+v0/packages/{package_id}/index.json
+v0/packages/{package_id}/index.html
+v0/packages/{package_id}/versions/{version}/index.json
+v0/packages/{package_id}/versions/{version}/index.html
+v0/packages/{package_id}/versions/{version}/{package_id}-{version}.specpm.tgz
+v0/capabilities/{capability_id}/packages/index.json
+v0/capabilities/{capability_id}/packages/index.html
+```
+
+Generated JSON payloads must validate against the remote registry API contract.
+The `index.html` files contain the same JSON bodies as the adjacent
+`index.json` files so static hosts can serve extensionless registry endpoints.
+The command may create deterministic package archives for static hosting, but it
+does not publish to a remote service, mutate registry state, install packages,
+fetch remote archives as a client, or execute package content.
 
 ## Inbox List
 

@@ -1,8 +1,8 @@
 # SpecPM CLI Exit Code Contract
 
 Status: Draft
-Updated: 2026-04-25
-Scope: MVP commands
+Updated: 2026-04-26
+Scope: MVP and implemented post-MVP commands
 
 SpecPM uses a small CLI exit code surface so shell scripts, Docker jobs, and
 ContextBuilder automation can treat command outcomes consistently.
@@ -36,6 +36,7 @@ ContextBuilder automation can treat command outcomes consistently.
 | `specpm remote package` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
 | `specpm remote version` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
 | `specpm remote search` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
+| `specpm public-index generate` | generator status is `ok` | generator status is `invalid` |
 
 ## Automation Guidance
 

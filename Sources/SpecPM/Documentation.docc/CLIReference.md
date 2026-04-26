@@ -78,6 +78,21 @@ Remote commands are explicit read-only metadata clients for the post-MVP
 registry contract. They do not download archives, publish packages, mutate
 remote state, or execute package content.
 
+## Public Static Index
+
+```bash
+specpm public-index generate <package-dir>... --output <dir> --registry <url> [--json]
+```
+
+The public index generator validates and deterministically packs package
+directories, then writes static `/v0` remote registry metadata for package
+lookup, package version lookup, and exact capability search. The output can be
+hosted by GitHub Pages or another static host.
+
+The command generates metadata and mirrored deterministic archives only. It
+does not publish to a remote service, mutate GitHub issues, install packages,
+download archives as a client, or execute package content.
+
 ## Exit Codes
 
 The CLI exit code contract is documented in `specs/CLI_EXIT_CODES.md`.
