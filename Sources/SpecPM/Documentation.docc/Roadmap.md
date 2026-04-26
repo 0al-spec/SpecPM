@@ -51,10 +51,10 @@ Current post-MVP tracks include:
 
 The read-only remote registry API contract, metadata client, public submission
 intake, validation workflow, static metadata generator, local discovery
-surface, and GitHub Pages static deployment path are implemented. The next
-useful public-index increment is to define the accepted-submissions data source
-that feeds the generated Pages output while keeping enterprise registry work
-separate.
+surface, GitHub Pages static deployment path, and accepted package manifest are
+implemented. The next useful public-index increment is to define maintainer
+promotion from validated submission issues into `public-index/accepted-packages.yml`
+while keeping enterprise registry work separate.
 
 The public index can start as an issue-based submission queue with GitHub
 Actions validation and GitHub Pages static `/v0` metadata. The reference

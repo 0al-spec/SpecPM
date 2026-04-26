@@ -133,10 +133,32 @@ claim verification.
 
 ## Generated Public Registry
 
-After acceptance, the index can generate a static registry with:
+After acceptance, maintainers record repository-local accepted package paths in:
+
+```text
+public-index/accepted-packages.yml
+```
+
+The accepted package manifest is the reviewed data source for the generated
+public index. It is intentionally small:
+
+```yaml
+schemaVersion: 1
+packages:
+  - path: examples/email_tools
+```
+
+Entries are repository-relative package directories that have already passed
+review. The manifest is not a remote registry API, not a package upload format,
+and not a `specpm publish` replacement. The Pages workflow reads this manifest,
+validates and packs the listed packages as untrusted data, and writes generated
+static `/v0` metadata.
+
+The index can generate a static registry from explicit local package directories
+or from the accepted package manifest:
 
 ```bash
-specpm public-index generate <package-dir>... \
+specpm public-index generate --manifest public-index/accepted-packages.yml \
   --output <generated-site-dir> \
   --registry <public-registry-url> \
   --json
@@ -172,7 +194,8 @@ The first repository deployment uses the existing DocC GitHub Pages workflow.
 That workflow builds the DocC site into `.docc-build`, then runs:
 
 ```bash
-python -m specpm.cli public-index generate examples/email_tools \
+python -m specpm.cli public-index generate \
+  --manifest public-index/accepted-packages.yml \
   --output ./.docc-build \
   --registry https://0al-spec.github.io/SpecPM \
   --json
@@ -215,12 +238,14 @@ make public-index-down
 
 The service:
 
-- generates `.specpm/public-index` from `examples/email_tools`;
+- generates `.specpm/public-index` from `public-index/accepted-packages.yml`;
 - serves the generated static `/v0` tree at `http://localhost:8081` by default;
 - exposes `/v0/status`, `/v0/packages`, package lookup, package version lookup,
   and exact capability search metadata;
 - can be pointed at another host-visible URL with
   `SPECPM_PUBLIC_INDEX_REGISTRY_URL`;
+- can use another accepted package manifest with
+  `SPECPM_PUBLIC_INDEX_MANIFEST`;
 - can use another host port with `SPECPM_PUBLIC_INDEX_PORT`.
 
 This service is intended for local SpecGraph, ContextBuilder, and manual
@@ -272,7 +297,8 @@ intent. A submission cannot command the index, the registry, or the host.
 
 Future work may add:
 
-- GitHub Pages deployment for the public index;
+- promotion from validated submission issues into
+  `public-index/accepted-packages.yml`;
 - package removal request workflow;
 - namespace claim workflow;
 - enterprise registry reference implementation;

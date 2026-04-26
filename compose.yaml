@@ -16,6 +16,7 @@ services:
     environment:
       SPECPM_PUBLIC_INDEX_PORT: "${SPECPM_PUBLIC_INDEX_PORT:-8081}"
       SPECPM_PUBLIC_INDEX_REGISTRY_URL: "${SPECPM_PUBLIC_INDEX_REGISTRY_URL:-}"
+      SPECPM_PUBLIC_INDEX_MANIFEST: "${SPECPM_PUBLIC_INDEX_MANIFEST:-public-index/accepted-packages.yml}"
     ports:
       - "${SPECPM_PUBLIC_INDEX_PORT:-8081}:8081"
     entrypoint: ["python", "scripts/serve_public_index.py"]

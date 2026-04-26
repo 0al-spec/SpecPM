@@ -10,6 +10,7 @@ import tarfile
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 
 from specpm import core as core_module
@@ -39,7 +40,7 @@ from specpm.index_submission import (
     render_submission_report_markdown,
     validate_submission_body,
 )
-from specpm.public_index import generate_public_index
+from specpm.public_index import generate_public_index, load_public_index_manifest
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
@@ -49,6 +50,7 @@ ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackage
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
+PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
 CONFORMANCE_CASE_KINDS = {
     "registry_lifecycle",
     "remote_registry_payload",
@@ -427,6 +429,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert {
         "src/specpm/**",
         "examples/**",
+        "public-index/**",
         "pyproject.toml",
         ".github/workflows/docs.yml",
     } <= paths
@@ -449,7 +452,8 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert generate["env"]["SPECPM_PUBLIC_INDEX_REGISTRY_URL"] == (
         "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
     )
-    assert "python -m specpm.cli public-index generate examples/email_tools" in generate["run"]
+    assert "python -m specpm.cli public-index generate" in generate["run"]
+    assert "--manifest public-index/accepted-packages.yml" in generate["run"]
     assert "--output ./.docc-build" in generate["run"]
     assert '--registry "$SPECPM_PUBLIC_INDEX_REGISTRY_URL"' in generate["run"]
 
@@ -466,6 +470,9 @@ def test_public_index_compose_service_exposes_local_registry() -> None:
     assert service["entrypoint"] == ["python", "scripts/serve_public_index.py"]
     assert service["environment"]["SPECPM_PUBLIC_INDEX_PORT"] == (
         "${SPECPM_PUBLIC_INDEX_PORT:-8081}"
+    )
+    assert service["environment"]["SPECPM_PUBLIC_INDEX_MANIFEST"] == (
+        "${SPECPM_PUBLIC_INDEX_MANIFEST:-public-index/accepted-packages.yml}"
     )
 
 
@@ -1211,6 +1218,40 @@ def test_public_index_generate_prefers_stable_release_for_latest_version(
     ]
 
 
+def test_public_index_accepted_manifest_resolves_repository_relative_packages() -> None:
+    report = load_public_index_manifest(PUBLIC_INDEX_ACCEPTED_MANIFEST, root=ROOT)
+
+    assert report["status"] == "ok"
+    assert report["package_dirs"] == [str((ROOT / "examples/email_tools").resolve())]
+    assert report["errors"] == []
+
+
+def test_public_index_accepted_manifest_rejects_path_escape(tmp_path: Path) -> None:
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "schemaVersion: 1\npackages:\n  - path: ../outside\n",
+        encoding="utf-8",
+    )
+
+    report = load_public_index_manifest(manifest, root=tmp_path / "repo")
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"public_index_manifest_package_path_escape"}
+
+
+def test_public_index_accepted_manifest_rejects_unknown_entry_fields(tmp_path: Path) -> None:
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "schemaVersion: 1\npackages:\n  - path: examples/email_tools\n    extra: false\n",
+        encoding="utf-8",
+    )
+
+    report = load_public_index_manifest(manifest, root=ROOT)
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"public_index_manifest_package_field_unknown"}
+
+
 def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
     exit_code = main(
         [
@@ -1230,6 +1271,47 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
     assert exit_code == 0
     assert payload["status"] == "ok"
     assert payload["written_count"] == 11
+
+
+def test_cli_public_index_generate_accepts_reviewed_manifest(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    exit_code = main(
+        [
+            "public-index",
+            "generate",
+            "--manifest",
+            str(PUBLIC_INDEX_ACCEPTED_MANIFEST),
+            "--output",
+            str(tmp_path / "site"),
+            "--registry",
+            "https://registry.example.invalid",
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["status"] == "ok"
+    assert (tmp_path / "site/v0/packages/document_conversion.email_tools/index.json").is_file()
+
+
+def test_cli_public_index_generate_requires_package_or_manifest(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    with pytest.raises(SystemExit) as error:
+        main(
+            [
+                "public-index",
+                "generate",
+                "--output",
+                str(tmp_path / "site"),
+                "--registry",
+                "https://registry.example.invalid",
+                "--json",
+            ]
+        )
+
+    captured = capsys.readouterr()
+    assert error.value.code == 2
+    assert "requires at least one package directory or --manifest" in captured.err
 
 
 def test_cli_remote_search_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]

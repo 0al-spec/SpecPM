@@ -32,9 +32,10 @@ make public-index-smoke
 ```
 
 The compose service exposes a local read-only public index at
-`http://localhost:8081`. It regenerates `.specpm/public-index` from the example
-package and serves the static `/v0` registry tree for manual testing and local
-SpecGraph or ContextBuilder integration.
+`http://localhost:8081`. It regenerates `.specpm/public-index` from the
+maintainer-reviewed `public-index/accepted-packages.yml` manifest and serves
+the static `/v0` registry tree for manual testing and local SpecGraph or
+ContextBuilder integration.
 
 ```bash
 make public-index-down

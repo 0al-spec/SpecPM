@@ -487,11 +487,41 @@ Acceptance:
   `.docc-build` as the Pages artifact.
 - GitHub Pages deployment remains read-only static hosting.
 
+## Phase 22. Public Index Accepted Package Manifest
+
+- [x] Add a maintainer-reviewed accepted package manifest at
+  `public-index/accepted-packages.yml`.
+- [x] Allow `specpm public-index generate` to read repository-relative package
+  directories from the accepted manifest while preserving explicit package
+  directory inputs.
+- [x] Reject missing manifests, invalid manifest shape, unknown package entry
+  fields, absolute paths, and path escapes before package validation or
+  packing.
+- [x] Update the GitHub Pages documentation workflow to generate `/v0` metadata
+  from the accepted manifest instead of hardcoded package arguments.
+- [x] Update the local Docker Compose public-index service and Make targets to
+  use the same accepted manifest by default.
+- [x] Add tests for manifest path resolution, path escape rejection, CLI
+  manifest generation, workflow shape, and compose service configuration.
+- [x] Document that the accepted manifest is a reviewed static input source,
+  not a remote mutation API, upload format, `specpm publish`, package
+  installation, or package execution behavior.
+
+Acceptance:
+
+- Pull requests can review the accepted package source independently of
+  generated Pages output.
+- Pages and the local public-index service use the same default accepted package
+  manifest.
+- Accepted package entries are repository-relative local package directories.
+- The manifest does not introduce remote publishing, issue mutation, auth,
+  signing, archive install/cache behavior, or package execution.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
-- Public SpecPM Index submission flow through GitHub Issues, Actions, and
-  GitHub Pages.
+- Promotion from validated public SpecPM Index submission issues into the
+  accepted package manifest.
 - Enterprise remote registry deployment with private access control, audit, and
   policy enforcement.
 - `specpm publish`.

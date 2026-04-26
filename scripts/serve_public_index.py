@@ -7,7 +7,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from specpm.public_index import generate_public_index
+from specpm.public_index import generate_public_index_from_inputs
 
 
 def main() -> int:
@@ -16,9 +16,21 @@ def main() -> int:
         f"http://localhost:{port}"
     )
     output_dir = Path(os.environ.get("SPECPM_PUBLIC_INDEX_OUTPUT", ".specpm/public-index"))
-    package_dir = Path(os.environ.get("SPECPM_PUBLIC_INDEX_PACKAGE", "examples/email_tools"))
+    manifest_path = Path(
+        os.environ.get("SPECPM_PUBLIC_INDEX_MANIFEST", "public-index/accepted-packages.yml")
+    )
+    package_dirs = [
+        Path(package_dir)
+        for package_dir in os.environ.get("SPECPM_PUBLIC_INDEX_PACKAGE", "").split(os.pathsep)
+        if package_dir
+    ]
 
-    report = generate_public_index([package_dir], output_dir, registry_url)
+    report = generate_public_index_from_inputs(
+        package_dirs,
+        output_dir,
+        registry_url,
+        manifest_path=manifest_path,
+    )
     print(json.dumps(report, indent=2, sort_keys=True), flush=True)
     if report["status"] != "ok":
         return 1

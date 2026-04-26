@@ -30,7 +30,7 @@ PYTHONPATH=src python3 -m specpm.cli add document_conversion.email_to_markdown -
 PYTHONPATH=src python3 -m specpm.cli diff examples/email_tools examples/email_tools --json
 PYTHONPATH=src python3 -m specpm.cli inbox list --root tests/fixtures/specgraph_exports --json
 PYTHONPATH=src python3 -m specpm.cli inbox inspect specgraph.core_repository_facade --root tests/fixtures/specgraph_exports --json
-PYTHONPATH=src python3 -m specpm.cli public-index generate examples/email_tools --output /tmp/specpm-public-index --registry https://registry.example.invalid --json
+PYTHONPATH=src python3 -m specpm.cli public-index generate --manifest public-index/accepted-packages.yml --output /tmp/specpm-public-index --registry https://registry.example.invalid --json
 ```
 
 Run through Docker:
@@ -48,7 +48,7 @@ docker compose run --rm specpm add document_conversion.email_to_markdown --index
 docker compose run --rm specpm diff examples/email_tools examples/email_tools --json
 docker compose run --rm specpm inbox list --root tests/fixtures/specgraph_exports --json
 docker compose run --rm specpm inbox inspect specgraph.core_repository_facade --root tests/fixtures/specgraph_exports --json
-docker compose run --rm specpm public-index generate examples/email_tools --output /tmp/specpm-public-index --registry https://registry.example.invalid --json
+docker compose run --rm specpm public-index generate --manifest public-index/accepted-packages.yml --output /tmp/specpm-public-index --registry https://registry.example.invalid --json
 ```
 
 Run the local public index service:
@@ -59,9 +59,10 @@ make public-index-smoke
 ```
 
 The default registry URL is `http://localhost:8081`. The service regenerates
-`.specpm/public-index` from `examples/email_tools` and serves the static `/v0`
-tree through Docker Compose. `make public-index-smoke` reads `/v0/status`,
-`/v0/packages`, and an exact capability search endpoint. Stop it with:
+`.specpm/public-index` from `public-index/accepted-packages.yml` and serves the
+static `/v0` tree through Docker Compose. `make public-index-smoke` reads
+`/v0/status`, `/v0/packages`, and an exact capability search endpoint. Stop it
+with:
 
 ```bash
 make public-index-down
@@ -112,7 +113,7 @@ Implemented first slice:
 - `specpm remote package <package-id> --registry <url> [--json]`
 - `specpm remote version <package-id@version> --registry <url> [--json]`
 - `specpm remote search <capability-id> --registry <url> [--json]`
-- `specpm public-index generate <package-dir>... --output <dir> --registry <url> [--json]`
+- `specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--json]`
 
 Inbox JSON includes bundle layout checks, validation status, handoff continuity
 fields, and actionable gaps for incomplete SpecGraph export bundles.
@@ -132,9 +133,11 @@ Public index and enterprise registry deployment options are tracked in
 `.github/ISSUE_TEMPLATE/add-specpackages.yml`, and the reference submission
 validation workflow is `.github/workflows/package-submission-check.yml`.
 `specpm public-index generate` emits static read-only `/v0` registry metadata
-and deterministic package archives for GitHub Pages-style hosting. It does not
-publish packages, mutate remote state, install packages, or execute package
-content.
+and deterministic package archives for GitHub Pages-style hosting. The checked-in
+accepted package source for Pages is `public-index/accepted-packages.yml`; it is
+a maintainer-reviewed list of repository-relative package directories, not a
+remote mutation API. The generator does not publish packages, mutate remote
+state, install packages, or execute package content.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 
@@ -164,7 +167,7 @@ The GitHub Pages workflow builds the same DocC catalog from
 `Sources/SpecPM/Documentation.docc`.
 
 The same Pages artifact also includes the generated read-only public index
-metadata under `/v0`, produced by `specpm public-index generate` during the
-documentation workflow. This is static hosting only; it does not add
-`specpm publish`, remote mutation APIs, package install behavior, or package
-content execution.
+metadata under `/v0`, produced from `public-index/accepted-packages.yml` by
+`specpm public-index generate` during the documentation workflow. This is static
+hosting only; it does not add `specpm publish`, remote mutation APIs, package
+install behavior, or package content execution.
