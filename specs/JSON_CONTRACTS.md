@@ -355,7 +355,10 @@ The `index.html` files contain the same JSON bodies as the adjacent
 `index.json` files so static hosts can serve extensionless registry endpoints.
 The command may create deterministic package archives for static hosting, but it
 does not publish to a remote service, mutate registry state, install packages,
-fetch remote archives as a client, or execute package content.
+fetch remote archives as a client, or execute package content. When the accepted
+manifest contains pinned public Git sources, generation checks out the reviewed
+ref, verifies the exact commit revision, and then treats the package files as
+untrusted data for validation and packing.
 
 ## Inbox List
 

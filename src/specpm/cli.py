@@ -176,7 +176,7 @@ def build_parser() -> argparse.ArgumentParser:
     public_index_generate.add_argument("package_dirs", nargs="*")
     public_index_generate.add_argument(
         "--manifest",
-        help="Read accepted package directories from a repository-relative public index manifest.",
+        help="Read accepted package sources from a public index manifest.",
     )
     public_index_generate.add_argument("--output", required=True)
     public_index_generate.add_argument("--registry", required=True)

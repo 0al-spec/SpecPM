@@ -264,6 +264,12 @@ def validate_submitted_repository(url: str, package_path: str, clone_root: Path)
         "status": "valid" if validation["status"] in {"valid", "warning_only"} else "invalid",
         "stage": "validate",
         "package_path": package_path,
+        "source": {
+            "repository": url,
+            "ref": clone.get("ref"),
+            "revision": clone.get("revision"),
+            "path": package_path,
+        },
         "validation_status": validation["status"],
         "package_identity": validation["package_identity"],
         "error_count": validation["error_count"],
@@ -322,7 +328,30 @@ def clone_repository(url: str, checkout: Path) -> dict[str, Any]:
                 )
             ],
         }
-    return {"status": "cloned", "errors": []}
+    revision = read_clone_metadata(["git", "-C", str(checkout), "rev-parse", "HEAD"])
+    ref = read_clone_metadata(["git", "-C", str(checkout), "branch", "--show-current"])
+    return {
+        "status": "cloned",
+        "ref": ref.strip() or None,
+        "revision": revision.strip().lower(),
+        "errors": [],
+    }
+
+
+def read_clone_metadata(command: list[str]) -> str:
+    try:
+        completed = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    if completed.returncode != 0:
+        return ""
+    return completed.stdout
 
 
 def clone_dir_name(url: str) -> str:
@@ -358,6 +387,19 @@ def render_submission_report_markdown(report: dict[str, Any]) -> str:
                 f"- `{item['status']}` `{item['url']}` "
                 f"stage=`{item['stage']}` package=`{package_id}@{version}`"
             )
+            source = item.get("source") or {}
+            if item["status"] == "valid" and source.get("ref") and source.get("revision"):
+                lines.extend(
+                    [
+                        "  - Accepted manifest candidate:",
+                        "    ```yaml",
+                        f"    - repository: {source['repository']}",
+                        f"      ref: {source['ref']}",
+                        f"      revision: {source['revision']}",
+                        f"      path: {source['path']}",
+                        "    ```",
+                    ]
+                )
             for issue in item.get("errors", []):
                 lines.append(f"  - `{issue['code']}`: {issue['message']}")
         lines.append("")

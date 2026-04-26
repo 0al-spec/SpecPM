@@ -1,5 +1,7 @@
-# Maintainer-reviewed package directories that feed the generated public index.
-# Entries are repository-relative paths validated and packed as untrusted data.
+# Maintainer-reviewed package sources that feed the generated public index.
+# Local entries use repository-relative paths. Remote entries use public HTTPS
+# Git repositories with a reviewed ref plus exact pinned commit revision.
+# All package content is validated and packed as untrusted data.
 schemaVersion: 1
 packages:
   - path: examples/email_tools
