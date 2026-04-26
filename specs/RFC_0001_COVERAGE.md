@@ -31,7 +31,7 @@ intentionally left for post-MVP tracks.
 | Structural diff | Implemented | Diff detects capability, required capability, interface, MUST constraint, package metadata, and compatibility changes with conservative classification. |
 | Conformance artifacts | Implemented | `tests/fixtures/conformance/specpm-conformance-v0.json` covers validation outcomes, local registry lifecycle behavior, and static remote registry payload shape. |
 | Remote registry API contract | Documented post-MVP contract | Read-only JSON payloads are documented in `specs/REMOTE_REGISTRY_API.md`; static conformance fixtures validate shape. |
-| Read-only remote registry client | Implemented post-MVP increment | `specpm remote package`, `specpm remote version`, and `specpm remote search` fetch metadata only and validate response shape before success. |
+| Read-only remote registry client | Implemented post-MVP increment | `specpm remote status`, `specpm remote packages`, `specpm remote package`, `specpm remote version`, and `specpm remote search` fetch metadata only and validate response shape before success. |
 | Security handling | Implemented for MVP | Packages are untrusted data; path traversal, symlinks, unsafe archive members, malformed YAML/JSON, and script execution are blocked or avoided. |
 | SpecGraph inbox | Implemented as local bridge | `.specgraph_exports/` bundles are listed and inspected without mutating canonical SpecGraph files. This extends the local MVP bridge. |
 
@@ -61,6 +61,8 @@ The read-only remote registry API v0 contract is documented in
 The contract covers:
 
 - package metadata lookup;
+- package index lookup;
+- registry status lookup;
 - package version lookup;
 - exact capability search;
 - yanked and deprecated version state;
@@ -74,6 +76,8 @@ download archives, publish packages, or mutate registry state.
 The implemented post-MVP client runtime is read-only metadata access:
 
 ```bash
+specpm remote status --registry <url> [--json]
+specpm remote packages --registry <url> [--json]
 specpm remote package <package-id> --registry <url> [--json]
 specpm remote version <package-id@version> --registry <url> [--json]
 specpm remote search <capability-id> --registry <url> [--json]

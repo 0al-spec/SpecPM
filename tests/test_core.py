@@ -19,7 +19,9 @@ from specpm.core import (
     add_package,
     diff_packages,
     get_remote_package,
+    get_remote_package_index,
     get_remote_package_version,
+    get_remote_registry_status,
     index_package,
     inspect_inbox_bundle,
     inspect_package,
@@ -55,7 +57,9 @@ REMOTE_REGISTRY_API_VERSION = "specpm.registry/v0"
 REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteCapabilitySearch",
     "RemotePackage",
+    "RemotePackageIndex",
     "RemotePackageVersion",
+    "RemoteRegistryStatus",
     "RemoteRegistryError",
 }
 REMOTE_REGISTRY_STATUSES = {"invalid", "not_found", "ok"}
@@ -178,6 +182,21 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
             assert isinstance(version["deprecated"], bool)
         return
 
+    if payload["kind"] == "RemotePackageIndex":
+        assert isinstance(payload["package_count"], int)
+        assert isinstance(payload["version_count"], int)
+        assert isinstance(payload["packages"], list)
+        assert payload["package_count"] == len(payload["packages"])
+        assert payload["version_count"] == sum(
+            len(package["versions"]) for package in payload["packages"]
+        )
+        for package in payload["packages"]:
+            assert isinstance(package["package_id"], str)
+            assert isinstance(package["name"], str)
+            assert isinstance(package["capabilities"], list)
+            assert isinstance(package["versions"], list)
+        return
+
     if payload["kind"] == "RemotePackageVersion":
         package = payload["package"]
         assert isinstance(package["package_id"], str)
@@ -203,6 +222,17 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
             assert isinstance(result["yanked"], bool)
             assert isinstance(result["deprecated"], bool)
             assert_remote_registry_source(result["source"])
+        return
+
+    if payload["kind"] == "RemoteRegistryStatus":
+        registry = payload["registry"]
+        assert registry["profile"] in {"public_static_index", "enterprise_registry"}
+        assert isinstance(registry["api_version"], str)
+        assert isinstance(registry["read_only"], bool)
+        assert isinstance(registry["authority"], str)
+        assert isinstance(registry["package_count"], int)
+        assert isinstance(registry["version_count"], int)
+        assert isinstance(registry["capability_count"], int)
         return
 
     assert payload["kind"] == "RemoteRegistryError"
@@ -759,6 +789,22 @@ def test_conformance_remote_registry_payload_cases() -> None:
         assert payload["status"] == expected["status"], case["id"]
         if payload["kind"] == "RemoteRegistryError":
             assert payload["error"]["code"] == expected["error_code"], case["id"]
+        if "profile" in expected:
+            assert payload["registry"]["profile"] == expected["profile"], case["id"]
+        if "package_count" in expected:
+            actual = (
+                payload["registry"]["package_count"]
+                if payload["kind"] == "RemoteRegistryStatus"
+                else payload["package_count"]
+            )
+            assert actual == expected["package_count"], case["id"]
+        if "version_count" in expected:
+            actual = (
+                payload["registry"]["version_count"]
+                if payload["kind"] == "RemoteRegistryStatus"
+                else payload["version_count"]
+            )
+            assert actual == expected["version_count"], case["id"]
         if "package_id" in expected:
             assert payload["package"]["package_id"] == expected["package_id"], case["id"]
         if "version" in expected:
@@ -843,6 +889,35 @@ def test_remote_registry_package_and_version_fetch_expected_endpoints(monkeypatc
     assert package["payload"]["kind"] == "RemotePackage"
     assert version["status"] == "ok"
     assert version["payload"]["kind"] == "RemotePackageVersion"
+    assert seen == list(payloads)
+
+
+def test_remote_registry_status_and_package_index_fetch_expected_endpoints(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payloads = {
+        "https://registry.example.invalid/v0/status": (
+            load_remote_registry_fixture("registry-status.json")
+        ),
+        "https://registry.example.invalid/v0/packages": (
+            load_remote_registry_fixture("package-index.json")
+        ),
+    }
+    seen: list[str] = []
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        seen.append(request.full_url)
+        return FakeRemoteResponse(payloads[request.full_url])
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    status = get_remote_registry_status("https://registry.example.invalid")
+    package_index = get_remote_package_index("https://registry.example.invalid")
+
+    assert status["status"] == "ok"
+    assert status["payload"]["kind"] == "RemoteRegistryStatus"
+    assert status["payload"]["registry"]["profile"] == "public_static_index"
+    assert package_index["status"] == "ok"
+    assert package_index["payload"]["kind"] == "RemotePackageIndex"
+    assert package_index["payload"]["package_count"] == 1
     assert seen == list(payloads)
 
 
@@ -942,6 +1017,10 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     )
 
     assert report["status"] == "ok"
+    status_payload = json.loads((output / "v0/status/index.json").read_text(encoding="utf-8"))
+    package_index_payload = json.loads(
+        (output / "v0/packages/index.json").read_text(encoding="utf-8")
+    )
     package_payload = json.loads(
         (output / "v0/packages/document_conversion.email_tools/index.json").read_text(
             encoding="utf-8"
@@ -969,10 +1048,22 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     )
 
     assert archive.is_file()
+    assert_remote_registry_payload_shape(status_payload)
+    assert_remote_registry_payload_shape(package_index_payload)
     assert_remote_registry_payload_shape(package_payload)
     assert package_directory_index == package_payload
     assert_remote_registry_payload_shape(version_payload)
     assert_remote_registry_payload_shape(capability_payload)
+    assert status_payload["registry"] == {
+        "profile": "public_static_index",
+        "api_version": "v0",
+        "read_only": True,
+        "authority": "metadata_only",
+        "package_count": 1,
+        "version_count": 1,
+        "capability_count": 1,
+    }
+    assert package_index_payload["packages"][0]["package_id"] == ("document_conversion.email_tools")
     assert package_payload["package"]["latest_version"] == "0.1.0"
     assert capability_payload["results"][0]["matched_capability"] == (
         "document_conversion.email_to_markdown"
@@ -1098,7 +1189,7 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
     payload = json.loads(captured.out)
     assert exit_code == 0
     assert payload["status"] == "ok"
-    assert payload["written_count"] == 7
+    assert payload["written_count"] == 11
 
 
 def test_cli_remote_search_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
@@ -1123,6 +1214,48 @@ def test_cli_remote_search_json(monkeypatch, capsys) -> None:  # type: ignore[no
     assert exit_code == 0
     assert payload["status"] == "ok"
     assert payload["payload"]["kind"] == "RemoteCapabilitySearch"
+
+
+def test_cli_remote_status_and_packages_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+    payloads = {
+        "https://registry.example.invalid/v0/status": (
+            load_remote_registry_fixture("registry-status.json")
+        ),
+        "https://registry.example.invalid/v0/packages": (
+            load_remote_registry_fixture("package-index.json")
+        ),
+    }
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payloads[request.full_url])
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    status_exit = main(
+        [
+            "remote",
+            "status",
+            "--registry",
+            "https://registry.example.invalid",
+            "--json",
+        ]
+    )
+    status_output = json.loads(capsys.readouterr().out)
+    packages_exit = main(
+        [
+            "remote",
+            "packages",
+            "--registry",
+            "https://registry.example.invalid",
+            "--json",
+        ]
+    )
+    packages_output = json.loads(capsys.readouterr().out)
+
+    assert status_exit == 0
+    assert status_output["payload"]["kind"] == "RemoteRegistryStatus"
+    assert packages_exit == 0
+    assert packages_output["payload"]["kind"] == "RemotePackageIndex"
 
 
 def test_inbox_lists_specgraph_export() -> None:

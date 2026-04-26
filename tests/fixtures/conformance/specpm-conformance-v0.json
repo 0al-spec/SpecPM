@@ -81,6 +81,29 @@
       }
     },
     {
+      "id": "remote_registry.registry_status",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/registry-status.json",
+      "expected": {
+        "kind": "RemoteRegistryStatus",
+        "status": "ok",
+        "profile": "public_static_index",
+        "package_count": 1,
+        "version_count": 1
+      }
+    },
+    {
+      "id": "remote_registry.package_index",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/package-index.json",
+      "expected": {
+        "kind": "RemotePackageIndex",
+        "status": "ok",
+        "package_count": 1,
+        "version_count": 1
+      }
+    },
+    {
       "id": "remote_registry.package_metadata",
       "kind": "remote_registry_payload",
       "payload": "tests/fixtures/conformance/remote_registry/package-metadata.json",

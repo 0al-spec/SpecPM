@@ -283,6 +283,8 @@ Yanked packages remain visible in exact search results with `yanked: true`.
 Commands:
 
 ```bash
+specpm remote status --registry <url> --json
+specpm remote packages --registry <url> --json
 specpm remote package <package-id> --registry <url> --json
 specpm remote version <package-id@version> --registry <url> --json
 specpm remote search <capability-id> --registry <url> --json
@@ -293,12 +295,12 @@ Contract:
 ```text
 RemoteRegistryClientReport = {
   status: "ok" | "not_found" | "invalid",
-  operation: "package" | "version" | "search",
+  operation: "status" | "packages" | "package" | "version" | "search",
   registry: string,
   endpoint: string | null,
   target: object,
-  payload: RemotePackage | RemotePackageVersion | RemoteCapabilitySearch |
-    RemoteRegistryError | null,
+  payload: RemoteRegistryStatus | RemotePackageIndex | RemotePackage |
+    RemotePackageVersion | RemoteCapabilitySearch | RemoteRegistryError | null,
   errors: Issue[]
 }
 ```
@@ -335,6 +337,10 @@ PublicIndexGeneratorReport = {
 The generator writes static remote registry payloads under `v0/`:
 
 ```text
+v0/status/index.json
+v0/status/index.html
+v0/packages/index.json
+v0/packages/index.html
 v0/packages/{package_id}/index.json
 v0/packages/{package_id}/index.html
 v0/packages/{package_id}/versions/{version}/index.json

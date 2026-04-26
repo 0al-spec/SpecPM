@@ -1,0 +1,31 @@
+{
+  "apiVersion": "specpm.registry/v0",
+  "schemaVersion": 1,
+  "kind": "RemotePackageIndex",
+  "status": "ok",
+  "package_count": 1,
+  "version_count": 1,
+  "packages": [
+    {
+      "package_id": "document_conversion.email_tools",
+      "name": "Email Tools",
+      "summary": "Boundary specifications for email document conversion.",
+      "license": "MIT",
+      "latest_version": "0.1.0",
+      "capabilities": [
+        "document_conversion.email_to_markdown"
+      ],
+      "keywords": [
+        "document-conversion",
+        "email"
+      ],
+      "versions": [
+        {
+          "version": "0.1.0",
+          "yanked": false,
+          "deprecated": false
+        }
+      ]
+    }
+  ]
+}

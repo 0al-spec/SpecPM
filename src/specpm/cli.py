@@ -11,7 +11,9 @@ from specpm.core import (
     add_package,
     diff_packages,
     get_remote_package,
+    get_remote_package_index,
     get_remote_package_version,
+    get_remote_registry_status,
     index_package,
     inspect_inbox_bundle,
     inspect_package,
@@ -121,6 +123,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     remote = subparsers.add_parser("remote", help="Read remote registry metadata.")
     remote_subparsers = remote.add_subparsers(dest="remote_command", required=True)
+
+    remote_status = remote_subparsers.add_parser(
+        "status", help="Fetch remote registry discovery status."
+    )
+    add_remote_registry_options(remote_status)
+    remote_status.set_defaults(handler=handle_remote_status)
+
+    remote_packages = remote_subparsers.add_parser(
+        "packages", help="Fetch the remote package index."
+    )
+    add_remote_registry_options(remote_packages)
+    remote_packages.set_defaults(handler=handle_remote_packages)
 
     remote_package = remote_subparsers.add_parser("package", help="Fetch remote package metadata.")
     remote_package.add_argument("package_id")
@@ -355,6 +369,16 @@ def handle_remote_package(args: argparse.Namespace) -> int:
     return emit_remote_registry_report(report, args.json)
 
 
+def handle_remote_status(args: argparse.Namespace) -> int:
+    report = get_remote_registry_status(args.registry, args.timeout)
+    return emit_remote_registry_report(report, args.json)
+
+
+def handle_remote_packages(args: argparse.Namespace) -> int:
+    report = get_remote_package_index(args.registry, args.timeout)
+    return emit_remote_registry_report(report, args.json)
+
+
 def handle_remote_version(args: argparse.Namespace) -> int:
     report = get_remote_package_version(args.registry, args.package_ref, args.timeout)
     return emit_remote_registry_report(report, args.json)
@@ -404,6 +428,18 @@ def print_remote_registry(report: dict[str, Any]) -> None:
 
     payload = report.get("payload") or {}
     kind = payload.get("kind")
+    if kind == "RemoteRegistryStatus":
+        registry = payload["registry"]
+        print(
+            f"{registry['profile']} "
+            f"[{registry['package_count']} packages, {registry['version_count']} versions]"
+        )
+        return
+    if kind == "RemotePackageIndex":
+        print(f"{payload['package_count']} remote packages [{payload['version_count']} versions]")
+        for package in payload["packages"]:
+            print(f"{package['package_id']} {package.get('latest_version', 'unknown')}")
+        return
     if kind == "RemotePackage":
         package = payload["package"]
         print(f"{package['package_id']} [{len(package['versions'])} versions]")

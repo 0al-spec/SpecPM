@@ -1,4 +1,4 @@
-.PHONY: install test lint format-check docker-build docker-test docs-build public-index-generate public-index-up public-index-down public-index-smoke
+.PHONY: install test lint format-check docker-build docker-test docs-build public-index-generate public-index-up public-index-down public-index-wait public-index-smoke
 
 SPECPM_PUBLIC_INDEX_PORT ?= 8081
 SPECPM_PUBLIC_INDEX_REGISTRY_URL ?= http://localhost:$(SPECPM_PUBLIC_INDEX_PORT)
@@ -46,7 +46,24 @@ public-index-up:
 public-index-down:
 	docker compose stop public-index
 
-public-index-smoke:
+public-index-wait:
+	@for attempt in 1 2 3 4 5 6 7 8 9 10; do \
+		PYTHONPATH=src python3 -m specpm.cli remote status \
+			--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+			--json >/dev/null 2>&1 && exit 0; \
+		sleep 1; \
+	done; \
+	PYTHONPATH=src python3 -m specpm.cli remote status \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json >/dev/null
+
+public-index-smoke: public-index-wait
+	PYTHONPATH=src python3 -m specpm.cli remote status \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json
+	PYTHONPATH=src python3 -m specpm.cli remote packages \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json
 	PYTHONPATH=src python3 -m specpm.cli remote search $(PUBLIC_INDEX_SMOKE_CAPABILITY) \
 		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
 		--json

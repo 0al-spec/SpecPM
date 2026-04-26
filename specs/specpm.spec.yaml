@@ -25,7 +25,7 @@ scope:
     - Publish portable conformance artifacts for local implementation behavior.
     - Document the post-MVP read-only remote registry API contract.
     - Publish static conformance fixtures for remote registry payload shape.
-    - Fetch read-only remote registry metadata for package lookup, package version lookup, and exact capability search.
+    - Fetch read-only remote registry metadata for registry status, package index, package lookup, package version lookup, and exact capability search.
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
     - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
@@ -88,7 +88,7 @@ provides:
       summary: Document issue-based public index submissions and enterprise registry deployment boundaries.
     - id: specpm.registry.remote_readonly_client
       role: secondary
-      summary: Fetch and validate read-only remote registry metadata without downloading archives or mutating local state.
+      summary: Fetch and validate read-only remote registry status, package index, and package metadata without downloading archives or mutating local state.
     - id: specpm.registry.public_static_index
       role: secondary
       summary: Generate static /v0 public index metadata and deterministic archives for read-only hosting.
@@ -189,7 +189,7 @@ interfaces:
             - text/plain
     - id: cli_remote
       kind: cli
-      summary: specpm remote package, specpm remote version, and specpm remote search for read-only registry metadata.
+      summary: specpm remote status, specpm remote packages, specpm remote package, specpm remote version, and specpm remote search for read-only registry metadata.
       outputs:
         - name: remote_registry_client_report
           mediaTypes:
@@ -215,6 +215,8 @@ interfaces:
         - add_package
         - yank_index_package
         - unyank_index_package
+        - get_remote_registry_status
+        - get_remote_package_index
         - get_remote_package
         - get_remote_package_version
         - search_remote_registry

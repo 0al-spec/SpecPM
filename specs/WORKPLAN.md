@@ -432,6 +432,35 @@ Acceptance:
 - The generated local service remains read-only and does not add publish, auth,
   signing, issue mutation, package installation, or package execution behavior.
 
+## Phase 20. Public Index Observation Surface
+
+- [x] Add a read-only `/v0/status` static registry payload for downstream
+  availability and profile observation.
+- [x] Add a read-only `/v0/packages` static package index payload for visible
+  package/version discovery.
+- [x] Add `specpm remote status --registry <url>` and
+  `specpm remote packages --registry <url>` client commands.
+- [x] Validate registry status and package index payload shapes through the
+  same remote registry contract validator.
+- [x] Extend conformance fixtures for registry status and package index
+  payloads.
+- [x] Extend `make public-index-smoke` so local SpecGraph and ContextBuilder
+  integrations can verify discovery before exact capability lookup.
+- [x] Document the observation surface without adding publish, auth, signing,
+  artifact generation, graph reasoning, archive download/install, or package
+  execution behavior.
+
+Acceptance:
+
+- `make public-index-up` exposes `/v0/status` and `/v0/packages` through the
+  static local registry service.
+- `specpm remote status --registry http://localhost:8081 --json` returns a
+  `RemoteRegistryStatus` payload.
+- `specpm remote packages --registry http://localhost:8081 --json` returns a
+  `RemotePackageIndex` payload.
+- SpecGraph and ContextBuilder can use the observation surface as metadata-only
+  evidence of package visibility.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -486,8 +515,6 @@ Future work may explore:
 - Package removal request workflow.
 - Namespace claim workflow.
 - GitHub Pages deployment automation for generated public index output.
-- SpecGraph and ContextBuilder local ecosystem smoke flow against the local
-  public index service.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

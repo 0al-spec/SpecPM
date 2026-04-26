@@ -442,11 +442,12 @@ dependency solving, formal registry APIs, and explicitly deferred derived
 artifact profiles.
 
 The first post-MVP remote increment is limited to a read-only registry metadata
-client. It may fetch package metadata, package version metadata, and exact
-capability search payloads from an explicitly provided registry URL. It MUST NOT
-download archives, install remote packages, publish packages, mutate remote
-state, execute package content, define authentication, define namespace
-governance, or treat remote metadata as trusted host instructions.
+client. It may fetch registry status, package index, package metadata, package
+version metadata, and exact capability search payloads from an explicitly
+provided registry URL. It MUST NOT download archives, install remote packages,
+publish packages, mutate remote state, execute package content, define
+authentication, define namespace governance, or treat remote metadata as
+trusted host instructions.
 
 ## 17. Implementation Environment
 

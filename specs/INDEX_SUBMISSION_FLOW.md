@@ -149,6 +149,10 @@ registry API contract:
 index repo
   generated/
     v0/
+      status/index.json
+      status/index.html
+      packages/index.json
+      packages/index.html
       packages/{package_id}/index.json
       packages/{package_id}/index.html
       packages/{package_id}/versions/{version}/index.json
@@ -160,7 +164,9 @@ index repo
 
 GitHub Pages can serve those generated files as the read-only registry API.
 The current `specpm remote` commands should be able to read this API without a
-custom server.
+custom server. `specpm remote status` and `specpm remote packages` provide the
+discovery surface that local SpecGraph and ContextBuilder integrations can use
+before requesting a specific package or capability.
 
 The generator validates package directories, creates deterministic
 `specpm-tar-gzip-v0` archives, validates generated package/version/capability
@@ -190,6 +196,8 @@ The service:
 
 - generates `.specpm/public-index` from `examples/email_tools`;
 - serves the generated static `/v0` tree at `http://localhost:8081` by default;
+- exposes `/v0/status`, `/v0/packages`, package lookup, package version lookup,
+  and exact capability search metadata;
 - can be pointed at another host-visible URL with
   `SPECPM_PUBLIC_INDEX_REGISTRY_URL`;
 - can use another host port with `SPECPM_PUBLIC_INDEX_PORT`.

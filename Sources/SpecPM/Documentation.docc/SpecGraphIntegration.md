@@ -21,6 +21,23 @@ specpm inbox inspect <package-id> --root .specgraph_exports --json
 The inbox bridge is local and review-oriented. It does not automatically import
 draft bundles into canonical SpecGraph files.
 
+## Public Index Observation
+
+The local public index service gives SpecGraph and ContextBuilder a read-only
+registry surface to observe:
+
+```bash
+make public-index-up
+specpm remote status --registry http://localhost:8081 --json
+specpm remote packages --registry http://localhost:8081 --json
+specpm remote search document_conversion.email_to_markdown --registry http://localhost:8081 --json
+```
+
+`status` answers whether the registry surface is visible and which profile it
+implements. `packages` lists the visible package IDs and versions. These
+commands read metadata only; they do not download archives, install packages,
+mutate SpecGraph state, or execute package content.
+
 ## Responsibilities
 
 SpecPM owns:
