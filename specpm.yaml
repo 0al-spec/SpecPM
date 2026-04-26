@@ -29,6 +29,7 @@ index:
       - specpm.registry.remote_readonly_client
       - specpm.registry.public_static_index
       - specpm.registry.local_dev_service
+      - specpm.registry.public_pages_deployment
       - specpm.conformance.remote_registry_payloads
       - specpm.documentation.docc_site
       - specpm.cli.public_surface

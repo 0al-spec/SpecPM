@@ -47,6 +47,7 @@ GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
 ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
+DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
 CONFORMANCE_CASE_KINDS = {
     "registry_lifecycle",
@@ -416,6 +417,44 @@ def test_package_submission_workflow_runs_only_for_submission_label() -> None:
     assert "listComments" in comment_script
     assert "updateComment" in comment_script
     assert "createComment" in comment_script
+
+
+def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
+    loaded = load_yaml_file(DOCS_WORKFLOW)
+
+    trigger = loaded.get("on") or loaded.get(True)
+    paths = set(trigger["push"]["paths"])
+    assert {
+        "src/specpm/**",
+        "examples/**",
+        "pyproject.toml",
+        ".github/workflows/docs.yml",
+    } <= paths
+
+    build = loaded["jobs"]["build"]
+    steps = build["steps"]
+    step_names = [step["name"] for step in steps if "name" in step]
+    assert step_names.index("Build Documentation") < step_names.index(
+        "Generate public index metadata"
+    )
+    assert step_names.index("Generate public index metadata") < step_names.index(
+        "Add .nojekyll and index.html redirect"
+    )
+
+    steps_by_name = {step["name"]: step for step in steps if "name" in step}
+    assert steps_by_name["Set up Python"]["uses"] == "actions/setup-python@v5"
+    assert steps_by_name["Install SpecPM"]["run"] == 'python -m pip install -e ".[dev]"'
+
+    generate = steps_by_name["Generate public index metadata"]
+    assert generate["env"]["SPECPM_PUBLIC_INDEX_REGISTRY_URL"] == (
+        "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+    )
+    assert "python -m specpm.cli public-index generate examples/email_tools" in generate["run"]
+    assert "--output ./.docc-build" in generate["run"]
+    assert '--registry "$SPECPM_PUBLIC_INDEX_REGISTRY_URL"' in generate["run"]
+
+    upload = steps_by_name["Upload artifact"]
+    assert upload["with"]["path"] == "./.docc-build"
 
 
 def test_public_index_compose_service_exposes_local_registry() -> None:

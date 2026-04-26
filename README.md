@@ -162,3 +162,9 @@ make docs-build
 
 The GitHub Pages workflow builds the same DocC catalog from
 `Sources/SpecPM/Documentation.docc`.
+
+The same Pages artifact also includes the generated read-only public index
+metadata under `/v0`, produced by `specpm public-index generate` during the
+documentation workflow. This is static hosting only; it does not add
+`specpm publish`, remote mutation APIs, package install behavior, or package
+content execution.

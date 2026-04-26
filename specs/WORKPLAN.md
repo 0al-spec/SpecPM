@@ -461,6 +461,32 @@ Acceptance:
 - SpecGraph and ContextBuilder can use the observation surface as metadata-only
   evidence of package visibility.
 
+## Phase 21. GitHub Pages Public Index Deployment
+
+- [x] Generate static `/v0` public index metadata into the GitHub Pages artifact
+  alongside the DocC documentation site.
+- [x] Use the existing read-only `specpm public-index generate` command instead
+  of adding a registry server or mutation API.
+- [x] Configure the Pages registry base URL as the repository Pages URL.
+- [x] Trigger the Pages build when public index generator code, example package
+  input, package metadata, docs, or workflow files change.
+- [x] Keep the Pages artifact root compatible with both `/documentation/specpm/`
+  and `/v0` paths.
+- [x] Add workflow-shape tests so CI catches drift in the DocC plus public index
+  deployment contract.
+- [x] Document that Pages deployment is generated static metadata only, not
+  `specpm publish`, remote registry service implementation, auth, package
+  installation, or package execution behavior.
+
+Acceptance:
+
+- Pushes to `main` build a Pages artifact containing DocC documentation and the
+  generated static `/v0` public index tree.
+- Pull requests validate the Pages artifact generation shape without deploying.
+- The workflow installs SpecPM, runs `specpm public-index generate`, and uploads
+  `.docc-build` as the Pages artifact.
+- GitHub Pages deployment remains read-only static hosting.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -515,7 +541,6 @@ Future work may explore:
   submissions.
 - Package removal request workflow.
 - Namespace claim workflow.
-- GitHub Pages deployment automation for generated public index output.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

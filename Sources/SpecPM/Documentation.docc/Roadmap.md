@@ -24,6 +24,8 @@ Completed areas include:
 - static public index `/v0` metadata generator.
 - local public index service and discovery endpoints for SpecGraph and
   ContextBuilder observation.
+- GitHub Pages deployment of generated `/v0` public index metadata alongside
+  DocC documentation.
 
 ## Post-MVP Tracks
 
@@ -48,10 +50,11 @@ Current post-MVP tracks include:
 ## Recommended Next Track
 
 The read-only remote registry API contract, metadata client, public submission
-intake, validation workflow, static metadata generator, and local discovery
-surface are implemented. The next useful public-index increment is to wire
-accepted submissions into a GitHub Pages deployment workflow while keeping
-enterprise registry work separate.
+intake, validation workflow, static metadata generator, local discovery
+surface, and GitHub Pages static deployment path are implemented. The next
+useful public-index increment is to define the accepted-submissions data source
+that feeds the generated Pages output while keeping enterprise registry work
+separate.
 
 The public index can start as an issue-based submission queue with GitHub
 Actions validation and GitHub Pages static `/v0` metadata. The reference
