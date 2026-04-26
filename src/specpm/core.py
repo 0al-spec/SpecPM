@@ -83,7 +83,9 @@ KNOWN_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
 REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteCapabilitySearch",
     "RemotePackage",
+    "RemotePackageIndex",
     "RemotePackageVersion",
+    "RemoteRegistryStatus",
     "RemoteRegistryError",
 }
 REMOTE_REGISTRY_STATUS_VALUES = {"ok", "not_found", "invalid"}
@@ -91,7 +93,9 @@ __all__ = [
     "add_package",
     "diff_packages",
     "get_remote_package",
+    "get_remote_package_index",
     "get_remote_package_version",
+    "get_remote_registry_status",
     "index_package",
     "inspect_inbox_bundle",
     "inspect_package",
@@ -738,6 +742,54 @@ def get_remote_package(
     )
 
 
+def get_remote_registry_status(
+    registry_url: str,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    endpoint, endpoint_errors = build_remote_registry_endpoint(registry_url, ["v0", "status"])
+    if endpoint_errors:
+        return remote_registry_invalid_report(
+            "status",
+            registry_url,
+            endpoint,
+            {},
+            endpoint_errors,
+        )
+    assert endpoint is not None
+    return read_remote_registry_endpoint(
+        "status",
+        registry_url,
+        endpoint,
+        "RemoteRegistryStatus",
+        {},
+        timeout,
+    )
+
+
+def get_remote_package_index(
+    registry_url: str,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    endpoint, endpoint_errors = build_remote_registry_endpoint(registry_url, ["v0", "packages"])
+    if endpoint_errors:
+        return remote_registry_invalid_report(
+            "packages",
+            registry_url,
+            endpoint,
+            {},
+            endpoint_errors,
+        )
+    assert endpoint is not None
+    return read_remote_registry_endpoint(
+        "packages",
+        registry_url,
+        endpoint,
+        "RemotePackageIndex",
+        {},
+        timeout,
+    )
+
+
 def get_remote_package_version(
     registry_url: str,
     package_ref: str,
@@ -1331,10 +1383,14 @@ def validate_remote_registry_payload(payload: Any) -> list[Issue]:
 
     if kind == "RemotePackage":
         validate_remote_package_payload(payload, errors)
+    elif kind == "RemotePackageIndex":
+        validate_remote_package_index_payload(payload, errors)
     elif kind == "RemotePackageVersion":
         validate_remote_package_version_payload(payload, errors)
     elif kind == "RemoteCapabilitySearch":
         validate_remote_capability_search_payload(payload, errors)
+    elif kind == "RemoteRegistryStatus":
+        validate_remote_registry_status_payload(payload, errors)
     elif kind == "RemoteRegistryError":
         validate_remote_registry_error_payload(payload, errors)
     return errors
@@ -1344,24 +1400,57 @@ def validate_remote_package_payload(payload: dict[str, Any], errors: list[Issue]
     package = require_remote_mapping(payload, "package", errors, "package")
     if package is None:
         return
-    require_remote_string(package, "package_id", errors, "package.package_id")
-    require_remote_string(package, "name", errors, "package.name")
-    require_remote_list(package, "capabilities", errors, "package.capabilities")
-    versions = require_remote_list(package, "versions", errors, "package.versions")
+    validate_remote_package_summary(package, errors, "package")
+
+
+def validate_remote_package_summary(
+    package: dict[str, Any],
+    errors: list[Issue],
+    field: str,
+) -> None:
+    require_remote_string(package, "package_id", errors, f"{field}.package_id")
+    require_remote_string(package, "name", errors, f"{field}.name")
+    require_remote_list(package, "capabilities", errors, f"{field}.capabilities")
+    versions = require_remote_list(package, "versions", errors, f"{field}.versions")
     if versions is None:
         return
     for index, version in enumerate(versions):
         if not isinstance(version, dict):
-            errors.append(remote_field_invalid(f"package.versions.{index}", "must be an object"))
+            errors.append(remote_field_invalid(f"{field}.versions.{index}", "must be an object"))
             continue
-        require_remote_string(version, "version", errors, f"package.versions.{index}.version")
-        require_remote_bool(version, "yanked", errors, f"package.versions.{index}.yanked")
+        require_remote_string(version, "version", errors, f"{field}.versions.{index}.version")
+        require_remote_bool(version, "yanked", errors, f"{field}.versions.{index}.yanked")
         require_remote_bool(
             version,
             "deprecated",
             errors,
-            f"package.versions.{index}.deprecated",
+            f"{field}.versions.{index}.deprecated",
         )
+
+
+def validate_remote_package_index_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    package_count = require_remote_int(payload, "package_count", errors, "package_count")
+    version_count = require_remote_int(payload, "version_count", errors, "version_count")
+    packages = require_remote_list(payload, "packages", errors, "packages")
+    if packages is None:
+        return
+    if package_count is not None and package_count != len(packages):
+        errors.append(remote_field_invalid("package_count", "must match packages length"))
+    computed_version_count = 0
+    for index, package in enumerate(packages):
+        field = f"packages.{index}"
+        if not isinstance(package, dict):
+            errors.append(remote_field_invalid(field, "must be an object"))
+            continue
+        validate_remote_package_summary(package, errors, field)
+        versions = package.get("versions")
+        if isinstance(versions, list):
+            computed_version_count += len(versions)
+    if version_count is not None and version_count != computed_version_count:
+        errors.append(remote_field_invalid("version_count", "must match listed package versions"))
 
 
 def validate_remote_package_version_payload(
@@ -1426,6 +1515,23 @@ def validate_remote_capability_search_payload(
         source = require_remote_mapping(result, "source", errors, f"{field}.source")
         if source is not None:
             validate_remote_registry_source(source, errors, f"{field}.source")
+
+
+def validate_remote_registry_status_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    registry = require_remote_mapping(payload, "registry", errors, "registry")
+    if registry is None:
+        return
+    require_remote_string(registry, "profile", errors, "registry.profile")
+    require_remote_string(registry, "api_version", errors, "registry.api_version")
+    require_remote_bool(registry, "read_only", errors, "registry.read_only")
+    require_remote_string(registry, "authority", errors, "registry.authority")
+    for key in ("package_count", "version_count", "capability_count"):
+        value = require_remote_int(registry, key, errors, f"registry.{key}")
+        if value is not None and value < 0:
+            errors.append(remote_field_invalid(f"registry.{key}", "must not be negative"))
 
 
 def validate_remote_registry_error_payload(payload: dict[str, Any], errors: list[Issue]) -> None:

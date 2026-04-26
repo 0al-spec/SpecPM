@@ -25,12 +25,13 @@ scope:
     - Publish portable conformance artifacts for local implementation behavior.
     - Document the post-MVP read-only remote registry API contract.
     - Publish static conformance fixtures for remote registry payload shape.
-    - Fetch read-only remote registry metadata for package lookup, package version lookup, and exact capability search.
+    - Fetch read-only remote registry metadata for registry status, package index, package lookup, package version lookup, and exact capability search.
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
     - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
+    - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
@@ -43,6 +44,7 @@ scope:
     - Package signing and trust policy.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
+    - LLM, embedding, vector search, or RAG-based intent resolution.
     - Full dependency solving.
     - PRD, brief, issue breakdown, test plan, or review report generation.
     - Artifact evaluation runtime.
@@ -88,7 +90,7 @@ provides:
       summary: Document issue-based public index submissions and enterprise registry deployment boundaries.
     - id: specpm.registry.remote_readonly_client
       role: secondary
-      summary: Fetch and validate read-only remote registry metadata without downloading archives or mutating local state.
+      summary: Fetch and validate read-only remote registry status, package index, and package metadata without downloading archives or mutating local state.
     - id: specpm.registry.public_static_index
       role: secondary
       summary: Generate static /v0 public index metadata and deterministic archives for read-only hosting.
@@ -189,7 +191,7 @@ interfaces:
             - text/plain
     - id: cli_remote
       kind: cli
-      summary: specpm remote package, specpm remote version, and specpm remote search for read-only registry metadata.
+      summary: specpm remote status, specpm remote packages, specpm remote package, specpm remote version, and specpm remote search for read-only registry metadata.
       outputs:
         - name: remote_registry_client_report
           mediaTypes:
@@ -215,6 +217,8 @@ interfaces:
         - add_package
         - yank_index_package
         - unyank_index_package
+        - get_remote_registry_status
+        - get_remote_package_index
         - get_remote_package
         - get_remote_package_version
         - search_remote_registry
@@ -272,6 +276,9 @@ constraints:
   - id: exact_search_normative
     level: MUST
     statement: MVP search must use exact capability ID matching for normative resolution.
+  - id: no_semantic_authority
+    level: MUST
+    statement: SpecPM must not treat LLM, embedding, vector search, or RAG output as authoritative package meaning.
   - id: deterministic_outputs
     level: MUST
     statement: Archives, local index updates, lockfiles, and JSON reports must remain deterministic for stable inputs.
@@ -374,6 +381,13 @@ evidence:
     supports:
       - scope.includes
       - scope.excludes
+  - id: intent_discovery_boundary
+    kind: documentation
+    path: specs/INTENT_DISCOVERY_BOUNDARY.md
+    supports:
+      - exact_search_normative
+      - no_semantic_authority
+      - scope.excludes
   - id: derived_boundary
     kind: adr
     path: specs/0001_Derived_Artifact_Profile_Decision.md
@@ -461,6 +475,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/Conformance.md
         - Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
+        - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
 provenance:
   sourceConfidence:

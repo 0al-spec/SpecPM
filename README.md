@@ -60,7 +60,8 @@ make public-index-smoke
 
 The default registry URL is `http://localhost:8081`. The service regenerates
 `.specpm/public-index` from `examples/email_tools` and serves the static `/v0`
-tree through Docker Compose. Stop it with:
+tree through Docker Compose. `make public-index-smoke` reads `/v0/status`,
+`/v0/packages`, and an exact capability search endpoint. Stop it with:
 
 ```bash
 make public-index-down
@@ -76,7 +77,11 @@ SPECPM_PUBLIC_INDEX_REGISTRY_URL=http://localhost:8082 make public-index-smoke
 Run the post-MVP read-only remote metadata client against a compatible registry:
 
 ```bash
+PYTHONPATH=src python3 -m specpm.cli remote status --registry https://registry.example.invalid --json
+PYTHONPATH=src python3 -m specpm.cli remote packages --registry https://registry.example.invalid --json
 PYTHONPATH=src python3 -m specpm.cli remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
+docker compose run --rm specpm remote status --registry https://registry.example.invalid --json
+docker compose run --rm specpm remote packages --registry https://registry.example.invalid --json
 docker compose run --rm specpm remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
 ```
 
@@ -102,6 +107,8 @@ Implemented first slice:
 - `specpm diff <old-package-dir> <new-package-dir> [--json]`
 - `specpm inbox list [--root .specgraph_exports] [--json]`
 - `specpm inbox inspect <package-id> [--root .specgraph_exports] [--json]`
+- `specpm remote status --registry <url> [--json]`
+- `specpm remote packages --registry <url> [--json]`
 - `specpm remote package <package-id> --registry <url> [--json]`
 - `specpm remote version <package-id@version> --registry <url> [--json]`
 - `specpm remote search <capability-id> --registry <url> [--json]`
@@ -130,6 +137,13 @@ publish packages, mutate remote state, install packages, or execute package
 content.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
+
+SpecPM does not translate plain-text user intent into capability IDs or package
+selections. Natural-language discovery, embeddings, vector search, RAG, and
+semantic reranking belong in ContextBuilder, SpecGraph, or a future downstream
+intent resolver. SpecPM remains the exact lookup and verification layer for
+structured package metadata. This boundary is documented in
+`specs/INTENT_DISCOVERY_BOUNDARY.md`.
 
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.

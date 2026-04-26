@@ -82,6 +82,8 @@ checks stable payload shape fields:
 - `schemaVersion`
 - `kind`
 - `status`
+- registry status fields where applicable
+- package index counts where applicable
 - package identity fields where applicable
 - exact capability query fields where applicable
 - yanked/deprecated lifecycle state where applicable
@@ -104,8 +106,8 @@ The initial conformance suite covers:
 - a spec path escape;
 - a warning-only manual-assertion evidence package;
 - local registry yank and unyank behavior.
-- remote registry package metadata, package version, exact capability search,
-  yanked version, and not-found error payloads.
+- remote registry status, package index, package metadata, package version,
+  exact capability search, yanked version, and not-found error payloads.
 - read-only remote registry client behavior using fixture-backed fetch stubs.
 
 ## Non-Goals

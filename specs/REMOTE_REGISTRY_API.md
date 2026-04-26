@@ -27,6 +27,8 @@ auth, internal policy, audit, and private storage.
 
 The remote registry API contract defines read-only discovery surfaces:
 
+- registry status lookup;
+- package index lookup;
 - package metadata lookup;
 - package version lookup;
 - exact capability search;
@@ -101,6 +103,8 @@ remain a separate track from the public GitHub-backed index flow.
 SpecPM may provide explicit read-only client commands for this contract:
 
 ```bash
+specpm remote status --registry <url> [--json]
+specpm remote packages --registry <url> [--json]
 specpm remote package <package-id> --registry <url> [--json]
 specpm remote version <package-id@version> --registry <url> [--json]
 specpm remote search <capability-id> --registry <url> [--json]
@@ -157,6 +161,38 @@ JSON payload shape within this draft family.
 
 ## Endpoints
 
+### Registry Status
+
+```text
+GET /v0/status
+```
+
+Returns read-only registry discovery metadata for downstream observers such as
+SpecGraph and ContextBuilder. This endpoint is for availability and capability
+surface observation only; it is not a health check for package execution.
+
+Response kind:
+
+```text
+RemoteRegistryStatus
+```
+
+### Package Index
+
+```text
+GET /v0/packages
+```
+
+Returns the deterministic package summary index visible through the registry.
+This endpoint lets downstream observers discover which package IDs and versions
+are currently exposed without guessing capability IDs first.
+
+Response kind:
+
+```text
+RemotePackageIndex
+```
+
 ### Package Metadata
 
 ```text
@@ -211,6 +247,43 @@ PackageIdentity = {
   package_id: string,
   name: string,
   version?: string
+}
+```
+
+### Registry Status
+
+```text
+RegistryStatus = {
+  profile: "public_static_index" | "enterprise_registry" | string,
+  api_version: "v0",
+  read_only: boolean,
+  authority: string,
+  package_count: integer,
+  version_count: integer,
+  capability_count: integer
+}
+```
+
+For the local static public index, `authority` is `metadata_only`. It means the
+registry can describe visible packages, but it cannot command the host and does
+not imply artifact execution authority.
+
+### Package Summary
+
+```text
+PackageSummary = {
+  package_id: string,
+  name: string,
+  summary?: string,
+  license?: string,
+  latest_version?: string,
+  capabilities: string[],
+  keywords?: string[],
+  versions: {
+    version: string,
+    yanked: boolean,
+    deprecated: boolean
+  }[]
 }
 ```
 
@@ -307,6 +380,10 @@ cases. These cases validate JSON shape only. They do not start a server, perform
 HTTP requests, download package archives, or mutate registry state. Client tests
 may use fixture-backed HTTP fetch stubs so the repository test suite does not
 require a live registry service.
+
+The initial fixture set covers registry status, package index, package
+metadata, package version metadata, exact capability search, yanked version
+visibility, and not-found errors.
 
 ## Security Considerations
 

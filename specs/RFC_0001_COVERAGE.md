@@ -31,7 +31,7 @@ intentionally left for post-MVP tracks.
 | Structural diff | Implemented | Diff detects capability, required capability, interface, MUST constraint, package metadata, and compatibility changes with conservative classification. |
 | Conformance artifacts | Implemented | `tests/fixtures/conformance/specpm-conformance-v0.json` covers validation outcomes, local registry lifecycle behavior, and static remote registry payload shape. |
 | Remote registry API contract | Documented post-MVP contract | Read-only JSON payloads are documented in `specs/REMOTE_REGISTRY_API.md`; static conformance fixtures validate shape. |
-| Read-only remote registry client | Implemented post-MVP increment | `specpm remote package`, `specpm remote version`, and `specpm remote search` fetch metadata only and validate response shape before success. |
+| Read-only remote registry client | Implemented post-MVP increment | `specpm remote status`, `specpm remote packages`, `specpm remote package`, `specpm remote version`, and `specpm remote search` fetch metadata only and validate response shape before success. |
 | Security handling | Implemented for MVP | Packages are untrusted data; path traversal, symlinks, unsafe archive members, malformed YAML/JSON, and script execution are blocked or avoided. |
 | SpecGraph inbox | Implemented as local bridge | `.specgraph_exports/` bundles are listed and inspected without mutating canonical SpecGraph files. This extends the local MVP bridge. |
 
@@ -45,6 +45,7 @@ intentionally left for post-MVP tracks.
 | Package signing / trust web | Post-MVP | Signing, trust policy, and revocation are explicitly non-goals for the MVP. |
 | Full dependency solving | Post-MVP | `add` resolves one exact package or capability at a time. |
 | Keyword/fuzzy/semantic search | Post-MVP for normative resolution | Exact capability ID matching is the only normative search path. |
+| Plain-text intent discovery | Post-MVP downstream resolver | LLM extraction, embeddings, vector search, RAG, and reranking belong outside SpecPM core. SpecPM verifies candidate exact IDs. |
 | Full semantic diffing | Post-MVP | MVP diff is structural and conservative. |
 | Foreign artifact semantic understanding | Post-MVP | Foreign artifacts are preserved as data and never override validation behavior. |
 | Redaction warnings for private data | Post-MVP | Privacy guidance is documented in the RFC, but automated secret/PII detection is not part of the local MVP. |
@@ -61,6 +62,8 @@ The read-only remote registry API v0 contract is documented in
 The contract covers:
 
 - package metadata lookup;
+- package index lookup;
+- registry status lookup;
 - package version lookup;
 - exact capability search;
 - yanked and deprecated version state;
@@ -74,6 +77,8 @@ download archives, publish packages, or mutate registry state.
 The implemented post-MVP client runtime is read-only metadata access:
 
 ```bash
+specpm remote status --registry <url> [--json]
+specpm remote packages --registry <url> [--json]
 specpm remote package <package-id> --registry <url> [--json]
 specpm remote version <package-id@version> --registry <url> [--json]
 specpm remote search <capability-id> --registry <url> [--json]
@@ -82,6 +87,26 @@ specpm remote search <capability-id> --registry <url> [--json]
 Remote service implementation, publish flows, auth, signing, namespace
 governance, remote yanking mutation, archive download, and remote install/cache
 behavior remain deferred.
+
+## Deferred: Plain-Text Intent Discovery
+
+SpecPM intentionally does not translate natural-language user intent into
+canonical capability IDs, package IDs, or package selections.
+
+The following capabilities are deferred outside SpecPM core:
+
+- LLM-based intent extraction.
+- Embedding generation.
+- Vector search.
+- RAG orchestration.
+- Semantic capability search.
+- Candidate reranking.
+- Automatic package selection from natural language.
+
+ContextBuilder, SpecGraph, or a future downstream intent resolver may own this
+layer. Any resolver output must be treated as candidate metadata and verified
+through SpecPM exact lookup, validation, inspection, and package metadata
+contracts.
 
 ## Post-MVP Track: Public Index and Enterprise Registry
 

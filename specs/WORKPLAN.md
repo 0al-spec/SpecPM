@@ -432,6 +432,35 @@ Acceptance:
 - The generated local service remains read-only and does not add publish, auth,
   signing, issue mutation, package installation, or package execution behavior.
 
+## Phase 20. Public Index Observation Surface
+
+- [x] Add a read-only `/v0/status` static registry payload for downstream
+  availability and profile observation.
+- [x] Add a read-only `/v0/packages` static package index payload for visible
+  package/version discovery.
+- [x] Add `specpm remote status --registry <url>` and
+  `specpm remote packages --registry <url>` client commands.
+- [x] Validate registry status and package index payload shapes through the
+  same remote registry contract validator.
+- [x] Extend conformance fixtures for registry status and package index
+  payloads.
+- [x] Extend `make public-index-smoke` so local SpecGraph and ContextBuilder
+  integrations can verify discovery before exact capability lookup.
+- [x] Document the observation surface without adding publish, auth, signing,
+  artifact generation, graph reasoning, archive download/install, or package
+  execution behavior.
+
+Acceptance:
+
+- `make public-index-up` exposes `/v0/status` and `/v0/packages` through the
+  static local registry service.
+- `specpm remote status --registry http://localhost:8081 --json` returns a
+  `RemoteRegistryStatus` payload.
+- `specpm remote packages --registry http://localhost:8081 --json` returns a
+  `RemotePackageIndex` payload.
+- SpecGraph and ContextBuilder can use the observation surface as metadata-only
+  evidence of package visibility.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -444,6 +473,7 @@ Acceptance:
 - Package signing and trust policies.
 - Namespace governance.
 - Natural-language or semantic capability search.
+- Plain-text intent discovery with LLM, embeddings, vector search, or RAG.
 - Full dependency solving.
 - Expanded conformance suites for additional post-MVP tracks.
 - Richer import adapters for CodeSpeak, OpenAPI, GraphQL, protobuf, AsyncAPI,
@@ -486,8 +516,6 @@ Future work may explore:
 - Package removal request workflow.
 - Namespace claim workflow.
 - GitHub Pages deployment automation for generated public index output.
-- SpecGraph and ContextBuilder local ecosystem smoke flow against the local
-  public index service.
 
 ### Post-MVP Track: Enterprise Remote Registry
 
@@ -576,3 +604,60 @@ Future work may explore:
 - traceability checks for generated artifacts.
 
 These investigation areas are not part of the MVP contract.
+
+### Post-MVP Track: Intent Discovery and Capability Resolver
+
+Status: Deferred.
+
+#### Goal
+
+Define a downstream resolver that can map plain-text user intent to candidate
+capability IDs or package IDs without making SpecPM core a semantic authority.
+
+Example user intent:
+
+```text
+I need a package that converts email messages into Markdown.
+```
+
+The resolver may propose:
+
+```text
+document_conversion.email_to_markdown
+```
+
+SpecPM then verifies the candidate through exact lookup, validation, inspection,
+and package metadata contracts.
+
+#### Boundary
+
+- SpecPM remains the package and verification substrate.
+- SpecPM exact search remains the normative package-manager resolution path.
+- ContextBuilder, SpecGraph, or a downstream resolver owns plain-text intent
+  interpretation.
+- A resolver may use LLM extraction, embeddings, vector search, lexical search,
+  reranking, ontology traversal, graph context, and human review.
+- Resolver output must be candidate `capability_id` or `package_id` values, not
+  trusted package selections.
+- Ambiguous matches must remain review-required.
+
+#### Non-Goals
+
+- This track does not add embedding generation to SpecPM core.
+- This track does not add vector index storage to SpecPM core.
+- This track does not add RAG orchestration to SpecPM core.
+- This track does not add semantic package selection authority to SpecPM core.
+- This track does not allow package content to become trusted prompt
+  instructions.
+- This track does not change the exact capability search contract.
+
+#### Future Investigation Areas
+
+Future work may explore:
+
+- metadata exports optimized for external embedding;
+- candidate generation from package summaries, capabilities, constraints,
+  evidence, and provenance;
+- confidence and traceability reports for candidate mappings;
+- policy gates before `specpm add`;
+- feedback loops into SpecGraph proposal lanes.

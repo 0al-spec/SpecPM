@@ -170,7 +170,16 @@ def prepare_public_index_package(
 
 def build_public_index_payloads(packages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     packages = sorted(packages, key=public_index_package_sort_key)
-    payloads: list[dict[str, Any]] = []
+    payloads: list[dict[str, Any]] = [
+        {
+            "path": registry_status_payload_path(),
+            "payload": remote_registry_status_payload(packages),
+        },
+        {
+            "path": package_index_payload_path(),
+            "payload": remote_package_index_payload(packages),
+        },
+    ]
 
     packages_by_id: dict[str, list[dict[str, Any]]] = {}
     capability_matches: dict[str, list[dict[str, Any]]] = {}
@@ -202,6 +211,51 @@ def build_public_index_payloads(packages: list[dict[str, Any]]) -> list[dict[str
         )
 
     return sorted(payloads, key=lambda item: item["path"])
+
+
+def remote_registry_status_payload(packages: list[dict[str, Any]]) -> dict[str, Any]:
+    package_ids = {package["package_id"] for package in packages}
+    capabilities = {
+        capability
+        for package in packages
+        for capability in package.get("provided_capabilities", [])
+        if isinstance(capability, str)
+    }
+    return {
+        "apiVersion": REMOTE_REGISTRY_API_VERSION,
+        "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
+        "kind": "RemoteRegistryStatus",
+        "status": "ok",
+        "registry": {
+            "profile": "public_static_index",
+            "api_version": "v0",
+            "read_only": True,
+            "authority": "metadata_only",
+            "package_count": len(package_ids),
+            "version_count": len(packages),
+            "capability_count": len(capabilities),
+        },
+    }
+
+
+def remote_package_index_payload(packages: list[dict[str, Any]]) -> dict[str, Any]:
+    packages_by_id: dict[str, list[dict[str, Any]]] = {}
+    for package in sorted(packages, key=public_index_package_sort_key):
+        packages_by_id.setdefault(package["package_id"], []).append(package)
+
+    package_summaries = [
+        remote_package_payload(versions)["package"]
+        for _, versions in sorted(packages_by_id.items())
+    ]
+    return {
+        "apiVersion": REMOTE_REGISTRY_API_VERSION,
+        "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
+        "kind": "RemotePackageIndex",
+        "status": "ok",
+        "package_count": len(package_summaries),
+        "version_count": len(packages),
+        "packages": package_summaries,
+    }
 
 
 def remote_package_payload(versions: list[dict[str, Any]]) -> dict[str, Any]:
@@ -361,6 +415,14 @@ def public_index_semver_key(
 
 def package_payload_path(package_id: str) -> str:
     return f"v0/packages/{package_id}/index.json"
+
+
+def package_index_payload_path() -> str:
+    return "v0/packages/index.json"
+
+
+def registry_status_payload_path() -> str:
+    return "v0/status/index.json"
 
 
 def version_payload_path(package: dict[str, Any]) -> str:

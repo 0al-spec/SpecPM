@@ -33,6 +33,8 @@ ContextBuilder automation can treat command outcomes consistently.
 | `specpm diff` | diff status is `ok` | diff status is `invalid` |
 | `specpm inbox list` | always returns a list report, even when empty | reserved for future unrecoverable command errors |
 | `specpm inbox inspect` | bundle is found | bundle is missing |
+| `specpm remote status` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
+| `specpm remote packages` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
 | `specpm remote package` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
 | `specpm remote version` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
 | `specpm remote search` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
