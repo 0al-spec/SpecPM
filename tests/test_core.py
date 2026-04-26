@@ -1377,6 +1377,52 @@ def test_public_index_accepted_manifest_resolves_pinned_remote_sources(
     assert report["errors"] == []
 
 
+def test_public_index_accepted_manifest_normalizes_remote_revision_for_checkout(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    revision = "A" * 40
+    normalized_revision = revision.lower()
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "\n".join(
+            [
+                "schemaVersion: 1",
+                "packages:",
+                "  - repository: https://github.com/0al-spec/email-tools.git",
+                "    ref: main",
+                f"    revision: {revision}",
+                "    path: .",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    checkouts: list[Path] = []
+
+    def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
+        checkouts.append(checkout)
+        shutil.copytree(ROOT / "examples/email_tools", checkout)
+        return {"status": "ok", "revision": normalized_revision, "errors": []}
+
+    monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
+
+    report = load_public_index_manifest(
+        manifest,
+        root=tmp_path,
+        remote_root=tmp_path / "remote-sources",
+    )
+
+    expected_checkout_name = public_index_module.public_index_checkout_dir_name(
+        "https://github.com/0al-spec/email-tools.git",
+        "main",
+        normalized_revision,
+    )
+    assert report["status"] == "ok"
+    assert checkouts[0].name == expected_checkout_name
+    assert report["sources"][0]["revision"] == normalized_revision
+
+
 def test_public_index_accepted_manifest_rejects_remote_revision_mismatch(
     tmp_path: Path,
     monkeypatch,
@@ -1411,6 +1457,54 @@ def test_public_index_accepted_manifest_rejects_remote_revision_mismatch(
 
     assert report["status"] == "invalid"
     assert issue_codes(report["errors"]) == {"public_index_manifest_repository_revision_mismatch"}
+
+
+def test_public_index_accepted_manifest_adds_context_to_remote_checkout_errors(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "\n".join(
+            [
+                "schemaVersion: 1",
+                "packages:",
+                "  - repository: https://github.com/0al-spec/email-tools.git",
+                "    ref: main",
+                f"    revision: {'a' * 40}",
+                "    path: .",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
+        return {
+            "status": "invalid",
+            "errors": [
+                public_index_module.public_index_error(
+                    "public_index_manifest_repository_checkout_failed",
+                    "checkout failed",
+                )
+            ],
+        }
+
+    monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
+
+    report = load_public_index_manifest(
+        manifest,
+        root=tmp_path,
+        remote_root=tmp_path / "remote-sources",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"public_index_manifest_repository_checkout_failed"}
+    assert report["errors"][0]["field"] == "packages[0]"
+    assert report["errors"][0]["detail"] == {
+        "repository": "https://github.com/0al-spec/email-tools.git",
+        "ref": "main",
+    }
 
 
 def test_public_index_accepted_manifest_skips_checkout_for_schema_invalid_remote_entry(

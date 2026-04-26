@@ -266,14 +266,22 @@ def resolve_remote_manifest_package(
     assert isinstance(revision, str)
     assert remote_root is not None
 
-    checkout = remote_root / public_index_checkout_dir_name(repository, ref, revision)
+    normalized_revision = revision.lower()
+    checkout = remote_root / public_index_checkout_dir_name(repository, ref, normalized_revision)
     checkout_result = checkout_public_index_repository(repository, ref, checkout)
     if checkout_result["status"] != "ok":
-        errors.extend(checkout_result["errors"])
+        errors.extend(
+            add_public_index_source_context(
+                checkout_result["errors"],
+                field=field,
+                repository=repository,
+                ref=ref,
+            )
+        )
         return None
 
     actual_revision = str(checkout_result.get("revision", "")).lower()
-    expected_revision = revision.lower()
+    expected_revision = normalized_revision
     if actual_revision != expected_revision:
         errors.append(
             public_index_error(
@@ -301,6 +309,25 @@ def resolve_remote_manifest_package(
         )
         return None
     return resolved_package
+
+
+def add_public_index_source_context(
+    issues: list[dict[str, Any]],
+    *,
+    field: str,
+    repository: str,
+    ref: str,
+) -> list[dict[str, Any]]:
+    contextual: list[dict[str, Any]] = []
+    for issue in issues:
+        updated = dict(issue)
+        updated.setdefault("field", field)
+        detail = dict(updated.get("detail") or {})
+        detail.setdefault("repository", repository)
+        detail.setdefault("ref", ref)
+        updated["detail"] = detail
+        contextual.append(updated)
+    return contextual
 
 
 def generate_public_index(
