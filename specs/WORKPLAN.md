@@ -473,6 +473,7 @@ Acceptance:
 - Package signing and trust policies.
 - Namespace governance.
 - Natural-language or semantic capability search.
+- Plain-text intent discovery with LLM, embeddings, vector search, or RAG.
 - Full dependency solving.
 - Expanded conformance suites for additional post-MVP tracks.
 - Richer import adapters for CodeSpeak, OpenAPI, GraphQL, protobuf, AsyncAPI,
@@ -603,3 +604,60 @@ Future work may explore:
 - traceability checks for generated artifacts.
 
 These investigation areas are not part of the MVP contract.
+
+### Post-MVP Track: Intent Discovery and Capability Resolver
+
+Status: Deferred.
+
+#### Goal
+
+Define a downstream resolver that can map plain-text user intent to candidate
+capability IDs or package IDs without making SpecPM core a semantic authority.
+
+Example user intent:
+
+```text
+I need a package that converts email messages into Markdown.
+```
+
+The resolver may propose:
+
+```text
+document_conversion.email_to_markdown
+```
+
+SpecPM then verifies the candidate through exact lookup, validation, inspection,
+and package metadata contracts.
+
+#### Boundary
+
+- SpecPM remains the package and verification substrate.
+- SpecPM exact search remains the normative package-manager resolution path.
+- ContextBuilder, SpecGraph, or a downstream resolver owns plain-text intent
+  interpretation.
+- A resolver may use LLM extraction, embeddings, vector search, lexical search,
+  reranking, ontology traversal, graph context, and human review.
+- Resolver output must be candidate `capability_id` or `package_id` values, not
+  trusted package selections.
+- Ambiguous matches must remain review-required.
+
+#### Non-Goals
+
+- This track does not add embedding generation to SpecPM core.
+- This track does not add vector index storage to SpecPM core.
+- This track does not add RAG orchestration to SpecPM core.
+- This track does not add semantic package selection authority to SpecPM core.
+- This track does not allow package content to become trusted prompt
+  instructions.
+- This track does not change the exact capability search contract.
+
+#### Future Investigation Areas
+
+Future work may explore:
+
+- metadata exports optimized for external embedding;
+- candidate generation from package summaries, capabilities, constraints,
+  evidence, and provenance;
+- confidence and traceability reports for candidate mappings;
+- policy gates before `specpm add`;
+- feedback loops into SpecGraph proposal lanes.

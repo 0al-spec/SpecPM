@@ -138,6 +138,13 @@ content.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 
+SpecPM does not translate plain-text user intent into capability IDs or package
+selections. Natural-language discovery, embeddings, vector search, RAG, and
+semantic reranking belong in ContextBuilder, SpecGraph, or a future downstream
+intent resolver. SpecPM remains the exact lookup and verification layer for
+structured package metadata. This boundary is documented in
+`specs/INTENT_DISCOVERY_BOUNDARY.md`.
+
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.
 

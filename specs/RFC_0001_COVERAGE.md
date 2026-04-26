@@ -45,6 +45,7 @@ intentionally left for post-MVP tracks.
 | Package signing / trust web | Post-MVP | Signing, trust policy, and revocation are explicitly non-goals for the MVP. |
 | Full dependency solving | Post-MVP | `add` resolves one exact package or capability at a time. |
 | Keyword/fuzzy/semantic search | Post-MVP for normative resolution | Exact capability ID matching is the only normative search path. |
+| Plain-text intent discovery | Post-MVP downstream resolver | LLM extraction, embeddings, vector search, RAG, and reranking belong outside SpecPM core. SpecPM verifies candidate exact IDs. |
 | Full semantic diffing | Post-MVP | MVP diff is structural and conservative. |
 | Foreign artifact semantic understanding | Post-MVP | Foreign artifacts are preserved as data and never override validation behavior. |
 | Redaction warnings for private data | Post-MVP | Privacy guidance is documented in the RFC, but automated secret/PII detection is not part of the local MVP. |
@@ -86,6 +87,26 @@ specpm remote search <capability-id> --registry <url> [--json]
 Remote service implementation, publish flows, auth, signing, namespace
 governance, remote yanking mutation, archive download, and remote install/cache
 behavior remain deferred.
+
+## Deferred: Plain-Text Intent Discovery
+
+SpecPM intentionally does not translate natural-language user intent into
+canonical capability IDs, package IDs, or package selections.
+
+The following capabilities are deferred outside SpecPM core:
+
+- LLM-based intent extraction.
+- Embedding generation.
+- Vector search.
+- RAG orchestration.
+- Semantic capability search.
+- Candidate reranking.
+- Automatic package selection from natural language.
+
+ContextBuilder, SpecGraph, or a future downstream intent resolver may own this
+layer. Any resolver output must be treated as candidate metadata and verified
+through SpecPM exact lookup, validation, inspection, and package metadata
+contracts.
 
 ## Post-MVP Track: Public Index and Enterprise Registry
 

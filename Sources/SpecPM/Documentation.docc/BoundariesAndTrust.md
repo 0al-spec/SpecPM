@@ -18,6 +18,11 @@ SpecPM does not own:
 - artifact eval execution;
 - package-provided prompt execution;
 - agent workflow runtime.
+- plain-text intent interpretation;
+- embedding generation;
+- vector search;
+- RAG orchestration;
+- semantic capability resolution.
 
 ## Untrusted Package Content
 
@@ -38,6 +43,17 @@ Any future support for derived artifact metadata or artifact evaluation profiles
 must be introduced as a post-MVP profile and must preserve the boundary that
 SpecPM is not an artifact generator, eval runner, or agent runtime.
 
+## Intent Discovery
+
+SpecPM does not convert natural-language user intent into canonical capability
+IDs, package IDs, or package selections. That belongs in ContextBuilder,
+SpecGraph, or a downstream intent resolver.
+
+A future resolver may use LLM extraction, embeddings, vector search, lexical
+search, reranking, graph traversal, and human review to propose candidates.
+SpecPM verifies those candidates through exact lookup and package metadata
+contracts.
+
 ## Core Sentences
 
 SpecPM may carry intent; SpecGraph decides meaning.
@@ -47,5 +63,7 @@ Package content can describe desired outputs. Package content cannot command the
 ## References
 
 - `specs/0001_Derived_Artifact_Profile_Decision.md`
+- `specs/INTENT_DISCOVERY_BOUNDARY.md`
 - `specs/RFC_0001_COVERAGE.md`
+- <doc:IntentDiscoveryBoundary>
 - <doc:SpecGraphIntegration>

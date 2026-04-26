@@ -24,6 +24,11 @@ The local MVP supports:
 - read-only remote registry metadata lookup;
 - viewer-facing JSON contracts and portable conformance artifacts.
 
+SpecPM does not perform natural-language intent resolution, embedding
+generation, vector search, RAG orchestration, or semantic package selection.
+That layer belongs in ContextBuilder, SpecGraph, or a downstream resolver; SpecPM
+verifies exact candidate IDs.
+
 ## Source Documents
 
 The canonical source files remain in the repository:
@@ -63,4 +68,5 @@ Package content can describe desired outputs. Package content cannot command the
 ### Architecture
 
 - <doc:BoundariesAndTrust>
+- <doc:IntentDiscoveryBoundary>
 - <doc:Roadmap>

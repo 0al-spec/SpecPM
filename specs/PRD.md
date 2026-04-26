@@ -388,7 +388,28 @@ Any future support for derived artifact metadata, generation preferences, or
 artifact evaluation profiles MUST be introduced as a post-MVP profile and MUST
 preserve this boundary.
 
-## 14. Viewer-Facing JSON Surfaces
+## 14. Intent Discovery Boundary
+
+SpecPM does not translate plain-text user intent into canonical capabilities,
+package IDs, or package selections.
+
+SpecPM is not an LLM prompt processor, embedding generator, vector database,
+RAG pipeline, semantic capability search engine, recommendation engine, or
+product meaning authority.
+
+Plain-text intent discovery belongs outside SpecPM core. ContextBuilder,
+SpecGraph, or a future downstream intent resolver may use LLM extraction,
+embeddings, vector search, lexical search, reranking, graph traversal, and
+human review to propose candidate `capability_id` or `package_id` values.
+
+Those candidates must still be verified through SpecPM exact lookup,
+validation, inspection, and package metadata contracts before they become
+reviewable package selections.
+
+Embeddings improve recall. SpecPM provides verification. SpecGraph and
+ContextBuilder decide meaning.
+
+## 15. Viewer-Facing JSON Surfaces
 
 Every command that can drive a viewer should support `--json`.
 
@@ -412,7 +433,7 @@ Status names should be explicit and stable enough for UI badges, for example:
 - `ready_for_review`
 - `blocked`
 
-## 15. Success Metrics
+## 16. Success Metrics
 
 The MVP is successful when:
 
@@ -425,7 +446,7 @@ The MVP is successful when:
 - invalid packages produce actionable JSON errors without crashing;
 - no command executes package-provided code.
 
-## 16. Release Boundary
+## 17. Release Boundary
 
 The first MVP release should be local-first:
 
@@ -449,7 +470,7 @@ publish packages, mutate remote state, execute package content, define
 authentication, define namespace governance, or treat remote metadata as
 trusted host instructions.
 
-## 17. Implementation Environment
+## 18. Implementation Environment
 
 The MVP implementation should maintain two supported execution paths:
 

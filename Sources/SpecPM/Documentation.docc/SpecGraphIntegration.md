@@ -38,6 +38,16 @@ implements. `packages` lists the visible package IDs and versions. These
 commands read metadata only; they do not download archives, install packages,
 mutate SpecGraph state, or execute package content.
 
+## Intent Resolution
+
+When a user starts with plain text, SpecGraph or ContextBuilder should resolve
+that text into candidate `capability_id` or `package_id` values before calling
+SpecPM. The resolver may use LLMs, embeddings, vector search, reranking, and
+graph context, but its output remains candidate metadata.
+
+SpecPM then provides exact lookup, validation, inspection, and package metadata
+verification. SpecPM does not decide product meaning from natural language.
+
 ## Responsibilities
 
 SpecPM owns:

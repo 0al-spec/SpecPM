@@ -38,6 +38,7 @@ Current post-MVP tracks include:
 - package signing and trust policies;
 - namespace governance;
 - natural-language or semantic capability search;
+- downstream intent discovery with LLMs, embeddings, vector search, or RAG;
 - full dependency solving;
 - expanded conformance suites;
 - richer import adapters;

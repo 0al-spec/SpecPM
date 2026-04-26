@@ -31,6 +31,7 @@ scope:
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
+    - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
@@ -43,6 +44,7 @@ scope:
     - Package signing and trust policy.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
+    - LLM, embedding, vector search, or RAG-based intent resolution.
     - Full dependency solving.
     - PRD, brief, issue breakdown, test plan, or review report generation.
     - Artifact evaluation runtime.
@@ -274,6 +276,9 @@ constraints:
   - id: exact_search_normative
     level: MUST
     statement: MVP search must use exact capability ID matching for normative resolution.
+  - id: no_semantic_authority
+    level: MUST
+    statement: SpecPM must not treat LLM, embedding, vector search, or RAG output as authoritative package meaning.
   - id: deterministic_outputs
     level: MUST
     statement: Archives, local index updates, lockfiles, and JSON reports must remain deterministic for stable inputs.
@@ -376,6 +381,13 @@ evidence:
     supports:
       - scope.includes
       - scope.excludes
+  - id: intent_discovery_boundary
+    kind: documentation
+    path: specs/INTENT_DISCOVERY_BOUNDARY.md
+    supports:
+      - exact_search_normative
+      - no_semantic_authority
+      - scope.excludes
   - id: derived_boundary
     kind: adr
     path: specs/0001_Derived_Artifact_Profile_Decision.md
@@ -463,6 +475,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/Conformance.md
         - Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
+        - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
 provenance:
   sourceConfidence:
