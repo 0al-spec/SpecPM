@@ -517,11 +517,36 @@ Acceptance:
 - The manifest does not introduce remote publishing, issue mutation, auth,
   signing, archive install/cache behavior, or package execution.
 
+## Phase 23. Public Index Pinned Remote Sources
+
+- [x] Allow accepted package manifest entries to reference public HTTPS Git
+  repositories with `repository`, `ref`, `revision`, and `path`.
+- [x] Require a 40-character pinned commit revision for remote manifest
+  entries.
+- [x] Check out remote manifest entries without submodules or Git LFS smudging.
+- [x] Verify that the checked out ref resolves to the pinned revision before
+  package validation or packing.
+- [x] Reject remote manifest URL credentials, query strings, fragments, unsafe
+  refs, missing revisions, path escapes, and revision drift.
+- [x] Keep accepted manifest generation static and read-only: no `publish`,
+  auth, issue mutation, package installation, or package execution behavior.
+- [x] Document the promotion path from validated submission issues to reviewed
+  accepted manifest entries.
+
+Acceptance:
+
+- `specpm public-index generate --manifest public-index/accepted-packages.yml`
+  still works for repository-local package paths.
+- Remote manifest entries can be resolved into temporary checkouts for
+  validation and static `/v0` generation.
+- Generation fails if a reviewed ref no longer resolves to its pinned
+  revision.
+- Public index promotion remains a maintainer-reviewed manifest change, not a
+  remote mutation API.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
-- Promotion from validated public SpecPM Index submission issues into the
-  accepted package manifest.
 - Enterprise remote registry deployment with private access control, audit, and
   policy enforcement.
 - `specpm publish`.

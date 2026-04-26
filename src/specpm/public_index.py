@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import hashlib
+import os
+import re
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -24,6 +28,8 @@ from specpm.core import (
 PUBLIC_INDEX_REPORT_SCHEMA_VERSION = 1
 PUBLIC_INDEX_MANIFEST_FILE_SCHEMA_VERSION = 1
 PUBLIC_INDEX_MANIFEST_REPORT_SCHEMA_VERSION = 1
+GIT_REVISION_PATTERN = re.compile(r"^[0-9a-fA-F]{40}$")
+GIT_REF_PATTERN = re.compile(r"^[A-Za-z0-9._/-]+$")
 
 
 def generate_public_index_from_inputs(
@@ -36,20 +42,31 @@ def generate_public_index_from_inputs(
 ) -> dict[str, Any]:
     resolved_package_dirs = [Path(package_dir) for package_dir in package_dirs]
     if manifest_path is not None:
-        manifest = load_public_index_manifest(manifest_path, root=root)
-        if manifest["status"] != "ok":
-            return public_index_report(
-                "invalid",
-                output_dir.resolve(),
-                registry_url,
-                [],
-                manifest["errors"],
+        with tempfile.TemporaryDirectory(prefix="specpm-public-index-sources-") as source_dir:
+            manifest = load_public_index_manifest(
+                manifest_path,
+                root=root,
+                remote_root=Path(source_dir),
             )
-        resolved_package_dirs.extend(Path(path) for path in manifest["package_dirs"])
+            if manifest["status"] != "ok":
+                return public_index_report(
+                    "invalid",
+                    output_dir.resolve(),
+                    registry_url,
+                    [],
+                    manifest["errors"],
+                )
+            resolved_package_dirs.extend(Path(path) for path in manifest["package_dirs"])
+            return generate_public_index(resolved_package_dirs, output_dir, registry_url)
     return generate_public_index(resolved_package_dirs, output_dir, registry_url)
 
 
-def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None) -> dict[str, Any]:
+def load_public_index_manifest(
+    manifest_path: Path,
+    *,
+    root: Path | None = None,
+    remote_root: Path | None = None,
+) -> dict[str, Any]:
     resolved_root = (root or Path.cwd()).resolve()
     resolved_manifest = manifest_path.resolve()
     errors: list[dict[str, Any]] = []
@@ -59,6 +76,7 @@ def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None)
             "invalid",
             resolved_manifest,
             resolved_root,
+            [],
             [],
             [
                 public_index_error(
@@ -77,6 +95,7 @@ def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None)
             resolved_manifest,
             resolved_root,
             [],
+            [],
             [issue.to_dict() for issue in exc.issues],
         )
 
@@ -88,7 +107,9 @@ def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None)
                 field=str(manifest_path),
             )
         )
-        return public_index_manifest_report("invalid", resolved_manifest, resolved_root, [], errors)
+        return public_index_manifest_report(
+            "invalid", resolved_manifest, resolved_root, [], [], errors
+        )
 
     unknown_top_level_fields = sorted(set(loaded) - {"schemaVersion", "packages"})
     if unknown_top_level_fields:
@@ -118,9 +139,12 @@ def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None)
                 field="packages",
             )
         )
-        return public_index_manifest_report("invalid", resolved_manifest, resolved_root, [], errors)
+        return public_index_manifest_report(
+            "invalid", resolved_manifest, resolved_root, [], [], errors
+        )
 
     package_dirs: list[Path] = []
+    sources: list[dict[str, Any]] = []
     for index, item in enumerate(packages):
         field = f"packages[{index}]"
         if not isinstance(item, dict):
@@ -133,7 +157,9 @@ def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None)
             )
             continue
 
-        unknown_fields = sorted(set(item) - {"path"})
+        is_remote_source = any(key in item for key in {"repository", "ref", "revision"})
+        allowed_fields = {"path", "repository", "ref", "revision"} if is_remote_source else {"path"}
+        unknown_fields = sorted(set(item) - allowed_fields)
         if unknown_fields:
             errors.append(
                 public_index_error(
@@ -155,6 +181,29 @@ def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None)
             )
             continue
 
+        if is_remote_source:
+            resolved_package = resolve_remote_manifest_package(
+                item,
+                field,
+                package_path,
+                remote_root,
+                errors,
+            )
+            if resolved_package is None:
+                continue
+            package_dirs.append(resolved_package)
+            sources.append(
+                {
+                    "kind": "git",
+                    "repository": item["repository"],
+                    "ref": item["ref"],
+                    "revision": item["revision"].lower(),
+                    "path": package_path,
+                    "package_dir": str(resolved_package),
+                }
+            )
+            continue
+
         resolved_package = resolve_inside(resolved_root, package_path)
         if resolved_package is None:
             errors.append(
@@ -166,11 +215,91 @@ def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None)
             )
             continue
         package_dirs.append(resolved_package)
+        sources.append(
+            {
+                "kind": "local",
+                "path": package_path,
+                "package_dir": str(resolved_package),
+            }
+        )
 
     status = "invalid" if errors else "ok"
     return public_index_manifest_report(
-        status, resolved_manifest, resolved_root, package_dirs if status == "ok" else [], errors
+        status,
+        resolved_manifest,
+        resolved_root,
+        package_dirs if status == "ok" else [],
+        sources if status == "ok" else [],
+        errors,
     )
+
+
+def resolve_remote_manifest_package(
+    item: dict[str, Any],
+    field: str,
+    package_path: str,
+    remote_root: Path | None,
+    errors: list[dict[str, Any]],
+) -> Path | None:
+    repository = item.get("repository")
+    ref = item.get("ref")
+    revision = item.get("revision")
+    source_errors: list[dict[str, Any]] = []
+    source_errors.extend(validate_public_index_repository_url(repository, f"{field}.repository"))
+    source_errors.extend(validate_public_index_ref(ref, f"{field}.ref"))
+    source_errors.extend(validate_public_index_revision(revision, f"{field}.revision"))
+    if remote_root is None:
+        source_errors.append(
+            public_index_error(
+                "public_index_manifest_remote_root_missing",
+                "Remote public index manifest entries require a remote source checkout root.",
+                field=field,
+            )
+        )
+    if source_errors:
+        errors.extend(source_errors)
+        return None
+
+    assert isinstance(repository, str)
+    assert isinstance(ref, str)
+    assert isinstance(revision, str)
+    assert remote_root is not None
+
+    checkout = remote_root / public_index_checkout_dir_name(repository, ref, revision)
+    checkout_result = checkout_public_index_repository(repository, ref, checkout)
+    if checkout_result["status"] != "ok":
+        errors.extend(checkout_result["errors"])
+        return None
+
+    actual_revision = str(checkout_result.get("revision", "")).lower()
+    expected_revision = revision.lower()
+    if actual_revision != expected_revision:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_repository_revision_mismatch",
+                "Remote public index package source did not resolve to the pinned revision.",
+                field=f"{field}.revision",
+                detail={
+                    "repository": repository,
+                    "ref": ref,
+                    "expected": expected_revision,
+                    "actual": actual_revision,
+                },
+            )
+        )
+        return None
+
+    resolved_package = resolve_inside(checkout, package_path)
+    if resolved_package is None:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_package_path_escape",
+                "Public index manifest package path must stay inside the checked out repository.",
+                field=f"{field}.path",
+            )
+        )
+        return None
+    return resolved_package
 
 
 def generate_public_index(
@@ -634,6 +763,7 @@ def public_index_manifest_report(
     manifest_path: Path,
     root: Path,
     package_dirs: list[Path],
+    sources: list[dict[str, Any]],
     errors: list[dict[str, Any]],
 ) -> dict[str, Any]:
     return {
@@ -642,8 +772,213 @@ def public_index_manifest_report(
         "manifest": str(manifest_path),
         "root": str(root),
         "package_dirs": [str(package_dir) for package_dir in package_dirs],
+        "sources": sources,
         "errors": errors,
     }
+
+
+def validate_public_index_repository_url(value: Any, field: str) -> list[dict[str, Any]]:
+    if not isinstance(value, str) or not value.strip():
+        return [
+            public_index_error(
+                "public_index_manifest_repository_invalid",
+                "Remote public index manifest repository must be a non-empty string.",
+                field=field,
+            )
+        ]
+    if value != value.strip():
+        return [
+            public_index_error(
+                "public_index_manifest_repository_invalid",
+                "Remote public index manifest repository must not contain leading "
+                "or trailing whitespace.",
+                field=field,
+            )
+        ]
+
+    parsed = urlparse(value)
+    errors: list[dict[str, Any]] = []
+    if parsed.scheme != "https" or not parsed.netloc:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_repository_url_invalid",
+                "Remote public index manifest repository must be an https URL with a hostname.",
+                field=field,
+            )
+        )
+    path_parts = [part for part in parsed.path.split("/") if part]
+    if len(path_parts) < 2:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_repository_url_path_invalid",
+                "Remote public index manifest repository URL must include an owner "
+                "and repository path.",
+                field=field,
+            )
+        )
+    if parsed.username or parsed.password:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_repository_url_credentials",
+                "Remote public index manifest repository URL must not embed credentials.",
+                field=field,
+            )
+        )
+    if parsed.params or parsed.query:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_repository_url_query",
+                "Remote public index manifest repository URL must not include query parameters.",
+                field=field,
+            )
+        )
+    if parsed.fragment:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_repository_url_fragment",
+                "Remote public index manifest repository URL must not include a fragment.",
+                field=field,
+            )
+        )
+    return errors
+
+
+def validate_public_index_ref(value: Any, field: str) -> list[dict[str, Any]]:
+    if not isinstance(value, str) or not value.strip():
+        return [
+            public_index_error(
+                "public_index_manifest_ref_invalid",
+                "Remote public index manifest ref must be a non-empty string.",
+                field=field,
+            )
+        ]
+    ref = value.strip()
+    if value != ref:
+        return [
+            public_index_error(
+                "public_index_manifest_ref_invalid",
+                "Remote public index manifest ref must not contain leading or trailing whitespace.",
+                field=field,
+            )
+        ]
+    if (
+        not GIT_REF_PATTERN.fullmatch(ref)
+        or ".." in ref
+        or "@{" in ref
+        or ref.startswith(("-", "/", "."))
+        or ref.endswith(("/", ".", ".lock"))
+        or "//" in ref
+    ):
+        return [
+            public_index_error(
+                "public_index_manifest_ref_invalid",
+                "Remote public index manifest ref must be a safe branch or tag name.",
+                field=field,
+            )
+        ]
+    return []
+
+
+def validate_public_index_revision(value: Any, field: str) -> list[dict[str, Any]]:
+    if (
+        not isinstance(value, str)
+        or value != value.strip()
+        or not GIT_REVISION_PATTERN.fullmatch(value)
+    ):
+        return [
+            public_index_error(
+                "public_index_manifest_revision_invalid",
+                "Remote public index manifest revision must be a 40-character Git commit SHA.",
+                field=field,
+            )
+        ]
+    return []
+
+
+def checkout_public_index_repository(
+    repository_url: str,
+    ref: str,
+    checkout: Path,
+) -> dict[str, Any]:
+    if checkout.exists():
+        shutil.rmtree(checkout)
+    checkout.parent.mkdir(parents=True, exist_ok=True)
+    command = [
+        "git",
+        "clone",
+        "--depth",
+        "1",
+        "--filter",
+        "blob:none",
+        "--no-tags",
+        "--no-recurse-submodules",
+        "--single-branch",
+        "--branch",
+        ref,
+        repository_url,
+        str(checkout),
+    ]
+    env = os.environ.copy()
+    env["GIT_LFS_SKIP_SMUDGE"] = "1"
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    completed = run_public_index_git_command(command, env=env)
+    if completed["status"] != "ok":
+        return completed
+
+    revision = run_public_index_git_command(
+        ["git", "-C", str(checkout), "rev-parse", "HEAD"],
+        env=env,
+    )
+    if revision["status"] != "ok":
+        return revision
+    return {
+        "status": "ok",
+        "revision": revision["stdout"].strip().lower(),
+        "errors": [],
+    }
+
+
+def run_public_index_git_command(command: list[str], *, env: dict[str, str]) -> dict[str, Any]:
+    try:
+        completed = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env=env,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {
+            "status": "invalid",
+            "stdout": "",
+            "errors": [
+                public_index_error(
+                    "public_index_manifest_repository_checkout_failed",
+                    f"Remote public index package source could not be checked out: {exc}",
+                )
+            ],
+        }
+    if completed.returncode != 0:
+        message = completed.stderr.strip() or completed.stdout.strip() or "git command failed"
+        return {
+            "status": "invalid",
+            "stdout": completed.stdout,
+            "errors": [
+                public_index_error(
+                    "public_index_manifest_repository_checkout_failed",
+                    message,
+                )
+            ],
+        }
+    return {"status": "ok", "stdout": completed.stdout, "errors": []}
+
+
+def public_index_checkout_dir_name(repository_url: str, ref: str, revision: str) -> str:
+    digest = hashlib.sha256(f"{repository_url}\0{ref}\0{revision}".encode()).hexdigest()
+    name = Path(urlparse(repository_url).path).name.removesuffix(".git") or "repository"
+    sanitized = "".join(char if char.isalnum() or char in {"-", "_"} else "-" for char in name)
+    return f"{sanitized}-{digest[:12]}"
 
 
 def public_index_error(

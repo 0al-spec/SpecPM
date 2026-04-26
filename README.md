@@ -135,9 +135,11 @@ validation workflow is `.github/workflows/package-submission-check.yml`.
 `specpm public-index generate` emits static read-only `/v0` registry metadata
 and deterministic package archives for GitHub Pages-style hosting. The checked-in
 accepted package source for Pages is `public-index/accepted-packages.yml`; it is
-a maintainer-reviewed list of repository-relative package directories, not a
-remote mutation API. The generator does not publish packages, mutate remote
-state, install packages, or execute package content.
+a maintainer-reviewed list of repository-relative package directories or pinned
+public Git sources, not a remote mutation API. Remote entries must include a
+reviewed `ref` plus exact commit `revision`; generation fails if the checkout no
+longer resolves to that revision. The generator does not publish packages,
+mutate remote state, install packages, or execute package content.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 
@@ -169,5 +171,6 @@ The GitHub Pages workflow builds the same DocC catalog from
 The same Pages artifact also includes the generated read-only public index
 metadata under `/v0`, produced from `public-index/accepted-packages.yml` by
 `specpm public-index generate` during the documentation workflow. This is static
-hosting only; it does not add `specpm publish`, remote mutation APIs, package
-install behavior, or package content execution.
+hosting only; remote manifest entries are checked out as untrusted data at a
+pinned commit before validation and packing. This does not add `specpm publish`,
+remote mutation APIs, package install behavior, or package content execution.

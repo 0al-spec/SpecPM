@@ -30,7 +30,7 @@ scope:
     - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
-    - Track maintainer-reviewed accepted package directories for generated public index deployment.
+    - Track maintainer-reviewed accepted package directories and pinned public Git sources for generated public index deployment.
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
@@ -98,7 +98,10 @@ provides:
       summary: Generate static /v0 public index metadata and deterministic archives for read-only hosting.
     - id: specpm.registry.public_index_accepted_manifest
       role: secondary
-      summary: Track reviewed repository-relative package directories that feed generated public index deployment.
+      summary: Track reviewed package sources that feed generated public index deployment.
+    - id: specpm.registry.public_index_remote_sources
+      role: secondary
+      summary: Resolve pinned public Git package sources from the accepted manifest before static index generation.
     - id: specpm.registry.local_dev_service
       role: secondary
       summary: Serve generated public index metadata locally for SpecGraph, ContextBuilder, and manual integration testing.
@@ -259,7 +262,7 @@ interfaces:
       summary: Static /v0 public index metadata and deterministic package archives.
     - id: public_index_accepted_manifest
       kind: file
-      summary: Maintainer-reviewed repository-relative package directories that feed generated public index output.
+      summary: Maintainer-reviewed local and pinned public Git package sources that feed generated public index output.
     - id: local_public_index_service
       kind: http
       summary: Serves generated read-only public index metadata on a local development port.
@@ -274,6 +277,9 @@ effects:
     - id: read_remote_registry_metadata
       kind: network_read
       summary: Reads explicitly requested remote registry JSON metadata through the read-only client.
+    - id: read_public_index_source_repositories
+      kind: network_read
+      summary: Checks out pinned public Git package sources listed in the accepted public-index manifest for static generation.
     - id: no_package_execution
       kind: unknown
       summary: Package content is treated as data and is not executed by SpecPM core.
@@ -370,6 +376,7 @@ evidence:
     supports:
       - specpm.registry.public_static_index
       - specpm.registry.public_index_accepted_manifest
+      - specpm.registry.public_index_remote_sources
       - specpm.registry.local_dev_service
       - specpm.registry.remote_api_contract
   - id: public_index_accepted_manifest
@@ -377,6 +384,7 @@ evidence:
     path: public-index/accepted-packages.yml
     supports:
       - specpm.registry.public_index_accepted_manifest
+      - specpm.registry.public_index_remote_sources
       - specpm.registry.public_pages_deployment
   - id: compose
     kind: source

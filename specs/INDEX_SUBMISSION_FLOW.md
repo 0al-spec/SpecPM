@@ -133,14 +133,14 @@ claim verification.
 
 ## Generated Public Registry
 
-After acceptance, maintainers record repository-local accepted package paths in:
+After acceptance, maintainers record accepted package sources in:
 
 ```text
 public-index/accepted-packages.yml
 ```
 
 The accepted package manifest is the reviewed data source for the generated
-public index. It is intentionally small:
+public index. It supports repository-local package directories:
 
 ```yaml
 schemaVersion: 1
@@ -148,11 +148,29 @@ packages:
   - path: examples/email_tools
 ```
 
-Entries are repository-relative package directories that have already passed
-review. The manifest is not a remote registry API, not a package upload format,
-and not a `specpm publish` replacement. The Pages workflow reads this manifest,
-validates and packs the listed packages as untrusted data, and writes generated
-static `/v0` metadata.
+It also supports pinned public Git package sources for maintainer-reviewed
+promotion from validated submission issues:
+
+```yaml
+schemaVersion: 1
+packages:
+  - repository: https://github.com/example/email-tools.git
+    ref: main
+    revision: 0123456789abcdef0123456789abcdef01234567
+    path: packages/email_tools
+```
+
+Remote entries must use public HTTPS repositories, a safe branch or tag ref, an
+exact 40-character commit revision, and a relative package path. The generator
+checks out the ref without submodules or Git LFS smudging, verifies that the
+checkout resolves to the pinned revision, then validates and packs the package
+as untrusted data.
+
+Entries are accepted sources that have already passed review. The manifest is
+not a remote registry API, not a package upload format, and not a `specpm
+publish` replacement. The Pages workflow reads this manifest, validates and
+packs the listed packages as untrusted data, and writes generated static `/v0`
+metadata.
 
 The index can generate a static registry from explicit local package directories
 or from the accepted package manifest:
@@ -208,9 +226,10 @@ documentation/specpm/
 v0/
 ```
 
-This is still static hosting. The workflow does not accept submissions,
-publish through a remote mutation API, install packages, fetch remote archives
-as a client, or execute package content.
+This is still static hosting. The workflow does not accept submissions, publish
+through a remote mutation API, install packages, fetch remote archives as a
+client, or execute package content. Remote accepted manifest entries are source
+checkouts used for static generation only.
 
 The generator validates package directories, creates deterministic
 `specpm-tar-gzip-v0` archives, validates generated package/version/capability

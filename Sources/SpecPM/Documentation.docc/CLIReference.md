@@ -96,9 +96,12 @@ host.
 
 The command generates metadata and mirrored deterministic archives only. It
 can read the maintainer-reviewed `public-index/accepted-packages.yml` manifest
-used by GitHub Pages deployment. It does not publish to a remote service,
-mutate GitHub issues, install packages, download archives as a client, or
-execute package content.
+used by GitHub Pages deployment. Manifest entries may be repository-local
+package directories or pinned public Git sources with `repository`, `ref`,
+`revision`, and `path`. Remote sources are checked out at the reviewed ref and
+must resolve to the exact pinned revision before validation. The command does
+not publish to a remote service, mutate GitHub issues, install packages,
+download archives as a client, or execute package content.
 
 ## Local Public Index Service
 

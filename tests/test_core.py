@@ -15,6 +15,7 @@ import yaml
 
 from specpm import core as core_module
 from specpm import index_submission as index_submission_module
+from specpm import public_index as public_index_module
 from specpm.cli import build_parser, main
 from specpm.core import (
     add_package,
@@ -40,7 +41,11 @@ from specpm.index_submission import (
     render_submission_report_markdown,
     validate_submission_body,
 )
-from specpm.public_index import generate_public_index, load_public_index_manifest
+from specpm.public_index import (
+    generate_public_index,
+    generate_public_index_from_inputs,
+    load_public_index_manifest,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
@@ -582,6 +587,10 @@ def test_clone_repository_limits_download_behavior(tmp_path: Path, monkeypatch) 
 
     def fake_run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
         calls.append((command, kwargs))
+        if "rev-parse" in command:
+            return subprocess.CompletedProcess(command, 0, stdout=f"{'a' * 40}\n", stderr="")
+        if "branch" in command:
+            return subprocess.CompletedProcess(command, 0, stdout="main\n", stderr="")
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
     monkeypatch.setattr(index_submission_module.subprocess, "run", fake_run)
@@ -591,7 +600,7 @@ def test_clone_repository_limits_download_behavior(tmp_path: Path, monkeypatch) 
         tmp_path / "checkout",
     )
 
-    assert result == {"status": "cloned", "errors": []}
+    assert result == {"status": "cloned", "ref": "main", "revision": "a" * 40, "errors": []}
     command, kwargs = calls[0]
     assert "--filter" in command
     assert command[command.index("--filter") + 1] == "blob:none"
@@ -607,7 +616,7 @@ def test_submission_validation_uses_specpm_validate_without_package_execution(
 ) -> None:
     def fake_clone_repository(url: str, checkout: Path) -> dict[str, Any]:
         shutil.copytree(ROOT / "examples/email_tools", checkout)
-        return {"status": "cloned", "errors": []}
+        return {"status": "cloned", "ref": "main", "revision": "a" * 40, "errors": []}
 
     monkeypatch.setattr(index_submission_module, "clone_repository", fake_clone_repository)
 
@@ -620,6 +629,12 @@ def test_submission_validation_uses_specpm_validate_without_package_execution(
     assert report["repositories"][0]["package_identity"]["package_id"] == (
         "document_conversion.email_tools"
     )
+    assert report["repositories"][0]["source"] == {
+        "repository": "https://github.com/example/email-tools.git",
+        "ref": "main",
+        "revision": "a" * 40,
+        "path": ".",
+    }
 
 
 def test_submission_cli_uses_temporary_clone_root_by_default(
@@ -676,6 +691,39 @@ def test_submission_report_markdown_is_reviewable() -> None:
     assert "SpecPM Index Submission Check" in markdown
     assert "package_urls_missing" in markdown
     assert "does not execute package content" in markdown
+
+
+def test_submission_report_markdown_includes_accepted_manifest_candidate() -> None:
+    report = {
+        "status": "valid",
+        "package_path": ".",
+        "repository_count": 1,
+        "repositories": [
+            {
+                "url": "https://github.com/example/email-tools.git",
+                "status": "valid",
+                "stage": "validate",
+                "package_identity": {
+                    "package_id": "document_conversion.email_tools",
+                    "version": "0.1.0",
+                },
+                "source": {
+                    "repository": "https://github.com/example/email-tools.git",
+                    "ref": "main",
+                    "revision": "a" * 40,
+                    "path": ".",
+                },
+                "errors": [],
+            }
+        ],
+        "errors": [],
+    }
+
+    markdown = render_submission_report_markdown(report)
+
+    assert "Accepted manifest candidate" in markdown
+    assert "repository: https://github.com/example/email-tools.git" in markdown
+    assert f"revision: {'a' * 40}" in markdown
 
 
 def test_rfc_example_validates() -> None:
@@ -1242,7 +1290,143 @@ def test_public_index_accepted_manifest_resolves_repository_relative_packages() 
 
     assert report["status"] == "ok"
     assert report["package_dirs"] == [str((ROOT / "examples/email_tools").resolve())]
+    assert report["sources"] == [
+        {
+            "kind": "local",
+            "path": "examples/email_tools",
+            "package_dir": str((ROOT / "examples/email_tools").resolve()),
+        }
+    ]
     assert report["errors"] == []
+
+
+def test_public_index_accepted_manifest_resolves_pinned_remote_sources(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    revision = "a" * 40
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "\n".join(
+            [
+                "schemaVersion: 1",
+                "packages:",
+                "  - repository: https://github.com/0al-spec/email-tools.git",
+                "    ref: main",
+                f"    revision: {revision}",
+                "    path: packages/email_tools",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
+        assert repository_url == "https://github.com/0al-spec/email-tools.git"
+        assert ref == "main"
+        package_dir = checkout / "packages/email_tools"
+        package_dir.parent.mkdir(parents=True)
+        shutil.copytree(ROOT / "examples/email_tools", package_dir)
+        return {"status": "ok", "revision": revision, "errors": []}
+
+    monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
+
+    report = load_public_index_manifest(
+        manifest,
+        root=tmp_path,
+        remote_root=tmp_path / "remote-sources",
+    )
+
+    assert report["status"] == "ok"
+    package_dir = Path(report["package_dirs"][0])
+    assert package_dir.name == "email_tools"
+    assert (package_dir / "specpm.yaml").is_file()
+    assert report["sources"] == [
+        {
+            "kind": "git",
+            "repository": "https://github.com/0al-spec/email-tools.git",
+            "ref": "main",
+            "revision": revision,
+            "path": "packages/email_tools",
+            "package_dir": str(package_dir),
+        }
+    ]
+    assert report["errors"] == []
+
+
+def test_public_index_accepted_manifest_rejects_remote_revision_mismatch(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "\n".join(
+            [
+                "schemaVersion: 1",
+                "packages:",
+                "  - repository: https://github.com/0al-spec/email-tools.git",
+                "    ref: main",
+                f"    revision: {'a' * 40}",
+                "    path: .",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
+        checkout.mkdir(parents=True)
+        return {"status": "ok", "revision": "b" * 40, "errors": []}
+
+    monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
+
+    report = load_public_index_manifest(
+        manifest,
+        root=tmp_path,
+        remote_root=tmp_path / "remote-sources",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"public_index_manifest_repository_revision_mismatch"}
+
+
+def test_public_index_generate_accepts_pinned_remote_manifest(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    revision = "a" * 40
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "\n".join(
+            [
+                "schemaVersion: 1",
+                "packages:",
+                "  - repository: https://github.com/0al-spec/email-tools.git",
+                "    ref: main",
+                f"    revision: {revision}",
+                "    path: .",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
+        shutil.copytree(ROOT / "examples/email_tools", checkout)
+        return {"status": "ok", "revision": revision, "errors": []}
+
+    monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
+
+    report = generate_public_index_from_inputs(
+        [],
+        tmp_path / "site",
+        "https://registry.example.invalid",
+        manifest_path=manifest,
+        root=tmp_path,
+    )
+
+    assert report["status"] == "ok"
+    assert (tmp_path / "site/v0/packages/document_conversion.email_tools/index.json").is_file()
 
 
 def test_public_index_accepted_manifest_rejects_path_escape(tmp_path: Path) -> None:

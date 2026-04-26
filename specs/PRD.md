@@ -85,16 +85,22 @@ These can be post-MVP tracks once the local package loop is stable.
 ## Post-MVP Static Public Index Boundary
 
 The implemented public index path is static and read-only. Maintainers record
-accepted repository-local package directories in
-`public-index/accepted-packages.yml`; the GitHub Pages workflow validates and
-packs those packages as untrusted data, then writes generated `/v0` registry
-metadata alongside the DocC documentation site.
+accepted repository-local package directories and pinned public Git package
+sources in `public-index/accepted-packages.yml`; the GitHub Pages workflow
+validates and packs those packages as untrusted data, then writes generated
+`/v0` registry metadata alongside the DocC documentation site.
+
+Pinned public Git package sources must include a public HTTPS repository URL, a
+reviewed Git ref, an exact 40-character commit revision, and a package path.
+Generation fails if the ref no longer resolves to the pinned revision. This
+keeps promotion from validated submission issues reviewable without turning
+SpecPM into a remote registry mutation service.
 
 This accepted package manifest is a reviewed input source for static
 generation. It is not a remote mutation API, upload format, `specpm publish`,
-package installation mechanism, or package execution path. Enterprise registry
-deployments remain a separate track for private access control, audit, policy,
-namespace ownership, and authenticated storage.
+package installation mechanism, remote archive client, or package execution
+path. Enterprise registry deployments remain a separate track for private
+access control, audit, policy, namespace ownership, and authenticated storage.
 
 ## 5. Primary Users
 
