@@ -924,6 +924,23 @@
       margin-bottom: 9px;
     }
 
+    .dialogue-status {
+      display: grid;
+      gap: 10px;
+    }
+
+    .dialogue-status-row {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .dialogue-status-row .status-pill {
+      min-width: 52px;
+      justify-content: center;
+    }
+
     .dialogue p {
       color: var(--ink);
       font-size: 15px;
@@ -1810,7 +1827,16 @@
             </svg>
             <div>
               <span class="label">Intent Resolver + SpecPM</span>
-              <p>&ldquo;Soon: propose auth.enterprise-sso as a candidate. Today: verify package shape, evidence, capability IDs, and registry metadata before selection.&rdquo;</p>
+              <div class="dialogue-status">
+                <div class="dialogue-status-row">
+                  <span class="status-pill soon">Soon</span>
+                  <p>Propose <code>auth.enterprise-sso</code> as a candidate from plain-text intent.</p>
+                </div>
+                <div class="dialogue-status-row">
+                  <span class="status-pill live">Live</span>
+                  <p>Verify package shape, evidence, capability IDs, and registry metadata before selection.</p>
+                </div>
+              </div>
             </div>
           </div>
         </article>
