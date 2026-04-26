@@ -332,7 +332,7 @@ def clone_repository(url: str, checkout: Path) -> dict[str, Any]:
     ref = read_clone_metadata(["git", "-C", str(checkout), "branch", "--show-current"])
     return {
         "status": "cloned",
-        "ref": ref.strip() or "HEAD",
+        "ref": ref.strip() or None,
         "revision": revision.strip().lower(),
         "errors": [],
     }

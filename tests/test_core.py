@@ -610,6 +610,29 @@ def test_clone_repository_limits_download_behavior(tmp_path: Path, monkeypatch) 
     assert kwargs["env"]["GIT_TERMINAL_PROMPT"] == "0"
 
 
+def test_clone_repository_does_not_default_unknown_ref_to_head(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    def fake_run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if "rev-parse" in command:
+            return subprocess.CompletedProcess(command, 0, stdout=f"{'a' * 40}\n", stderr="")
+        if "branch" in command:
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(index_submission_module.subprocess, "run", fake_run)
+
+    result = index_submission_module.clone_repository(
+        "https://github.com/example/email-tools.git",
+        tmp_path / "checkout",
+    )
+
+    assert result["status"] == "cloned"
+    assert result["ref"] is None
+    assert result["revision"] == "a" * 40
+
+
 def test_submission_validation_uses_specpm_validate_without_package_execution(
     tmp_path: Path,
     monkeypatch,
@@ -1388,6 +1411,42 @@ def test_public_index_accepted_manifest_rejects_remote_revision_mismatch(
 
     assert report["status"] == "invalid"
     assert issue_codes(report["errors"]) == {"public_index_manifest_repository_revision_mismatch"}
+
+
+def test_public_index_accepted_manifest_skips_checkout_for_schema_invalid_remote_entry(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "\n".join(
+            [
+                "schemaVersion: 1",
+                "packages:",
+                "  - repository: https://github.com/0al-spec/email-tools.git",
+                "    ref: main",
+                f"    revision: {'a' * 40}",
+                "    path: .",
+                "    unexpected: true",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    def fail_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
+        raise AssertionError("schema-invalid manifest entry should not be checked out")
+
+    monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fail_checkout)
+
+    report = load_public_index_manifest(
+        manifest,
+        root=tmp_path,
+        remote_root=tmp_path / "remote-sources",
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"public_index_manifest_package_field_unknown"}
 
 
 def test_public_index_generate_accepts_pinned_remote_manifest(

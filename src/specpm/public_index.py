@@ -169,6 +169,7 @@ def load_public_index_manifest(
                     detail={"fields": unknown_fields},
                 )
             )
+            continue
 
         package_path = item.get("path")
         if not isinstance(package_path, str) or not package_path.strip():
