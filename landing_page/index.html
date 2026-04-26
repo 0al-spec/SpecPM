@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta
     name="description"
-    content="SpecPM is a specification registry and need resolution engine for implementation-backed specs."
+    content="SpecPM is a specification registry and need resolution engine, with the verifiable package layer live now and intent-to-spec resolution coming soon."
   />
   <title>SpecPM - Resolve Needs Into Specifications</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -165,6 +165,16 @@
       margin: 0;
     }
 
+    code {
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+
+    .term {
+      border-bottom: 1px dotted currentColor;
+      cursor: help;
+    }
+
     .lede {
       color: var(--muted);
       font-size: 16px;
@@ -322,6 +332,39 @@
       margin-top: 31px;
       color: var(--muted);
       font-size: 13px;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 26px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid var(--rule-soft);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .status-pill.live {
+      border-color: color-mix(in oklab, var(--accent) 42%, var(--rule-soft));
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .status-pill.soon {
+      border-color: var(--ink);
+      color: var(--paper);
+      background: var(--ink);
     }
 
     .hero-mock-wrap {
@@ -519,6 +562,15 @@
       line-height: 1.12;
     }
 
+    .punchline strong {
+      color: var(--ink);
+      font-weight: 400;
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+    }
+
     .problem-panel {
       border: 1px solid var(--rule-soft);
       background: color-mix(in oklab, var(--paper) 88%, white);
@@ -583,6 +635,68 @@
       border-top: 1px solid var(--rule-soft);
       color: var(--accent);
       font-size: 14px;
+    }
+
+    .status-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.72fr) minmax(520px, 1fr);
+      gap: 70px;
+      align-items: start;
+    }
+
+    .status-copy h2 {
+      margin-top: 24px;
+      max-width: 520px;
+    }
+
+    .status-copy .lede {
+      max-width: 540px;
+      margin-top: 24px;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--rule-soft);
+      border-left: 1px solid var(--rule-soft);
+    }
+
+    .status-card {
+      min-height: 218px;
+      padding: 24px;
+      border-right: 1px solid var(--rule-soft);
+      border-bottom: 1px solid var(--rule-soft);
+      background: color-mix(in oklab, var(--paper) 88%, white);
+    }
+
+    .status-card.soon {
+      background: color-mix(in oklab, var(--accent-soft) 36%, white);
+    }
+
+    .status-card h3 {
+      margin-top: 14px;
+      font-family: var(--sans);
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .status-card p,
+    .status-card li {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .status-card p {
+      margin-top: 12px;
+    }
+
+    .status-card ul {
+      display: grid;
+      gap: 7px;
+      margin: 14px 0 0;
+      padding-left: 17px;
     }
 
     .how-head {
@@ -810,6 +924,23 @@
       margin-bottom: 9px;
     }
 
+    .dialogue-status {
+      display: grid;
+      gap: 10px;
+    }
+
+    .dialogue-status-row {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .dialogue-status-row .status-pill {
+      min-width: 52px;
+      justify-content: center;
+    }
+
     .dialogue p {
       color: var(--ink);
       font-size: 15px;
@@ -1022,7 +1153,8 @@
       .statement-grid,
       .dark-grid,
       .agents-grid,
-      .api-grid {
+      .api-grid,
+      .status-layout {
         grid-template-columns: 1fr;
         gap: 42px;
       }
@@ -1044,6 +1176,16 @@
         grid-template-columns: repeat(2, max-content);
         justify-content: start;
         padding: 0 0 48px;
+      }
+    }
+
+    @media (max-width: 1060px) {
+      .nav-inner {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .nav-links {
+        display: none;
       }
     }
 
@@ -1144,7 +1286,8 @@
 
       .problem-content,
       .examples-head,
-      .comparison-grid {
+      .comparison-grid,
+      .status-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1288,16 +1431,17 @@
 
       <nav class="nav-links" aria-label="Primary navigation">
         <a href="#registry">Registry</a>
+        <a href="#status">Current Status</a>
         <a href="#how">How it Works</a>
         <a href="#agents">For Agents</a>
-        <a href="#api">Docs</a>
+        <a href="https://0al-spec.github.io/SpecPM" target="_blank" rel="noopener">Docs</a>
         <a href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">GitHub</a>
       </nav>
 
       <div class="nav-actions">
         <a class="btn" href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">RFC on GitHub</a>
         <a class="btn primary" href="#api">
-          Resolve a Need
+          Intent API Soon
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
             <path d="M5 12h14" />
             <path d="m13 6 6 6-6 6" />
@@ -1317,77 +1461,82 @@
             <em>Implementations come included.</em>
           </h1>
           <p class="lede hero-sub">
-            <span class="serif-name">SpecPM</span> is a specification registry and need resolution engine that turns implementation needs into concrete specs - each backed by real modules, subsystems, and code.
+            SpecPM is building the need resolution engine for reusable specification intent. The package and registry layer is live now; the upcoming resolver will turn plain-text needs into exact, reviewable <span class="term" title="SpecPackage: a versioned package that groups specs, metadata, capabilities, evidence, and registry data." aria-label="SpecPackage: a versioned package that groups specs, metadata, capabilities, evidence, and registry data.">SpecPackage</span> and <span class="term" title="BoundarySpec: one concrete specification for a product, module, subsystem, or integration boundary." aria-label="BoundarySpec: one concrete specification for a product, module, subsystem, or integration boundary.">BoundarySpec</span> candidates.
           </p>
+          <div class="hero-badges" aria-label="SpecPM availability">
+            <span class="status-pill live">Package Layer Live</span>
+            <span class="status-pill live">Docker Local Service Live</span>
+            <span class="status-pill soon">Need Resolution API Soon</span>
+          </div>
           <div class="hero-ctas">
             <a class="btn primary" href="#api">
-              Resolve a Need
+              Preview Intent API
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                 <path d="M5 12h14" />
                 <path d="m13 6 6 6-6 6" />
               </svg>
             </a>
-            <a class="btn" href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">RFC on GitHub</a>
+            <a class="btn" href="https://0al-spec.github.io/SpecPM" target="_blank" rel="noopener">Read Docs</a>
           </div>
-          <p class="positioning">Spec-first. Implementation-backed. Built for agentic software creation.</p>
+          <p class="positioning">Available now: validation, inspect, deterministic pack, local/public index, exact search, SpecGraph inbox, and read-only registry metadata.</p>
         </div>
 
         <div class="hero-mock-wrap">
           <article class="resolve-card" aria-label="SpecPM resolution preview">
             <div class="resolve-row">
-              <span class="label">Need</span>
-              <div class="mock-input">User authentication for a B2B SaaS dashboard</div>
+              <span class="label">Intent Input - Coming Soon</span>
+              <div class="mock-input">I need enterprise authentication for a B2B SaaS dashboard.</div>
             </div>
 
             <div class="resolve-row split">
               <div>
-                <span class="label">Resolved Specification</span>
-                <div class="spec-name">auth.user-session</div>
+                <span class="label">Candidate SpecPackage</span>
+                <div class="spec-name">auth.enterprise-sso</div>
               </div>
               <div>
-                <span class="label">Fit</span>
-                <div class="fit-score">98% <span>match</span></div>
+                <span class="label">Preview Fit</span>
+                <div class="fit-score">98% <span>candidate</span></div>
               </div>
             </div>
 
             <div class="resolve-row">
-              <span class="label">Implementation Included</span>
+              <span class="label">Verified by SpecPM Today</span>
               <ul class="includes">
                 <li>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <circle cx="12" cy="12" r="8" />
                     <path d="m9.5 12 1.7 1.8 3.7-4" />
                   </svg>
-                  OAuth adapter
+                  <span class="serif-name">SpecPackage</span> validation
                 </li>
                 <li>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <rect x="5" y="4" width="14" height="16" rx="2" />
                     <path d="M8 8h8M8 12h8M8 16h5" />
                   </svg>
-                  JWT session module
+                  <span class="serif-name">BoundarySpec</span> inspection
                 </li>
                 <li>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path d="M4 12h16" />
                     <path d="m14 6 6 6-6 6" />
                   </svg>
-                  Passwordless login flow
+                  Deterministic .specpm.tgz pack
                 </li>
                 <li>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                     <path d="M12 3 5 6v6c0 4.5 3 7.3 7 9 4-1.7 7-4.5 7-9V6l-7-3Z" />
                     <path d="M9.5 12.5 11 14l3.5-4" />
                   </svg>
-                  Role-based access layer
+                  Static /v0 registry metadata
                 </li>
               </ul>
             </div>
 
             <div class="resolve-row">
-              <span class="label">Why This Spec</span>
+              <span class="label">Boundary</span>
               <p class="why-copy">
-                Matches SaaS auth requirements, supports enterprise identity providers, and includes production-ready implementation paths.
+                The future resolver may propose candidates. <span class="serif-name">SpecPM</span> verifies exact package data, paths, provenance, and registry metadata.
               </p>
             </div>
           </article>
@@ -1406,18 +1555,18 @@
     <section class="section" aria-labelledby="statement-title">
       <div class="wrap statement-grid">
         <div class="statement">
-          <p class="eyebrow">Not Another Package Manager</p>
-          <h2 id="statement-title">A registry of working specifications.</h2>
+          <p class="eyebrow">Package Substrate First</p>
+          <h2 id="statement-title">A verifiable registry layer for specification intent.</h2>
           <div class="statement-body">
             <p>Traditional package managers expose code first.</p>
             <p><span class="serif-name">SpecPM</span> works differently.</p>
             <p>
-              It stores specifications as the primary unit - structured, reusable definitions of what a module or subsystem should do. Each specification is connected to real implementation options, so a need can be resolved into a spec, and the spec can lead directly to working code.
+              It stores specifications as the primary unit: structured, reusable definitions of what a module, subsystem, or product boundary should do. Today, <span class="serif-name">SpecPM</span> validates, packs, indexes, and exposes that package data. The intent-to-spec resolver is the next online/API layer built on top.
             </p>
           </div>
           <p class="punchline">
-            You don&apos;t start with packages.<br />
-            You start with the right specification.
+            The <strong>current layer</strong> makes specs <strong>verifiable</strong>.<br />
+            The <strong>next layer</strong> makes intent <strong>resolvable</strong>.
           </p>
         </div>
 
@@ -1427,25 +1576,25 @@
           </div>
           <div class="problem-content">
             <div class="problem-title">
-              <h3 id="problem-title">Implementation decisions slow everything down.</h3>
+              <h3 id="problem-title">Plain text intent still needs a verified package layer.</h3>
               <p>
-                <span class="serif-name">SpecPM</span> removes that loop. Instead of searching for implementation details, agents and developers resolve needs into specification-backed modules that already know how they can be implemented.
+                The future resolver can turn a need into candidate specs. <span class="serif-name">SpecPM</span> makes those candidates reviewable by validating exact package structure, capability IDs, evidence, provenance, and registry metadata.
               </p>
             </div>
             <div class="loop">
-              <p>Every product need creates the same loop:</p>
+              <p>Current package-manager work removes the fragile parts first:</p>
               <ol class="loop-list">
-                <li><b>01</b><span>Search for libraries.</span></li>
-                <li><b>02</b><span>Compare APIs.</span></li>
-                <li><b>03</b><span>Read docs.</span></li>
-                <li><b>04</b><span>Evaluate trade-offs.</span></li>
-                <li><b>05</b><span>Wire integrations.</span></li>
-                <li><b>06</b><span>Rewrite glue code.</span></li>
+                <li><b>01</b><span>Validate package shape.</span></li>
+                <li><b>02</b><span>Inspect <span class="serif-name">BoundarySpec</span> intent.</span></li>
+                <li><b>03</b><span>Pack deterministic archives.</span></li>
+                <li><b>04</b><span>Index exact capabilities.</span></li>
+                <li><b>05</b><span>Expose static /v0 metadata.</span></li>
+                <li><b>06</b><span>Let <span class="serif-name">SpecGraph</span> observe package visibility.</span></li>
               </ol>
               <div class="stop-list">
-                <span>- Stop searching.</span>
-                <span>- Stop comparing.</span>
-                <span>- Stop wiring from scratch.</span>
+                <span>- Live now: exact package verification.</span>
+                <span>- Soon: semantic intent-to-spec discovery.</span>
+                <span>- Always: package content stays untrusted data.</span>
               </div>
             </div>
           </div>
@@ -1453,11 +1602,65 @@
       </div>
     </section>
 
+    <section class="section current-status" id="status" aria-labelledby="status-title">
+      <div class="wrap status-layout">
+        <div class="status-copy">
+          <p class="eyebrow"><span class="dot"></span>Current Status</p>
+          <h2 id="status-title">The package and registry substrate is working now.</h2>
+          <p class="lede">
+            <span class="serif-name">SpecPM</span> already provides the deterministic substrate that an intent-to-spec service needs: trusted outputs, exact lookup, package validation, and read-only registry metadata.
+          </p>
+        </div>
+
+        <div class="status-grid" aria-label="SpecPM current and upcoming capabilities">
+          <article class="status-card">
+            <span class="status-pill live">Live</span>
+            <h3>Local CLI package manager</h3>
+            <ul>
+              <li>validate and inspect <span class="serif-name">SpecPackage</span> directories</li>
+              <li>pack deterministic <code>.specpm.tgz</code> archives</li>
+              <li>diff package versions and report breaking changes</li>
+            </ul>
+          </article>
+
+          <article class="status-card">
+            <span class="status-pill live">Live</span>
+            <h3>Local and public registry metadata</h3>
+            <ul>
+              <li>index, search, add, lock, yank, and unyank locally</li>
+              <li>generate static public <code>/v0</code> registry files</li>
+              <li>serve the public index locally through Docker</li>
+            </ul>
+          </article>
+
+          <article class="status-card">
+            <span class="status-pill live">Live</span>
+            <h3>SpecGraph and viewer contracts</h3>
+            <ul>
+              <li>inspect <span class="serif-name">SpecGraph</span> inbox bundles</li>
+              <li>read remote registry status, packages, and capability search</li>
+              <li>publish DocC documentation and conformance fixtures</li>
+            </ul>
+          </article>
+
+          <article class="status-card soon">
+            <span class="status-pill soon">Soon</span>
+            <h3>Intent-to-spec online API</h3>
+            <ul>
+              <li>accept plain-text product or engineering needs</li>
+              <li>propose exact <span class="serif-name">SpecPackage</span> and <span class="serif-name">BoundarySpec</span> candidates</li>
+              <li>use semantic discovery while keeping <span class="serif-name">SpecPM</span> core verifiable</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="section" id="how" aria-labelledby="how-title">
       <div class="wrap">
         <div class="how-head">
-          <p class="eyebrow">How <span class="serif-name">SpecPM</span> Works</p>
-          <h2 id="how-title">Need &rarr; Specification &rarr; Implementation</h2>
+          <p class="eyebrow">How SpecPM Works</p>
+          <h2 id="how-title">Package intent today. Resolve plain text soon.</h2>
         </div>
 
         <div class="steps">
@@ -1467,8 +1670,8 @@
               <path d="M10 13h28v19H20l-8 6v-6h-2V13Z" stroke-width="1.5" />
               <path d="M17 20h14M17 25h10" stroke-width="1.5" />
             </svg>
-            <h3>Describe the <span class="step-title-break">need</span></h3>
-            <p>A user, developer, or agent describes what is required: authentication, billing, notifications, audit logs, data sync, search, permissions, or any other system part.</p>
+            <h3>Package reusable <span class="step-title-break">intent</span></h3>
+            <p>Authors describe product and engineering boundaries as <span class="serif-name">SpecPackage</span> and <span class="serif-name">BoundarySpec</span> data with capabilities, requirements, evidence, provenance, and constraints.</p>
           </article>
 
           <article class="step">
@@ -1478,8 +1681,8 @@
               <circle cx="24" cy="24" r="3" stroke-width="1.5" />
               <path d="M24 7v8M24 33v8M7 24h8M33 24h8" stroke-width="1.5" />
             </svg>
-            <h3>Resolve the best <span class="step-title-break">specification</span></h3>
-            <p><span class="serif-name">SpecPM</span> searches the registry and finds the best matching spec by structure, constraints, context, and intended use.</p>
+            <h3>Validate and <span class="step-title-break">pack</span></h3>
+            <p><span class="serif-name">SpecPM</span> validates restricted YAML, blocks path escapes, inspects package metadata, and creates deterministic archives without executing package content.</p>
           </article>
 
           <article class="step">
@@ -1488,8 +1691,8 @@
               <path d="m24 9 16 8-16 8-16-8 16-8Z" stroke-width="1.5" />
               <path d="m12 25 12 6 12-6M12 33l12 6 12-6" stroke-width="1.5" />
             </svg>
-            <h3>Get code <span class="step-title-break">included</span></h3>
-            <p>Each resolved spec is backed by real modules, subsystems, adapters, or code templates. The implementation comes with the specification.</p>
+            <h3>Index and <span class="step-title-break">expose</span></h3>
+            <p>Packages become searchable by exact capability ID through local indexes, generated public <code>/v0</code> metadata, and read-only remote registry client commands.</p>
           </article>
 
           <article class="step">
@@ -1500,8 +1703,8 @@
               <path d="M881 777.5C881 731.384 843.616 694 797.5 694C751.384 694 714 731.384 714 777.5C714 823.616 751.384 861 797.5 861V885C738.129 885 690 836.871 690 777.5C690 718.129 738.129 670 797.5 670C856.871 670 905 718.129 905 777.5C905 836.871 856.871 885 797.5 885V861C843.616 861 881 823.616 881 777.5Z" fill="currentColor" />
               <path d="M606.6 785.6C556.2 785.6 531 758.4 531 704V618.8C531 590.4 527.6 570.6 520.8 559.4C514.4 547.8 504.2 542 490.2 542C485.4 542 483 539.6 483 534.8C483 530 485.4 527.6 490.2 527.6C504.2 527.6 514.4 521.8 520.8 510.2C527.6 498.6 531 478.8 531 450.8V365.6C531 311.2 556.2 284 606.6 284C611.4 284 613.8 286.4 613.8 291.2C613.8 296 611.4 298.4 606.6 298.4C579.4 298.4 565.8 320 565.8 363.2V448.4C565.8 475.2 562.2 494.8 555 507.2C548.2 519.6 537 528.8 521.4 534.8C537 540.8 548.2 550 555 562.4C562.2 574.8 565.8 594.4 565.8 621.2V706.4C565.8 749.6 579.4 771.2 606.6 771.2C611.4 771.2 613.8 773.6 613.8 778.4C613.8 783.2 611.4 785.6 606.6 785.6Z" fill="currentColor" />
             </svg>
-            <h3>Use it in the <span class="step-title-break">system graph</span></h3>
-            <p>The resolved spec can be used by <span class="serif-name">SpecGraph</span> agents, developers, or automation workflows as a concrete building block for the system being designed.</p>
+            <h3>Resolve intent <span class="step-title-break">soon</span></h3>
+            <p>The upcoming online/API layer will map plain text needs to candidate packages. <span class="serif-name">SpecPM</span> will remain the exact verification layer under that resolver.</p>
           </article>
         </div>
       </div>
@@ -1510,33 +1713,33 @@
     <section class="dark-section" id="registry" aria-labelledby="registry-title">
       <div class="wrap dark-grid">
         <div>
-          <p class="eyebrow">A Registry for Specs, Not Just Code</p>
-          <h2 id="registry-title">Specifications are the new dependency layer.</h2>
+          <p class="eyebrow">Registry Surface</p>
+          <h2 id="registry-title">Specification packages are the dependency layer.</h2>
           <p class="lede">
-            Code dependencies tell you what you installed. Specifications tell you what the system needs, why it exists, how it should behave, and which implementation can satisfy it.
+            Code dependencies tell you what you installed. Specification packages tell downstream tools what a boundary means, which capabilities it provides, what evidence supports it, and how it can be verified.
           </p>
           <p class="lede">
-            <span class="serif-name">SpecPM</span> makes specifications searchable, reusable, resolvable, and implementation-backed.
+            <span class="serif-name">SpecPM</span> already publishes static read-only registry metadata that <span class="serif-name">SpecGraph</span>, ContextBuilder, and other consumers can observe.
           </p>
           <div class="formula" aria-label="Need to specification to implementation">
-            <span>Need</span>
+            <span>Intent</span>
             <span>&rarr;</span>
-            <span>Specification</span>
+            <span>SpecPackage</span>
             <span>&rarr;</span>
-            <span>Implementation</span>
+            <span>Registry Metadata</span>
           </div>
         </div>
 
         <div>
-          <p class="mono registry-head">Popular Spec Categories</p>
+          <p class="mono registry-head">Live Registry Building Blocks</p>
           <div class="registry-grid">
             <article class="category-card">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                 <rect x="5" y="10" width="14" height="10" rx="2" />
                 <path d="M8 10V7a4 4 0 0 1 8 0v3" />
               </svg>
-              <h3>Authentication</h3>
-              <p>User sessions, OAuth flows, passwordless login, enterprise SSO, RBAC, and identity lifecycle specs.</p>
+              <h3>SpecPackage</h3>
+              <p>The package manifest, referenced <span class="serif-name">BoundarySpecs</span>, evidence, foreign inputs, metadata, and compatibility declarations.</p>
             </article>
 
             <article class="category-card">
@@ -1544,8 +1747,8 @@
                 <rect x="3" y="5" width="18" height="14" rx="2" />
                 <path d="M3 10h18M7 15h5" />
               </svg>
-              <h3>Billing</h3>
-              <p>Subscriptions, invoices, metering, checkout flows, payment adapters, and revenue operations specs.</p>
+              <h3>BoundarySpec</h3>
+              <p>Structured intent, scope, provided capabilities, required capabilities, interfaces, effects, and provenance.</p>
             </article>
 
             <article class="category-card">
@@ -1553,8 +1756,8 @@
                 <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
                 <path d="M10 21h4" />
               </svg>
-              <h3>Notifications</h3>
-              <p>Email, push, SMS, webhooks, routing logic, templates, delivery policies, and retry behavior specs.</p>
+              <h3>Exact Search</h3>
+              <p>Local and remote lookup by exact capability ID, with semantic discovery intentionally kept outside core.</p>
             </article>
 
             <article class="category-card">
@@ -1563,8 +1766,8 @@
                 <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
                 <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
               </svg>
-              <h3>Data Systems</h3>
-              <p>Pipelines, sync jobs, storage interfaces, indexing, search, analytics, and data transformation specs.</p>
+              <h3>Public /v0 Index</h3>
+              <p>Generated static registry status, package index, version metadata, capability search, and deterministic archives.</p>
             </article>
 
             <article class="category-card">
@@ -1572,8 +1775,8 @@
                 <path d="M12 3 5 6v6c0 4.5 3 7.3 7 9 4-1.7 7-4.5 7-9V6l-7-3Z" />
                 <path d="M12 8v5l3 2" />
               </svg>
-              <h3>Security &amp; Audit</h3>
-              <p>Access policies, audit logs, permission boundaries, compliance events, and operational visibility specs.</p>
+              <h3>Docker Service</h3>
+              <p>A local static public-index service at <code>localhost:8081</code> for <span class="serif-name">SpecGraph</span>, ContextBuilder, and manual integration testing.</p>
             </article>
 
             <article class="category-card">
@@ -1581,8 +1784,8 @@
                 <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
                 <path d="M12 12 4.5 7.7M12 12l7.5-4.3M12 12v8.5" />
               </svg>
-              <h3>Infrastructure Modules</h3>
-              <p>Deployment units, runtime requirements, background workers, queues, schedulers, and service boundaries.</p>
+              <h3>DocC and Conformance</h3>
+              <p>Published documentation, JSON contracts, golden fixtures, and self-spec validation for the public surface.</p>
             </article>
           </div>
         </div>
@@ -1593,15 +1796,15 @@
       <div class="wrap agents-grid">
         <div>
           <p class="eyebrow"><span class="dot"></span>Built for Agents</p>
-          <h2 id="agents-title">Built for agents that write specs.</h2>
+          <h2 id="agents-title">Built for agents that need verified spec candidates.</h2>
           <p class="lede">
-            <a href="https://0al-spec.github.io/SpecGraph/"><span class="serif-name">SpecGraph<span></span></a> agents don&apos;t need to implement every system part from scratch. When an agent identifies a need inside a system design, it can ask <span class="serif-name">SpecPM</span> for the best matching specification.
+            <a href="https://0al-spec.github.io/SpecGraph/"><span class="serif-name">SpecGraph</span></a> and ContextBuilder can consume <span class="serif-name">SpecPM</span> packages as verified metadata today. The future resolver will add plain-text intent intake before that exact package verification step.
           </p>
         </div>
 
         <p class="agent-line">
-          The agent keeps designing.<br />
-          <span class="serif-name">SpecPM</span> handles resolution.
+          Agents can explore intent.<br />
+          SpecPM verifies packages.
         </p>
 
         <article class="dialogue" aria-label="SpecGraph and SpecPM example">
@@ -1623,8 +1826,17 @@
               <path d="M606.6 785.6C556.2 785.6 531 758.4 531 704V618.8C531 590.4 527.6 570.6 520.8 559.4C514.4 547.8 504.2 542 490.2 542C485.4 542 483 539.6 483 534.8C483 530 485.4 527.6 490.2 527.6C504.2 527.6 514.4 521.8 520.8 510.2C527.6 498.6 531 478.8 531 450.8V365.6C531 311.2 556.2 284 606.6 284C611.4 284 613.8 286.4 613.8 291.2C613.8 296 611.4 298.4 606.6 298.4C579.4 298.4 565.8 320 565.8 363.2V448.4C565.8 475.2 562.2 494.8 555 507.2C548.2 519.6 537 528.8 521.4 534.8C537 540.8 548.2 550 555 562.4C562.2 574.8 565.8 594.4 565.8 621.2V706.4C565.8 749.6 579.4 771.2 606.6 771.2C611.4 771.2 613.8 773.6 613.8 778.4C613.8 783.2 611.4 785.6 606.6 785.6Z" fill="currentColor" />
             </svg>
             <div>
-              <span class="label">SpecPM</span>
-              <p>&ldquo;Use auth.enterprise-sso. It includes SAML, OAuth, SCIM provisioning, RBAC, and audit-ready session tracking.&rdquo;</p>
+              <span class="label">Intent Resolver + SpecPM</span>
+              <div class="dialogue-status">
+                <div class="dialogue-status-row">
+                  <span class="status-pill soon">Soon</span>
+                  <p>Propose <code>auth.enterprise-sso</code> as a candidate from plain-text intent.</p>
+                </div>
+                <div class="dialogue-status-row">
+                  <span class="status-pill live">Live</span>
+                  <p>Verify package shape, evidence, capability IDs, and registry metadata before selection.</p>
+                </div>
+              </div>
             </div>
           </div>
         </article>
@@ -1635,64 +1847,64 @@
       <div class="wrap">
         <div class="examples-head">
           <div>
-            <p class="eyebrow">Why <span class="serif-name">SpecPM</span> Is Different</p>
-            <h2 id="examples-title">From manual implementation search to spec resolution.</h2>
+            <p class="eyebrow">Why SpecPM Is Different</p>
+            <h2 id="examples-title">From package files to intent-aware discovery.</h2>
           </div>
           <p class="lede">
-            Package managers expose implementation. <span class="serif-name">SpecPM</span> resolves intent into specs. Libraries require interpretation; specs carry structure, purpose, and implementation paths.
+            Package managers expose implementation. <span class="serif-name">SpecPM</span> exposes verified specification intent. The upcoming resolver adds the semantic front door; the current CLI and registry keep the result machine-checkable.
           </p>
         </div>
 
         <div class="comparison-grid">
           <article class="comparison">
-            <h3>Before SpecPM</h3>
+            <h3>Current SpecPM</h3>
             <ol>
-              <li>Search for a library</li>
-              <li>Compare APIs</li>
-              <li>Read documentation</li>
-              <li>Guess the right fit</li>
-              <li>Write integration glue</li>
-              <li>Maintain implementation decisions manually</li>
+              <li>Validate package and <span class="serif-name">BoundarySpec</span> shape</li>
+              <li>Inspect capabilities, evidence, and provenance</li>
+              <li>Pack deterministic archives</li>
+              <li>Index and search exact capability IDs</li>
+              <li>Expose static public registry metadata</li>
+              <li>Let <span class="serif-name">SpecGraph</span> observe package visibility</li>
             </ol>
           </article>
           <article class="comparison">
-            <h3>With SpecPM</h3>
+            <h3>Intent-to-Spec Soon</h3>
             <ol>
-              <li>Describe the need</li>
-              <li>Resolve the best specification</li>
-              <li>Get implementation paths included</li>
-              <li>Attach the spec to the system design</li>
-              <li>Let agents compose from structured building blocks</li>
+              <li>Accept a plain-text product or engineering need</li>
+              <li>Use semantic discovery to find candidate packages</li>
+              <li>Return exact <span class="serif-name">SpecPackage</span> and <span class="serif-name">BoundarySpec</span> references</li>
+              <li>Mark candidates as reviewable, not automatically trusted</li>
+              <li>Verify every candidate through <span class="serif-name">SpecPM</span> metadata</li>
             </ol>
           </article>
         </div>
 
         <div class="api-grid" id="api">
           <div class="api-copy">
-            <p class="eyebrow">Resolve Specs Programmatically</p>
-            <h2>Built for humans and agents.</h2>
+            <p class="eyebrow">Intent-to-Spec API Coming Soon</p>
+            <h2>Built for humans, agents, and downstream tools.</h2>
             <p class="lede">
-              Search the registry, resolve needs, inspect specs, and retrieve implementation-backed modules through a simple CLI and API.
+              The hosted resolver will accept plain-text intent and return exact, reviewable package candidates. The local CLI already provides the verification and registry substrate behind that flow.
             </p>
           </div>
 
           <div class="code-window" aria-label="SpecPM CLI example">
             <div class="code-top"><span></span><span></span><span></span></div>
-            <pre><code><span class="cmd">$ specpm resolve "enterprise authentication for B2B SaaS"</span>
+            <pre><code><span class="cmd"># coming soon: hosted intent-to-spec API</span>
+POST /v0/resolve-intent
+{
+  "intent": "enterprise authentication for B2B SaaS",
+  "context": "SpecGraph product boundary"
+}
 
-resolved:
-  spec: auth.enterprise-sso
-  match: 0.98
-  includes:
-    - saml-sso
-    - oauth-adapter
-    - scim-provisioning
-    - rbac
-    - audit-events
-  implementations:
-    - auth-enterprise-module
-    - oauth-saml-adapter
-    - session-service-template</code></pre>
+candidate:
+  package: auth.enterprise-sso
+  status: review_required
+
+<span class="cmd"># available today: exact verification layer</span>
+$ specpm validate examples/email_tools --json
+$ specpm inspect examples/email_tools --json
+$ specpm public-index generate --manifest public-index/accepted-packages.yml --json</code></pre>
           </div>
         </div>
       </div>
@@ -1703,15 +1915,15 @@ resolved:
         <img src="assets/hero.jpg" alt="" />
       </div>
       <div class="cta-copy">
-        <p class="eyebrow">Ready to Resolve?</p>
-        <h2 id="cta-title">Resolve your next implementation need.</h2>
+        <p class="eyebrow">Current CLI, Future Resolver</p>
+        <h2 id="cta-title">Use the package substrate now. Resolve plain text soon.</h2>
         <p class="lede">
-          Start with a need. Get the right specification. Use the implementation already behind it.
+          Start with validated <span class="serif-name">SpecPackages</span> today. The online intent-to-spec layer will turn user needs into reviewable candidates on top of the same registry contract.
         </p>
       </div>
       <div class="cta-actions">
-        <a class="btn primary" href="#api">
-          Resolve a Need
+        <a class="btn primary" href="https://0al-spec.github.io/SpecPM" target="_blank" rel="noopener">
+          Read Docs
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
             <path d="M5 12h14" />
             <path d="m13 6 6 6-6 6" />
@@ -1724,14 +1936,14 @@ resolved:
 
   <footer class="footer">
     <div class="wrap footer-strip" aria-label="Footer positioning statements">
-      <span>SpecPM - specification registry and need resolution engine.</span>
-      <span>Spec-first. Implementation-backed.</span>
-      <span>A registry of implementation-backed specifications for agentic software creation.</span>
-      <span>The spec-first way to find working modules and subsystems.</span>
+      <span><span class="serif-name">SpecPM</span> - verifiable package layer for reusable intent.</span>
+      <span>CLI and registry substrate live now.</span>
+      <span>Intent-to-spec online API coming soon.</span>
+      <span>Exact verification below semantic discovery.</span>
     </div>
     <div class="wrap footer-main">
-      <span>Resolve needs into specifications. Implementations come included.</span>
-      <span>&copy; 2026 SpecPM</span>
+      <span>Package, validate, index, and expose specs today. Resolve intent soon.</span>
+      <span>&copy; 2026 <span class="serif-name">SpecPM</span></span>
     </div>
   </footer>
 </body>
