@@ -562,6 +562,15 @@
       line-height: 1.12;
     }
 
+    .punchline strong {
+      color: var(--ink);
+      font-weight: 400;
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+    }
+
     .problem-panel {
       border: 1px solid var(--rule-soft);
       background: color-mix(in oklab, var(--paper) 88%, white);
@@ -1539,8 +1548,8 @@
             </p>
           </div>
           <p class="punchline">
-            The current layer makes specs verifiable.<br />
-            The next layer makes intent resolvable.
+            The <strong>current layer</strong> makes specs <strong>verifiable</strong>.<br />
+            The <strong>next layer</strong> makes intent <strong>resolvable</strong>.
           </p>
         </div>
 
