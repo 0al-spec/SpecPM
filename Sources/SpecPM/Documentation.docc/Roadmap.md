@@ -49,8 +49,10 @@ registry work explicitly.
 The public index can start as an issue-based submission queue with GitHub
 Actions validation and GitHub Pages static `/v0` metadata. The reference
 `Add SpecPackage(s)` issue form is available in
-`.github/ISSUE_TEMPLATE/add-specpackages.yml`. Enterprise registry work should
-remain available for private packages, auth, audit, policy, and internal
+`.github/ISSUE_TEMPLATE/add-specpackages.yml`, and the reference issue
+validation workflow is available in
+`.github/workflows/package-submission-check.yml`. Enterprise registry work
+should remain available for private packages, auth, audit, policy, and internal
 namespace ownership.
 
 `specpm publish`, auth, signing, namespace governance, and remote yanking

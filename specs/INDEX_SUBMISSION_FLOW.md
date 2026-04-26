@@ -86,6 +86,31 @@ The template intentionally does not collect enterprise credentials, private
 repository access, signing keys, upload tokens, or publish permissions. Public
 index submission is reviewable metadata intake, not a remote mutation API.
 
+## Submission Validation Workflow
+
+The first reference validation workflow lives at:
+
+```text
+.github/workflows/package-submission-check.yml
+```
+
+The workflow runs for issues labeled `package-submission`.
+
+It:
+
+- parses the `Add SpecPackage(s)` issue form body;
+- validates repository URL and package path shape before clone;
+- rejects missing URLs, non-HTTPS URLs, credential-bearing URLs, URL fragments,
+  absolute package paths, and package path traversal;
+- shallow-clones submitted public repositories without submodules;
+- runs `specpm validate` on the submitted package path;
+- posts a markdown validation report back to the issue;
+- fails the check for invalid submissions.
+
+The workflow uses repository read permission and issue write permission for
+comments. It does not publish packages, upload archives, mutate registry state,
+install submitted packages, or execute package content.
+
 ## Public Index Requirements
 
 Initial public submissions should meet these requirements:

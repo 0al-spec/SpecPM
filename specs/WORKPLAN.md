@@ -354,6 +354,30 @@ Acceptance:
 - Documentation links the issue template to the public index flow while keeping
   enterprise registry deployment separate.
 
+## Phase 17. Public Index Submission Validation Workflow
+
+- [x] Add a GitHub Actions workflow for issues labeled `package-submission`.
+- [x] Parse the `Add SpecPackage(s)` issue form body into repository URLs,
+  package path, and notes.
+- [x] Reject missing URLs, non-HTTPS URLs, credential-bearing URLs, URL
+  fragments, absolute package paths, and package path traversal before cloning.
+- [x] Shallow-clone submitted public repositories without submodules.
+- [x] Run `specpm validate` against the submitted package path.
+- [x] Post a markdown validation report back to the submission issue.
+- [x] Fail the workflow for invalid submissions while still leaving a
+  machine-readable and human-readable report.
+- [x] Add tests for issue parsing, URL/path guards, workflow shape, report
+  rendering, and validation through `specpm validate`.
+
+Acceptance:
+
+- The workflow only runs for the `package-submission` label.
+- The workflow permissions are limited to repository read and issue comments.
+- Submitted package content is validated as data and is not executed.
+- The workflow does not publish packages, generate registry JSON, mutate remote
+  registry state, download package archives, or install submitted packages.
+- Invalid submissions produce an issue comment and a failing validation check.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -403,7 +427,6 @@ and publishes generated read-only registry metadata through GitHub Pages.
 
 Future work may explore:
 
-- GitHub Actions that clone submitted repositories and run `specpm validate`.
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
 - A generator that emits static `/v0/packages/...` and

@@ -28,6 +28,7 @@ scope:
     - Fetch read-only remote registry metadata for package lookup, package version lookup, and exact capability search.
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
     - Provide a GitHub Issue form for public SpecPackage index submissions.
+    - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
@@ -312,6 +313,16 @@ evidence:
     path: .github/ISSUE_TEMPLATE/add-specpackages.yml
     supports:
       - specpm.registry.index_submission_flow
+  - id: package_submission_workflow
+    kind: documentation
+    path: .github/workflows/package-submission-check.yml
+    supports:
+      - specpm.registry.index_submission_flow
+  - id: index_submission_validator
+    kind: source
+    path: src/specpm/index_submission.py
+    supports:
+      - specpm.registry.index_submission_flow
   - id: rfc_coverage
     kind: documentation
     path: specs/RFC_0001_COVERAGE.md
@@ -371,6 +382,16 @@ implementationBindings:
     files:
       owned:
         - tests/test_core.py
+  - id: index_submission_validator
+    path: src/specpm/index_submission.py
+    files:
+      owned:
+        - src/specpm/index_submission.py
+        - scripts/validate_index_submission.py
+        - .github/workflows/package-submission-check.yml
+      border:
+        - .github/ISSUE_TEMPLATE/add-specpackages.yml
+        - specs/INDEX_SUBMISSION_FLOW.md
   - id: docc
     path: Sources/SpecPM/Documentation.docc/SpecPM.md
     files:
