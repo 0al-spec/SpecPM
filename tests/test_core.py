@@ -4,6 +4,7 @@ import argparse
 import io
 import json
 import shutil
+import subprocess
 import tarfile
 from pathlib import Path
 from typing import Any
@@ -338,6 +339,11 @@ def test_package_submission_workflow_runs_only_for_submission_label() -> None:
     assert "scripts/validate_index_submission.py" in validate_run
     assert "--issue-body-file submission-issue.md" in validate_run
     assert "--markdown-output submission-report.md" in validate_run
+    comment_script = steps["Comment validation report"]["with"]["script"]
+    assert "package-submission-validation-report" in comment_script
+    assert "listComments" in comment_script
+    assert "updateComment" in comment_script
+    assert "createComment" in comment_script
 
 
 def sample_submission_issue_body(
@@ -404,6 +410,46 @@ def test_submission_issue_body_rejects_insecure_url_and_path_escape() -> None:
         "package_path_escape",
         "repository_url_invalid",
     }
+
+
+def test_submission_issue_body_rejects_empty_path_and_query_without_secret_echo() -> None:
+    issue = parse_submission_issue_body(
+        sample_submission_issue_body(
+            urls=(
+                "https://github.com\nhttps://github.com/example/email-tools.git?token=secret-value"
+            )
+        )
+    )
+
+    assert {error["code"] for error in issue.errors} == {
+        "repository_url_path_invalid",
+        "repository_url_query",
+    }
+    assert all("secret-value" not in error["message"] for error in issue.errors)
+
+
+def test_clone_repository_limits_download_behavior(tmp_path: Path, monkeypatch) -> None:
+    calls: list[tuple[list[str], dict[str, Any]]] = []
+
+    def fake_run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        calls.append((command, kwargs))
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(index_submission_module.subprocess, "run", fake_run)
+
+    result = index_submission_module.clone_repository(
+        "https://github.com/example/email-tools.git",
+        tmp_path / "checkout",
+    )
+
+    assert result == {"status": "cloned", "errors": []}
+    command, kwargs = calls[0]
+    assert "--filter" in command
+    assert command[command.index("--filter") + 1] == "blob:none"
+    assert "--no-recurse-submodules" in command
+    assert "--single-branch" in command
+    assert kwargs["env"]["GIT_LFS_SKIP_SMUDGE"] == "1"
+    assert kwargs["env"]["GIT_TERMINAL_PROMPT"] == "0"
 
 
 def test_submission_validation_uses_specpm_validate_without_package_execution(

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -163,7 +164,16 @@ def validate_public_git_url(url: str) -> list[dict[str, str]]:
         errors.append(
             submission_error(
                 "repository_url_invalid",
-                f"Repository URL must be an https URL: {url}",
+                "Repository URL must be an https URL with a hostname.",
+                field="package_urls",
+            )
+        )
+    path_parts = [part for part in parsed.path.split("/") if part]
+    if len(path_parts) < 2:
+        errors.append(
+            submission_error(
+                "repository_url_path_invalid",
+                "Repository URL must include an owner and repository path.",
                 field="package_urls",
             )
         )
@@ -171,7 +181,15 @@ def validate_public_git_url(url: str) -> list[dict[str, str]]:
         errors.append(
             submission_error(
                 "repository_url_credentials",
-                f"Repository URL must not embed credentials: {url}",
+                "Repository URL must not embed credentials.",
+                field="package_urls",
+            )
+        )
+    if parsed.params or parsed.query:
+        errors.append(
+            submission_error(
+                "repository_url_query",
+                "Repository URL must not include query parameters.",
                 field="package_urls",
             )
         )
@@ -179,7 +197,7 @@ def validate_public_git_url(url: str) -> list[dict[str, str]]:
         errors.append(
             submission_error(
                 "repository_url_fragment",
-                f"Repository URL must not include a fragment: {url}",
+                "Repository URL must not include a fragment.",
                 field="package_urls",
             )
         )
@@ -261,11 +279,17 @@ def clone_repository(url: str, checkout: Path) -> dict[str, Any]:
         "clone",
         "--depth",
         "1",
+        "--filter",
+        "blob:none",
         "--no-tags",
         "--no-recurse-submodules",
+        "--single-branch",
         url,
         str(checkout),
     ]
+    env = os.environ.copy()
+    env["GIT_LFS_SKIP_SMUDGE"] = "1"
+    env["GIT_TERMINAL_PROMPT"] = "0"
     try:
         completed = subprocess.run(
             command,
@@ -273,6 +297,7 @@ def clone_repository(url: str, checkout: Path) -> dict[str, Any]:
             capture_output=True,
             text=True,
             timeout=120,
+            env=env,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {
