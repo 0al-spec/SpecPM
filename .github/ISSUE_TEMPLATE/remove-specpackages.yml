@@ -1,0 +1,82 @@
+name: Remove SpecPackage(s)
+description: Request removal from the public SpecPM Index.
+title: "Remove SpecPackage(s): "
+labels:
+  - package-removal
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to request removal of package metadata from the public SpecPM Index.
+
+        Removal requests are maintainer-reviewed. A request does not automatically mutate the registry, delete archives, yank versions, or remove package history.
+
+        The public index is generated static metadata. Maintainers review removal requests, update `public-index/accepted-packages.yml` or related policy by pull request when appropriate, and let GitHub Pages publish the next generated `/v0` snapshot.
+
+        This form does not define `specpm publish`, remote mutation APIs, enterprise authentication, archive install behavior, package content execution, or emergency takedown automation.
+  - type: textarea
+    id: package_refs
+    attributes:
+      label: Package references
+      description: List one package ID or package reference per line.
+      placeholder: |
+        document_conversion.email_tools
+        document_conversion.email_tools@0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: removal_scope
+    attributes:
+      label: Requested removal scope
+      description: Select the requested public-index removal scope.
+      options:
+        - Package metadata from future public index snapshots
+        - Specific package version metadata from future public index snapshots
+        - Generated archive artifact from future public index snapshots
+        - Other maintainer-reviewed scope
+    validations:
+      required: true
+  - type: dropdown
+    id: reason
+    attributes:
+      label: Reason
+      description: Select the primary reason for the request.
+      options:
+        - Package owner request
+        - Invalid or obsolete metadata
+        - Policy or code-of-conduct concern
+        - Legal or licensing concern
+        - Security concern
+        - Duplicate or superseded package
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Explain the reason, affected versions, links to supporting context, and desired outcome.
+      placeholder: "Explain what should be removed from future generated index snapshots and why."
+    validations:
+      required: true
+  - type: input
+    id: requester_relationship
+    attributes:
+      label: Requester relationship
+      description: Describe your relationship to the package or concern.
+      placeholder: "Maintainer, package author, security reporter, legal contact, index maintainer, or other."
+    validations:
+      required: true
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Removal acknowledgements
+      options:
+        - label: I understand this request is reviewed by maintainers and does not automatically mutate the registry.
+          required: true
+        - label: I understand public index removal is handled by pull request or maintainer policy, not by `specpm publish` or a remote mutation API.
+          required: true
+        - label: I have included enough package IDs, versions, links, and rationale for maintainers to review the request.
+          required: true
+        - label: I am not submitting credentials, private keys, tokens, secrets, or private repository access.
+          required: true

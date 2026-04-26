@@ -52,6 +52,7 @@ SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
 GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
 ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
+REMOVE_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/remove-specpackages.yml"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
@@ -401,6 +402,35 @@ def test_add_specpackages_issue_template_matches_public_index_contract() -> None
     assert "does not define" in template_text
     for forbidden in ("password", "token", "private key", "signing key", "secret"):
         assert forbidden not in template_text
+
+
+def test_remove_specpackages_issue_template_matches_public_index_boundary() -> None:
+    loaded = load_yaml_file(REMOVE_SPECPACKAGES_ISSUE_TEMPLATE)
+    assert loaded["name"] == "Remove SpecPackage(s)"
+    assert "package-removal" in loaded["labels"]
+
+    body = loaded["body"]
+    assert isinstance(body, list)
+    fields = {item.get("id"): item for item in body if isinstance(item, dict) and "id" in item}
+    assert fields["package_refs"]["type"] == "textarea"
+    assert fields["package_refs"]["validations"]["required"] is True
+    assert fields["removal_scope"]["type"] == "dropdown"
+    assert fields["removal_scope"]["validations"]["required"] is True
+    assert fields["reason"]["type"] == "dropdown"
+    assert fields["rationale"]["validations"]["required"] is True
+    assert fields["requester_relationship"]["validations"]["required"] is True
+    assert fields["acknowledgements"]["type"] == "checkboxes"
+
+    acknowledgements = fields["acknowledgements"]["attributes"]["options"]
+    assert len(acknowledgements) >= 4
+    assert all(option["required"] is True for option in acknowledgements)
+
+    template_text = REMOVE_SPECPACKAGES_ISSUE_TEMPLATE.read_text(encoding="utf-8").lower()
+    assert "does not automatically mutate the registry" in template_text
+    assert "public-index/accepted-packages.yml" in template_text
+    assert "specpm publish" in template_text
+    assert "remote mutation api" in template_text
+    assert "package content execution" in template_text
 
 
 def test_pull_request_template_requires_motivation_and_goals() -> None:

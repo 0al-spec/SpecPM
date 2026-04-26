@@ -544,6 +544,31 @@ Acceptance:
 - Public index promotion remains a maintainer-reviewed manifest change, not a
   remote mutation API.
 
+## Phase 24. Public Index Removal Request Intake
+
+- [x] Add a GitHub Issue form for `Remove SpecPackage(s)` requests.
+- [x] Collect package IDs or `package_id@version` references, requested removal
+  scope, reason, rationale, and requester relationship.
+- [x] Include acknowledgements that removal requests are maintainer-reviewed
+  and do not automatically mutate the registry.
+- [x] Document that removals happen through reviewed manifest or policy changes
+  for future generated `/v0` snapshots.
+- [x] Keep removal intake separate from `specpm publish`, remote mutation APIs,
+  remote yanking workflows, package installation, credential intake, and
+  package execution.
+- [x] Add lightweight tests that keep the removal request form aligned with the
+  public index boundary.
+
+Acceptance:
+
+- The issue template is valid YAML and uses GitHub Issue Forms structure.
+- The form requires package references, removal scope, reason, rationale, and
+  requester relationship.
+- The form does not request credentials, tokens, private repository access,
+  signing keys, or upload permissions.
+- Documentation links removal requests to maintainer-reviewed static index
+  changes without implying automatic deletion or registry mutation.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

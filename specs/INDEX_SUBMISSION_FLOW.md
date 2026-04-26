@@ -86,6 +86,30 @@ The template intentionally does not collect enterprise credentials, private
 repository access, signing keys, upload tokens, or publish permissions. Public
 index submission is reviewable metadata intake, not a remote mutation API.
 
+## Removal Request Template
+
+The first reference removal request form lives at:
+
+```text
+.github/ISSUE_TEMPLATE/remove-specpackages.yml
+```
+
+The form collects:
+
+- one or more package IDs or `package_id@version` references;
+- requested removal scope;
+- removal reason;
+- rationale and supporting context;
+- requester relationship to the package or concern;
+- acknowledgements that removal is maintainer-reviewed and does not
+  automatically mutate the registry.
+
+Removal requests are review inputs for maintainers. A request may lead to a
+pull request that removes or changes entries in `public-index/accepted-packages.yml`
+or adjusts public index policy for future generated snapshots. It does not
+define automatic deletion, remote yanking mutation, `specpm publish`, package
+installation behavior, credential intake, or package content execution.
+
 ## Submission Validation Workflow
 
 The first reference validation workflow lives at:
@@ -316,9 +340,6 @@ intent. A submission cannot command the index, the registry, or the host.
 
 Future work may add:
 
-- promotion from validated submission issues into
-  `public-index/accepted-packages.yml`;
-- package removal request workflow;
 - namespace claim workflow;
 - enterprise registry reference implementation;
 - conformance suites for public index and enterprise registry deployments.
