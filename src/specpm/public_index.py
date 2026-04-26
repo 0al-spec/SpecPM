@@ -10,15 +10,166 @@ from specpm.core import (
     REMOTE_REGISTRY_API_VERSION,
     REMOTE_REGISTRY_SCHEMA_VERSION,
     Issue,
+    RestrictedYamlError,
     get_field,
     inspect_package,
+    load_restricted_yaml,
     pack_package,
+    resolve_inside,
     semver_key,
     validate_remote_registry_payload,
     write_json_file,
 )
 
 PUBLIC_INDEX_REPORT_SCHEMA_VERSION = 1
+PUBLIC_INDEX_MANIFEST_SCHEMA_VERSION = 1
+
+
+def generate_public_index_from_inputs(
+    package_dirs: list[Path],
+    output_dir: Path,
+    registry_url: str,
+    *,
+    manifest_path: Path | None = None,
+    root: Path | None = None,
+) -> dict[str, Any]:
+    resolved_package_dirs = [Path(package_dir) for package_dir in package_dirs]
+    if manifest_path is not None:
+        manifest = load_public_index_manifest(manifest_path, root=root)
+        if manifest["status"] != "ok":
+            return public_index_report(
+                "invalid",
+                output_dir.resolve(),
+                registry_url,
+                [],
+                manifest["errors"],
+            )
+        resolved_package_dirs.extend(Path(path) for path in manifest["package_dirs"])
+    return generate_public_index(resolved_package_dirs, output_dir, registry_url)
+
+
+def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None) -> dict[str, Any]:
+    resolved_root = (root or Path.cwd()).resolve()
+    resolved_manifest = manifest_path.resolve()
+    errors: list[dict[str, Any]] = []
+
+    if not resolved_manifest.is_file():
+        return public_index_manifest_report(
+            "invalid",
+            resolved_manifest,
+            resolved_root,
+            [],
+            [
+                public_index_error(
+                    "public_index_manifest_missing",
+                    "Public index accepted package manifest is missing.",
+                    field=str(manifest_path),
+                )
+            ],
+        )
+
+    try:
+        loaded = load_restricted_yaml(resolved_manifest, resolved_manifest.parent)
+    except RestrictedYamlError as exc:
+        return public_index_manifest_report(
+            "invalid",
+            resolved_manifest,
+            resolved_root,
+            [],
+            [issue.to_dict() for issue in exc.issues],
+        )
+
+    if not isinstance(loaded, dict):
+        errors.append(
+            public_index_error(
+                "public_index_manifest_invalid",
+                "Public index accepted package manifest must be a mapping.",
+                field=str(manifest_path),
+            )
+        )
+        return public_index_manifest_report("invalid", resolved_manifest, resolved_root, [], errors)
+
+    unknown_top_level_fields = sorted(set(loaded) - {"schemaVersion", "packages"})
+    if unknown_top_level_fields:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_field_unknown",
+                "Public index accepted package manifest contains unknown top-level fields.",
+                detail={"fields": unknown_top_level_fields},
+            )
+        )
+
+    if loaded.get("schemaVersion") != PUBLIC_INDEX_MANIFEST_SCHEMA_VERSION:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_schema_version_invalid",
+                "Public index accepted package manifest schemaVersion must be 1.",
+                field="schemaVersion",
+            )
+        )
+
+    packages = loaded.get("packages")
+    if not isinstance(packages, list) or not packages:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_packages_invalid",
+                "Public index accepted package manifest must contain a non-empty packages list.",
+                field="packages",
+            )
+        )
+        return public_index_manifest_report("invalid", resolved_manifest, resolved_root, [], errors)
+
+    package_dirs: list[Path] = []
+    for index, item in enumerate(packages):
+        field = f"packages[{index}]"
+        if not isinstance(item, dict):
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_package_invalid",
+                    "Public index manifest package entries must be mappings.",
+                    field=field,
+                )
+            )
+            continue
+
+        unknown_fields = sorted(set(item) - {"path"})
+        if unknown_fields:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_package_field_unknown",
+                    "Public index manifest package entry contains unknown fields.",
+                    field=field,
+                    detail={"fields": unknown_fields},
+                )
+            )
+
+        package_path = item.get("path")
+        if not isinstance(package_path, str) or not package_path.strip():
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_package_path_invalid",
+                    "Public index manifest package path must be a non-empty string.",
+                    field=f"{field}.path",
+                )
+            )
+            continue
+
+        resolved_package = resolve_inside(resolved_root, package_path)
+        if resolved_package is None:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_package_path_escape",
+                    "Public index manifest package path must stay inside the repository root.",
+                    field=f"{field}.path",
+                )
+            )
+            continue
+        package_dirs.append(resolved_package)
+
+    status = "invalid" if errors else "ok"
+    return public_index_manifest_report(
+        status, resolved_manifest, resolved_root, package_dirs if status == "ok" else [], errors
+    )
 
 
 def generate_public_index(
@@ -473,6 +624,23 @@ def public_index_report(
         "registry": registry_url,
         "written_count": len(written_files),
         "written_files": written_files,
+        "errors": errors,
+    }
+
+
+def public_index_manifest_report(
+    status: str,
+    manifest_path: Path,
+    root: Path,
+    package_dirs: list[Path],
+    errors: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "schemaVersion": PUBLIC_INDEX_MANIFEST_SCHEMA_VERSION,
+        "status": status,
+        "manifest": str(manifest_path),
+        "root": str(root),
+        "package_dirs": [str(package_dir) for package_dir in package_dirs],
         "errors": errors,
     }
 

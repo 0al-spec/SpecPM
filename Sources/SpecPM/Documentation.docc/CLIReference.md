@@ -85,7 +85,7 @@ packages, mutate remote state, or execute package content.
 ## Public Static Index
 
 ```bash
-specpm public-index generate <package-dir>... --output <dir> --registry <url> [--json]
+specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--json]
 ```
 
 The public index generator validates and deterministically packs package
@@ -95,8 +95,10 @@ capability search. The output can be hosted by GitHub Pages or another static
 host.
 
 The command generates metadata and mirrored deterministic archives only. It
-does not publish to a remote service, mutate GitHub issues, install packages,
-download archives as a client, or execute package content.
+can read the maintainer-reviewed `public-index/accepted-packages.yml` manifest
+used by GitHub Pages deployment. It does not publish to a remote service,
+mutate GitHub issues, install packages, download archives as a client, or
+execute package content.
 
 ## Local Public Index Service
 
@@ -107,9 +109,10 @@ make public-index-down
 ```
 
 The compose service serves generated static `/v0` registry metadata at
-`http://localhost:8081` by default. Use `SPECPM_PUBLIC_INDEX_PORT` or
-`SPECPM_PUBLIC_INDEX_REGISTRY_URL` when another local runtime needs a different
-host-visible endpoint.
+`http://localhost:8081` by default from `public-index/accepted-packages.yml`.
+Use `SPECPM_PUBLIC_INDEX_PORT`, `SPECPM_PUBLIC_INDEX_REGISTRY_URL`, or
+`SPECPM_PUBLIC_INDEX_MANIFEST` when another local runtime needs a different
+host-visible endpoint or accepted package source.
 
 ## Exit Codes
 

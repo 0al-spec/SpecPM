@@ -317,7 +317,7 @@ Golden fixture: `tests/fixtures/golden/remote-search-email-tools.json`.
 Command:
 
 ```bash
-specpm public-index generate <package-dir>... --output <dir> --registry <url> --json
+specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> --json
 ```
 
 Contract:

@@ -1,0 +1,5 @@
+# Maintainer-reviewed package directories that feed the generated public index.
+# Entries are repository-relative paths validated and packed as untrusted data.
+schemaVersion: 1
+packages:
+  - path: examples/email_tools

@@ -30,6 +30,7 @@ scope:
     - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
+    - Track maintainer-reviewed accepted package directories for generated public index deployment.
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
@@ -95,6 +96,9 @@ provides:
     - id: specpm.registry.public_static_index
       role: secondary
       summary: Generate static /v0 public index metadata and deterministic archives for read-only hosting.
+    - id: specpm.registry.public_index_accepted_manifest
+      role: secondary
+      summary: Track reviewed repository-relative package directories that feed generated public index deployment.
     - id: specpm.registry.local_dev_service
       role: secondary
       summary: Serve generated public index metadata locally for SpecGraph, ContextBuilder, and manual integration testing.
@@ -203,7 +207,7 @@ interfaces:
             - text/plain
     - id: cli_public-index
       kind: cli
-      summary: specpm public-index generate for static read-only /v0 registry metadata output.
+      summary: specpm public-index generate for static read-only /v0 registry metadata output from package directories or an accepted package manifest.
       outputs:
         - name: public_index_generator_report
           mediaTypes:
@@ -253,6 +257,9 @@ interfaces:
     - id: public_index_static_site
       kind: file
       summary: Static /v0 public index metadata and deterministic package archives.
+    - id: public_index_accepted_manifest
+      kind: file
+      summary: Maintainer-reviewed repository-relative package directories that feed generated public index output.
     - id: local_public_index_service
       kind: http
       summary: Serves generated read-only public index metadata on a local development port.
@@ -260,7 +267,7 @@ effects:
   sideEffects:
     - id: read_package_data
       kind: filesystem_read
-      summary: Reads manifests, BoundarySpecs, evidence, foreign artifacts, implementation bindings, indexes, locks, and inbox bundles.
+      summary: Reads manifests, BoundarySpecs, evidence, foreign artifacts, implementation bindings, indexes, locks, inbox bundles, and accepted public-index package lists.
     - id: write_local_artifacts
       kind: filesystem_write
       summary: Writes deterministic archives, local index files, lockfiles, package cache metadata, and DocC build output.
@@ -362,8 +369,15 @@ evidence:
     path: src/specpm/public_index.py
     supports:
       - specpm.registry.public_static_index
+      - specpm.registry.public_index_accepted_manifest
       - specpm.registry.local_dev_service
       - specpm.registry.remote_api_contract
+  - id: public_index_accepted_manifest
+    kind: package_manifest
+    path: public-index/accepted-packages.yml
+    supports:
+      - specpm.registry.public_index_accepted_manifest
+      - specpm.registry.public_pages_deployment
   - id: compose
     kind: source
     path: compose.yaml
@@ -428,6 +442,7 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.public_pages_deployment
+      - specpm.registry.public_index_accepted_manifest
 implementationBindings:
   - id: cli
     path: src/specpm/cli.py
@@ -468,6 +483,7 @@ implementationBindings:
         - src/specpm/public_index.py
       border:
         - src/specpm/cli.py
+        - public-index/accepted-packages.yml
         - scripts/serve_public_index.py
         - compose.yaml
         - Makefile

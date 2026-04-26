@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-25
+Updated: 2026-04-26
 Owner: SpecPM
 Primary source: `RFC/SpecGraph-RFC-0001.md`
 
@@ -67,7 +67,7 @@ The MVP must solve the practical local workflow first:
 
 ## 4. Non-Goals
 
-- Remote public registry hosting.
+- Remote public registry service implementation or publish APIs.
 - Package signing and trust web.
 - AI semantic search as normative resolution.
 - Full dependency solving.
@@ -81,6 +81,20 @@ The MVP must solve the practical local workflow first:
 - Package-provided prompt or generation instruction execution.
 
 These can be post-MVP tracks once the local package loop is stable.
+
+## Post-MVP Static Public Index Boundary
+
+The implemented public index path is static and read-only. Maintainers record
+accepted repository-local package directories in
+`public-index/accepted-packages.yml`; the GitHub Pages workflow validates and
+packs those packages as untrusted data, then writes generated `/v0` registry
+metadata alongside the DocC documentation site.
+
+This accepted package manifest is a reviewed input source for static
+generation. It is not a remote mutation API, upload format, `specpm publish`,
+package installation mechanism, or package execution path. Enterprise registry
+deployments remain a separate track for private access control, audit, policy,
+namespace ownership, and authenticated storage.
 
 ## 5. Primary Users
 

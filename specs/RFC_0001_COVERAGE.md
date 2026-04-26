@@ -125,10 +125,12 @@ requirements without forcing those requirements into the public index MVP.
 The submission flow is tracked in `specs/INDEX_SUBMISSION_FLOW.md`.
 
 The first GitHub Pages deployment path is implemented through the DocC Pages
-workflow. It generates static `/v0` registry metadata into the same Pages
-artifact as the documentation site. This is static read-only hosting only; it
-does not implement a remote registry server, `specpm publish`, auth, remote
-mutation APIs, package installation, or package execution.
+workflow. It reads accepted repository-local package directories from
+`public-index/accepted-packages.yml` and generates static `/v0` registry
+metadata into the same Pages artifact as the documentation site. This is static
+read-only hosting only; it does not implement a remote registry server,
+`specpm publish`, auth, remote mutation APIs, package installation, or package
+execution.
 
 ## Deferred: Derived Artifact Generation and Artifact Evals
 

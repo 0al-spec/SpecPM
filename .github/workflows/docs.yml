@@ -12,6 +12,7 @@ on:
       - "specpm.yaml"
       - "src/specpm/**"
       - "examples/**"
+      - "public-index/**"
       - "Sources/SpecPM/**"
       - "Sources/SpecPM-docs/**"
       - "README.md"
@@ -29,6 +30,7 @@ on:
       - "specpm.yaml"
       - "src/specpm/**"
       - "examples/**"
+      - "public-index/**"
       - "Sources/SpecPM/**"
       - "Sources/SpecPM-docs/**"
       - "README.md"
@@ -78,7 +80,8 @@ jobs:
         env:
           SPECPM_PUBLIC_INDEX_REGISTRY_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
         run: |
-          python -m specpm.cli public-index generate examples/email_tools \
+          python -m specpm.cli public-index generate \
+            --manifest public-index/accepted-packages.yml \
             --output ./.docc-build \
             --registry "$SPECPM_PUBLIC_INDEX_REGISTRY_URL" \
             --json

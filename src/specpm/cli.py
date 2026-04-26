@@ -25,7 +25,7 @@ from specpm.core import (
     validate_package,
     yank_index_package,
 )
-from specpm.public_index import generate_public_index
+from specpm.public_index import generate_public_index_from_inputs
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -165,7 +165,11 @@ def build_parser() -> argparse.ArgumentParser:
     public_index_generate = public_index_subparsers.add_parser(
         "generate", help="Generate static /v0 registry metadata from package directories."
     )
-    public_index_generate.add_argument("package_dirs", nargs="+")
+    public_index_generate.add_argument("package_dirs", nargs="*")
+    public_index_generate.add_argument(
+        "--manifest",
+        help="Read accepted package directories from a repository-relative public index manifest.",
+    )
     public_index_generate.add_argument("--output", required=True)
     public_index_generate.add_argument("--registry", required=True)
     public_index_generate.add_argument("--json", action="store_true", help="Emit stable JSON.")
@@ -390,10 +394,11 @@ def handle_remote_search(args: argparse.Namespace) -> int:
 
 
 def handle_public_index_generate(args: argparse.Namespace) -> int:
-    report = generate_public_index(
+    report = generate_public_index_from_inputs(
         [Path(package_dir) for package_dir in args.package_dirs],
         Path(args.output),
         args.registry,
+        manifest_path=Path(args.manifest) if args.manifest else None,
     )
     if args.json:
         print_json(report)
