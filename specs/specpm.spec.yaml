@@ -31,6 +31,7 @@ scope:
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
+    - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
@@ -97,6 +98,9 @@ provides:
     - id: specpm.registry.local_dev_service
       role: secondary
       summary: Serve generated public index metadata locally for SpecGraph, ContextBuilder, and manual integration testing.
+    - id: specpm.registry.public_pages_deployment
+      role: secondary
+      summary: Publish generated read-only public index metadata through GitHub Pages static hosting.
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
@@ -418,6 +422,12 @@ evidence:
     path: Sources/SpecPM/Documentation.docc/SpecPM.md
     supports:
       - specpm.documentation.docc_site
+  - id: docs_pages_workflow
+    kind: source
+    path: .github/workflows/docs.yml
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.public_pages_deployment
 implementationBindings:
   - id: cli
     path: src/specpm/cli.py
@@ -469,6 +479,7 @@ implementationBindings:
     files:
       owned:
         - Sources/SpecPM/Documentation.docc/SpecPM.md
+        - .github/workflows/docs.yml
         - Sources/SpecPM/Documentation.docc/PackageModel.md
         - Sources/SpecPM/Documentation.docc/CLIReference.md
         - Sources/SpecPM/Documentation.docc/JSONContracts.md

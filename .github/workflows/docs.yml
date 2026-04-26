@@ -8,7 +8,10 @@ on:
       - "Package.swift"
       - "Package.resolved"
       - "Makefile"
+      - "pyproject.toml"
       - "specpm.yaml"
+      - "src/specpm/**"
+      - "examples/**"
       - "Sources/SpecPM/**"
       - "Sources/SpecPM-docs/**"
       - "README.md"
@@ -22,7 +25,10 @@ on:
       - "Package.swift"
       - "Package.resolved"
       - "Makefile"
+      - "pyproject.toml"
       - "specpm.yaml"
+      - "src/specpm/**"
+      - "examples/**"
       - "Sources/SpecPM/**"
       - "Sources/SpecPM-docs/**"
       - "README.md"
@@ -51,6 +57,14 @@ jobs:
         with:
           xcode-version: latest-stable
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install SpecPM
+        run: python -m pip install -e ".[dev]"
+
       - name: Build Documentation
         run: |
           swift package --allow-writing-to-directory ./.docc-build \
@@ -59,6 +73,15 @@ jobs:
             --output-path ./.docc-build \
             --transform-for-static-hosting \
             --hosting-base-path SpecPM
+
+      - name: Generate public index metadata
+        env:
+          SPECPM_PUBLIC_INDEX_REGISTRY_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+        run: |
+          python -m specpm.cli public-index generate examples/email_tools \
+            --output ./.docc-build \
+            --registry "$SPECPM_PUBLIC_INDEX_REGISTRY_URL" \
+            --json
 
       - name: Add .nojekyll and index.html redirect
         run: |

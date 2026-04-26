@@ -168,6 +168,27 @@ custom server. `specpm remote status` and `specpm remote packages` provide the
 discovery surface that local SpecGraph and ContextBuilder integrations can use
 before requesting a specific package or capability.
 
+The first repository deployment uses the existing DocC GitHub Pages workflow.
+That workflow builds the DocC site into `.docc-build`, then runs:
+
+```bash
+python -m specpm.cli public-index generate examples/email_tools \
+  --output ./.docc-build \
+  --registry https://0al-spec.github.io/SpecPM \
+  --json
+```
+
+The deployed Pages artifact therefore contains both:
+
+```text
+documentation/specpm/
+v0/
+```
+
+This is still static hosting. The workflow does not accept submissions,
+publish through a remote mutation API, install packages, fetch remote archives
+as a client, or execute package content.
+
 The generator validates package directories, creates deterministic
 `specpm-tar-gzip-v0` archives, validates generated package/version/capability
 payloads against the remote registry contract, and writes static files in
