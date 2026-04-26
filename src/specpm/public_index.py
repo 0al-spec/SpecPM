@@ -22,7 +22,8 @@ from specpm.core import (
 )
 
 PUBLIC_INDEX_REPORT_SCHEMA_VERSION = 1
-PUBLIC_INDEX_MANIFEST_SCHEMA_VERSION = 1
+PUBLIC_INDEX_MANIFEST_FILE_SCHEMA_VERSION = 1
+PUBLIC_INDEX_MANIFEST_REPORT_SCHEMA_VERSION = 1
 
 
 def generate_public_index_from_inputs(
@@ -99,7 +100,7 @@ def load_public_index_manifest(manifest_path: Path, *, root: Path | None = None)
             )
         )
 
-    if loaded.get("schemaVersion") != PUBLIC_INDEX_MANIFEST_SCHEMA_VERSION:
+    if loaded.get("schemaVersion") != PUBLIC_INDEX_MANIFEST_FILE_SCHEMA_VERSION:
         errors.append(
             public_index_error(
                 "public_index_manifest_schema_version_invalid",
@@ -636,7 +637,7 @@ def public_index_manifest_report(
     errors: list[dict[str, Any]],
 ) -> dict[str, Any]:
     return {
-        "schemaVersion": PUBLIC_INDEX_MANIFEST_SCHEMA_VERSION,
+        "schemaVersion": PUBLIC_INDEX_MANIFEST_REPORT_SCHEMA_VERSION,
         "status": status,
         "manifest": str(manifest_path),
         "root": str(root),

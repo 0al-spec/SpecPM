@@ -36,6 +36,14 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 0
 
+    if (
+        args.command == "public-index"
+        and args.public_index_command == "generate"
+        and not args.package_dirs
+        and not args.manifest
+    ):
+        parser.error("public-index generate requires at least one package directory or --manifest")
+
     return args.handler(args)
 
 

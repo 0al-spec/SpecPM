@@ -10,6 +10,7 @@ import tarfile
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 
 from specpm import core as core_module
@@ -1292,6 +1293,25 @@ def test_cli_public_index_generate_accepts_reviewed_manifest(tmp_path: Path, cap
     assert exit_code == 0
     assert payload["status"] == "ok"
     assert (tmp_path / "site/v0/packages/document_conversion.email_tools/index.json").is_file()
+
+
+def test_cli_public_index_generate_requires_package_or_manifest(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    with pytest.raises(SystemExit) as error:
+        main(
+            [
+                "public-index",
+                "generate",
+                "--output",
+                str(tmp_path / "site"),
+                "--registry",
+                "https://registry.example.invalid",
+                "--json",
+            ]
+        )
+
+    captured = capsys.readouterr()
+    assert error.value.code == 2
+    assert "requires at least one package directory or --manifest" in captured.err
 
 
 def test_cli_remote_search_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
