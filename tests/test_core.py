@@ -51,6 +51,7 @@ PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
+PULL_REQUEST_TEMPLATE = ROOT / ".github/PULL_REQUEST_TEMPLATE.md"
 CONFORMANCE_CASE_KINDS = {
     "registry_lifecycle",
     "remote_registry_payload",
@@ -395,6 +396,24 @@ def test_add_specpackages_issue_template_matches_public_index_contract() -> None
     assert "does not define" in template_text
     for forbidden in ("password", "token", "private key", "signing key", "secret"):
         assert forbidden not in template_text
+
+
+def test_pull_request_template_requires_motivation_and_goals() -> None:
+    template = PULL_REQUEST_TEMPLATE.read_text(encoding="utf-8")
+
+    expected_sections = [
+        "## Motivation",
+        "## Goals",
+        "## Changes",
+        "## Validation",
+        "## Boundaries and Non-Goals",
+        "## Notes",
+    ]
+    for section in expected_sections:
+        assert section in template
+
+    assert "Do not claim checks that were not run." in template
+    assert "security boundaries" in template
 
 
 def test_package_submission_workflow_runs_only_for_submission_label() -> None:
