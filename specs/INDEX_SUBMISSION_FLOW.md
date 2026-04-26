@@ -176,6 +176,29 @@ submissions, change issue labels, publish through a remote mutation API,
 install packages, fetch remote archives as a client, or execute package
 content.
 
+## Local Public Index Service
+
+The repository includes a Docker Compose service for local integration testing:
+
+```bash
+make public-index-up
+make public-index-smoke
+make public-index-down
+```
+
+The service:
+
+- generates `.specpm/public-index` from `examples/email_tools`;
+- serves the generated static `/v0` tree at `http://localhost:8081` by default;
+- can be pointed at another host-visible URL with
+  `SPECPM_PUBLIC_INDEX_REGISTRY_URL`;
+- can use another host port with `SPECPM_PUBLIC_INDEX_PORT`.
+
+This service is intended for local SpecGraph, ContextBuilder, and manual
+ecosystem testing. It is not a remote registry server implementation and does
+not add publish, auth, signing, issue mutation, package installation, or
+package execution behavior.
+
 ## Enterprise Remote Registry
 
 Enterprise users may need a registry that is not issue-based and not public.

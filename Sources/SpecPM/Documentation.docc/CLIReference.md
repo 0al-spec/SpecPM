@@ -93,6 +93,19 @@ The command generates metadata and mirrored deterministic archives only. It
 does not publish to a remote service, mutate GitHub issues, install packages,
 download archives as a client, or execute package content.
 
+## Local Public Index Service
+
+```bash
+make public-index-up
+make public-index-smoke
+make public-index-down
+```
+
+The compose service serves generated static `/v0` registry metadata at
+`http://localhost:8081` by default. Use `SPECPM_PUBLIC_INDEX_PORT` or
+`SPECPM_PUBLIC_INDEX_REGISTRY_URL` when another local runtime needs a different
+host-visible endpoint.
+
 ## Exit Codes
 
 The CLI exit code contract is documented in `specs/CLI_EXIT_CODES.md`.

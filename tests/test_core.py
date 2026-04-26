@@ -45,6 +45,7 @@ GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
 ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
+COMPOSE_FILE = ROOT / "compose.yaml"
 CONFORMANCE_CASE_KINDS = {
     "registry_lifecycle",
     "remote_registry_payload",
@@ -354,6 +355,18 @@ def test_package_submission_workflow_runs_only_for_submission_label() -> None:
     assert "listComments" in comment_script
     assert "updateComment" in comment_script
     assert "createComment" in comment_script
+
+
+def test_public_index_compose_service_exposes_local_registry() -> None:
+    loaded = load_yaml_file(COMPOSE_FILE)
+    service = loaded["services"]["public-index"]
+
+    assert service["image"] == "specpm:dev"
+    assert "${SPECPM_PUBLIC_INDEX_PORT:-8081}:8081" in service["ports"]
+    assert service["entrypoint"] == ["python", "scripts/serve_public_index.py"]
+    assert service["environment"]["SPECPM_PUBLIC_INDEX_PORT"] == (
+        "${SPECPM_PUBLIC_INDEX_PORT:-8081}"
+    )
 
 
 def sample_submission_issue_body(
@@ -972,7 +985,7 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
             "--output",
             str(tmp_path / "site"),
             "--registry",
-            "https://0al-spec.github.io/SpecPM",
+            "http://localhost:8081",
             "--json",
         ]
     )

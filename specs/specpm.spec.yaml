@@ -30,6 +30,7 @@ scope:
     - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
+    - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Build and deploy DocC documentation for the package contract.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
@@ -91,6 +92,9 @@ provides:
     - id: specpm.registry.public_static_index
       role: secondary
       summary: Generate static /v0 public index metadata and deterministic archives for read-only hosting.
+    - id: specpm.registry.local_dev_service
+      role: secondary
+      summary: Serve generated public index metadata locally for SpecGraph, ContextBuilder, and manual integration testing.
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
@@ -241,6 +245,9 @@ interfaces:
     - id: public_index_static_site
       kind: file
       summary: Static /v0 public index metadata and deterministic package archives.
+    - id: local_public_index_service
+      kind: http
+      summary: Serves generated read-only public index metadata on a local development port.
 effects:
   sideEffects:
     - id: read_package_data
@@ -344,7 +351,23 @@ evidence:
     path: src/specpm/public_index.py
     supports:
       - specpm.registry.public_static_index
+      - specpm.registry.local_dev_service
       - specpm.registry.remote_api_contract
+  - id: compose
+    kind: source
+    path: compose.yaml
+    supports:
+      - specpm.registry.local_dev_service
+  - id: public_index_service_script
+    kind: source
+    path: scripts/serve_public_index.py
+    supports:
+      - specpm.registry.local_dev_service
+  - id: makefile
+    kind: source
+    path: Makefile
+    supports:
+      - specpm.registry.local_dev_service
   - id: rfc_coverage
     kind: documentation
     path: specs/RFC_0001_COVERAGE.md
@@ -421,6 +444,9 @@ implementationBindings:
         - src/specpm/public_index.py
       border:
         - src/specpm/cli.py
+        - scripts/serve_public_index.py
+        - compose.yaml
+        - Makefile
         - specs/INDEX_SUBMISSION_FLOW.md
         - specs/REMOTE_REGISTRY_API.md
         - specs/JSON_CONTRACTS.md

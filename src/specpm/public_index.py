@@ -4,7 +4,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 from specpm.core import (
     REMOTE_REGISTRY_API_VERSION,
@@ -36,11 +36,12 @@ def generate_public_index(
                 "At least one package directory is required.",
             )
         )
-    if not is_https_registry_url(registry_url):
+    if not is_allowed_public_index_registry_url(registry_url):
         errors.append(
             public_index_error(
                 "public_index_registry_url_invalid",
-                "Public index registry URL must be an https URL.",
+                "Public index registry URL must be an https URL, except localhost HTTP "
+                "development endpoints.",
                 field="registry_url",
             )
         )
@@ -349,8 +350,18 @@ def public_index_url(registry_url: str, parts: list[str]) -> str:
     return f"{base}/{path}"
 
 
-def is_https_registry_url(registry_url: str) -> bool:
-    return isinstance(registry_url, str) and registry_url.startswith("https://")
+def is_allowed_public_index_registry_url(registry_url: str) -> bool:
+    if not isinstance(registry_url, str) or not registry_url.strip():
+        return False
+    parsed = urlparse(registry_url)
+    if parsed.scheme == "https" and parsed.netloc and not parsed.username and not parsed.password:
+        return True
+    return (
+        parsed.scheme == "http"
+        and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+        and not parsed.username
+        and not parsed.password
+    )
 
 
 def relative_output_path(output_dir: Path, path: Path) -> str:

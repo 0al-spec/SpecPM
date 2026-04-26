@@ -407,6 +407,31 @@ Acceptance:
 - The command does not contact a remote registry, change GitHub issues, publish
   through a mutation API, install packages, or execute package content.
 
+## Phase 19. Local Public Index Service
+
+- [x] Add a Docker Compose `public-index` service for local read-only registry
+  testing.
+- [x] Generate `.specpm/public-index` before serving the static `/v0` tree.
+- [x] Serve the generated public index at `http://localhost:8081` by default.
+- [x] Add Make targets for `public-index-generate`, `public-index-up`,
+  `public-index-smoke`, and `public-index-down`.
+- [x] Allow local endpoint overrides with `SPECPM_PUBLIC_INDEX_PORT` and
+  `SPECPM_PUBLIC_INDEX_REGISTRY_URL`.
+- [x] Allow the generator to use localhost HTTP development registry URLs while
+  still rejecting non-local insecure HTTP URLs.
+- [x] Add tests for the compose service contract and localhost generator
+  behavior.
+- [x] Document the local service as an integration point for SpecGraph,
+  ContextBuilder, and manual ecosystem testing.
+
+Acceptance:
+
+- `make public-index-up` starts a local static registry service.
+- `make public-index-smoke` can read the service through the existing
+  read-only remote metadata client.
+- The generated local service remains read-only and does not add publish, auth,
+  signing, issue mutation, package installation, or package execution behavior.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -461,6 +486,8 @@ Future work may explore:
 - Package removal request workflow.
 - Namespace claim workflow.
 - GitHub Pages deployment automation for generated public index output.
+- SpecGraph and ContextBuilder local ecosystem smoke flow against the local
+  public index service.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

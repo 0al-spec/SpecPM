@@ -24,6 +24,22 @@ docker compose run --rm specpm inspect examples/email_tools --json
 docker compose run --rm specpm pack examples/email_tools -o /tmp/email_tools.specpm.tgz --json
 ```
 
+Run the local public index service:
+
+```bash
+make public-index-up
+make public-index-smoke
+```
+
+The compose service exposes a local read-only public index at
+`http://localhost:8081`. It regenerates `.specpm/public-index` from the example
+package and serves the static `/v0` registry tree for manual testing and local
+SpecGraph or ContextBuilder integration.
+
+```bash
+make public-index-down
+```
+
 Use the repository quality gates before opening or merging changes:
 
 ```bash
