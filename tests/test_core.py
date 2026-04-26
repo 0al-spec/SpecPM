@@ -225,6 +225,36 @@ def copy_email_package(tmp_path: Path, name: str) -> Path:
     return package
 
 
+def update_email_package(
+    package: Path,
+    *,
+    package_id: str | None = None,
+    package_name: str | None = None,
+    version: str | None = None,
+    capability_id: str | None = None,
+) -> None:
+    manifest_path = package / "specpm.yaml"
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    manifest = load_yaml_file(manifest_path)
+    spec = load_yaml_file(spec_path)
+
+    if package_id is not None:
+        manifest["metadata"]["id"] = package_id
+    if package_name is not None:
+        manifest["metadata"]["name"] = package_name
+    if version is not None:
+        manifest["metadata"]["version"] = version
+        spec["metadata"]["version"] = version
+    if capability_id is not None:
+        manifest["index"]["provides"]["capabilities"] = [capability_id]
+        spec["metadata"]["id"] = capability_id
+        spec["provides"]["capabilities"][0]["id"] = capability_id
+        spec["evidence"][0]["supports"] = [f"provides.capabilities.{capability_id}"]
+
+    write_yaml_file(manifest_path, manifest)
+    write_yaml_file(spec_path, spec)
+
+
 def run_cli_json(args: list[str], capsys, expected_exit: int = 0) -> dict[str, Any]:  # type: ignore[no-untyped-def]
     exit_code = main(args)
     captured = capsys.readouterr()
@@ -974,6 +1004,80 @@ def test_public_index_generate_rejects_duplicate_version_conflict(tmp_path: Path
     assert report["status"] == "invalid"
     assert issue_codes(report["errors"]) == {"public_index_duplicate_package_conflict"}
     assert not output.exists()
+
+
+def test_public_index_generate_replaces_stale_v0_output(tmp_path: Path) -> None:
+    first = copy_email_package(tmp_path, "first")
+    second = copy_email_package(tmp_path, "second")
+    update_email_package(
+        second,
+        package_id="document_conversion.text_tools",
+        package_name="Text Tools",
+        capability_id="document_conversion.email_to_text",
+    )
+    output = tmp_path / "site"
+
+    first_report = generate_public_index([first], output, "https://registry.example.invalid")
+    second_report = generate_public_index([second], output, "https://registry.example.invalid")
+
+    assert first_report["status"] == "ok"
+    assert second_report["status"] == "ok"
+    assert not (output / "v0/packages/document_conversion.email_tools/index.json").exists()
+    assert not (
+        output / "v0/capabilities/document_conversion.email_to_markdown/packages/index.json"
+    ).exists()
+    assert (output / "v0/packages/document_conversion.text_tools/index.json").is_file()
+    assert (
+        output / "v0/capabilities/document_conversion.email_to_text/packages/index.json"
+    ).is_file()
+
+
+def test_public_index_generate_rejects_malformed_registry_urls(tmp_path: Path) -> None:
+    package = ROOT / "examples/email_tools"
+    bad_urls = [
+        "https://",
+        "https://user:secret@registry.example.invalid",
+        "https://registry.example.invalid?token=secret-value",
+        "https://registry.example.invalid#fragment",
+        "http://registry.example.invalid",
+    ]
+
+    for index, registry_url in enumerate(bad_urls):
+        output = tmp_path / f"site-{index}"
+        report = generate_public_index([package], output, registry_url)
+
+        assert report["status"] == "invalid", registry_url
+        assert issue_codes(report["errors"]) == {"public_index_registry_url_invalid"}
+        assert not output.exists()
+        assert all("secret-value" not in error["message"] for error in report["errors"])
+
+
+def test_public_index_generate_prefers_stable_release_for_latest_version(
+    tmp_path: Path,
+) -> None:
+    prerelease = copy_email_package(tmp_path, "prerelease")
+    stable = copy_email_package(tmp_path, "stable")
+    update_email_package(prerelease, version="1.0.0-rc.1")
+    update_email_package(stable, version="1.0.0")
+    output = tmp_path / "site"
+
+    report = generate_public_index(
+        [prerelease, stable],
+        output,
+        "https://registry.example.invalid",
+    )
+
+    package_payload = json.loads(
+        (output / "v0/packages/document_conversion.email_tools/index.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert report["status"] == "ok"
+    assert package_payload["package"]["latest_version"] == "1.0.0"
+    assert [item["version"] for item in package_payload["package"]["versions"]] == [
+        "1.0.0-rc.1",
+        "1.0.0",
+    ]
 
 
 def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]

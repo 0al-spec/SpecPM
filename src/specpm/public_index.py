@@ -320,16 +320,43 @@ def write_public_index_payloads(output_dir: Path, payloads: list[dict[str, Any]]
 
 def copy_public_index_output(staging_output: Path, output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(staging_output, output_dir, dirs_exist_ok=True)
+    output_v0 = output_dir / "v0"
+    if output_v0.exists():
+        shutil.rmtree(output_v0)
+    shutil.copytree(staging_output / "v0", output_v0)
 
 
-def public_index_package_sort_key(package: dict[str, Any]) -> tuple[str, tuple[int, int, int], str]:
-    version_key = semver_key(package.get("version")) or (0, 0, 0)
-    return (package["package_id"], version_key, package["version"])
+def public_index_package_sort_key(
+    package: dict[str, Any],
+) -> tuple[str, tuple[tuple[int, int, int], int, tuple[tuple[int, int | str], ...], str]]:
+    return (package["package_id"], public_index_semver_key(package.get("version")))
 
 
-def public_index_latest_key(package: dict[str, Any]) -> tuple[tuple[int, int, int], str]:
-    return (semver_key(package.get("version")) or (0, 0, 0), package["version"])
+def public_index_latest_key(
+    package: dict[str, Any],
+) -> tuple[tuple[int, int, int], int, tuple[tuple[int, int | str], ...], str]:
+    return public_index_semver_key(package.get("version"))
+
+
+def public_index_semver_key(
+    version: Any,
+) -> tuple[tuple[int, int, int], int, tuple[tuple[int, int | str], ...], str]:
+    base_version = semver_key(version) or (0, 0, 0)
+    if not isinstance(version, str):
+        return (base_version, 1, (), "")
+
+    public_version = version.split("+", 1)[0]
+    if "-" not in public_version:
+        return (base_version, 1, (), version)
+
+    prerelease = public_version.split("-", 1)[1]
+    identifiers: list[tuple[int, int | str]] = []
+    for identifier in prerelease.split("."):
+        if identifier.isdigit():
+            identifiers.append((0, int(identifier)))
+        else:
+            identifiers.append((1, identifier))
+    return (base_version, 0, tuple(identifiers), version)
 
 
 def package_payload_path(package_id: str) -> str:
@@ -353,8 +380,10 @@ def public_index_url(registry_url: str, parts: list[str]) -> str:
 def is_allowed_public_index_registry_url(registry_url: str) -> bool:
     if not isinstance(registry_url, str) or not registry_url.strip():
         return False
-    parsed = urlparse(registry_url)
-    if parsed.scheme == "https" and parsed.netloc and not parsed.username and not parsed.password:
+    parsed = urlparse(registry_url.strip())
+    if parsed.username or parsed.password or parsed.params or parsed.query or parsed.fragment:
+        return False
+    if parsed.scheme == "https" and parsed.netloc:
         return True
     return (
         parsed.scheme == "http"
