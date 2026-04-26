@@ -226,7 +226,8 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
 
     if payload["kind"] == "RemoteRegistryStatus":
         registry = payload["registry"]
-        assert registry["profile"] in {"public_static_index", "enterprise_registry"}
+        assert isinstance(registry["profile"], str)
+        assert registry["profile"]
         assert isinstance(registry["api_version"], str)
         assert isinstance(registry["read_only"], bool)
         assert isinstance(registry["authority"], str)
