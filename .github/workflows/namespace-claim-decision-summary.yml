@@ -1,0 +1,146 @@
+name: Namespace Claim Decision Summary
+
+"on":
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  summarize-namespace-claim-decisions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build namespace claim decision summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+
+            const decisionLabels = [
+              "namespace:accepted",
+              "namespace:rejected",
+              "namespace:contested",
+              "namespace:superseded"
+            ];
+            const policyPath = "specs/NAMESPACE_CLAIM_POLICY.md";
+            const outputDir = "namespace-claim-decision-summary";
+            fs.mkdirSync(outputDir, { recursive: true });
+
+            const { data: repository } = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const policyUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${repository.default_branch}/${policyPath}`;
+
+            async function searchDecisionIssues(label) {
+              const q = `repo:${context.repo.owner}/${context.repo.repo} type:issue label:"namespace-claim" label:"${label}"`;
+              const items = [];
+              let page = 1;
+
+              while (true) {
+                const { data } = await github.rest.search.issuesAndPullRequests({
+                  q,
+                  sort: "updated",
+                  order: "desc",
+                  per_page: 100,
+                  page
+                });
+
+                for (const item of data.items) {
+                  items.push({
+                    number: item.number,
+                    title: item.title,
+                    state: item.state,
+                    html_url: item.html_url,
+                    updated_at: item.updated_at,
+                    labels: (item.labels || []).map((issueLabel) =>
+                      typeof issueLabel === "string" ? issueLabel : issueLabel.name
+                    )
+                  });
+                }
+
+                if (data.items.length < 100) {
+                  break;
+                }
+
+                page += 1;
+              }
+
+              return items;
+            }
+
+            const byDecisionLabel = {};
+            for (const label of decisionLabels) {
+              byDecisionLabel[label] = await searchDecisionIssues(label);
+            }
+
+            const seen = new Map();
+            for (const issues of Object.values(byDecisionLabel)) {
+              for (const issue of issues) {
+                seen.set(issue.number, issue);
+              }
+            }
+
+            const ambiguous = [...seen.values()].filter((issue) => {
+              const activeDecisionLabels = decisionLabels.filter((label) => issue.labels.includes(label));
+              return activeDecisionLabels.length > 1;
+            });
+
+            const report = {
+              generated_at: new Date().toISOString(),
+              repository: `${context.repo.owner}/${context.repo.repo}`,
+              policy_url: policyUrl,
+              decision_labels: decisionLabels,
+              counts: Object.fromEntries(
+                decisionLabels.map((label) => [label, byDecisionLabel[label].length])
+              ),
+              ambiguous_count: ambiguous.length,
+              by_decision_label: byDecisionLabel,
+              ambiguous
+            };
+
+            const markdown = [
+              "# Namespace Claim Decision Summary",
+              "",
+              `Generated at: ${report.generated_at}`,
+              "",
+              `Policy: [Public Index Namespace Claim Policy](${policyUrl})`,
+              "",
+              "## Counts",
+              "",
+              "| Decision label | Issues |",
+              "| --- | ---: |",
+              ...decisionLabels.map((label) => `| \`${label}\` | ${byDecisionLabel[label].length} |`),
+              `| ambiguous decision labels | ${ambiguous.length} |`,
+              "",
+              "## Ambiguous Issues",
+              "",
+              ...(ambiguous.length === 0
+                ? ["No namespace claim issues currently have multiple decision labels."]
+                : ambiguous.map((issue) => `- #${issue.number} [${issue.title}](${issue.html_url})`)),
+              "",
+              "This summary is read-only. It does not apply labels, decide claims, edit `public-index/accepted-packages.yml`, generate registry metadata, publish packages, install packages, or execute package content.",
+              ""
+            ].join("\n");
+
+            fs.writeFileSync(
+              path.join(outputDir, "namespace-claim-decision-summary.json"),
+              JSON.stringify(report, null, 2) + "\n",
+              "utf8"
+            );
+            fs.writeFileSync(
+              path.join(outputDir, "namespace-claim-decision-summary.md"),
+              markdown,
+              "utf8"
+            );
+            await core.summary.addRaw(markdown).write();
+
+      - name: Upload namespace claim decision summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: namespace-claim-decision-summary
+          path: namespace-claim-decision-summary/

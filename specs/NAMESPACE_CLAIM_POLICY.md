@@ -1,7 +1,7 @@
 # Public Index Namespace Claim Policy
 
 Status: Draft
-Updated: 2026-04-27
+Updated: 2026-04-28
 Scope: public SpecPM Index namespace claim review
 
 ## Purpose
@@ -116,6 +116,25 @@ update any existing report to state that no current decision label is present.
 
 The workflow must not grant namespace ownership, approve packages, edit
 `public-index/accepted-packages.yml`, generate registry metadata, publish
+packages, install packages, execute package content, or treat package content
+as trusted instructions.
+
+## Decision Summary Aggregation
+
+The repository may use a read-only GitHub Actions workflow to aggregate current
+namespace claim decision labels:
+
+```text
+.github/workflows/namespace-claim-decision-summary.yml
+```
+
+The workflow may run manually or on a schedule, query public namespace claim
+issues, count current decision labels, detect ambiguous issues with multiple
+decision labels, write a workflow summary, and upload JSON/Markdown artifacts.
+
+The workflow must use read-only repository and issue permissions. It must not
+apply labels, comment on issues, grant namespace ownership, approve packages,
+edit `public-index/accepted-packages.yml`, generate registry metadata, publish
 packages, install packages, execute package content, or treat package content
 as trusted instructions.
 

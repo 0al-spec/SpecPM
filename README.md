@@ -139,7 +139,9 @@ Namespace claim review criteria, labels, outcomes, and dispute handling are
 documented in `specs/NAMESPACE_CLAIM_POLICY.md`; the optional triage workflow
 for namespace claim labels is `.github/workflows/namespace-claim-triage.yml`,
 and the optional maintainer decision report workflow is
-`.github/workflows/namespace-claim-decision-report.yml`.
+`.github/workflows/namespace-claim-decision-report.yml`. Read-only scheduled or
+manual aggregation of namespace claim decisions is available through
+`.github/workflows/namespace-claim-decision-summary.yml`.
 `specpm public-index generate` emits static read-only `/v0` registry metadata
 and deterministic package archives for GitHub Pages-style hosting. The checked-in
 accepted package source for Pages is `public-index/accepted-packages.yml`; it is

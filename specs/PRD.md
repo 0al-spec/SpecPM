@@ -121,7 +121,10 @@ review labels and policy notes, but it must not accept or reject claims, edit
 accepted package sources, generate registry metadata, publish packages, install
 packages, or execute package content. Namespace claim decision report
 automation may report maintainer-applied decision labels, but it must not apply
-terminal decision labels by itself.
+terminal decision labels by itself. Namespace claim decision aggregation may
+produce read-only workflow summaries and artifacts, but it must not mutate
+issues, public index sources, generated registry metadata, packages, or package
+content.
 
 ## 5. Primary Users
 
