@@ -643,6 +643,34 @@ Acceptance:
 - The workflow is idempotent for comments and conservative for review status
   labels.
 
+## Phase 28. Public Index Namespace Claim Decision Reports
+
+- [x] Add a GitHub Actions workflow for namespace claim decision reports.
+- [x] Report maintainer-applied decision labels for accepted, rejected,
+  contested, and superseded namespace claims.
+- [x] Skip creating new reports when no namespace claim decision label is
+  present and no previous report exists.
+- [x] Update existing reports when decision labels are removed.
+- [x] Report ambiguity when multiple decision labels are present.
+- [x] Post or update an idempotent decision report comment that links to
+  `specs/NAMESPACE_CLAIM_POLICY.md`.
+- [x] Keep decision report automation separate from applying terminal decision
+  labels, editing `public-index/accepted-packages.yml`, generating registry
+  metadata, publishing packages, installing packages, and executing package
+  content.
+- [x] Add workflow-shape tests that keep report-only behavior explicit.
+
+Acceptance:
+
+- The workflow only runs for namespace claim issues.
+- The workflow has repository read and issue write permissions only.
+- The workflow reports maintainer-applied labels and does not decide claims.
+- The workflow is idempotent for comments and paginates marker lookup.
+- The workflow does not leave stale decision reports after decision labels are
+  removed.
+- The workflow has no runtime, schema, CLI, JSON contract, auth, registry
+  mutation, or package execution changes.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -693,7 +721,7 @@ Future work may explore:
 
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
-- Namespace claim decision automation reports.
+- Namespace claim decision report aggregation.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

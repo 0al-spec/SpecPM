@@ -117,7 +117,9 @@ Namespace claim review criteria and dispute handling are documented in
 `specs/NAMESPACE_CLAIM_POLICY.md`. Namespace claim label automation may prepare
 review labels and policy notes, but it must not accept or reject claims, edit
 accepted package sources, generate registry metadata, publish packages, install
-packages, or execute package content.
+packages, or execute package content. Namespace claim decision report
+automation may report maintainer-applied decision labels, but it must not apply
+terminal decision labels by itself.
 
 ## 5. Primary Users
 

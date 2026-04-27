@@ -30,6 +30,7 @@ index:
       - specpm.registry.namespace_claim_request_flow
       - specpm.registry.namespace_claim_policy
       - specpm.registry.namespace_claim_label_triage
+      - specpm.registry.namespace_claim_decision_reports
       - specpm.registry.remote_readonly_client
       - specpm.registry.public_static_index
       - specpm.registry.public_index_accepted_manifest
