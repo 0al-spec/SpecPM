@@ -57,6 +57,9 @@ CLAIM_NAMESPACE_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/claim-namespace.
 NAMESPACE_CLAIM_POLICY = ROOT / "specs/NAMESPACE_CLAIM_POLICY.md"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 NAMESPACE_CLAIM_TRIAGE_WORKFLOW = ROOT / ".github/workflows/namespace-claim-triage.yml"
+NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW = (
+    ROOT / ".github/workflows/namespace-claim-decision-report.yml"
+)
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
@@ -484,6 +487,7 @@ def test_namespace_claim_policy_documents_review_boundary() -> None:
     assert "does not automatically grant exclusive namespace ownership" in policy_text
     assert "not a machine-enforced ownership contract" in policy_text
     assert ".github/workflows/namespace-claim-triage.yml" in policy_text
+    assert ".github/workflows/namespace-claim-decision-report.yml" in policy_text
     assert "public-index/accepted-packages.yml" in policy_text
     assert "reviewed pull request" in policy_text
     assert "specpm publish" in policy_text
@@ -573,6 +577,49 @@ def test_namespace_claim_triage_workflow_applies_review_labels_only() -> None:
     assert "does not grant namespace ownership" in script
     assert "public-index/accepted-packages.yml" in script
     for forbidden in ("specpm publish", "public-index generate", "validate_index_submission.py"):
+        assert forbidden not in script
+
+
+def test_namespace_claim_decision_report_workflow_is_report_only() -> None:
+    loaded = load_yaml_file(NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW)
+
+    assert loaded["name"] == "Namespace Claim Decision Report"
+    assert loaded["permissions"] == {"contents": "read", "issues": "write"}
+    assert loaded["on"]["issues"]["types"] == [
+        "opened",
+        "edited",
+        "reopened",
+        "labeled",
+        "unlabeled",
+    ]
+
+    job = loaded["jobs"]["report-namespace-claim-decision"]
+    assert "namespace-claim" in job["if"]
+    steps = {step["name"]: step for step in job["steps"] if "name" in step}
+    assert "Report namespace claim decision label" in steps
+
+    script = steps["Report namespace claim decision label"]["with"]["script"]
+    for decision_label in (
+        "namespace:accepted",
+        "namespace:rejected",
+        "namespace:contested",
+        "namespace:superseded",
+    ):
+        assert decision_label in script
+    assert "namespace-claim-decision-report" in script
+    assert "No namespace claim decision label is present" in script
+    assert "github.rest.repos.get" in script
+    assert "repository.default_branch" in script
+    assert "policyUrl" in script
+    assert "listComments" in script
+    assert "page += 1" in script
+    assert 'comment.user?.login === "github-actions[bot]"' in script
+    assert "updateComment" in script
+    assert "createComment" in script
+    assert "maintainer-applied issue label" in script
+    assert "does not apply terminal decision labels by itself" in script
+    assert "public-index/accepted-packages.yml" in script
+    for forbidden in ("addLabels", "createLabel", "specpm publish", "public-index generate"):
         assert forbidden not in script
 
 

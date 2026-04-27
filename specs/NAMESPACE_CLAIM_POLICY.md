@@ -91,6 +91,32 @@ decision labels by itself, edit `public-index/accepted-packages.yml`, generate
 registry metadata, publish packages, install packages, execute package content,
 or treat package content as trusted instructions.
 
+## Decision Report Automation
+
+The repository may use a second conservative GitHub Actions workflow to report
+maintainer-applied namespace claim decision labels:
+
+```text
+.github/workflows/namespace-claim-decision-report.yml
+```
+
+The workflow may read current issue labels and post or update an idempotent
+decision report when one of these labels is present:
+
+- `namespace:accepted`;
+- `namespace:rejected`;
+- `namespace:contested`;
+- `namespace:superseded`.
+
+The workflow must not apply terminal decision labels by itself. It only records
+the current maintainer-applied label in a review comment and links back to this
+policy.
+
+The workflow must not grant namespace ownership, approve packages, edit
+`public-index/accepted-packages.yml`, generate registry metadata, publish
+packages, install packages, execute package content, or treat package content
+as trusted instructions.
+
 ## Review Criteria
 
 Maintainers should consider:
