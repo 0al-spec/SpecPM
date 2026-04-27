@@ -136,6 +136,12 @@ authentication, authorization, enterprise namespace governance, `specpm
 publish`, remote mutation APIs, package installation behavior, credential
 intake, or package content execution.
 
+Review labels, criteria, outcomes, and dispute handling are documented in:
+
+```text
+specs/NAMESPACE_CLAIM_POLICY.md
+```
+
 ## Submission Validation Workflow
 
 The first reference validation workflow lives at:
@@ -366,6 +372,6 @@ intent. A submission cannot command the index, the registry, or the host.
 
 Future work may add:
 
-- namespace claim review policy and dispute process;
+- namespace claim label automation;
 - enterprise registry reference implementation;
 - conformance suites for public index and enterprise registry deployments.

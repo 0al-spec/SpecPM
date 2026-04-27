@@ -64,11 +64,13 @@ form is available in `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, the
 reference namespace claim form is available in
 `.github/ISSUE_TEMPLATE/claim-namespace.yml`, and the reference issue
 validation workflow is available in
-`.github/workflows/package-submission-check.yml`. Static registry metadata can
-be generated with `specpm public-index generate`. The next useful registry
-increment is namespace claim review policy and dispute handling for the public
-static index. Enterprise registry work should remain available for private
-packages, auth, audit, policy, and internal namespace ownership.
+`.github/workflows/package-submission-check.yml`. Namespace claim review
+criteria and dispute handling are documented in
+`specs/NAMESPACE_CLAIM_POLICY.md`. Static registry metadata can be generated
+with `specpm public-index generate`. The next useful registry increment is
+namespace claim label automation for the public static index. Enterprise
+registry work should remain available for private packages, auth, audit,
+policy, and internal namespace ownership.
 
 `specpm publish`, auth, signing, namespace governance, and remote yanking
 mutation workflows remain separate follow-up tracks unless they are scoped to
