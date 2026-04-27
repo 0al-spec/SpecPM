@@ -135,6 +135,8 @@ form is `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, the reference
 namespace claim form is `.github/ISSUE_TEMPLATE/claim-namespace.yml`, and the
 reference submission validation workflow is
 `.github/workflows/package-submission-check.yml`.
+Namespace claim review criteria, labels, outcomes, and dispute handling are
+documented in `specs/NAMESPACE_CLAIM_POLICY.md`.
 `specpm public-index generate` emits static read-only `/v0` registry metadata
 and deterministic package archives for GitHub Pages-style hosting. The checked-in
 accepted package source for Pages is `public-index/accepted-packages.yml`; it is

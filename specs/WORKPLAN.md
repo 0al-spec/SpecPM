@@ -596,6 +596,30 @@ Acceptance:
   index policy without implying automatic ownership, authentication, or
   registry mutation.
 
+## Phase 26. Public Index Namespace Claim Review Policy
+
+- [x] Add a public index namespace claim review policy document.
+- [x] Define recommended review labels for needs-info, under-review, accepted,
+  rejected, contested, and superseded claim states.
+- [x] Define maintainer review criteria based on public evidence, namespace
+  shape, conflicts, validation status, confusion risk, and policy concerns.
+- [x] Define accepted, rejected, and contested claim outcomes.
+- [x] Document a public dispute process for competing namespace claims.
+- [x] Keep the policy separate from namespace ownership enforcement,
+  authentication, authorization, enterprise namespace governance, remote
+  mutation APIs, package signing, package installation, and package execution.
+- [x] Add lightweight tests that keep the policy boundary explicit.
+
+Acceptance:
+
+- The policy is documented in `specs/NAMESPACE_CLAIM_POLICY.md`.
+- The policy explains that namespace claims are public-index review evidence,
+  not a machine-enforced ownership contract.
+- The policy records how claims may be cited from reviewed accepted-source pull
+  requests without directly editing `public-index/accepted-packages.yml`.
+- The policy has no runtime, schema, CLI, JSON contract, auth, or package
+  execution changes.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -646,7 +670,7 @@ Future work may explore:
 
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
-- Namespace claim review policy and dispute process.
+- Namespace claim label automation.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

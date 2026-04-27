@@ -54,6 +54,7 @@ CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.jso
 ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
 REMOVE_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/remove-specpackages.yml"
 CLAIM_NAMESPACE_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/claim-namespace.yml"
+NAMESPACE_CLAIM_POLICY = ROOT / "specs/NAMESPACE_CLAIM_POLICY.md"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
@@ -464,6 +465,30 @@ def test_claim_namespace_issue_template_matches_public_index_boundary() -> None:
     assert "remote mutation api" in template_text
     assert "enterprise namespace governance" in template_text
     assert "package content execution" in template_text
+
+
+def test_namespace_claim_policy_documents_review_boundary() -> None:
+    policy_text = NAMESPACE_CLAIM_POLICY.read_text(encoding="utf-8").lower()
+
+    for status_label in (
+        "namespace:needs-info",
+        "namespace:under-review",
+        "namespace:accepted",
+        "namespace:rejected",
+        "namespace:contested",
+        "namespace:superseded",
+    ):
+        assert status_label in policy_text
+
+    assert "does not automatically grant exclusive namespace ownership" in policy_text
+    assert "not a machine-enforced ownership contract" in policy_text
+    assert "public-index/accepted-packages.yml" in policy_text
+    assert "reviewed pull request" in policy_text
+    assert "specpm publish" in policy_text
+    assert "remote mutation api" in policy_text
+    assert "authentication" in policy_text
+    assert "enterprise namespace governance" in policy_text
+    assert "package content execution" in policy_text
 
 
 def test_pull_request_template_requires_motivation_and_goals() -> None:
