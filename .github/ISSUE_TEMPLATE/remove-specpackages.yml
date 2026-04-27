@@ -32,7 +32,7 @@ body:
       options:
         - Package metadata from future public index snapshots
         - Specific package version metadata from future public index snapshots
-        - Generated archive artifact from future public index snapshots
+        - Exclude generated archive artifact from future public index snapshots only
         - Other maintainer-reviewed scope
     validations:
       required: true
