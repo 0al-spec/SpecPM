@@ -1,0 +1,86 @@
+name: Claim Namespace
+description: Request maintainer review for a public SpecPM Index namespace claim.
+title: "Claim Namespace: "
+labels:
+  - namespace-claim
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to request maintainer review for a namespace or package ID prefix in the public SpecPM Index.
+
+        Namespace claims are review inputs for maintainers. A request does not automatically grant exclusive ownership, reserve names across all registries, mutate the registry, publish packages, or approve submitted packages.
+
+        Maintainers may use approved claims as public-index review evidence, accepted package context, or future policy input. Any index change still happens through reviewed pull requests and generated static `/v0` snapshots.
+
+        This form does not define `specpm publish`, remote mutation APIs, authentication, authorization, package signing, enterprise namespace governance, archive install behavior, package content execution, or emergency takeover automation.
+  - type: input
+    id: namespace_id
+    attributes:
+      label: Namespace or package ID prefix
+      description: Provide the namespace or package ID prefix being claimed.
+      placeholder: "document_conversion"
+    validations:
+      required: true
+  - type: dropdown
+    id: claim_scope
+    attributes:
+      label: Claim scope
+      description: Select the requested public-index namespace claim scope.
+      options:
+        - Public index package ID prefix
+        - Organization or project namespace
+        - Package family namespace
+        - Other maintainer-reviewed scope
+    validations:
+      required: true
+  - type: input
+    id: claimant
+    attributes:
+      label: Claimant
+      description: Identify the organization, project, maintainer group, or individual making the claim.
+      placeholder: "Example Organization / @example-maintainer"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence_urls
+    attributes:
+      label: Public evidence URLs
+      description: List public URLs that support the namespace claim, such as project repositories, organization pages, package docs, ownership records, or prior package submissions.
+      placeholder: |
+        https://github.com/example
+        https://github.com/example/email-tools.git
+        https://example.org/specpm-packages
+    validations:
+      required: true
+  - type: textarea
+    id: intended_use
+    attributes:
+      label: Intended namespace use
+      description: Explain what packages or capability families this namespace is expected to cover.
+      placeholder: "Describe the package family, capability area, or public index submissions associated with this namespace."
+    validations:
+      required: true
+  - type: input
+    id: public_contact
+    attributes:
+      label: Public contact
+      description: Provide a public GitHub handle, team, or project contact for maintainer follow-up.
+      placeholder: "@example-maintainer"
+    validations:
+      required: true
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Namespace acknowledgements
+      options:
+        - label: I understand this request is reviewed by maintainers and does not automatically grant exclusive namespace ownership.
+          required: true
+        - label: I understand namespace claim review is handled by issue, pull request, or maintainer policy, not by `specpm publish` or a remote mutation API.
+          required: true
+        - label: I understand this request does not define authentication, authorization, package signing, enterprise namespace governance, package installation, or package content execution.
+          required: true
+        - label: I have included public evidence URLs and enough context for maintainers to review the claim.
+          required: true
+        - label: I am not submitting credentials, private keys, tokens, secrets, or private repository access.
+          required: true

@@ -29,6 +29,7 @@ scope:
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
     - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Provide a GitHub Issue form for public SpecPackage index removal requests.
+    - Provide a GitHub Issue form for public SpecPM Index namespace claim requests.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
     - Track maintainer-reviewed accepted package directories and pinned public Git sources for generated public index deployment.
@@ -94,6 +95,9 @@ provides:
     - id: specpm.registry.index_removal_request_flow
       role: secondary
       summary: Collect maintainer-reviewed public index removal requests without mutating registry state.
+    - id: specpm.registry.namespace_claim_request_flow
+      role: secondary
+      summary: Collect maintainer-reviewed public index namespace claim requests without granting ownership or mutating registry state.
     - id: specpm.registry.remote_readonly_client
       role: secondary
       summary: Fetch and validate read-only remote registry status, package index, and package metadata without downloading archives or mutating local state.
@@ -369,6 +373,12 @@ evidence:
     path: .github/ISSUE_TEMPLATE/remove-specpackages.yml
     supports:
       - specpm.registry.index_removal_request_flow
+      - specpm.registry.index_submission_flow
+  - id: claim_namespace_issue_template
+    kind: documentation
+    path: .github/ISSUE_TEMPLATE/claim-namespace.yml
+    supports:
+      - specpm.registry.namespace_claim_request_flow
       - specpm.registry.index_submission_flow
   - id: package_submission_workflow
     kind: documentation

@@ -1,7 +1,7 @@
 # SpecPM Index Submission Flow
 
 Status: Draft
-Updated: 2026-04-26
+Updated: 2026-04-27
 Scope: post-MVP public index submission and enterprise registry deployment
 
 ## Purpose
@@ -109,6 +109,32 @@ pull request that removes or changes entries in `public-index/accepted-packages.
 or adjusts public index policy for future generated snapshots. It does not
 define automatic deletion, remote yanking mutation, `specpm publish`, package
 installation behavior, credential intake, or package content execution.
+
+## Namespace Claim Template
+
+The first reference namespace claim form lives at:
+
+```text
+.github/ISSUE_TEMPLATE/claim-namespace.yml
+```
+
+The form collects:
+
+- the namespace or package ID prefix being claimed;
+- requested claim scope;
+- claimant identity;
+- public evidence URLs;
+- intended namespace use;
+- public contact for maintainer follow-up;
+- acknowledgements that the claim is maintainer-reviewed and does not
+  automatically grant exclusive namespace ownership.
+
+Namespace claim requests are review inputs for maintainers. A request may
+provide public evidence for package review, accepted package context, or future
+public index policy. It does not define automatic namespace reservation,
+authentication, authorization, enterprise namespace governance, `specpm
+publish`, remote mutation APIs, package installation behavior, credential
+intake, or package content execution.
 
 ## Submission Validation Workflow
 
@@ -340,6 +366,6 @@ intent. A submission cannot command the index, the registry, or the host.
 
 Future work may add:
 
-- namespace claim workflow;
+- namespace claim review policy and dispute process;
 - enterprise registry reference implementation;
 - conformance suites for public index and enterprise registry deployments.

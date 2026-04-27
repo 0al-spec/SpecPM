@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-26
+Updated: 2026-04-27
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -569,6 +569,33 @@ Acceptance:
 - Documentation links removal requests to maintainer-reviewed static index
   changes without implying automatic deletion or registry mutation.
 
+## Phase 25. Public Index Namespace Claim Intake
+
+- [x] Add a GitHub Issue form for `Claim Namespace` requests.
+- [x] Collect namespace or package ID prefix, claim scope, claimant identity,
+  public evidence URLs, intended use, and public contact.
+- [x] Include acknowledgements that namespace claims are maintainer-reviewed
+  and do not automatically grant exclusive namespace ownership.
+- [x] Document that namespace claims may inform package review, accepted-source
+  context, or future public index policy.
+- [x] Keep namespace claim intake separate from `specpm publish`, remote
+  mutation APIs, authentication, authorization, enterprise namespace
+  governance, package signing, package installation, credential intake, and
+  package execution.
+- [x] Add lightweight tests that keep the namespace claim form aligned with the
+  public index boundary.
+
+Acceptance:
+
+- The issue template is valid YAML and uses GitHub Issue Forms structure.
+- The form requires namespace prefix, claim scope, claimant identity, public
+  evidence URLs, intended use, public contact, and acknowledgements.
+- The form does not request credentials, tokens, private repository access,
+  signing keys, or upload permissions.
+- Documentation links namespace claim requests to maintainer-reviewed public
+  index policy without implying automatic ownership, authentication, or
+  registry mutation.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -619,8 +646,7 @@ Future work may explore:
 
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
-- Package removal request workflow.
-- Namespace claim workflow.
+- Namespace claim review policy and dispute process.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

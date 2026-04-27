@@ -53,6 +53,7 @@ GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
 ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
 REMOVE_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/remove-specpackages.yml"
+CLAIM_NAMESPACE_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/claim-namespace.yml"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
@@ -430,6 +431,38 @@ def test_remove_specpackages_issue_template_matches_public_index_boundary() -> N
     assert "public-index/accepted-packages.yml" in template_text
     assert "specpm publish" in template_text
     assert "remote mutation api" in template_text
+    assert "package content execution" in template_text
+
+
+def test_claim_namespace_issue_template_matches_public_index_boundary() -> None:
+    loaded = load_yaml_file(CLAIM_NAMESPACE_ISSUE_TEMPLATE)
+    assert loaded["name"] == "Claim Namespace"
+    assert "namespace-claim" in loaded["labels"]
+
+    body = loaded["body"]
+    assert isinstance(body, list)
+    fields = {item.get("id"): item for item in body if isinstance(item, dict) and "id" in item}
+    assert fields["namespace_id"]["type"] == "input"
+    assert fields["namespace_id"]["validations"]["required"] is True
+    assert fields["claim_scope"]["type"] == "dropdown"
+    assert fields["claim_scope"]["validations"]["required"] is True
+    assert fields["claimant"]["validations"]["required"] is True
+    assert fields["evidence_urls"]["type"] == "textarea"
+    assert fields["evidence_urls"]["validations"]["required"] is True
+    assert fields["intended_use"]["validations"]["required"] is True
+    assert fields["public_contact"]["validations"]["required"] is True
+    assert fields["acknowledgements"]["type"] == "checkboxes"
+
+    acknowledgements = fields["acknowledgements"]["attributes"]["options"]
+    assert len(acknowledgements) >= 5
+    assert all(option["required"] is True for option in acknowledgements)
+
+    template_text = CLAIM_NAMESPACE_ISSUE_TEMPLATE.read_text(encoding="utf-8").lower()
+    assert "does not automatically grant exclusive namespace ownership" in template_text
+    assert "reviewed pull requests" in template_text
+    assert "specpm publish" in template_text
+    assert "remote mutation api" in template_text
+    assert "enterprise namespace governance" in template_text
     assert "package content execution" in template_text
 
 
