@@ -73,6 +73,24 @@ The first public-index workflow may use these labels:
 These labels are workflow hints, not a machine-enforced ownership contract.
 They do not change the generated `/v0` registry by themselves.
 
+## Label Automation
+
+The repository may use a conservative GitHub Actions workflow to prepare
+namespace claim review labels:
+
+```text
+.github/workflows/namespace-claim-triage.yml
+```
+
+The workflow may ensure the recommended labels exist, apply
+`namespace:under-review` when no namespace review status label is present, and
+post or update an idempotent policy note on the issue.
+
+The workflow must not accept or reject namespace claims, apply terminal
+decision labels by itself, edit `public-index/accepted-packages.yml`, generate
+registry metadata, publish packages, install packages, execute package content,
+or treat package content as trusted instructions.
+
 ## Review Criteria
 
 Maintainers should consider:

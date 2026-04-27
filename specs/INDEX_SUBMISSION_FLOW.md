@@ -142,6 +142,19 @@ Review labels, criteria, outcomes, and dispute handling are documented in:
 specs/NAMESPACE_CLAIM_POLICY.md
 ```
 
+The optional namespace claim triage workflow lives at:
+
+```text
+.github/workflows/namespace-claim-triage.yml
+```
+
+The workflow runs for issues labeled `namespace-claim`. It ensures the
+recommended namespace review labels exist, applies `namespace:under-review`
+when no namespace review status label is present, and posts or updates an
+idempotent policy note. It does not accept or reject claims, edit
+`public-index/accepted-packages.yml`, generate registry metadata, publish
+packages, install packages, or execute package content.
+
 ## Submission Validation Workflow
 
 The first reference validation workflow lives at:
@@ -372,6 +385,6 @@ intent. A submission cannot command the index, the registry, or the host.
 
 Future work may add:
 
-- namespace claim label automation;
+- namespace claim decision automation reports;
 - enterprise registry reference implementation;
 - conformance suites for public index and enterprise registry deployments.
