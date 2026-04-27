@@ -561,7 +561,13 @@ def test_namespace_claim_triage_workflow_applies_review_labels_only() -> None:
     assert "namespace-claim-triage" in script
     assert "addLabels" in script
     assert "createLabel" in script
+    assert "createError.status !== 422" in script
+    assert "github.rest.repos.get" in script
+    assert "repository.default_branch" in script
+    assert "policyUrl" in script
     assert "listComments" in script
+    assert "page += 1" in script
+    assert 'comment.user?.login === "github-actions[bot]"' in script
     assert "updateComment" in script
     assert "createComment" in script
     assert "does not grant namespace ownership" in script

@@ -75,6 +75,10 @@ jobs:
                   name,
                   color: definition.color,
                   description: definition.description
+                }).catch((createError) => {
+                  if (createError.status !== 422) {
+                    throw createError;
+                  }
                 });
               }
             }
@@ -97,25 +101,45 @@ jobs:
               });
             }
 
+            const { data: repository } = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const policyUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${repository.default_branch}/${policyPath}`;
+
             const body = [
               marker,
               "Namespace claim triage is active.",
               "",
-              `Maintainers should review this issue using [Public Index Namespace Claim Policy](${policyPath}).`,
+              `Maintainers should review this issue using [Public Index Namespace Claim Policy](${policyUrl}).`,
               "",
               "This automation only prepares review labels and keeps this note current. It does not grant namespace ownership, approve packages, mutate the registry, edit `public-index/accepted-packages.yml`, publish packages, install packages, or execute package content."
             ].join("\n");
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              per_page: 100
-            });
+            let existingComment;
+            let page = 1;
 
-            const existingComment = comments.find((comment) =>
-              typeof comment.body === "string" && comment.body.includes(marker)
-            );
+            while (!existingComment) {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+                page
+              });
+
+              existingComment = comments.find((comment) =>
+                comment.user?.login === "github-actions[bot]" &&
+                typeof comment.body === "string" &&
+                comment.body.includes(marker)
+              );
+
+              if (existingComment || comments.length < 100) {
+                break;
+              }
+
+              page += 1;
+            }
 
             if (existingComment) {
               await github.rest.issues.updateComment({
