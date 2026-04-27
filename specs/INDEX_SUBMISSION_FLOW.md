@@ -164,8 +164,10 @@ The optional namespace claim decision report workflow lives at:
 The workflow runs for issues labeled `namespace-claim` and reports
 maintainer-applied decision labels such as `namespace:accepted`,
 `namespace:rejected`, `namespace:contested`, and `namespace:superseded`. It
-does not apply terminal decision labels by itself and does not mutate public
-index sources or generated registry metadata.
+does not apply terminal decision labels by itself, reports ambiguity when
+multiple decision labels are present, clears stale reports when decision labels
+are removed, and does not mutate public index sources or generated registry
+metadata.
 
 ## Submission Validation Workflow
 

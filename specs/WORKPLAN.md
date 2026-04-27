@@ -648,7 +648,10 @@ Acceptance:
 - [x] Add a GitHub Actions workflow for namespace claim decision reports.
 - [x] Report maintainer-applied decision labels for accepted, rejected,
   contested, and superseded namespace claims.
-- [x] Skip reporting when no namespace claim decision label is present.
+- [x] Skip creating new reports when no namespace claim decision label is
+  present and no previous report exists.
+- [x] Update existing reports when decision labels are removed.
+- [x] Report ambiguity when multiple decision labels are present.
 - [x] Post or update an idempotent decision report comment that links to
   `specs/NAMESPACE_CLAIM_POLICY.md`.
 - [x] Keep decision report automation separate from applying terminal decision
@@ -663,6 +666,8 @@ Acceptance:
 - The workflow has repository read and issue write permissions only.
 - The workflow reports maintainer-applied labels and does not decide claims.
 - The workflow is idempotent for comments and paginates marker lookup.
+- The workflow does not leave stale decision reports after decision labels are
+  removed.
 - The workflow has no runtime, schema, CLI, JSON contract, auth, registry
   mutation, or package execution changes.
 

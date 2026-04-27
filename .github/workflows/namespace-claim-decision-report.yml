@@ -42,31 +42,11 @@ jobs:
             );
             const activeDecisionLabels = decisionLabels.filter((label) => currentLabels.includes(label));
 
-            if (activeDecisionLabels.length === 0) {
-              core.info("No namespace claim decision label is present; no report is needed.");
-              return;
-            }
-
-            const activeDecision = activeDecisionLabels[0];
-
             const { data: repository } = await github.rest.repos.get({
               owner: context.repo.owner,
               repo: context.repo.repo
             });
             const policyUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${repository.default_branch}/${policyPath}`;
-
-            const body = [
-              marker,
-              "Namespace claim decision report.",
-              "",
-              `Current maintainer-applied decision label: \`${activeDecision}\`.`,
-              "",
-              labelDescriptions[activeDecision],
-              "",
-              `Review context: [Public Index Namespace Claim Policy](${policyUrl}).`,
-              "",
-              "This report records a maintainer-applied issue label. It does not apply terminal decision labels by itself, grant namespace ownership, approve packages, mutate the registry, edit `public-index/accepted-packages.yml`, publish packages, install packages, or execute package content."
-            ].join("\n");
 
             let existingComment;
             let page = 1;
@@ -91,6 +71,52 @@ jobs:
               }
 
               page += 1;
+            }
+
+            if (activeDecisionLabels.length === 0 && !existingComment) {
+              core.info("No namespace claim decision label is present; no report is needed.");
+              return;
+            }
+
+            let body;
+            if (activeDecisionLabels.length === 0) {
+              body = [
+                marker,
+                "Namespace claim decision report.",
+                "",
+                "No namespace claim decision label is currently present.",
+                "",
+                `Review context: [Public Index Namespace Claim Policy](${policyUrl}).`,
+                "",
+                "This report records maintainer-applied issue labels. It does not apply terminal decision labels by itself, grant namespace ownership, approve packages, mutate the registry, edit `public-index/accepted-packages.yml`, publish packages, install packages, or execute package content."
+              ].join("\n");
+            } else if (activeDecisionLabels.length > 1) {
+              body = [
+                marker,
+                "Namespace claim decision report.",
+                "",
+                `Multiple maintainer-applied decision labels are present: ${activeDecisionLabels.map((label) => `\`${label}\``).join(", ")}.`,
+                "",
+                "Maintainers should keep exactly one terminal namespace decision label before using this report as decision evidence.",
+                "",
+                `Review context: [Public Index Namespace Claim Policy](${policyUrl}).`,
+                "",
+                "This report records maintainer-applied issue labels. It does not apply terminal decision labels by itself, grant namespace ownership, approve packages, mutate the registry, edit `public-index/accepted-packages.yml`, publish packages, install packages, or execute package content."
+              ].join("\n");
+            } else {
+              const activeDecision = activeDecisionLabels[0];
+              body = [
+                marker,
+                "Namespace claim decision report.",
+                "",
+                `Current maintainer-applied decision label: \`${activeDecision}\`.`,
+                "",
+                labelDescriptions[activeDecision],
+                "",
+                `Review context: [Public Index Namespace Claim Policy](${policyUrl}).`,
+                "",
+                "This report records a maintainer-applied issue label. It does not apply terminal decision labels by itself, grant namespace ownership, approve packages, mutate the registry, edit `public-index/accepted-packages.yml`, publish packages, install packages, or execute package content."
+              ].join("\n");
             }
 
             if (existingComment) {

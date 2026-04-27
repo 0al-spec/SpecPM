@@ -608,6 +608,11 @@ def test_namespace_claim_decision_report_workflow_is_report_only() -> None:
         assert decision_label in script
     assert "namespace-claim-decision-report" in script
     assert "No namespace claim decision label is present" in script
+    assert "No namespace claim decision label is currently present" in script
+    assert "activeDecisionLabels.length === 0 && !existingComment" in script
+    assert "activeDecisionLabels.length > 1" in script
+    assert "Multiple maintainer-applied decision labels are present" in script
+    assert "exactly one terminal namespace decision label" in script
     assert "github.rest.repos.get" in script
     assert "repository.default_branch" in script
     assert "policyUrl" in script
