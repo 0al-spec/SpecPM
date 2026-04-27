@@ -131,8 +131,10 @@ publish packages, mutate remote state, or execute package content.
 Public index and enterprise registry deployment options are tracked in
 `specs/INDEX_SUBMISSION_FLOW.md`. The reference public-index submission form is
 `.github/ISSUE_TEMPLATE/add-specpackages.yml`, the reference removal request
-form is `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, and the reference
-submission validation workflow is `.github/workflows/package-submission-check.yml`.
+form is `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, the reference
+namespace claim form is `.github/ISSUE_TEMPLATE/claim-namespace.yml`, and the
+reference submission validation workflow is
+`.github/workflows/package-submission-check.yml`.
 `specpm public-index generate` emits static read-only `/v0` registry metadata
 and deterministic package archives for GitHub Pages-style hosting. The checked-in
 accepted package source for Pages is `public-index/accepted-packages.yml`; it is
@@ -140,7 +142,8 @@ a maintainer-reviewed list of repository-relative package directories or pinned
 public Git sources, not a remote mutation API. Remote entries must include a
 reviewed `ref` plus exact commit `revision`; generation fails if the checkout no
 longer resolves to that revision. The generator does not publish packages,
-mutate remote state, install packages, or execute package content.
+mutate remote state, grant namespace ownership, install packages, or execute
+package content.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 

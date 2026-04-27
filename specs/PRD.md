@@ -108,6 +108,12 @@ future generated `/v0` snapshot, but they do not automatically mutate the
 registry, delete archives, yank versions, install packages, or execute package
 content.
 
+Public index namespace claim requests are also issue-based maintainer review
+inputs. They may provide evidence for package review, accepted-source changes,
+or future public index policy, but they do not automatically grant exclusive
+namespace ownership, define authentication or authorization, mutate registry
+state, approve packages, install packages, or execute package content.
+
 ## 5. Primary Users
 
 - Package author: creates `specpm.yaml`, `BoundarySpec`, evidence, and foreign
