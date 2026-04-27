@@ -1,0 +1,4 @@
+interface:
+  display_name: "SpecPM Author Spec"
+  short_description: "Author SpecPM packages and BoundarySpecs"
+  default_prompt: "Use $specpm-author-spec to draft a SpecPackage and BoundarySpec for this project."

@@ -40,6 +40,7 @@ scope:
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
+    - Provide experimental Agent Skills for authoring and reviewing SpecPM package specs.
     - Document the public CLI command surface exposed by src/specpm/cli.py.
     - Document the importable public core functions exposed by src/specpm/core.py.
   excludes:
@@ -134,6 +135,12 @@ provides:
     - id: specpm.documentation.docc_site
       role: secondary
       summary: Build a DocC documentation site for SpecPM contracts and package-manager boundaries.
+    - id: specpm.agent_skills.spec_authoring
+      role: secondary
+      summary: Provide an installable experimental Agent Skill for authoring SpecPackage and BoundarySpec files from repository evidence.
+    - id: specpm.agent_skills.spec_review
+      role: secondary
+      summary: Provide an installable experimental Agent Skill for reviewing and fixing SpecPM package specifications.
     - id: specpm.cli.public_surface
       role: secondary
       summary: Expose the implemented CLI commands as the stable user-facing surface for the MVP.
@@ -497,6 +504,29 @@ evidence:
     path: Sources/SpecPM/Documentation.docc/SpecPM.md
     supports:
       - specpm.documentation.docc_site
+  - id: agent_skills_readme
+    kind: documentation
+    path: skills/README.md
+    supports:
+      - specpm.agent_skills.spec_authoring
+      - specpm.agent_skills.spec_review
+  - id: agent_skills_docc
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/AgentSkills.md
+    supports:
+      - specpm.agent_skills.spec_authoring
+      - specpm.agent_skills.spec_review
+      - specpm.documentation.docc_site
+  - id: author_spec_skill
+    kind: documentation
+    path: skills/.experimental/specpm-author-spec/SKILL.md
+    supports:
+      - specpm.agent_skills.spec_authoring
+  - id: review_spec_skill
+    kind: documentation
+    path: skills/.experimental/specpm-review-spec/SKILL.md
+    supports:
+      - specpm.agent_skills.spec_review
   - id: docs_pages_workflow
     kind: source
     path: .github/workflows/docs.yml
@@ -565,6 +595,20 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
         - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
+        - Sources/SpecPM/Documentation.docc/AgentSkills.md
+  - id: agent_skills
+    path: skills/README.md
+    files:
+      owned:
+        - skills/README.md
+        - skills/.experimental/specpm-author-spec/SKILL.md
+        - skills/.experimental/specpm-author-spec/agents/openai.yaml
+        - skills/.experimental/specpm-author-spec/references/authoring-checklist.md
+        - skills/.experimental/specpm-author-spec/LICENSE.txt
+        - skills/.experimental/specpm-review-spec/SKILL.md
+        - skills/.experimental/specpm-review-spec/agents/openai.yaml
+        - skills/.experimental/specpm-review-spec/references/review-checklist.md
+        - skills/.experimental/specpm-review-spec/LICENSE.txt
 provenance:
   sourceConfidence:
     intent: high

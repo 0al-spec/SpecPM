@@ -22,7 +22,8 @@ The local MVP supports:
 - structural diff;
 - SpecGraph inbox inspection for `.specgraph_exports/` bundles;
 - read-only remote registry metadata lookup;
-- viewer-facing JSON contracts and portable conformance artifacts.
+- viewer-facing JSON contracts and portable conformance artifacts;
+- experimental Agent Skills for authoring and reviewing SpecPM package specs.
 
 SpecPM does not perform natural-language intent resolution, embedding
 generation, vector search, RAG orchestration, or semantic package selection.
@@ -41,6 +42,7 @@ The canonical source files remain in the repository:
 - `specs/REMOTE_REGISTRY_API.md`
 - `specs/INDEX_SUBMISSION_FLOW.md`
 - `specs/RFC_0001_COVERAGE.md`
+- `skills/README.md`
 - `RFC/SpecGraph-RFC-0001.md`
 
 This DocC site is a navigable documentation package built from those contracts.
@@ -64,6 +66,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:JSONContracts>
 - <doc:Conformance>
 - <doc:SpecGraphIntegration>
+- <doc:AgentSkills>
 
 ### Architecture
 

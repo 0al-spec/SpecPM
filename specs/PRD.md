@@ -64,6 +64,8 @@ The MVP must solve the practical local workflow first:
 - Support SpecGraph materialized bundles under `.specgraph_exports/` as local
   draft package candidates.
 - Produce machine-readable outputs that a viewer can render.
+- Provide repository-managed Agent Skills that help agents author and review
+  SpecPM package specs without changing SpecPM runtime responsibilities.
 
 ## 4. Non-Goals
 
@@ -131,6 +133,8 @@ terminal decision labels by itself.
   `.specgraph_exports/<package_id>/` bundles in the SpecPM checkout.
 - Viewer developer: needs compact JSON outputs for package status, validation
   errors, capability indexes, and imported package state.
+- Agent/tooling operator: installs repository-managed skills that guide agents
+  through SpecPM spec authoring and review workflows.
 
 ## 6. MVP Package Contract
 
