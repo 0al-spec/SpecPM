@@ -113,6 +113,8 @@ inputs. They may provide evidence for package review, accepted-source changes,
 or future public index policy, but they do not automatically grant exclusive
 namespace ownership, define authentication or authorization, mutate registry
 state, approve packages, install packages, or execute package content.
+Namespace claim review criteria and dispute handling are documented in
+`specs/NAMESPACE_CLAIM_POLICY.md`.
 
 ## 5. Primary Users
 

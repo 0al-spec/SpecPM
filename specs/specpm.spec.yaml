@@ -30,6 +30,7 @@ scope:
     - Provide a GitHub Issue form for public SpecPackage index submissions.
     - Provide a GitHub Issue form for public SpecPackage index removal requests.
     - Provide a GitHub Issue form for public SpecPM Index namespace claim requests.
+    - Document public SpecPM Index namespace claim review policy and dispute handling.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
     - Track maintainer-reviewed accepted package directories and pinned public Git sources for generated public index deployment.
@@ -98,6 +99,9 @@ provides:
     - id: specpm.registry.namespace_claim_request_flow
       role: secondary
       summary: Collect maintainer-reviewed public index namespace claim requests without granting ownership or mutating registry state.
+    - id: specpm.registry.namespace_claim_policy
+      role: secondary
+      summary: Document namespace claim review labels, criteria, outcomes, and dispute handling without enforcing ownership.
     - id: specpm.registry.remote_readonly_client
       role: secondary
       summary: Fetch and validate read-only remote registry status, package index, and package metadata without downloading archives or mutating local state.
@@ -378,6 +382,13 @@ evidence:
     kind: documentation
     path: .github/ISSUE_TEMPLATE/claim-namespace.yml
     supports:
+      - specpm.registry.namespace_claim_request_flow
+      - specpm.registry.index_submission_flow
+  - id: namespace_claim_policy
+    kind: documentation
+    path: specs/NAMESPACE_CLAIM_POLICY.md
+    supports:
+      - specpm.registry.namespace_claim_policy
       - specpm.registry.namespace_claim_request_flow
       - specpm.registry.index_submission_flow
   - id: package_submission_workflow
