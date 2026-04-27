@@ -26,6 +26,7 @@ index:
       - specpm.conformance.local_suite
       - specpm.registry.remote_api_contract
       - specpm.registry.index_submission_flow
+      - specpm.registry.index_removal_request_flow
       - specpm.registry.remote_readonly_client
       - specpm.registry.public_static_index
       - specpm.registry.public_index_accepted_manifest

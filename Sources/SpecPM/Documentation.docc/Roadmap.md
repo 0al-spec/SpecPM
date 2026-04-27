@@ -59,13 +59,14 @@ enterprise registry work separate.
 The public index can start as an issue-based submission queue with GitHub
 Actions validation and GitHub Pages static `/v0` metadata. The reference
 `Add SpecPackage(s)` issue form is available in
-`.github/ISSUE_TEMPLATE/add-specpackages.yml`, and the reference issue
-validation workflow is available in
+`.github/ISSUE_TEMPLATE/add-specpackages.yml`, the reference removal request
+form is available in `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, and the
+reference issue validation workflow is available in
 `.github/workflows/package-submission-check.yml`. Static registry metadata can
 be generated with `specpm public-index generate`. The next useful registry
-increment is package removal and deprecation policy for the public static index.
-Enterprise registry work should remain available for private packages, auth,
-audit, policy, and internal namespace ownership.
+increment is namespace claim policy for the public static index. Enterprise
+registry work should remain available for private packages, auth, audit,
+policy, and internal namespace ownership.
 
 `specpm publish`, auth, signing, namespace governance, and remote yanking
 mutation workflows remain separate follow-up tracks unless they are scoped to

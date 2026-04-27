@@ -102,6 +102,12 @@ package installation mechanism, remote archive client, or package execution
 path. Enterprise registry deployments remain a separate track for private
 access control, audit, policy, namespace ownership, and authenticated storage.
 
+Public index removal requests are issue-based maintainer review inputs. They
+may lead to pull requests that update accepted package sources or policy for a
+future generated `/v0` snapshot, but they do not automatically mutate the
+registry, delete archives, yank versions, install packages, or execute package
+content.
+
 ## 5. Primary Users
 
 - Package author: creates `specpm.yaml`, `BoundarySpec`, evidence, and foreign

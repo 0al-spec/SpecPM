@@ -129,9 +129,10 @@ metadata clients for that contract; they do not download package archives,
 publish packages, mutate remote state, or execute package content.
 
 Public index and enterprise registry deployment options are tracked in
-`specs/INDEX_SUBMISSION_FLOW.md`. The reference public-index issue form is
-`.github/ISSUE_TEMPLATE/add-specpackages.yml`, and the reference submission
-validation workflow is `.github/workflows/package-submission-check.yml`.
+`specs/INDEX_SUBMISSION_FLOW.md`. The reference public-index submission form is
+`.github/ISSUE_TEMPLATE/add-specpackages.yml`, the reference removal request
+form is `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, and the reference
+submission validation workflow is `.github/workflows/package-submission-check.yml`.
 `specpm public-index generate` emits static read-only `/v0` registry metadata
 and deterministic package archives for GitHub Pages-style hosting. The checked-in
 accepted package source for Pages is `public-index/accepted-packages.yml`; it is
