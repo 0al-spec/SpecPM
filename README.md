@@ -168,6 +168,25 @@ surface and importable core functions as a `SpecPackage`. CI validates this
 self-spec and checks that it tracks the current CLI commands and exported core
 API.
 
+## Agent Skills
+
+SpecPM also ships experimental Agent Skills for agents that need to author or
+review SpecPM packages:
+
+- `skills/.experimental/specpm-author-spec`
+- `skills/.experimental/specpm-review-spec`
+
+Install them through Codex after the branch is available on GitHub:
+
+```bash
+$skill-installer install https://github.com/0al-spec/SpecPM/tree/main/skills/.experimental/specpm-author-spec
+$skill-installer install https://github.com/0al-spec/SpecPM/tree/main/skills/.experimental/specpm-review-spec
+```
+
+These skills are repository-managed instructions and references. They do not
+change SpecPM CLI behavior, schemas, JSON contracts, registry behavior, or the
+rule that package content is untrusted data.
+
 Build the DocC documentation site locally:
 
 ```bash

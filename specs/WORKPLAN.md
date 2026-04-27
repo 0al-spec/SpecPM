@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-27
+Updated: 2026-04-28
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -670,6 +670,31 @@ Acceptance:
   removed.
 - The workflow has no runtime, schema, CLI, JSON contract, auth, registry
   mutation, or package execution changes.
+
+## Phase 29. Repository Agent Skills
+
+- [x] Add repository-managed experimental Agent Skills for authoring and
+  reviewing SpecPM package specs.
+- [x] Keep skills under `skills/.experimental/` so they can be installed through
+  `$skill-installer` from the GitHub repository.
+- [x] Include per-skill `SKILL.md`, OpenAI interface metadata, reference
+  checklists, and MIT license files.
+- [x] Document installation commands and the skill boundary in `README.md` and
+  DocC.
+- [x] Update the self-spec so Agent Skills are part of the repository's
+  declared package surface.
+- [x] Add tests that verify skill shape, install prompts, licensing, README
+  links, and self-spec coverage.
+- [x] Keep Agent Skills separate from SpecPM runtime, schema validation,
+  registry behavior, JSON contracts, and package execution policy.
+
+Acceptance:
+
+- Skills validate with the Agent Skill quick validator.
+- `PYTHONPATH=src python3 -m specpm.cli validate . --json` remains valid.
+- CI checks catch missing skill files, license drift, or self-spec drift.
+- No runtime, schema, CLI, JSON contract, registry mutation, or package
+  execution behavior changes.
 
 ## Post-MVP Tracks
 

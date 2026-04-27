@@ -26,6 +26,8 @@ Completed areas include:
   ContextBuilder observation.
 - GitHub Pages deployment of generated `/v0` public index metadata alongside
   DocC documentation.
+- repository-managed experimental Agent Skills for SpecPM spec authoring and
+  review.
 
 ## Post-MVP Tracks
 

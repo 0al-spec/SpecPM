@@ -1,0 +1,4 @@
+interface:
+  display_name: "SpecPM Review Spec"
+  short_description: "Review and fix SpecPM package specs"
+  default_prompt: "Use $specpm-review-spec to review and fix this SpecPM package."

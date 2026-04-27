@@ -64,6 +64,17 @@ DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
 PULL_REQUEST_TEMPLATE = ROOT / ".github/PULL_REQUEST_TEMPLATE.md"
+AGENT_SKILL_ROOT = ROOT / "skills/.experimental"
+AGENT_SKILLS = {
+    "specpm-author-spec": {
+        "capability": "specpm.agent_skills.spec_authoring",
+        "reference": "references/authoring-checklist.md",
+    },
+    "specpm-review-spec": {
+        "capability": "specpm.agent_skills.spec_review",
+        "reference": "references/review-checklist.md",
+    },
+}
 CONFORMANCE_CASE_KINDS = {
     "registry_lifecycle",
     "remote_registry_payload",
@@ -989,6 +1000,58 @@ def test_repository_root_is_self_describing_specpackage() -> None:
     assert set(inbound_interfaces["python_core_api"]["functions"]) == {
         *core_module.__all__,
     }
+
+
+def test_repository_agent_skills_are_installable_and_self_described() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    skills_readme = (ROOT / "skills/README.md").read_text(encoding="utf-8")
+    docc_skills = (ROOT / "Sources/SpecPM/Documentation.docc/AgentSkills.md").read_text(
+        encoding="utf-8"
+    )
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    owned_binding_paths = {
+        path
+        for binding in boundary["implementationBindings"]
+        for path in binding["files"].get("owned", [])
+    }
+
+    for skill_name, expected in AGENT_SKILLS.items():
+        skill_dir = AGENT_SKILL_ROOT / skill_name
+        skill_doc = skill_dir / "SKILL.md"
+        agent_config = skill_dir / "agents/openai.yaml"
+        reference_doc = skill_dir / expected["reference"]
+        license_doc = skill_dir / "LICENSE.txt"
+        repo_skill_path = f"skills/.experimental/{skill_name}"
+
+        assert skill_doc.is_file()
+        assert agent_config.is_file()
+        assert reference_doc.is_file()
+        assert license_doc.is_file()
+
+        skill_text = skill_doc.read_text(encoding="utf-8")
+        assert f"name: {skill_name}" in skill_text
+        assert "description:" in skill_text
+        assert expected["reference"] in skill_text
+
+        agent = load_yaml_file(agent_config)
+        assert f"${skill_name}" in agent["interface"]["default_prompt"]
+        assert agent["interface"]["display_name"].startswith("SpecPM")
+
+        assert "MIT License" in license_doc.read_text(encoding="utf-8")
+        assert repo_skill_path in readme
+        assert repo_skill_path in skills_readme
+        assert repo_skill_path in docc_skills
+        assert expected["capability"] in manifest_capabilities
+        assert expected["capability"] in boundary_capabilities
+        assert f"{repo_skill_path}/SKILL.md" in evidence_paths
+        assert f"{repo_skill_path}/SKILL.md" in owned_binding_paths
 
 
 def test_golden_inspect_json_contract() -> None:
