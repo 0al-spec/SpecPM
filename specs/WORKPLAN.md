@@ -620,6 +620,29 @@ Acceptance:
 - The policy has no runtime, schema, CLI, JSON contract, auth, or package
   execution changes.
 
+## Phase 27. Public Index Namespace Claim Label Automation
+
+- [x] Add a GitHub Actions workflow for issues labeled `namespace-claim`.
+- [x] Ensure recommended namespace claim review labels exist.
+- [x] Apply `namespace:under-review` when a namespace claim issue has no
+  existing namespace review status label.
+- [x] Post or update an idempotent policy note linking to
+  `specs/NAMESPACE_CLAIM_POLICY.md`.
+- [x] Keep automation separate from accepting or rejecting claims, editing
+  `public-index/accepted-packages.yml`, generating registry metadata,
+  publishing packages, installing packages, and executing package content.
+- [x] Add workflow-shape tests that keep permissions, trigger labels, and
+  non-goals explicit.
+
+Acceptance:
+
+- The workflow only runs for namespace claim issues.
+- The workflow has repository read and issue write permissions only.
+- The workflow does not run package validation, public index generation,
+  publish, package installation, or package execution.
+- The workflow is idempotent for comments and conservative for review status
+  labels.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -670,7 +693,7 @@ Future work may explore:
 
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
-- Namespace claim label automation.
+- Namespace claim decision automation reports.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

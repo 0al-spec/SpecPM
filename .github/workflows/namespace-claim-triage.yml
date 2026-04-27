@@ -1,0 +1,158 @@
+name: Namespace Claim Triage
+
+"on":
+  issues:
+    types:
+      - opened
+      - edited
+      - reopened
+      - labeled
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  triage-namespace-claim:
+    if: contains(github.event.issue.labels.*.name, 'namespace-claim')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply namespace review triage
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const policyPath = "specs/NAMESPACE_CLAIM_POLICY.md";
+            const marker = "<!-- namespace-claim-triage -->";
+            const reviewLabels = [
+              "namespace:needs-info",
+              "namespace:under-review",
+              "namespace:accepted",
+              "namespace:rejected",
+              "namespace:contested",
+              "namespace:superseded"
+            ];
+            const labelDefinitions = {
+              "namespace:needs-info": {
+                color: "FBCA04",
+                description: "Namespace claim needs more public evidence or context."
+              },
+              "namespace:under-review": {
+                color: "1D76DB",
+                description: "Namespace claim is ready for maintainer review."
+              },
+              "namespace:accepted": {
+                color: "0E8A16",
+                description: "Namespace claim accepted as public-index review evidence."
+              },
+              "namespace:rejected": {
+                color: "D93F0B",
+                description: "Namespace claim rejected for the public index."
+              },
+              "namespace:contested": {
+                color: "B60205",
+                description: "Namespace claim conflicts with another claim or package submission."
+              },
+              "namespace:superseded": {
+                color: "C5DEF5",
+                description: "Namespace claim was replaced by a newer issue or decision."
+              }
+            };
+
+            async function ensureLabel(name, definition) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  color: definition.color,
+                  description: definition.description
+                }).catch((createError) => {
+                  if (createError.status !== 422) {
+                    throw createError;
+                  }
+                });
+              }
+            }
+
+            for (const [name, definition] of Object.entries(labelDefinitions)) {
+              await ensureLabel(name, definition);
+            }
+
+            const currentLabels = (context.payload.issue.labels || []).map((label) =>
+              typeof label === "string" ? label : label.name
+            );
+            const hasReviewLabel = currentLabels.some((label) => reviewLabels.includes(label));
+
+            if (!hasReviewLabel) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: ["namespace:under-review"]
+              });
+            }
+
+            const { data: repository } = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const policyUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${repository.default_branch}/${policyPath}`;
+
+            const body = [
+              marker,
+              "Namespace claim triage is active.",
+              "",
+              `Maintainers should review this issue using [Public Index Namespace Claim Policy](${policyUrl}).`,
+              "",
+              "This automation only prepares review labels and keeps this note current. It does not grant namespace ownership, approve packages, mutate the registry, edit `public-index/accepted-packages.yml`, publish packages, install packages, or execute package content."
+            ].join("\n");
+
+            let existingComment;
+            let page = 1;
+
+            while (!existingComment) {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+                page
+              });
+
+              existingComment = comments.find((comment) =>
+                comment.user?.login === "github-actions[bot]" &&
+                typeof comment.body === "string" &&
+                comment.body.includes(marker)
+              );
+
+              if (existingComment || comments.length < 100) {
+                break;
+              }
+
+              page += 1;
+            }
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }

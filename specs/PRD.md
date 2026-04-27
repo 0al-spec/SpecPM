@@ -114,7 +114,10 @@ or future public index policy, but they do not automatically grant exclusive
 namespace ownership, define authentication or authorization, mutate registry
 state, approve packages, install packages, or execute package content.
 Namespace claim review criteria and dispute handling are documented in
-`specs/NAMESPACE_CLAIM_POLICY.md`.
+`specs/NAMESPACE_CLAIM_POLICY.md`. Namespace claim label automation may prepare
+review labels and policy notes, but it must not accept or reject claims, edit
+accepted package sources, generate registry metadata, publish packages, install
+packages, or execute package content.
 
 ## 5. Primary Users
 
