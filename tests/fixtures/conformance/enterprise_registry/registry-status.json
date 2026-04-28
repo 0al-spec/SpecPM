@@ -1,0 +1,15 @@
+{
+  "apiVersion": "specpm.registry/v0",
+  "schemaVersion": 1,
+  "kind": "RemoteRegistryStatus",
+  "status": "ok",
+  "registry": {
+    "profile": "enterprise_registry",
+    "api_version": "v0",
+    "read_only": true,
+    "authority": "policy_enforced",
+    "package_count": 0,
+    "version_count": 0,
+    "capability_count": 0
+  }
+}

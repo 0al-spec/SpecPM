@@ -19,6 +19,7 @@ Remote registry API payload fixtures live under:
 
 ```text
 tests/fixtures/conformance/remote_registry/
+tests/fixtures/conformance/enterprise_registry/
 ```
 
 ## Suite Shape
@@ -60,7 +61,15 @@ rejection for yanked packages, unyank, and add success.
 
 `remote_registry_payload` checks static post-MVP registry API payload shape. It
 does not start a registry server, perform HTTP requests, download archives, or
-mutate registry state.
+mutate registry state. It also includes negative payload-shape cases and
+enterprise registry compatibility payloads for the same read-only metadata
+contract.
+
+`public_registry_static_index` generates a static public `/v0` tree from
+repository fixtures and checks the registry status, package index, package
+metadata, package version, exact capability search, adjacent `index.html`
+static-host payloads, archive digest metadata, and absent missing
+package/capability paths.
 
 Read-only remote registry client tests reuse those payloads behind HTTP fetch
 stubs. They verify endpoint construction and stable client reports without a

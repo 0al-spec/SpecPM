@@ -79,6 +79,7 @@ AGENT_SKILLS = {
     },
 }
 CONFORMANCE_CASE_KINDS = {
+    "public_registry_static_index",
     "registry_lifecycle",
     "remote_registry_payload",
     "validate_package",
@@ -148,6 +149,7 @@ def sha256_path(path: Path) -> str:
 def load_conformance_suite() -> dict[str, Any]:
     suite = json.loads(CONFORMANCE_SUITE.read_text(encoding="utf-8"))
     assert suite["schemaVersion"] == 1
+    assert suite["suite"] == "specpm-conformance-v0"
     case_ids = [case["id"] for case in suite["cases"]]
     assert len(case_ids) == len(set(case_ids))
     case_kinds = {case["kind"] for case in suite["cases"]}
@@ -1216,15 +1218,23 @@ def test_conformance_remote_registry_payload_cases() -> None:
     remote_cases = [case for case in suite["cases"] if case["kind"] == "remote_registry_payload"]
     assert remote_cases
 
-    fixture_root = (ROOT / "tests/fixtures/conformance/remote_registry").resolve()
+    fixture_root = (ROOT / "tests/fixtures/conformance").resolve()
     for case in remote_cases:
         payload_path = (ROOT / case["payload"]).resolve()
         assert payload_path.is_relative_to(fixture_root), case["id"]
         payload = json.loads(payload_path.read_text(encoding="utf-8"))
         assert isinstance(payload, dict), case["id"]
-        assert_remote_registry_payload_shape(payload)
+        validation_errors = validate_remote_registry_payload(payload)
 
         expected = case["expected"]
+        if expected.get("validation_status") == "invalid":
+            assert issue_codes([issue.to_dict() for issue in validation_errors]) == set(
+                expected["validation_error_codes"]
+            ), case["id"]
+            continue
+
+        assert validation_errors == [], case["id"]
+        assert_remote_registry_payload_shape(payload)
         assert payload["kind"] == expected["kind"], case["id"]
         assert payload["status"] == expected["status"], case["id"]
         if payload["kind"] == "RemoteRegistryError":
@@ -1251,10 +1261,77 @@ def test_conformance_remote_registry_payload_cases() -> None:
             assert payload["package"]["version"] == expected["version"], case["id"]
         if "yanked" in expected:
             assert payload["package"]["state"]["yanked"] is expected["yanked"], case["id"]
+        if "deprecated" in expected:
+            assert payload["package"]["state"]["deprecated"] is expected["deprecated"], case["id"]
         if "capability_id" in expected:
             assert payload["query"]["capability_id"] == expected["capability_id"], case["id"]
         if "result_count" in expected:
             assert payload["result_count"] == expected["result_count"], case["id"]
+
+
+def test_conformance_public_registry_static_index_cases(tmp_path: Path) -> None:
+    suite = load_conformance_suite()
+    public_cases = [
+        case for case in suite["cases"] if case["kind"] == "public_registry_static_index"
+    ]
+    assert public_cases
+
+    for case in public_cases:
+        output = tmp_path / case["id"]
+        report = generate_public_index(
+            [ROOT / case["package"]],
+            output,
+            case["registry"],
+        )
+        expected = case["expected"]
+        assert report["status"] == expected["status"], case["id"]
+        assert sorted(report["written_files"]) == report["written_files"], case["id"]
+
+        for endpoint in expected["endpoints"]:
+            endpoint_path = output / endpoint["path"]
+            assert endpoint_path.is_file(), f"{case['id']} missing {endpoint['path']}"
+            payload = json.loads(endpoint_path.read_text(encoding="utf-8"))
+            assert validate_remote_registry_payload(payload) == [], case["id"]
+            assert_remote_registry_payload_shape(payload)
+            assert payload["kind"] == endpoint["kind"], case["id"]
+            assert payload["status"] == endpoint["status"], case["id"]
+            if "package_count" in endpoint:
+                actual = (
+                    payload["registry"]["package_count"]
+                    if payload["kind"] == "RemoteRegistryStatus"
+                    else payload["package_count"]
+                )
+                assert actual == endpoint["package_count"], case["id"]
+            if "version_count" in endpoint:
+                actual = (
+                    payload["registry"]["version_count"]
+                    if payload["kind"] == "RemoteRegistryStatus"
+                    else payload["version_count"]
+                )
+                assert actual == endpoint["version_count"], case["id"]
+            if "package_id" in endpoint:
+                assert payload["package"]["package_id"] == endpoint["package_id"], case["id"]
+            if "version" in endpoint:
+                assert payload["package"]["version"] == endpoint["version"], case["id"]
+            if "capability_id" in endpoint:
+                assert payload["query"]["capability_id"] == endpoint["capability_id"], case["id"]
+            if "result_count" in endpoint:
+                assert payload["result_count"] == endpoint["result_count"], case["id"]
+
+            html_path = endpoint_path.with_name("index.html")
+            assert html_path.is_file(), f"{case['id']} missing {html_path.relative_to(output)}"
+            assert json.loads(html_path.read_text(encoding="utf-8")) == payload
+
+        archive = output / expected["archive"]
+        version_payload = json.loads(
+            (output / expected["version_endpoint"]).read_text(encoding="utf-8")
+        )
+        assert archive.is_file(), case["id"]
+        assert version_payload["package"]["source"]["digest"]["value"] == sha256_path(archive)
+        assert version_payload["package"]["source"]["size"] == archive.stat().st_size
+
+        for missing_path in expected.get("absent_paths", []):
+            assert not (output / missing_path).exists(), case["id"]
 
 
 def test_remote_registry_payload_validator_rejects_incomplete_source() -> None:

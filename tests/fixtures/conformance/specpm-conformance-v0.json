@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "suite": "specpm-local-conformance-v0",
+  "suite": "specpm-conformance-v0",
   "cases": [
     {
       "id": "validate.valid_email_tools",
@@ -149,6 +149,19 @@
       }
     },
     {
+      "id": "remote_registry.deprecated_version",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/deprecated-version.json",
+      "expected": {
+        "kind": "RemotePackageVersion",
+        "status": "ok",
+        "package_id": "document_conversion.email_tools",
+        "version": "0.1.0",
+        "yanked": false,
+        "deprecated": true
+      }
+    },
+    {
       "id": "remote_registry.error_not_found",
       "kind": "remote_registry_payload",
       "payload": "tests/fixtures/conformance/remote_registry/error-not-found.json",
@@ -156,6 +169,80 @@
         "kind": "RemoteRegistryError",
         "status": "not_found",
         "error_code": "package_not_found"
+      }
+    },
+    {
+      "id": "remote_registry.invalid_package_index_count",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/invalid-package-index-count.json",
+      "expected": {
+        "validation_status": "invalid",
+        "validation_error_codes": [
+          "remote_registry_field_invalid"
+        ]
+      }
+    },
+    {
+      "id": "enterprise_registry.registry_status",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/enterprise_registry/registry-status.json",
+      "expected": {
+        "kind": "RemoteRegistryStatus",
+        "status": "ok",
+        "profile": "enterprise_registry",
+        "package_count": 0,
+        "version_count": 0
+      }
+    },
+    {
+      "id": "public_registry.generated_email_tools_static_index",
+      "kind": "public_registry_static_index",
+      "package": "examples/email_tools",
+      "registry": "https://registry.example.invalid",
+      "expected": {
+        "status": "ok",
+        "archive": "v0/packages/document_conversion.email_tools/versions/0.1.0/document_conversion.email_tools-0.1.0.specpm.tgz",
+        "version_endpoint": "v0/packages/document_conversion.email_tools/versions/0.1.0/index.json",
+        "absent_paths": [
+          "v0/packages/document_conversion.missing/index.json",
+          "v0/capabilities/document_conversion.missing/packages/index.json"
+        ],
+        "endpoints": [
+          {
+            "path": "v0/status/index.json",
+            "kind": "RemoteRegistryStatus",
+            "status": "ok",
+            "package_count": 1,
+            "version_count": 1
+          },
+          {
+            "path": "v0/packages/index.json",
+            "kind": "RemotePackageIndex",
+            "status": "ok",
+            "package_count": 1,
+            "version_count": 1
+          },
+          {
+            "path": "v0/packages/document_conversion.email_tools/index.json",
+            "kind": "RemotePackage",
+            "status": "ok",
+            "package_id": "document_conversion.email_tools"
+          },
+          {
+            "path": "v0/packages/document_conversion.email_tools/versions/0.1.0/index.json",
+            "kind": "RemotePackageVersion",
+            "status": "ok",
+            "package_id": "document_conversion.email_tools",
+            "version": "0.1.0"
+          },
+          {
+            "path": "v0/capabilities/document_conversion.email_to_markdown/packages/index.json",
+            "kind": "RemoteCapabilitySearch",
+            "status": "ok",
+            "capability_id": "document_conversion.email_to_markdown",
+            "result_count": 1
+          }
+        ]
       }
     }
   ]

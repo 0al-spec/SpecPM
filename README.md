@@ -121,7 +121,9 @@ fields, and actionable gaps for incomplete SpecGraph export bundles.
 Viewer-facing JSON contracts and golden fixtures are documented in
 `specs/JSON_CONTRACTS.md`.
 
-Portable conformance artifacts are documented in `specs/CONFORMANCE.md`.
+Portable conformance artifacts are documented in `specs/CONFORMANCE.md`,
+including local package behavior, remote registry payload shape, generated
+public static index endpoints, and enterprise registry compatibility payloads.
 
 The post-MVP remote registry API contract is documented in
 `specs/REMOTE_REGISTRY_API.md`. The `specpm remote` commands are read-only

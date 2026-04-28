@@ -28,6 +28,8 @@ Completed areas include:
   DocC documentation.
 - repository-managed experimental Agent Skills for SpecPM spec authoring and
   review.
+- public static index and enterprise registry conformance cases for the
+  read-only `/v0` metadata contract.
 
 ## Post-MVP Tracks
 
@@ -74,10 +76,11 @@ claim decision labels can be reported by
 `.github/workflows/namespace-claim-decision-report.yml`, and current decision
 labels can be summarized by
 `.github/workflows/namespace-claim-decision-summary.yml`. Static registry
-metadata can be generated with `specpm public-index generate`. The next useful
-registry increment is public index and enterprise registry conformance suites.
-Enterprise registry work should remain available for private packages, auth,
-audit, policy, and internal namespace ownership.
+metadata can be generated with `specpm public-index generate`. Public static
+index and enterprise registry conformance cases now cover the read-only `/v0`
+metadata contract without requiring a live server. The next useful registry
+increment is deciding whether enterprise-specific auth/audit policy remains
+docs-only or gets a separate experimental profile.
 
 `specpm publish`, auth, signing, namespace governance, and remote yanking
 mutation workflows remain separate follow-up tracks unless they are scoped to

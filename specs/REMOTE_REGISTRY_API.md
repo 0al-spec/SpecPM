@@ -373,17 +373,27 @@ Static conformance fixtures live under:
 
 ```text
 tests/fixtures/conformance/remote_registry/
+tests/fixtures/conformance/enterprise_registry/
 ```
 
 The suite manifest references those fixtures with `remote_registry_payload`
-cases. These cases validate JSON shape only. They do not start a server, perform
-HTTP requests, download package archives, or mutate registry state. Client tests
-may use fixture-backed HTTP fetch stubs so the repository test suite does not
-require a live registry service.
+cases. These cases validate JSON shape only, including positive fixtures,
+negative invalid-shape fixtures, and enterprise registry compatibility payloads
+that reuse the same read-only metadata contract. They do not start a server,
+perform HTTP requests, download package archives, or mutate registry state.
+Client tests may use fixture-backed HTTP fetch stubs so the repository test
+suite does not require a live registry service.
 
 The initial fixture set covers registry status, package index, package
 metadata, package version metadata, exact capability search, yanked version
-visibility, and not-found errors.
+visibility, deprecated version visibility, invalid count detection, not-found
+errors, and enterprise registry status shape.
+
+The suite also includes `public_registry_static_index` cases that generate a
+static public `/v0` tree and verify the same endpoint payloads produced by
+`specpm public-index generate`. Those cases validate generated JSON and
+adjacent `index.html` payload bodies, but they still do not start a live
+registry server or perform remote registry mutation.
 
 ## Security Considerations
 

@@ -1,7 +1,7 @@
 # SpecPM Conformance Artifacts
 
 Status: Draft
-Updated: 2026-04-25
+Updated: 2026-04-28
 Scope: local SpecPM package-manager behavior and post-MVP registry contract payloads
 
 ## Purpose
@@ -9,9 +9,10 @@ Scope: local SpecPM package-manager behavior and post-MVP registry contract payl
 SpecPM conformance artifacts provide a small, portable test corpus for
 implementations and downstream SpecGraph tooling. They describe expected
 outcomes for package validation, local registry lifecycle behavior, static
-remote registry contract payloads, and fixture-backed read-only client behavior
-without requiring a remote registry service, package signing, semantic search,
-graph reasoning, artifact generation, or agent runtime behavior.
+remote registry contract payloads, generated public static index endpoints,
+enterprise registry compatibility payloads, and fixture-backed read-only client
+behavior without requiring a remote registry service, package signing, semantic
+search, graph reasoning, artifact generation, or agent runtime behavior.
 
 The current suite lives at:
 
@@ -25,6 +26,13 @@ Fixture packages live under:
 tests/fixtures/conformance/packages/
 ```
 
+Remote registry and enterprise registry payload fixtures live under:
+
+```text
+tests/fixtures/conformance/remote_registry/
+tests/fixtures/conformance/enterprise_registry/
+```
+
 ## Suite Format
 
 The suite file is JSON so non-Python implementations can consume it directly:
@@ -32,7 +40,7 @@ The suite file is JSON so non-Python implementations can consume it directly:
 ```json
 {
   "schemaVersion": 1,
-  "suite": "specpm-local-conformance-v0",
+  "suite": "specpm-conformance-v0",
   "cases": []
 }
 ```
@@ -89,8 +97,28 @@ checks stable payload shape fields:
 - yanked/deprecated lifecycle state where applicable
 - error payload fields where applicable
 
+This case kind may also carry negative shape fixtures where
+`expected.validation_status` is `invalid` and `expected.validation_error_codes`
+lists expected validator error codes.
+
 This case kind does not start a registry server, perform HTTP requests,
 download archives, or mutate registry state.
+
+### `public_registry_static_index`
+
+Generates a static public `/v0` registry tree from repository-relative package
+fixtures and checks endpoint payload shape:
+
+1. generate the public index with `specpm public-index generate` behavior;
+2. assert required JSON endpoints exist;
+3. assert adjacent `index.html` files carry the same JSON bodies for static
+   hosts;
+4. validate generated payloads against the remote registry API contract;
+5. check archive digest and size metadata against the generated archive;
+6. assert missing package/capability paths are not fabricated as package data.
+
+This case kind does not start a server, publish packages, mutate remote state,
+download remote archives as a client, or execute package content.
 
 Read-only client tests may reuse these payload fixtures behind HTTP fetch stubs.
 Those tests verify endpoint construction, response shape validation, and stable
@@ -107,8 +135,14 @@ The initial conformance suite covers:
 - a warning-only manual-assertion evidence package;
 - local registry yank and unyank behavior.
 - remote registry status, package index, package metadata, package version,
-  exact capability search, yanked version, and not-found error payloads.
+  exact capability search, yanked version, deprecated version, not-found error,
+  and invalid-shape payloads.
 - read-only remote registry client behavior using fixture-backed fetch stubs.
+- generated public static `/v0` endpoint shape, adjacent static-host HTML
+  payloads, archive digest metadata, and absent missing package/capability
+  paths.
+- enterprise registry status payload compatibility for implementations that
+  reuse the same read-only metadata contract behind private policy controls.
 
 ## Non-Goals
 
