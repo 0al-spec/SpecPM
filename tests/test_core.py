@@ -65,14 +65,18 @@ NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-summary.yml"
 )
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
+DOCKERFILE = ROOT / "Dockerfile"
 MAKEFILE = ROOT / "Makefile"
 AGENTS_FILE = ROOT / "AGENTS.md"
 DEPLOY_FIRST_DOC = ROOT / "specs/DEPLOY_FIRST.md"
+PUBLIC_ALPHA_DOC = ROOT / "specs/PUBLIC_ALPHA.md"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
+DOCC_PUBLIC_ALPHA_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md"
 DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
+SPECNODE_MAIN_REVISION = "9b6046777723435d94d66d4149fe5e9a6c52f604"
 PULL_REQUEST_TEMPLATE = ROOT / ".github/PULL_REQUEST_TEMPLATE.md"
 AGENT_SKILL_ROOT = ROOT / "skills/.experimental"
 AGENT_SKILLS = {
@@ -344,6 +348,16 @@ def update_email_package(
 
     write_yaml_file(manifest_path, manifest)
     write_yaml_file(spec_path, spec)
+
+
+def write_fake_specnode_checkout(checkout: Path) -> None:
+    shutil.copytree(ROOT / "examples/email_tools", checkout)
+    update_email_package(
+        checkout,
+        package_id="specnode.core",
+        package_name="SpecNode",
+        capability_id="specnode.typed_job_protocol",
+    )
 
 
 def run_cli_json(args: list[str], capsys, expected_exit: int = 0) -> dict[str, Any]:  # type: ignore[no-untyped-def]
@@ -783,6 +797,7 @@ def test_public_index_compose_service_exposes_local_registry() -> None:
 
 def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     makefile = MAKEFILE.read_text(encoding="utf-8")
+    dockerfile = DOCKERFILE.read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     agent_instructions = AGENTS_FILE.read_text(encoding="utf-8")
     deploy_doc = DEPLOY_FIRST_DOC.read_text(encoding="utf-8")
@@ -802,6 +817,7 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     for target in expected_targets:
         assert f"{target}:" in makefile
 
+    assert "apt-get install -y --no-install-recommends ca-certificates git" in dockerfile
     assert "PAGES_REGISTRY_URL ?= https://0al-spec.github.io/SpecPM" in makefile
     assert set(make_target_prerequisites(makefile, "dev-reload")) == {
         "public-index-reload",
@@ -893,6 +909,44 @@ def test_registry_operations_runbook_documents_deploy_backup_and_abuse_boundarie
     assert "specpm.deployment.registry_operations_runbook" in boundary_capabilities
     assert "specs/REGISTRY_OPERATIONS.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/RegistryOperations.md" in evidence_paths
+
+
+def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:
+    accepted_manifest = load_yaml_file(PUBLIC_INDEX_ACCEPTED_MANIFEST)
+    public_alpha_doc = PUBLIC_ALPHA_DOC.read_text(encoding="utf-8")
+    docc_public_alpha = DOCC_PUBLIC_ALPHA_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    package_entries = accepted_manifest["packages"]
+    assert {"path": "examples/email_tools"} in package_entries
+    assert {"path": "."} in package_entries
+    assert {
+        "repository": "https://github.com/0al-spec/SpecNode.git",
+        "ref": "main",
+        "revision": SPECNODE_MAIN_REVISION,
+        "path": ".",
+    } in package_entries
+
+    for text in (public_alpha_doc, docc_public_alpha, readme):
+        assert "https://0al-spec.github.io/SpecPM" in text
+        assert "specpm.core" in text
+        assert "specnode.core" in text
+
+    assert "specnode.typed_job_protocol" in public_alpha_doc
+    assert SPECNODE_MAIN_REVISION in public_alpha_doc
+    assert "<doc:PublicAlphaRegistry>" in docc_overview
+
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.registry.public_alpha_index" in boundary_capabilities
+    assert "specs/PUBLIC_ALPHA.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md" in evidence_paths
 
 
 def sample_submission_issue_body(
@@ -1188,6 +1242,7 @@ def test_repository_root_is_self_describing_specpackage() -> None:
         "specpm.public_api.core_functions",
         "specpm.package.validate",
         "specpm.documentation.docc_site",
+        "specpm.registry.public_alpha_index",
         "specpm.deployment.deploy_first_workflow",
         "specpm.deployment.registry_operations_runbook",
     } <= capabilities
@@ -1832,17 +1887,56 @@ def test_public_index_generate_prefers_stable_release_for_latest_version(
     ]
 
 
-def test_public_index_accepted_manifest_resolves_repository_relative_packages() -> None:
-    report = load_public_index_manifest(PUBLIC_INDEX_ACCEPTED_MANIFEST, root=ROOT)
+def test_public_index_accepted_manifest_resolves_alpha_packages(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    remote_root = tmp_path / "remote-sources"
+
+    def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
+        assert repository_url == "https://github.com/0al-spec/SpecNode.git"
+        assert ref == "main"
+        write_fake_specnode_checkout(checkout)
+        return {"status": "ok", "revision": SPECNODE_MAIN_REVISION, "errors": []}
+
+    monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
+
+    report = load_public_index_manifest(
+        PUBLIC_INDEX_ACCEPTED_MANIFEST,
+        root=ROOT,
+        remote_root=remote_root,
+    )
 
     assert report["status"] == "ok"
-    assert report["package_dirs"] == [str((ROOT / "examples/email_tools").resolve())]
+    checkout = remote_root / public_index_module.public_index_checkout_dir_name(
+        "https://github.com/0al-spec/SpecNode.git",
+        "main",
+        SPECNODE_MAIN_REVISION,
+    )
+    assert report["package_dirs"] == [
+        str((ROOT / "examples/email_tools").resolve()),
+        str(ROOT.resolve()),
+        str(checkout),
+    ]
     assert report["sources"] == [
         {
             "kind": "local",
             "path": "examples/email_tools",
             "package_dir": str((ROOT / "examples/email_tools").resolve()),
-        }
+        },
+        {
+            "kind": "local",
+            "path": ".",
+            "package_dir": str(ROOT.resolve()),
+        },
+        {
+            "kind": "git",
+            "repository": "https://github.com/0al-spec/SpecNode.git",
+            "ref": "main",
+            "revision": SPECNODE_MAIN_REVISION,
+            "path": ".",
+            "package_dir": str(checkout),
+        },
     ]
     assert report["errors"] == []
 
@@ -2153,7 +2247,19 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
     assert payload["written_count"] == 11
 
 
-def test_cli_public_index_generate_accepts_reviewed_manifest(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+def test_cli_public_index_generate_accepts_reviewed_manifest(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
+        assert repository_url == "https://github.com/0al-spec/SpecNode.git"
+        assert ref == "main"
+        write_fake_specnode_checkout(checkout)
+        return {"status": "ok", "revision": SPECNODE_MAIN_REVISION, "errors": []}
+
+    monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
+
     exit_code = main(
         [
             "public-index",
@@ -2173,6 +2279,8 @@ def test_cli_public_index_generate_accepts_reviewed_manifest(tmp_path: Path, cap
     assert exit_code == 0
     assert payload["status"] == "ok"
     assert (tmp_path / "site/v0/packages/document_conversion.email_tools/index.json").is_file()
+    assert (tmp_path / "site/v0/packages/specpm.core/index.json").is_file()
+    assert (tmp_path / "site/v0/packages/specnode.core/index.json").is_file()
 
 
 def test_cli_public_index_generate_requires_package_or_manifest(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]

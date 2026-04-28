@@ -34,6 +34,8 @@ Completed areas include:
   registry surface.
 - registry operations runbook for fresh deploys, Git-based rollback,
   backup/restore boundaries, and flood/DDoS planning.
+- public alpha registry seed with `specpm.core` and pinned `specnode.core`
+  packages for early SpecGraph and SpecNode integration.
 
 ## Post-MVP Tracks
 
@@ -93,6 +95,11 @@ rollback, backup/restore sources, and current flood/DDoS boundaries while
 keeping future non-static registry or online intent-to-spec services separate
 from the current read-only public index boundary.
 
+The public alpha registry now has real ecosystem seed packages:
+`specpm.core@0.1.0` from this repository and `specnode.core@0.1.0` from a
+pinned public SpecNode source. This makes the static registry useful to
+SpecGraph and SpecNode before a mutable backend exists.
+
 `specpm publish`, auth, signing, namespace governance, remote yanking mutation
 workflows, and online intent-to-spec APIs remain separate follow-up tracks
 unless they are scoped to the enterprise registry or downstream resolver model.
@@ -105,3 +112,4 @@ unless they are scoped to the enterprise registry or downstream resolver model.
 - <doc:Conformance>
 - <doc:Deployment>
 - <doc:RegistryOperations>
+- <doc:PublicAlphaRegistry>

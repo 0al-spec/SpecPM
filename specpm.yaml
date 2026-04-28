@@ -36,6 +36,7 @@ index:
       - specpm.registry.public_static_index
       - specpm.registry.public_index_accepted_manifest
       - specpm.registry.public_index_remote_sources
+      - specpm.registry.public_alpha_index
       - specpm.registry.local_dev_service
       - specpm.registry.public_pages_deployment
       - specpm.deployment.deploy_first_workflow

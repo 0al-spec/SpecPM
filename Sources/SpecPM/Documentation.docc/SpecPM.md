@@ -41,6 +41,7 @@ The canonical source files remain in the repository:
 - `specs/CONFORMANCE.md`
 - `specs/REMOTE_REGISTRY_API.md`
 - `specs/INDEX_SUBMISSION_FLOW.md`
+- `specs/PUBLIC_ALPHA.md`
 - `specs/DEPLOY_FIRST.md`
 - `specs/REGISTRY_OPERATIONS.md`
 - `specs/RFC_0001_COVERAGE.md`
@@ -69,6 +70,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:Conformance>
 - <doc:SpecGraphIntegration>
 - <doc:AgentSkills>
+- <doc:PublicAlphaRegistry>
 
 ### Architecture
 

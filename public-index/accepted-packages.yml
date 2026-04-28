@@ -5,3 +5,8 @@
 schemaVersion: 1
 packages:
   - path: examples/email_tools
+  - path: .
+  - repository: https://github.com/0al-spec/SpecNode.git
+    ref: main
+    revision: 9b6046777723435d94d66d4149fe5e9a6c52f604
+    path: .

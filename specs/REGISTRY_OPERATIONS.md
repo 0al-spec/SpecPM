@@ -28,6 +28,9 @@ Current live surfaces:
 The static registry API is served under the `/v0` path prefix on those base
 URLs.
 
+The current public alpha registry package set is documented in
+`specs/PUBLIC_ALPHA.md`.
+
 Current public request handling is static-file based. Public registry reads do
 not execute package content, run server-side package validation, call an LLM, or
 mutate registry state.
