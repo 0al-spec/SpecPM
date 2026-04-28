@@ -862,6 +862,9 @@ def test_registry_operations_runbook_documents_deploy_backup_and_abuse_boundarie
         assert section in operations_doc
 
     for required_text in (
+        "local Docker Compose public index at `http://localhost:8081`",
+        "GitHub Pages static public index at `https://0al-spec.github.io/SpecPM`",
+        "served under the `/v0` path prefix",
         "GitHub Pages static public index",
         "public-index/accepted-packages.yml",
         "make dev-reload",
@@ -873,6 +876,8 @@ def test_registry_operations_runbook_documents_deploy_backup_and_abuse_boundarie
         "Package content cannot command the host.",
     ):
         assert required_text in operations_doc
+    assert "http://localhost:8081/v0" not in operations_doc
+    assert "https://0al-spec.github.io/SpecPM/v0" not in operations_doc
 
     assert "specs/REGISTRY_OPERATIONS.md" in readme
     assert "specs/REGISTRY_OPERATIONS.md" in deploy_doc

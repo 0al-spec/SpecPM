@@ -18,12 +18,15 @@ package publish service, package install service, or online intent-to-spec API.
 
 Current live surfaces:
 
-- local Docker Compose public index at `http://localhost:8081/v0`;
-- GitHub Pages static public index at `https://0al-spec.github.io/SpecPM/v0`;
+- local Docker Compose public index at `http://localhost:8081`;
+- GitHub Pages static public index at `https://0al-spec.github.io/SpecPM`;
 - GitHub Issue forms for public package submission, removal requests, and
   namespace claims;
 - GitHub Actions workflows for validation, DocC, static `/v0` generation, and
   read-only summary artifacts.
+
+The static registry API is served under the `/v0` path prefix on those base
+URLs.
 
 Current public request handling is static-file based. Public registry reads do
 not execute package content, run server-side package validation, call an LLM, or
