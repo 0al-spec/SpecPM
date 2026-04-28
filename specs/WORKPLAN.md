@@ -696,6 +696,38 @@ Acceptance:
 - No runtime, schema, CLI, JSON contract, registry mutation, or package
   execution behavior changes.
 
+## Phase 30. Public Index Namespace Claim Decision Summary
+
+- [x] Add a read-only GitHub Actions workflow for namespace claim decision
+  summary aggregation.
+- [x] Run the summary manually and on a weekly schedule.
+- [x] Query namespace claim issues by current maintainer-applied decision
+  labels.
+- [x] Count accepted, rejected, contested, and superseded namespace claim
+  issues without double-counting ambiguous issues in per-label counts.
+- [x] Detect ambiguous namespace claim issues with multiple decision labels.
+- [x] Preserve inclusive per-label search hit counts separately from
+  unambiguous issue counts.
+- [x] Bound GitHub Search API pagination to the first 1,000 accessible results
+  per decision label and report truncation or incomplete-result warnings.
+- [x] Emit workflow summary output and JSON/Markdown artifacts.
+- [x] Keep aggregation separate from applying labels, commenting on issues,
+  editing `public-index/accepted-packages.yml`, generating registry metadata,
+  publishing packages, installing packages, and executing package content.
+- [x] Add workflow-shape tests that keep read-only behavior explicit.
+
+Acceptance:
+
+- The workflow has repository read and issue read permissions only.
+- The workflow does not write labels, comments, accepted package sources,
+  registry metadata, packages, or package content.
+- The workflow output is a review aid, not a decision authority or namespace
+  ownership contract.
+- The workflow surfaces truncation warnings when GitHub Search API result caps
+  may make summary counts incomplete.
+- The workflow has no runtime, schema, CLI, JSON contract, auth, registry
+  mutation, or package execution changes.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -746,7 +778,7 @@ Future work may explore:
 
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
-- Namespace claim decision report aggregation.
+- Public index and enterprise registry conformance suites.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

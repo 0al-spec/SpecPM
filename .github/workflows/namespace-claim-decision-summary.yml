@@ -1,0 +1,207 @@
+name: Namespace Claim Decision Summary
+
+"on":
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  summarize-namespace-claim-decisions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build namespace claim decision summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+
+            const decisionLabels = [
+              "namespace:accepted",
+              "namespace:rejected",
+              "namespace:contested",
+              "namespace:superseded"
+            ];
+            const policyPath = "specs/NAMESPACE_CLAIM_POLICY.md";
+            const outputDir = "namespace-claim-decision-summary";
+            const searchPageSize = 100;
+            const searchPageLimit = 10;
+            const searchResultLimit = searchPageSize * searchPageLimit;
+            fs.mkdirSync(outputDir, { recursive: true });
+
+            const { data: repository } = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const policyUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${repository.default_branch}/${policyPath}`;
+
+            async function searchDecisionIssues(label) {
+              const q = `repo:${context.repo.owner}/${context.repo.repo} type:issue label:"namespace-claim" label:"${label}"`;
+              const items = [];
+              let totalCount = 0;
+              let incompleteResults = false;
+
+              for (let page = 1; page <= searchPageLimit; page += 1) {
+                const { data } = await github.rest.search.issuesAndPullRequests({
+                  q,
+                  sort: "updated",
+                  order: "desc",
+                  per_page: searchPageSize,
+                  page
+                });
+
+                if (page === 1) {
+                  totalCount = data.total_count || 0;
+                }
+                incompleteResults = incompleteResults || Boolean(data.incomplete_results);
+
+                for (const item of data.items) {
+                  items.push({
+                    number: item.number,
+                    title: item.title,
+                    state: item.state,
+                    html_url: item.html_url,
+                    updated_at: item.updated_at,
+                    labels: (item.labels || []).map((issueLabel) =>
+                      typeof issueLabel === "string" ? issueLabel : issueLabel.name
+                    )
+                  });
+                }
+
+                if (
+                  data.items.length < searchPageSize ||
+                  items.length >= Math.min(totalCount, searchResultLimit)
+                ) {
+                  break;
+                }
+              }
+
+              return {
+                items,
+                total_count: totalCount,
+                fetched_count: items.length,
+                truncated: totalCount > items.length,
+                incomplete_results: incompleteResults
+              };
+            }
+
+            const byDecisionLabel = {};
+            const searchMetadata = {};
+            const searchWarnings = [];
+            for (const label of decisionLabels) {
+              const searchResult = await searchDecisionIssues(label);
+              byDecisionLabel[label] = searchResult.items;
+              searchMetadata[label] = {
+                total_count: searchResult.total_count,
+                fetched_count: searchResult.fetched_count,
+                truncated: searchResult.truncated,
+                incomplete_results: searchResult.incomplete_results
+              };
+              if (searchResult.truncated) {
+                searchWarnings.push(
+                  `Search results for ${label} were truncated at ${searchResult.fetched_count} of ${searchResult.total_count}; counts may be incomplete.`
+                );
+              }
+              if (searchResult.incomplete_results) {
+                searchWarnings.push(
+                  `GitHub reported incomplete search results for ${label}; counts may be incomplete.`
+                );
+              }
+            }
+
+            const seen = new Map();
+            for (const issues of Object.values(byDecisionLabel)) {
+              for (const issue of issues) {
+                seen.set(issue.number, issue);
+              }
+            }
+
+            const uniqueIssues = [...seen.values()].map((issue) => {
+              const activeDecisionLabels = decisionLabels.filter((label) => issue.labels.includes(label));
+              return {
+                ...issue,
+                active_decision_labels: activeDecisionLabels
+              };
+            });
+
+            const ambiguous = uniqueIssues.filter((issue) => issue.active_decision_labels.length > 1);
+            const counts = Object.fromEntries(
+              decisionLabels.map((label) => [
+                label,
+                uniqueIssues.filter(
+                  (issue) =>
+                    issue.active_decision_labels.length === 1 &&
+                    issue.active_decision_labels[0] === label
+                ).length
+              ])
+            );
+            const inclusiveSearchCounts = Object.fromEntries(
+              decisionLabels.map((label) => [label, byDecisionLabel[label].length])
+            );
+
+            const report = {
+              generated_at: new Date().toISOString(),
+              repository: `${context.repo.owner}/${context.repo.repo}`,
+              policy_url: policyUrl,
+              decision_labels: decisionLabels,
+              search_limit: searchResultLimit,
+              search_warnings: searchWarnings,
+              search_metadata: searchMetadata,
+              counts,
+              inclusive_search_counts: inclusiveSearchCounts,
+              ambiguous_count: ambiguous.length,
+              by_decision_label: byDecisionLabel,
+              ambiguous
+            };
+
+            const markdown = [
+              "# Namespace Claim Decision Summary",
+              "",
+              `Generated at: ${report.generated_at}`,
+              "",
+              `Policy: [Public Index Namespace Claim Policy](${policyUrl})`,
+              "",
+              "## Counts",
+              "",
+              "| Decision label | Unambiguous issues | Inclusive search hits |",
+              "| --- | ---: | ---: |",
+              ...decisionLabels.map((label) => `| \`${label}\` | ${counts[label]} | ${inclusiveSearchCounts[label]} |`),
+              `| ambiguous decision labels | ${ambiguous.length} | - |`,
+              "",
+              "## Search Warnings",
+              "",
+              ...(searchWarnings.length === 0
+                ? ["No search truncation or incomplete-result warnings were reported."]
+                : searchWarnings.map((warning) => `- ${warning}`)),
+              "",
+              "## Ambiguous Issues",
+              "",
+              ...(ambiguous.length === 0
+                ? ["No namespace claim issues currently have multiple decision labels."]
+                : ambiguous.map((issue) => `- #${issue.number} [${issue.title}](${issue.html_url})`)),
+              "",
+              "This summary is read-only. It does not apply labels, decide claims, edit `public-index/accepted-packages.yml`, generate registry metadata, publish packages, install packages, or execute package content.",
+              ""
+            ].join("\n");
+
+            fs.writeFileSync(
+              path.join(outputDir, "namespace-claim-decision-summary.json"),
+              JSON.stringify(report, null, 2) + "\n",
+              "utf8"
+            );
+            fs.writeFileSync(
+              path.join(outputDir, "namespace-claim-decision-summary.md"),
+              markdown,
+              "utf8"
+            );
+            await core.summary.addRaw(markdown).write();
+
+      - name: Upload namespace claim decision summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: namespace-claim-decision-summary
+          path: namespace-claim-decision-summary/

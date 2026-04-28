@@ -33,6 +33,7 @@ scope:
     - Document public SpecPM Index namespace claim review policy and dispute handling.
     - Triage namespace claim issues with conservative GitHub label automation.
     - Report maintainer-applied namespace claim decision labels without deciding claims.
+    - Summarize namespace claim decision labels through read-only GitHub workflow artifacts.
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
     - Track maintainer-reviewed accepted package directories and pinned public Git sources for generated public index deployment.
@@ -111,6 +112,9 @@ provides:
     - id: specpm.registry.namespace_claim_decision_reports
       role: secondary
       summary: Report maintainer-applied namespace claim decision labels without applying labels or mutating registry state.
+    - id: specpm.registry.namespace_claim_decision_summary
+      role: secondary
+      summary: Aggregate namespace claim decision labels into read-only workflow summaries and artifacts.
     - id: specpm.registry.remote_readonly_client
       role: secondary
       summary: Fetch and validate read-only remote registry status, package index, and package metadata without downloading archives or mutating local state.
@@ -420,6 +424,13 @@ evidence:
       - specpm.registry.namespace_claim_decision_reports
       - specpm.registry.namespace_claim_policy
       - specpm.registry.namespace_claim_request_flow
+  - id: namespace_claim_decision_summary_workflow
+    kind: source
+    path: .github/workflows/namespace-claim-decision-summary.yml
+    supports:
+      - specpm.registry.namespace_claim_decision_summary
+      - specpm.registry.namespace_claim_decision_reports
+      - specpm.registry.namespace_claim_policy
   - id: package_submission_workflow
     kind: documentation
     path: .github/workflows/package-submission-check.yml

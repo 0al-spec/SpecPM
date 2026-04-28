@@ -60,6 +60,9 @@ NAMESPACE_CLAIM_TRIAGE_WORKFLOW = ROOT / ".github/workflows/namespace-claim-tria
 NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-report.yml"
 )
+NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW = (
+    ROOT / ".github/workflows/namespace-claim-decision-summary.yml"
+)
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
@@ -636,6 +639,60 @@ def test_namespace_claim_decision_report_workflow_is_report_only() -> None:
     assert "does not apply terminal decision labels by itself" in script
     assert "public-index/accepted-packages.yml" in script
     for forbidden in ("addLabels", "createLabel", "specpm publish", "public-index generate"):
+        assert forbidden not in script
+
+
+def test_namespace_claim_decision_summary_workflow_is_read_only() -> None:
+    loaded = load_yaml_file(NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW)
+
+    assert loaded["name"] == "Namespace Claim Decision Summary"
+    assert loaded["permissions"] == {"contents": "read", "issues": "read"}
+    assert "workflow_dispatch" in loaded["on"]
+    assert loaded["on"]["schedule"][0]["cron"] == "17 3 * * 1"
+
+    job = loaded["jobs"]["summarize-namespace-claim-decisions"]
+    steps = {step["name"]: step for step in job["steps"] if "name" in step}
+    assert "Build namespace claim decision summary" in steps
+    assert "Upload namespace claim decision summary" in steps
+
+    script = steps["Build namespace claim decision summary"]["with"]["script"]
+    for decision_label in (
+        "namespace:accepted",
+        "namespace:rejected",
+        "namespace:contested",
+        "namespace:superseded",
+    ):
+        assert decision_label in script
+    assert "github.rest.search.issuesAndPullRequests" in script
+    assert 'label:"namespace-claim"' in script
+    assert 'label:"${label}"' in script
+    assert "const searchPageLimit = 10" in script
+    assert "data.total_count" in script
+    assert "search_warnings" in script
+    assert "search_metadata" in script
+    assert "truncated" in script
+    assert "inclusive_search_counts" in script
+    assert "active_decision_labels" in script
+    assert "Unambiguous issues" in script
+    assert "ambiguous_count" in script
+    assert "namespace-claim-decision-summary.json" in script
+    assert "namespace-claim-decision-summary.md" in script
+    assert "core.summary.addRaw" in script
+    assert "This summary is read-only" in script
+    assert "public-index/accepted-packages.yml" in script
+
+    upload = steps["Upload namespace claim decision summary"]
+    assert upload["uses"] == "actions/upload-artifact@v4"
+    assert upload["with"]["name"] == "namespace-claim-decision-summary"
+
+    for forbidden in (
+        "addLabels",
+        "createLabel",
+        "createComment",
+        "updateComment",
+        "specpm publish",
+        "public-index generate",
+    ):
         assert forbidden not in script
 
 

@@ -1,7 +1,7 @@
 # SpecPM Index Submission Flow
 
 Status: Draft
-Updated: 2026-04-27
+Updated: 2026-04-28
 Scope: post-MVP public index submission and enterprise registry deployment
 
 ## Purpose
@@ -168,6 +168,18 @@ does not apply terminal decision labels by itself, reports ambiguity when
 multiple decision labels are present, clears stale reports when decision labels
 are removed, and does not mutate public index sources or generated registry
 metadata.
+
+The optional namespace claim decision summary workflow lives at:
+
+```text
+.github/workflows/namespace-claim-decision-summary.yml
+```
+
+The workflow runs manually or on a schedule. It aggregates current namespace
+claim decision labels into workflow summary output and JSON/Markdown artifacts.
+It is read-only: it does not apply labels, comment on issues, edit
+`public-index/accepted-packages.yml`, generate registry metadata, publish
+packages, install packages, or execute package content.
 
 ## Submission Validation Workflow
 
@@ -399,6 +411,5 @@ intent. A submission cannot command the index, the registry, or the host.
 
 Future work may add:
 
-- namespace claim decision report aggregation;
+- public index and enterprise registry conformance suites;
 - enterprise registry reference implementation;
-- conformance suites for public index and enterprise registry deployments.

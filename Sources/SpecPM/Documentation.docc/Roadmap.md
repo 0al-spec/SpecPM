@@ -71,11 +71,13 @@ criteria and dispute handling are documented in
 `specs/NAMESPACE_CLAIM_POLICY.md`, and namespace claim label triage lives in
 `.github/workflows/namespace-claim-triage.yml`. Maintainer-applied namespace
 claim decision labels can be reported by
-`.github/workflows/namespace-claim-decision-report.yml`. Static registry
+`.github/workflows/namespace-claim-decision-report.yml`, and current decision
+labels can be summarized by
+`.github/workflows/namespace-claim-decision-summary.yml`. Static registry
 metadata can be generated with `specpm public-index generate`. The next useful
-registry increment is namespace claim decision report aggregation for the
-public static index. Enterprise registry work should remain available for
-private packages, auth, audit, policy, and internal namespace ownership.
+registry increment is public index and enterprise registry conformance suites.
+Enterprise registry work should remain available for private packages, auth,
+audit, policy, and internal namespace ownership.
 
 `specpm publish`, auth, signing, namespace governance, and remote yanking
 mutation workflows remain separate follow-up tracks unless they are scoped to
