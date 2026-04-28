@@ -28,6 +28,9 @@ jobs:
             ];
             const policyPath = "specs/NAMESPACE_CLAIM_POLICY.md";
             const outputDir = "namespace-claim-decision-summary";
+            const searchPageSize = 100;
+            const searchPageLimit = 10;
+            const searchResultLimit = searchPageSize * searchPageLimit;
             fs.mkdirSync(outputDir, { recursive: true });
 
             const { data: repository } = await github.rest.repos.get({
@@ -39,16 +42,22 @@ jobs:
             async function searchDecisionIssues(label) {
               const q = `repo:${context.repo.owner}/${context.repo.repo} type:issue label:"namespace-claim" label:"${label}"`;
               const items = [];
-              let page = 1;
+              let totalCount = 0;
+              let incompleteResults = false;
 
-              while (true) {
+              for (let page = 1; page <= searchPageLimit; page += 1) {
                 const { data } = await github.rest.search.issuesAndPullRequests({
                   q,
                   sort: "updated",
                   order: "desc",
-                  per_page: 100,
+                  per_page: searchPageSize,
                   page
                 });
+
+                if (page === 1) {
+                  totalCount = data.total_count || 0;
+                }
+                incompleteResults = incompleteResults || Boolean(data.incomplete_results);
 
                 for (const item of data.items) {
                   items.push({
@@ -63,19 +72,45 @@ jobs:
                   });
                 }
 
-                if (data.items.length < 100) {
+                if (
+                  data.items.length < searchPageSize ||
+                  items.length >= Math.min(totalCount, searchResultLimit)
+                ) {
                   break;
                 }
-
-                page += 1;
               }
 
-              return items;
+              return {
+                items,
+                total_count: totalCount,
+                fetched_count: items.length,
+                truncated: totalCount > items.length,
+                incomplete_results: incompleteResults
+              };
             }
 
             const byDecisionLabel = {};
+            const searchMetadata = {};
+            const searchWarnings = [];
             for (const label of decisionLabels) {
-              byDecisionLabel[label] = await searchDecisionIssues(label);
+              const searchResult = await searchDecisionIssues(label);
+              byDecisionLabel[label] = searchResult.items;
+              searchMetadata[label] = {
+                total_count: searchResult.total_count,
+                fetched_count: searchResult.fetched_count,
+                truncated: searchResult.truncated,
+                incomplete_results: searchResult.incomplete_results
+              };
+              if (searchResult.truncated) {
+                searchWarnings.push(
+                  `Search results for ${label} were truncated at ${searchResult.fetched_count} of ${searchResult.total_count}; counts may be incomplete.`
+                );
+              }
+              if (searchResult.incomplete_results) {
+                searchWarnings.push(
+                  `GitHub reported incomplete search results for ${label}; counts may be incomplete.`
+                );
+              }
             }
 
             const seen = new Map();
@@ -85,19 +120,39 @@ jobs:
               }
             }
 
-            const ambiguous = [...seen.values()].filter((issue) => {
+            const uniqueIssues = [...seen.values()].map((issue) => {
               const activeDecisionLabels = decisionLabels.filter((label) => issue.labels.includes(label));
-              return activeDecisionLabels.length > 1;
+              return {
+                ...issue,
+                active_decision_labels: activeDecisionLabels
+              };
             });
+
+            const ambiguous = uniqueIssues.filter((issue) => issue.active_decision_labels.length > 1);
+            const counts = Object.fromEntries(
+              decisionLabels.map((label) => [
+                label,
+                uniqueIssues.filter(
+                  (issue) =>
+                    issue.active_decision_labels.length === 1 &&
+                    issue.active_decision_labels[0] === label
+                ).length
+              ])
+            );
+            const inclusiveSearchCounts = Object.fromEntries(
+              decisionLabels.map((label) => [label, byDecisionLabel[label].length])
+            );
 
             const report = {
               generated_at: new Date().toISOString(),
               repository: `${context.repo.owner}/${context.repo.repo}`,
               policy_url: policyUrl,
               decision_labels: decisionLabels,
-              counts: Object.fromEntries(
-                decisionLabels.map((label) => [label, byDecisionLabel[label].length])
-              ),
+              search_limit: searchResultLimit,
+              search_warnings: searchWarnings,
+              search_metadata: searchMetadata,
+              counts,
+              inclusive_search_counts: inclusiveSearchCounts,
               ambiguous_count: ambiguous.length,
               by_decision_label: byDecisionLabel,
               ambiguous
@@ -112,10 +167,16 @@ jobs:
               "",
               "## Counts",
               "",
-              "| Decision label | Issues |",
-              "| --- | ---: |",
-              ...decisionLabels.map((label) => `| \`${label}\` | ${byDecisionLabel[label].length} |`),
-              `| ambiguous decision labels | ${ambiguous.length} |`,
+              "| Decision label | Unambiguous issues | Inclusive search hits |",
+              "| --- | ---: | ---: |",
+              ...decisionLabels.map((label) => `| \`${label}\` | ${counts[label]} | ${inclusiveSearchCounts[label]} |`),
+              `| ambiguous decision labels | ${ambiguous.length} | - |`,
+              "",
+              "## Search Warnings",
+              "",
+              ...(searchWarnings.length === 0
+                ? ["No search truncation or incomplete-result warnings were reported."]
+                : searchWarnings.map((warning) => `- ${warning}`)),
               "",
               "## Ambiguous Issues",
               "",

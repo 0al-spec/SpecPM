@@ -704,8 +704,12 @@ Acceptance:
 - [x] Query namespace claim issues by current maintainer-applied decision
   labels.
 - [x] Count accepted, rejected, contested, and superseded namespace claim
-  issues.
+  issues without double-counting ambiguous issues in per-label counts.
 - [x] Detect ambiguous namespace claim issues with multiple decision labels.
+- [x] Preserve inclusive per-label search hit counts separately from
+  unambiguous issue counts.
+- [x] Bound GitHub Search API pagination to the first 1,000 accessible results
+  per decision label and report truncation or incomplete-result warnings.
 - [x] Emit workflow summary output and JSON/Markdown artifacts.
 - [x] Keep aggregation separate from applying labels, commenting on issues,
   editing `public-index/accepted-packages.yml`, generating registry metadata,
@@ -719,6 +723,8 @@ Acceptance:
   registry metadata, packages, or package content.
 - The workflow output is a review aid, not a decision authority or namespace
   ownership contract.
+- The workflow surfaces truncation warnings when GitHub Search API result caps
+  may make summary counts incomplete.
 - The workflow has no runtime, schema, CLI, JSON contract, auth, registry
   mutation, or package execution changes.
 

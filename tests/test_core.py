@@ -666,6 +666,14 @@ def test_namespace_claim_decision_summary_workflow_is_read_only() -> None:
     assert "github.rest.search.issuesAndPullRequests" in script
     assert 'label:"namespace-claim"' in script
     assert 'label:"${label}"' in script
+    assert "const searchPageLimit = 10" in script
+    assert "data.total_count" in script
+    assert "search_warnings" in script
+    assert "search_metadata" in script
+    assert "truncated" in script
+    assert "inclusive_search_counts" in script
+    assert "active_decision_labels" in script
+    assert "Unambiguous issues" in script
     assert "ambiguous_count" in script
     assert "namespace-claim-decision-summary.json" in script
     assert "namespace-claim-decision-summary.md" in script
