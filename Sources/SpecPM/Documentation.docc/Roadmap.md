@@ -30,6 +30,8 @@ Completed areas include:
   review.
 - public static index and enterprise registry conformance cases for the
   read-only `/v0` metadata contract.
+- deploy-first local Docker and GitHub Pages smoke workflow for the read-only
+  registry surface.
 
 ## Post-MVP Tracks
 
@@ -47,6 +49,8 @@ Current post-MVP tracks include:
 - downstream intent discovery with LLMs, embeddings, vector search, or RAG;
 - full dependency solving;
 - expanded conformance suites;
+- fresh-version deployment, backup, restore, flood, abuse, and DDoS controls
+  for service surfaces beyond static hosting;
 - richer import adapters;
 - cross-repo PR workflow automation with SpecGraph;
 - SpecGraph feedback promotion from observed downstream adoption.
@@ -78,13 +82,18 @@ labels can be summarized by
 `.github/workflows/namespace-claim-decision-summary.yml`. Static registry
 metadata can be generated with `specpm public-index generate`. Public static
 index and enterprise registry conformance cases now cover the read-only `/v0`
-metadata contract without requiring a live server. The next useful registry
-increment is deciding whether enterprise-specific auth/audit policy remains
-docs-only or gets a separate experimental profile.
+metadata contract without requiring a live server.
 
-`specpm publish`, auth, signing, namespace governance, and remote yanking
-mutation workflows remain separate follow-up tracks unless they are scoped to
-the enterprise registry model.
+The deploy-first loop is now explicit: use `make dev-reload` for live local
+Docker registry changes and `make pages-smoke` for the deployed static Pages
+registry. The next useful operational increment is to design fresh-version
+deployment, backup/restore, and abuse/DDoS controls for future non-static
+registry or online intent-to-spec services without changing the current
+read-only public index boundary.
+
+`specpm publish`, auth, signing, namespace governance, remote yanking mutation
+workflows, and online intent-to-spec APIs remain separate follow-up tracks
+unless they are scoped to the enterprise registry or downstream resolver model.
 
 ## References
 
@@ -92,3 +101,4 @@ the enterprise registry model.
 - `specs/RFC_0001_COVERAGE.md`
 - `specs/INDEX_SUBMISSION_FLOW.md`
 - <doc:Conformance>
+- <doc:Deployment>

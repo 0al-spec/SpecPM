@@ -41,6 +41,7 @@ The canonical source files remain in the repository:
 - `specs/CONFORMANCE.md`
 - `specs/REMOTE_REGISTRY_API.md`
 - `specs/INDEX_SUBMISSION_FLOW.md`
+- `specs/DEPLOY_FIRST.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
 - `RFC/SpecGraph-RFC-0001.md`
@@ -72,4 +73,5 @@ Package content can describe desired outputs. Package content cannot command the
 
 - <doc:BoundariesAndTrust>
 - <doc:IntentDiscoveryBoundary>
+- <doc:Deployment>
 - <doc:Roadmap>

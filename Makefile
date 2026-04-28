@@ -1,10 +1,12 @@
-.PHONY: install test lint format-check docker-build docker-test docs-build public-index-generate public-index-up public-index-down public-index-wait public-index-smoke
+.PHONY: install test lint format-check docker-build docker-test docs-build public-index-generate public-index-up public-index-reload public-index-down public-index-wait public-index-smoke dev-up dev-reload dev-smoke dev-down pages-smoke
 
 SPECPM_PUBLIC_INDEX_PORT ?= 8081
 SPECPM_PUBLIC_INDEX_REGISTRY_URL ?= http://localhost:$(SPECPM_PUBLIC_INDEX_PORT)
+PAGES_REGISTRY_URL ?= https://0al-spec.github.io/SpecPM
 PUBLIC_INDEX_OUTPUT ?= .specpm/public-index
 PUBLIC_INDEX_MANIFEST ?= public-index/accepted-packages.yml
 PUBLIC_INDEX_SMOKE_CAPABILITY ?= document_conversion.email_to_markdown
+PUBLIC_INDEX_COMPOSE_ARGS ?=
 
 install:
 	python3 -m pip install -e ".[dev]"
@@ -43,7 +45,10 @@ public-index-up:
 	SPECPM_PUBLIC_INDEX_PORT=$(SPECPM_PUBLIC_INDEX_PORT) \
 	SPECPM_PUBLIC_INDEX_REGISTRY_URL=$(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
 	SPECPM_PUBLIC_INDEX_MANIFEST=$(PUBLIC_INDEX_MANIFEST) \
-	docker compose up -d --build public-index
+	docker compose up -d --build $(PUBLIC_INDEX_COMPOSE_ARGS) public-index
+
+public-index-reload:
+	$(MAKE) public-index-up PUBLIC_INDEX_COMPOSE_ARGS="--force-recreate"
 
 public-index-down:
 	docker compose stop public-index
@@ -68,4 +73,23 @@ public-index-smoke: public-index-wait
 		--json
 	PYTHONPATH=src python3 -m specpm.cli remote search $(PUBLIC_INDEX_SMOKE_CAPABILITY) \
 		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json
+
+dev-up: public-index-up public-index-smoke
+
+dev-reload: public-index-reload public-index-smoke
+
+dev-smoke: public-index-smoke
+
+dev-down: public-index-down
+
+pages-smoke:
+	PYTHONPATH=src python3 -m specpm.cli remote status \
+		--registry $(PAGES_REGISTRY_URL) \
+		--json
+	PYTHONPATH=src python3 -m specpm.cli remote packages \
+		--registry $(PAGES_REGISTRY_URL) \
+		--json
+	PYTHONPATH=src python3 -m specpm.cli remote search $(PUBLIC_INDEX_SMOKE_CAPABILITY) \
+		--registry $(PAGES_REGISTRY_URL) \
 		--json

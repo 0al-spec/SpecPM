@@ -759,11 +759,53 @@ Acceptance:
   client, package signing, package installation, or package execution behavior
   is added.
 
+## Phase 32. Deploy-First Development Workflow
+
+- [x] Add deploy-first Make aliases for the live local registry loop:
+  `dev-up`, `dev-reload`, `dev-smoke`, and `dev-down`.
+- [x] Add `public-index-reload` so registry-related changes can force-recreate
+  the Docker Compose `public-index` service before smoke checks.
+- [x] Add `pages-smoke` for validating the deployed GitHub Pages `/v0`
+  registry through the read-only `specpm remote` client.
+- [x] Document the current live local deployment, production static Pages
+  deployment, fresh-version deployment strategy, backup assumptions, and
+  flood/DDoS boundary in `specs/DEPLOY_FIRST.md`.
+- [x] Update repository agent instructions so registry/deploy changes use the
+  live Docker service as the first deploy gate.
+- [x] Update README and DocC so local operators and downstream SpecGraph or
+  ContextBuilder developers can find the live registry workflow.
+- [x] Update the self-spec so deploy-first operation is declared as part of the
+  repository package surface.
+- [x] Add tests that keep the deploy-first Make targets, docs, and self-spec
+  coverage aligned.
+- [x] Keep the workflow read-only: no `specpm publish`, remote mutation API,
+  auth flow, archive download/install client, package execution, or online
+  intent-to-spec runtime is added.
+
+Acceptance:
+
+- `make dev-reload` rebuilds/recreates the local Docker public-index service
+  and runs live read-only smoke checks.
+- `make pages-smoke` validates the deployed GitHub Pages `/v0` registry through
+  the same read-only remote metadata client.
+- Documentation makes clear that fresh deployment, backup, flood/DDoS
+  protection, and future online intent-to-spec endpoints are operational
+  follow-up tracks, not current SpecPM core behavior.
+- The local service remains available for SpecGraph, ContextBuilder, and manual
+  ecosystem integration testing at `http://localhost:8081` by default.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
 - Enterprise remote registry deployment with private access control, audit, and
   policy enforcement.
+- Fresh-version deployment channels, staged rollout, rollback, and release
+  promotion policy for non-static registries.
+- Backup and restore policy for generated registry snapshots, accepted package
+  manifests, package archives, private enterprise metadata, audit logs, and
+  namespace decisions.
+- Flood, abuse, and DDoS controls for future online registry and intent-to-spec
+  endpoints.
 - `specpm publish`.
 - Remote package yanking governance.
 - Package signing and trust policies.

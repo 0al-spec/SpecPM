@@ -75,6 +75,23 @@ SPECPM_PUBLIC_INDEX_PORT=8082 make public-index-up
 SPECPM_PUBLIC_INDEX_REGISTRY_URL=http://localhost:8082 make public-index-smoke
 ```
 
+Deploy-first local workflow:
+
+```bash
+make dev-up
+make dev-smoke
+make dev-reload
+make pages-smoke
+make dev-down
+```
+
+`make dev-up` builds and starts the Docker-backed local registry, then smokes
+the live `/v0` surface through `specpm remote`. `make dev-reload` force
+recreates the container so changed package manifests, accepted sources, or
+generator code regenerate `.specpm/public-index` before smoke tests. `make
+pages-smoke` verifies the GitHub Pages registry deployment at
+`https://0al-spec.github.io/SpecPM`.
+
 Run the post-MVP read-only remote metadata client against a compatible registry:
 
 ```bash
@@ -131,7 +148,8 @@ metadata clients for that contract; they do not download package archives,
 publish packages, mutate remote state, or execute package content.
 
 Public index and enterprise registry deployment options are tracked in
-`specs/INDEX_SUBMISSION_FLOW.md`. The reference public-index submission form is
+`specs/INDEX_SUBMISSION_FLOW.md`. The deploy-first operating loop is tracked in
+`specs/DEPLOY_FIRST.md`. The reference public-index submission form is
 `.github/ISSUE_TEMPLATE/add-specpackages.yml`, the reference removal request
 form is `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, the reference
 namespace claim form is `.github/ISSUE_TEMPLATE/claim-namespace.yml`, and the
