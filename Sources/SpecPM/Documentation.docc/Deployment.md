@@ -66,6 +66,9 @@ Current public reads are static files. Future non-static services need separate
 design for fresh-version deployment, backups, rollback, rate limits, abuse
 monitoring, and DDoS protection.
 
+See <doc:RegistryOperations> for the detailed runbook.
+
 ## Source Contract
 
-The detailed operating notes are maintained in `specs/DEPLOY_FIRST.md`.
+The detailed operating notes are maintained in `specs/DEPLOY_FIRST.md` and
+`specs/REGISTRY_OPERATIONS.md`.

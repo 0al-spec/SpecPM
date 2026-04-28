@@ -149,7 +149,9 @@ publish packages, mutate remote state, or execute package content.
 
 Public index and enterprise registry deployment options are tracked in
 `specs/INDEX_SUBMISSION_FLOW.md`. The deploy-first operating loop is tracked in
-`specs/DEPLOY_FIRST.md`. The reference public-index submission form is
+`specs/DEPLOY_FIRST.md`, and fresh deploy, backup/restore, and flood/DDoS
+planning are tracked in `specs/REGISTRY_OPERATIONS.md`. The reference
+public-index submission form is
 `.github/ISSUE_TEMPLATE/add-specpackages.yml`, the reference removal request
 form is `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, the reference
 namespace claim form is `.github/ISSUE_TEMPLATE/claim-namespace.yml`, and the

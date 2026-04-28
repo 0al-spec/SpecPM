@@ -153,6 +153,12 @@ Future work should separately define fresh-version deployment channels,
 rollback and backup policy, abuse controls, and DDoS protection for any service
 surface that goes beyond static hosting.
 
+The current registry operations runbook is documented in
+`specs/REGISTRY_OPERATIONS.md`. It treats the public index as static
+GitHub-backed infrastructure today and reserves authenticated deployment,
+backup automation, restore automation, request throttling, and DDoS enforcement
+for future enterprise or online service profiles.
+
 ## 5. Primary Users
 
 - Package author: creates `specpm.yaml`, `BoundarySpec`, evidence, and foreign
