@@ -6,6 +6,7 @@ PAGES_REGISTRY_URL ?= https://0al-spec.github.io/SpecPM
 PUBLIC_INDEX_OUTPUT ?= .specpm/public-index
 PUBLIC_INDEX_MANIFEST ?= public-index/accepted-packages.yml
 PUBLIC_INDEX_SMOKE_CAPABILITY ?= document_conversion.email_to_markdown
+PUBLIC_INDEX_COMPOSE_ARGS ?=
 
 install:
 	python3 -m pip install -e ".[dev]"
@@ -44,13 +45,10 @@ public-index-up:
 	SPECPM_PUBLIC_INDEX_PORT=$(SPECPM_PUBLIC_INDEX_PORT) \
 	SPECPM_PUBLIC_INDEX_REGISTRY_URL=$(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
 	SPECPM_PUBLIC_INDEX_MANIFEST=$(PUBLIC_INDEX_MANIFEST) \
-	docker compose up -d --build public-index
+	docker compose up -d --build $(PUBLIC_INDEX_COMPOSE_ARGS) public-index
 
 public-index-reload:
-	SPECPM_PUBLIC_INDEX_PORT=$(SPECPM_PUBLIC_INDEX_PORT) \
-	SPECPM_PUBLIC_INDEX_REGISTRY_URL=$(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
-	SPECPM_PUBLIC_INDEX_MANIFEST=$(PUBLIC_INDEX_MANIFEST) \
-	docker compose up -d --build --force-recreate public-index
+	$(MAKE) public-index-up PUBLIC_INDEX_COMPOSE_ARGS="--force-recreate"
 
 public-index-down:
 	docker compose stop public-index

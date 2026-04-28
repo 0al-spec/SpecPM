@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import io
 import json
+import re
 import shutil
 import subprocess
 import tarfile
@@ -167,6 +168,27 @@ def load_remote_registry_fixture(name: str) -> dict[str, Any]:
     )
     assert isinstance(loaded, dict)
     return loaded
+
+
+def make_target_prerequisites(makefile: str, target: str) -> list[str]:
+    match = re.search(rf"^{re.escape(target)}:(.*)$", makefile, re.MULTILINE)
+    assert match is not None, target
+    return match.group(1).split()
+
+
+def make_target_recipe(makefile: str, target: str) -> str:
+    lines = makefile.splitlines()
+    target_line = f"{target}:"
+    for index, line in enumerate(lines):
+        if line.startswith(target_line):
+            recipe_lines: list[str] = []
+            for recipe_line in lines[index + 1 :]:
+                if recipe_line and not recipe_line.startswith(("\t", " ", "@")):
+                    break
+                if recipe_line.strip():
+                    recipe_lines.append(recipe_line)
+            return " ".join(" ".join(recipe_lines).split())
+    raise AssertionError(target)
 
 
 class FakeRemoteResponse:
@@ -767,20 +789,42 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
         encoding="utf-8"
     )
 
-    for target in (
+    expected_targets = {
         "public-index-reload",
         "dev-up",
         "dev-reload",
         "dev-smoke",
         "dev-down",
         "pages-smoke",
-    ):
+    }
+    for target in expected_targets:
         assert f"{target}:" in makefile
 
     assert "PAGES_REGISTRY_URL ?= https://0al-spec.github.io/SpecPM" in makefile
-    assert "docker compose up -d --build --force-recreate public-index" in makefile
-    assert "dev-reload: public-index-reload public-index-smoke" in makefile
-    assert "pages-smoke:" in makefile
+    assert set(make_target_prerequisites(makefile, "dev-reload")) == {
+        "public-index-reload",
+        "public-index-smoke",
+    }
+    assert set(make_target_prerequisites(makefile, "dev-up")) == {
+        "public-index-up",
+        "public-index-smoke",
+    }
+
+    public_index_up_recipe = make_target_recipe(makefile, "public-index-up")
+    assert "SPECPM_PUBLIC_INDEX_PORT=$(SPECPM_PUBLIC_INDEX_PORT)" in public_index_up_recipe
+    assert "SPECPM_PUBLIC_INDEX_REGISTRY_URL=$(SPECPM_PUBLIC_INDEX_REGISTRY_URL)" in (
+        public_index_up_recipe
+    )
+    assert "SPECPM_PUBLIC_INDEX_MANIFEST=$(PUBLIC_INDEX_MANIFEST)" in public_index_up_recipe
+    assert "docker compose up" in public_index_up_recipe
+    assert "--build" in public_index_up_recipe
+    assert "$(PUBLIC_INDEX_COMPOSE_ARGS)" in public_index_up_recipe
+    assert "public-index" in public_index_up_recipe
+
+    public_index_reload_recipe = make_target_recipe(makefile, "public-index-reload")
+    assert "$(MAKE)" in public_index_reload_recipe
+    assert "public-index-up" in public_index_reload_recipe
+    assert 'PUBLIC_INDEX_COMPOSE_ARGS="--force-recreate"' in public_index_reload_recipe
 
     for text in (readme, agent_instructions, deploy_doc, docc_deployment):
         assert "make dev-reload" in text
