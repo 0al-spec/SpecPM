@@ -27,8 +27,8 @@ docker compose run --rm specpm pack examples/email_tools -o /tmp/email_tools.spe
 Run the local public index service:
 
 ```bash
-make public-index-up
-make public-index-smoke
+make dev-up
+make dev-smoke
 ```
 
 The compose service exposes a local read-only public index at
@@ -37,8 +37,21 @@ maintainer-reviewed `public-index/accepted-packages.yml` manifest and serves
 the static `/v0` registry tree for manual testing and local SpecGraph or
 ContextBuilder integration.
 
+After changing package manifests, accepted package sources, registry generator
+code, or remote contract code, recreate the live container and smoke it:
+
 ```bash
-make public-index-down
+make dev-reload
+```
+
+Smoke the deployed GitHub Pages registry:
+
+```bash
+make pages-smoke
+```
+
+```bash
+make dev-down
 ```
 
 Use the repository quality gates before opening or merging changes:
@@ -71,3 +84,4 @@ The documentation build writes static output to `.docc-build/`.
 - <doc:PackageModel>
 - <doc:CLIReference>
 - <doc:JSONContracts>
+- <doc:Deployment>

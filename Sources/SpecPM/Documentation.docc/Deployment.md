@@ -1,0 +1,71 @@
+# Deployment
+
+SpecPM follows a deploy-first operating model for the registry surface: the
+current `/v0` public index should be runnable locally as a live service and
+smoke-tested through the same read-only client contract that downstream
+consumers use.
+
+## Local Live Registry
+
+Start and smoke the Docker-backed local public index:
+
+```bash
+make dev-up
+```
+
+The service listens at:
+
+```text
+http://localhost:8081/v0
+```
+
+It generates `.specpm/public-index` from the maintainer-reviewed
+`public-index/accepted-packages.yml` manifest and serves static registry
+metadata for SpecGraph, ContextBuilder, and manual ecosystem testing.
+
+After changing accepted sources, package metadata, public index generation code,
+or remote registry contract code, recreate the service and smoke it:
+
+```bash
+make dev-reload
+```
+
+Stop the local service:
+
+```bash
+make dev-down
+```
+
+## Public Static Deployment
+
+The current public deployment is GitHub Pages:
+
+```text
+https://0al-spec.github.io/SpecPM
+```
+
+The Pages artifact contains both DocC documentation and generated static `/v0`
+registry metadata. Smoke the deployed read-only registry with:
+
+```bash
+make pages-smoke
+```
+
+## Boundaries
+
+The deploy-first loop does not add:
+
+- `specpm publish`;
+- a remote mutation API;
+- authentication or authorization;
+- archive download or install behavior;
+- package execution;
+- online intent-to-spec runtime.
+
+Current public reads are static files. Future non-static services need separate
+design for fresh-version deployment, backups, rollback, rate limits, abuse
+monitoring, and DDoS protection.
+
+## Source Contract
+
+The detailed operating notes are maintained in `specs/DEPLOY_FIRST.md`.

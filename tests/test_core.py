@@ -64,6 +64,10 @@ NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-summary.yml"
 )
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
+MAKEFILE = ROOT / "Makefile"
+AGENTS_FILE = ROOT / "AGENTS.md"
+DEPLOY_FIRST_DOC = ROOT / "specs/DEPLOY_FIRST.md"
+DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
 PULL_REQUEST_TEMPLATE = ROOT / ".github/PULL_REQUEST_TEMPLATE.md"
@@ -753,6 +757,42 @@ def test_public_index_compose_service_exposes_local_registry() -> None:
     )
 
 
+def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
+    makefile = MAKEFILE.read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    agent_instructions = AGENTS_FILE.read_text(encoding="utf-8")
+    deploy_doc = DEPLOY_FIRST_DOC.read_text(encoding="utf-8")
+    docc_deployment = DOCC_DEPLOYMENT_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+
+    for target in (
+        "public-index-reload",
+        "dev-up",
+        "dev-reload",
+        "dev-smoke",
+        "dev-down",
+        "pages-smoke",
+    ):
+        assert f"{target}:" in makefile
+
+    assert "PAGES_REGISTRY_URL ?= https://0al-spec.github.io/SpecPM" in makefile
+    assert "docker compose up -d --build --force-recreate public-index" in makefile
+    assert "dev-reload: public-index-reload public-index-smoke" in makefile
+    assert "pages-smoke:" in makefile
+
+    for text in (readme, agent_instructions, deploy_doc, docc_deployment):
+        assert "make dev-reload" in text
+        assert "make pages-smoke" in text
+
+    assert "Backup Strategy" in deploy_doc
+    assert "Flood and DDoS Boundary" in deploy_doc
+    assert "does not introduce a remote mutation API" in deploy_doc
+    assert "online intent-to-spec runtime" in deploy_doc
+    assert "<doc:Deployment>" in docc_overview
+
+
 def sample_submission_issue_body(
     urls: str = "https://github.com/example/email-tools.git",
     package_path: str = ".",
@@ -1046,6 +1086,7 @@ def test_repository_root_is_self_describing_specpackage() -> None:
         "specpm.public_api.core_functions",
         "specpm.package.validate",
         "specpm.documentation.docc_site",
+        "specpm.deployment.deploy_first_workflow",
     } <= capabilities
 
     boundary_spec = inspection["boundary_specs"][0]

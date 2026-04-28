@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-26
+Updated: 2026-04-28
 Owner: SpecPM
 Primary source: `RFC/SpecGraph-RFC-0001.md`
 
@@ -66,6 +66,9 @@ The MVP must solve the practical local workflow first:
 - Produce machine-readable outputs that a viewer can render.
 - Provide repository-managed Agent Skills that help agents author and review
   SpecPM package specs without changing SpecPM runtime responsibilities.
+- Keep registry-related development deploy-first by running a Docker-backed
+  local public index and smoke-testing it through the same read-only client
+  contract that downstream consumers use.
 
 ## 4. Non-Goals
 
@@ -128,6 +131,27 @@ terminal decision labels by itself. Namespace claim decision aggregation may
 produce read-only workflow summaries and artifacts, but it must not mutate
 issues, public index sources, generated registry metadata, packages, or package
 content.
+
+## Deploy-First Operating Loop
+
+SpecPM should keep even the smallest useful registry surface deployable and
+observable. The current live development deployment is the Docker Compose
+`public-index` service, which serves generated static `/v0` metadata at
+`http://localhost:8081` by default. Registry-related changes should be checked
+with `make dev-reload`, which rebuilds and recreates the container before
+running read-only `specpm remote` smoke checks.
+
+The current public deployment is GitHub Pages at
+`https://0al-spec.github.io/SpecPM`. The Pages artifact contains DocC
+documentation and generated static `/v0` registry metadata. Operators can check
+the deployed read-only registry contract with `make pages-smoke`.
+
+This operating loop is documented in `specs/DEPLOY_FIRST.md`. It does not add a
+remote mutation API, `specpm publish`, authentication, archive download or
+install behavior, package execution, or an online intent-to-spec runtime.
+Future work should separately define fresh-version deployment channels,
+rollback and backup policy, abuse controls, and DDoS protection for any service
+surface that goes beyond static hosting.
 
 ## 5. Primary Users
 
