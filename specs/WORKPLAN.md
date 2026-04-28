@@ -827,6 +827,37 @@ Acceptance:
 - Tests prevent the runbook from silently dropping fresh deploy, backup/restore,
   flood/DDoS, and intent-to-spec boundary coverage.
 
+## Phase 34. Public Alpha Registry Seed
+
+- [x] Add the SpecPM self-spec package `specpm.core@0.1.0` to
+  `public-index/accepted-packages.yml`.
+- [x] Add the SpecNode package `specnode.core@0.1.0` as a pinned public Git
+  source in `public-index/accepted-packages.yml`.
+- [x] Pin SpecNode to exact revision
+  `9b6046777723435d94d66d4149fe5e9a6c52f604`.
+- [x] Document the public alpha registry endpoint, `/v0` prefix, seed package
+  set, intended consumers, promotion path, and boundaries in
+  `specs/PUBLIC_ALPHA.md`.
+- [x] Publish the alpha registry contract in DocC.
+- [x] Update README, PRD, and self-spec coverage.
+- [x] Add tests that keep accepted package manifest entries and public alpha
+  docs aligned.
+- [x] Keep the alpha read-only and static-hosted: no `specpm publish`, package
+  upload, remote mutation API, auth flow, package install/download client,
+  online intent-to-spec runtime, or package content execution is added.
+
+Acceptance:
+
+- Local public index generation includes `document_conversion.email_tools`,
+  `specpm.core`, and `specnode.core`.
+- `make dev-reload` exposes all alpha packages through the local Docker
+  registry.
+- After merge and Pages deployment, `make pages-smoke` checks the deployed
+  static registry and downstream consumers can query
+  `specnode.typed_job_protocol`.
+- Unit tests avoid live network checkout by faking the remote SpecNode source,
+  while live deploy smoke validates the real pinned source.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

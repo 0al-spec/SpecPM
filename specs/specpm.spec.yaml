@@ -38,6 +38,7 @@ scope:
     - Validate public SpecPackage index submissions through a GitHub Actions workflow without publishing packages.
     - Generate static read-only public index metadata and deterministic archives for GitHub Pages-style hosting.
     - Track maintainer-reviewed accepted package directories and pinned public Git sources for generated public index deployment.
+    - Seed the public alpha registry with SpecPM and SpecNode packages for early ecosystem integration.
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
@@ -134,6 +135,9 @@ provides:
     - id: specpm.registry.public_index_remote_sources
       role: secondary
       summary: Resolve pinned public Git package sources from the accepted manifest before static index generation.
+    - id: specpm.registry.public_alpha_index
+      role: secondary
+      summary: Seed and document the read-only public alpha registry package set for SpecPM, SpecNode, and example packages.
     - id: specpm.registry.local_dev_service
       role: secondary
       summary: Serve generated public index metadata locally for SpecGraph, ContextBuilder, and manual integration testing.
@@ -487,12 +491,27 @@ evidence:
     supports:
       - specpm.registry.public_index_accepted_manifest
       - specpm.registry.public_index_remote_sources
+      - specpm.registry.public_alpha_index
       - specpm.registry.public_pages_deployment
+  - id: public_alpha_docs
+    kind: documentation
+    path: specs/PUBLIC_ALPHA.md
+    supports:
+      - specpm.registry.public_alpha_index
+      - specpm.registry.public_pages_deployment
+      - scope.includes
+      - scope.excludes
   - id: compose
     kind: source
     path: compose.yaml
     supports:
       - specpm.registry.local_dev_service
+  - id: dockerfile
+    kind: source
+    path: Dockerfile
+    supports:
+      - specpm.registry.local_dev_service
+      - specpm.registry.public_index_remote_sources
   - id: public_index_service_script
     kind: source
     path: scripts/serve_public_index.py
@@ -579,6 +598,12 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.deployment.registry_operations_runbook
+  - id: docc_public_alpha
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.public_alpha_index
   - id: agent_skills_readme
     kind: documentation
     path: skills/README.md
@@ -652,7 +677,9 @@ implementationBindings:
         - public-index/accepted-packages.yml
         - scripts/serve_public_index.py
         - compose.yaml
+        - Dockerfile
         - Makefile
+        - specs/PUBLIC_ALPHA.md
         - specs/DEPLOY_FIRST.md
         - specs/REGISTRY_OPERATIONS.md
         - specs/INDEX_SUBMISSION_FLOW.md
@@ -669,6 +696,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/JSONContracts.md
         - Sources/SpecPM/Documentation.docc/Conformance.md
         - Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
+        - Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
         - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md
         - Sources/SpecPM/Documentation.docc/Deployment.md

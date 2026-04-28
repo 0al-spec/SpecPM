@@ -176,6 +176,11 @@ package content.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 
+The public alpha registry is available at `https://0al-spec.github.io/SpecPM`
+with the API served under `/v0`. The current alpha package set is documented in
+`specs/PUBLIC_ALPHA.md` and includes `specpm.core` plus a pinned
+`specnode.core` source for early SpecGraph and SpecNode integration.
+
 SpecPM does not translate plain-text user intent into capability IDs or package
 selections. Natural-language discovery, embeddings, vector search, RAG, and
 semantic reranking belong in ContextBuilder, SpecGraph, or a future downstream

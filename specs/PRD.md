@@ -159,6 +159,11 @@ GitHub-backed infrastructure today and reserves authenticated deployment,
 backup automation, restore automation, request throttling, and DDoS enforcement
 for future enterprise or online service profiles.
 
+The public alpha registry is documented in `specs/PUBLIC_ALPHA.md`. It exposes
+the static read-only `/v0` registry at `https://0al-spec.github.io/SpecPM` and
+is seeded with `document_conversion.email_tools`, `specpm.core`, and the pinned
+public `specnode.core` package for early SpecGraph and SpecNode integration.
+
 ## 5. Primary Users
 
 - Package author: creates `specpm.yaml`, `BoundarySpec`, evidence, and foreign
