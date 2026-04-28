@@ -728,6 +728,37 @@ Acceptance:
 - The workflow has no runtime, schema, CLI, JSON contract, auth, registry
   mutation, or package execution changes.
 
+## Phase 31. Public and Enterprise Registry Conformance
+
+- [x] Add conformance cases for generated public static `/v0` registry
+  endpoints.
+- [x] Validate generated registry status, package index, package metadata,
+  package version, and exact capability search payloads.
+- [x] Verify static-host `index.html` payload mirrors for generated endpoints.
+- [x] Verify generated archive digest and size metadata against the actual
+  deterministic archive.
+- [x] Assert missing package and missing capability paths are not fabricated as
+  package data in the static index.
+- [x] Add remote registry payload conformance fixtures for deprecated versions
+  and invalid package index counts.
+- [x] Add enterprise registry status fixture coverage using the same read-only
+  metadata contract.
+- [x] Document that enterprise registry conformance does not add auth, publish,
+  remote mutation, package installation, package signing, or package execution
+  to SpecPM core.
+
+Acceptance:
+
+- The portable conformance suite includes public static index endpoint cases.
+- The portable conformance suite includes enterprise registry compatibility
+  payload cases.
+- Generated `/v0` JSON and adjacent `index.html` static-host payloads validate
+  against the remote registry API contract.
+- Negative payload-shape fixtures produce expected validator error codes.
+- No runtime server, publish flow, auth flow, remote mutation API, archive
+  client, package signing, package installation, or package execution behavior
+  is added.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -740,7 +771,8 @@ Acceptance:
 - Natural-language or semantic capability search.
 - Plain-text intent discovery with LLM, embeddings, vector search, or RAG.
 - Full dependency solving.
-- Expanded conformance suites for additional post-MVP tracks.
+- Expanded conformance suites for additional post-MVP tracks beyond the
+  read-only public and enterprise registry metadata contract.
 - Richer import adapters for CodeSpeak, OpenAPI, GraphQL, protobuf, AsyncAPI,
   README, ADR, package manifests, test metadata, and source-level public API
   summaries.
@@ -778,7 +810,9 @@ Future work may explore:
 
 - Maintainer labels for accepted, rejected, duplicate, blocked, and needs-info
   submissions.
-- Public index and enterprise registry conformance suites.
+- Additional conformance suites for authenticated enterprise registry behavior
+  if a future enterprise profile defines auth, audit, or private storage
+  contracts.
 
 ### Post-MVP Track: Enterprise Remote Registry
 

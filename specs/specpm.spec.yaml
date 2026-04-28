@@ -25,6 +25,7 @@ scope:
     - Publish portable conformance artifacts for local implementation behavior.
     - Document the post-MVP read-only remote registry API contract.
     - Publish static conformance fixtures for remote registry payload shape.
+    - Publish conformance cases for generated public static index endpoints and enterprise registry compatibility payloads.
     - Fetch read-only remote registry metadata for registry status, package index, package lookup, package version lookup, and exact capability search.
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
     - Provide a GitHub Issue form for public SpecPackage index submissions.
@@ -136,6 +137,9 @@ provides:
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
+    - id: specpm.conformance.public_enterprise_registry_suite
+      role: secondary
+      summary: Provide conformance cases for generated public static index endpoints and enterprise registry compatibility payloads.
     - id: specpm.documentation.docc_site
       role: secondary
       summary: Build a DocC documentation site for SpecPM contracts and package-manager boundaries.
@@ -367,12 +371,14 @@ evidence:
     supports:
       - specpm.conformance.local_suite
       - specpm.conformance.remote_registry_payloads
+      - specpm.conformance.public_enterprise_registry_suite
   - id: conformance_fixtures
     kind: test
     path: tests/fixtures/conformance
     supports:
       - specpm.conformance.local_suite
       - specpm.conformance.remote_registry_payloads
+      - specpm.conformance.public_enterprise_registry_suite
   - id: remote_registry_api
     kind: documentation
     path: specs/REMOTE_REGISTRY_API.md
@@ -380,6 +386,7 @@ evidence:
       - specpm.registry.remote_api_contract
       - specpm.registry.remote_readonly_client
       - specpm.conformance.remote_registry_payloads
+      - specpm.conformance.public_enterprise_registry_suite
   - id: index_submission_flow
     kind: documentation
     path: specs/INDEX_SUBMISSION_FLOW.md
@@ -510,6 +517,7 @@ evidence:
     supports:
       - provides.capabilities
       - constraints
+      - specpm.conformance.public_enterprise_registry_suite
   - id: docc_overview
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/SpecPM.md

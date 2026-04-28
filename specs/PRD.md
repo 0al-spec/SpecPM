@@ -103,6 +103,9 @@ generation. It is not a remote mutation API, upload format, `specpm publish`,
 package installation mechanism, remote archive client, or package execution
 path. Enterprise registry deployments remain a separate track for private
 access control, audit, policy, namespace ownership, and authenticated storage.
+Public static index and enterprise registry metadata payloads may share the
+same read-only `/v0` conformance suite so downstream consumers can verify shape
+compatibility without requiring a live registry server.
 
 Public index removal requests are issue-based maintainer review inputs. They
 may lead to pull requests that update accepted package sources or policy for a
