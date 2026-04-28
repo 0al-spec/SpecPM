@@ -32,6 +32,8 @@ Completed areas include:
   read-only `/v0` metadata contract.
 - deploy-first local Docker and GitHub Pages smoke workflow for the read-only
   registry surface.
+- registry operations runbook for fresh deploys, Git-based rollback,
+  backup/restore boundaries, and flood/DDoS planning.
 
 ## Post-MVP Tracks
 
@@ -86,10 +88,10 @@ metadata contract without requiring a live server.
 
 The deploy-first loop is now explicit: use `make dev-reload` for live local
 Docker registry changes and `make pages-smoke` for the deployed static Pages
-registry. The next useful operational increment is to design fresh-version
-deployment, backup/restore, and abuse/DDoS controls for future non-static
-registry or online intent-to-spec services without changing the current
-read-only public index boundary.
+registry. The registry operations runbook documents fresh deploys, Git-based
+rollback, backup/restore sources, and current flood/DDoS boundaries while
+keeping future non-static registry or online intent-to-spec services separate
+from the current read-only public index boundary.
 
 `specpm publish`, auth, signing, namespace governance, remote yanking mutation
 workflows, and online intent-to-spec APIs remain separate follow-up tracks
@@ -102,3 +104,4 @@ unless they are scoped to the enterprise registry or downstream resolver model.
 - `specs/INDEX_SUBMISSION_FLOW.md`
 - <doc:Conformance>
 - <doc:Deployment>
+- <doc:RegistryOperations>

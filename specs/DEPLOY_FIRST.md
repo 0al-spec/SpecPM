@@ -109,6 +109,9 @@ Future enterprise deployment work may introduce separate release channels,
 private registry storage, authenticated promotion, staged rollout, and rollback
 policy. Those are outside the current public static index contract.
 
+The detailed deployment, rollback, backup, restore, and abuse-control runbook is
+tracked in `specs/REGISTRY_OPERATIONS.md`.
+
 ## Backup Strategy
 
 Current public registry state is source-controlled and reproducible:
@@ -127,6 +130,9 @@ Future backup work should define:
 - restore tests that regenerate a historical registry snapshot;
 - enterprise backup policy for private package metadata, archives, audit logs,
   and namespace decisions.
+
+The current restore procedure and future backup requirements are tracked in
+`specs/REGISTRY_OPERATIONS.md`.
 
 ## Flood and DDoS Boundary
 
@@ -153,6 +159,9 @@ Future protection work should define:
 - abuse monitoring and alerting;
 - separate controls for future intent-to-spec endpoints, because LLM-backed
   APIs have different cost and abuse characteristics.
+
+The current abuse boundary and future DDoS control requirements are tracked in
+`specs/REGISTRY_OPERATIONS.md`.
 
 ## Operator Rule
 

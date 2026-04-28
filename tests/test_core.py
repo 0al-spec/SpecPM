@@ -68,7 +68,9 @@ DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 MAKEFILE = ROOT / "Makefile"
 AGENTS_FILE = ROOT / "AGENTS.md"
 DEPLOY_FIRST_DOC = ROOT / "specs/DEPLOY_FIRST.md"
+REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
+DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
 PULL_REQUEST_TEMPLATE = ROOT / ".github/PULL_REQUEST_TEMPLATE.md"
@@ -837,6 +839,57 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "<doc:Deployment>" in docc_overview
 
 
+def test_registry_operations_runbook_documents_deploy_backup_and_abuse_boundaries() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    deploy_doc = DEPLOY_FIRST_DOC.read_text(encoding="utf-8")
+    operations_doc = REGISTRY_OPERATIONS_DOC.read_text(encoding="utf-8")
+    docc_registry_operations = DOCC_REGISTRY_OPERATIONS_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    required_sections = (
+        "Fresh Version Deployment",
+        "Rollback",
+        "Backup and Restore",
+        "Flood, DDoS, and Abuse Controls",
+        "Future Online APIs",
+        "Operational Boundaries",
+    )
+    for section in required_sections:
+        assert section in operations_doc
+
+    for required_text in (
+        "GitHub Pages static public index",
+        "public-index/accepted-packages.yml",
+        "make dev-reload",
+        "make pages-smoke",
+        "no remote mutation API",
+        "no unauthenticated upload endpoint",
+        "LLM token and cost budgets",
+        "online intent-to-spec runtime",
+        "Package content cannot command the host.",
+    ):
+        assert required_text in operations_doc
+
+    assert "specs/REGISTRY_OPERATIONS.md" in readme
+    assert "specs/REGISTRY_OPERATIONS.md" in deploy_doc
+    assert "specs/REGISTRY_OPERATIONS.md" in docc_registry_operations
+    assert "<doc:RegistryOperations>" in docc_overview
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.deployment.registry_operations_runbook" in manifest_capabilities
+    assert "specpm.deployment.registry_operations_runbook" in boundary_capabilities
+    assert "specs/REGISTRY_OPERATIONS.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/RegistryOperations.md" in evidence_paths
+
+
 def sample_submission_issue_body(
     urls: str = "https://github.com/example/email-tools.git",
     package_path: str = ".",
@@ -1131,6 +1184,7 @@ def test_repository_root_is_self_describing_specpackage() -> None:
         "specpm.package.validate",
         "specpm.documentation.docc_site",
         "specpm.deployment.deploy_first_workflow",
+        "specpm.deployment.registry_operations_runbook",
     } <= capabilities
 
     boundary_spec = inspection["boundary_specs"][0]

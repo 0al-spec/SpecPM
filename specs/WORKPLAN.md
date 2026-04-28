@@ -794,6 +794,39 @@ Acceptance:
 - The local service remains available for SpecGraph, ContextBuilder, and manual
   ecosystem integration testing at `http://localhost:8081` by default.
 
+## Phase 33. Registry Operations Runbook
+
+- [x] Document the current fresh-version deployment path for the public static
+  index: reviewed source changes, CI validation, merge to `main`, GitHub Pages
+  generation, and `make pages-smoke`.
+- [x] Document the current rollback model as Git-based restoration of a
+  known-good accepted manifest and package source state.
+- [x] Document current backup sources: Git history, accepted package manifest,
+  repository-local packages, pinned public source revisions, generated Pages
+  artifacts, issues, and workflow artifacts.
+- [x] Document a restore procedure that rebuilds static `/v0` metadata, checks
+  the local Docker service, promotes through review, and validates Pages.
+- [x] Document current flood and DDoS mitigation from static hosting, no public
+  mutation endpoint, no package execution, and GitHub Actions validation.
+- [x] Document future controls for mutable registry, enterprise, and online
+  intent-to-spec services: auth, quotas, CDN/WAF, bounded queues, circuit
+  breakers, LLM budget controls, audit logs, monitoring, and alerting.
+- [x] Link the operations runbook from deploy-first docs, PRD, DocC, Roadmap,
+  and the self-spec.
+- [x] Keep this docs/spec-only: no runtime server, publish flow, auth flow,
+  remote mutation API, backup automation, DDoS enforcement code, or online
+  intent-to-spec runtime is added.
+
+Acceptance:
+
+- `specs/REGISTRY_OPERATIONS.md` distinguishes current static public index
+  operations from future enterprise or online service controls.
+- DocC exposes the registry operations runbook from the architecture topics.
+- The self-spec declares registry operations documentation as part of the
+  repository package surface.
+- Tests prevent the runbook from silently dropping fresh deploy, backup/restore,
+  flood/DDoS, and intent-to-spec boundary coverage.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

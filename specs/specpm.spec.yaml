@@ -41,6 +41,7 @@ scope:
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
+    - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
     - Provide experimental Agent Skills for authoring and reviewing SpecPM package specs.
@@ -63,6 +64,7 @@ scope:
     - Online intent-to-spec runtime.
     - Public remote registry mutation, package upload, or package publish APIs.
     - Production backup automation, rollback orchestration, rate limiting, or DDoS enforcement.
+    - Authenticated enterprise registry operations or online intent-to-spec service operations.
     - SpecGraph canonical graph reasoning, refinement, or proposal lanes.
 provides:
   capabilities:
@@ -141,6 +143,9 @@ provides:
     - id: specpm.deployment.deploy_first_workflow
       role: secondary
       summary: Run and document Docker-backed local registry deploy smoke checks and GitHub Pages registry smoke checks.
+    - id: specpm.deployment.registry_operations_runbook
+      role: secondary
+      summary: Document fresh public static index deployment, Git-based rollback, backup/restore boundaries, and flood/DDoS planning.
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
@@ -311,6 +316,9 @@ interfaces:
     - id: deploy_first_smoke_targets
       kind: cli
       summary: Make targets for local Docker registry reload, local smoke checks, and GitHub Pages registry smoke checks.
+    - id: registry_operations_runbook
+      kind: file
+      summary: Documentation for public static index deployment, rollback, restore, and anti-abuse planning.
 effects:
   sideEffects:
     - id: read_package_data
@@ -353,6 +361,9 @@ constraints:
   - id: registry_changes_smoked_live
     level: SHOULD
     statement: Registry-related changes should be validated against the Docker-backed local public index service before merge.
+  - id: static_public_registry_no_request_time_compute
+    level: SHOULD
+    statement: The public static index should avoid request-time compute and keep public reads static until a separate service profile defines abuse controls.
 evidence:
   - id: license
     kind: documentation
@@ -499,9 +510,18 @@ evidence:
     path: specs/DEPLOY_FIRST.md
     supports:
       - specpm.deployment.deploy_first_workflow
+      - specpm.deployment.registry_operations_runbook
       - scope.includes
       - scope.excludes
       - registry_changes_smoked_live
+  - id: registry_operations_docs
+    kind: documentation
+    path: specs/REGISTRY_OPERATIONS.md
+    supports:
+      - specpm.deployment.registry_operations_runbook
+      - scope.includes
+      - scope.excludes
+      - static_public_registry_no_request_time_compute
   - id: rfc_coverage
     kind: documentation
     path: specs/RFC_0001_COVERAGE.md
@@ -552,6 +572,13 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.deployment.deploy_first_workflow
+      - specpm.deployment.registry_operations_runbook
+  - id: docc_registry_operations
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/RegistryOperations.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.deployment.registry_operations_runbook
   - id: agent_skills_readme
     kind: documentation
     path: skills/README.md
@@ -627,6 +654,7 @@ implementationBindings:
         - compose.yaml
         - Makefile
         - specs/DEPLOY_FIRST.md
+        - specs/REGISTRY_OPERATIONS.md
         - specs/INDEX_SUBMISSION_FLOW.md
         - specs/REMOTE_REGISTRY_API.md
         - specs/JSON_CONTRACTS.md
@@ -644,6 +672,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
         - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md
         - Sources/SpecPM/Documentation.docc/Deployment.md
+        - Sources/SpecPM/Documentation.docc/RegistryOperations.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
         - Sources/SpecPM/Documentation.docc/AgentSkills.md
   - id: agent_skills
