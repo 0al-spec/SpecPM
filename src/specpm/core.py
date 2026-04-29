@@ -100,6 +100,7 @@ __all__ = [
     "inspect_inbox_bundle",
     "inspect_package",
     "list_inbox",
+    "observe_remote_registry",
     "pack_package",
     "search_index",
     "search_remote_registry",
@@ -863,6 +864,272 @@ def search_remote_registry(
         {"capability_id": capability_id},
         timeout,
     )
+
+
+def observe_remote_registry(
+    registry_url: str,
+    *,
+    package_ids: list[str] | None = None,
+    package_refs: list[str] | None = None,
+    capability_ids: list[str] | None = None,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    expected_package_ids = unique_ordered(package_ids or [])
+    expected_package_refs = unique_ordered(package_refs or [])
+    expected_capability_ids = unique_ordered(capability_ids or [])
+
+    status_report = get_remote_registry_status(registry_url, timeout)
+    package_index_report = get_remote_package_index(registry_url, timeout)
+    package_reports = {
+        package_id: get_remote_package(registry_url, package_id, timeout)
+        for package_id in expected_package_ids
+    }
+    version_reports = {
+        package_ref: get_remote_package_version(registry_url, package_ref, timeout)
+        for package_ref in expected_package_refs
+    }
+    capability_reports = {
+        capability_id: search_remote_registry(registry_url, capability_id, timeout)
+        for capability_id in expected_capability_ids
+    }
+
+    checks: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+
+    append_observation_report_check(
+        checks,
+        errors,
+        check_id="registry_status_available",
+        report=status_report,
+        failure_code="remote_observation_status_unavailable",
+        failure_message="Remote registry status endpoint is not available.",
+    )
+    append_observation_report_check(
+        checks,
+        errors,
+        check_id="package_index_available",
+        report=package_index_report,
+        failure_code="remote_observation_package_index_unavailable",
+        failure_message="Remote registry package index endpoint is not available.",
+    )
+
+    indexed_package_ids = remote_package_index_ids(package_index_report)
+    if indexed_package_ids is not None:
+        for package_id in expected_package_ids:
+            append_observation_presence_check(
+                checks,
+                errors,
+                check_id=f"package_index_contains:{package_id}",
+                ok=package_id in indexed_package_ids,
+                failure_code="remote_observation_package_missing_from_index",
+                failure_message=(
+                    f"Expected package is missing from the remote package index: {package_id}"
+                ),
+                target={"package_id": package_id},
+            )
+
+    for package_id, report in package_reports.items():
+        append_observation_report_check(
+            checks,
+            errors,
+            check_id=f"package_visible:{package_id}",
+            report=report,
+            failure_code="remote_observation_package_unavailable",
+            failure_message=f"Expected package endpoint is not available: {package_id}",
+        )
+
+    for package_ref, report in version_reports.items():
+        append_observation_report_check(
+            checks,
+            errors,
+            check_id=f"version_visible:{package_ref}",
+            report=report,
+            failure_code="remote_observation_version_unavailable",
+            failure_message=f"Expected package version endpoint is not available: {package_ref}",
+        )
+
+    for capability_id, report in capability_reports.items():
+        append_observation_report_check(
+            checks,
+            errors,
+            check_id=f"capability_search_available:{capability_id}",
+            report=report,
+            failure_code="remote_observation_capability_search_unavailable",
+            failure_message=(
+                f"Expected capability search endpoint is not available: {capability_id}"
+            ),
+        )
+        result_count = remote_capability_result_count(report)
+        if result_count is not None:
+            append_observation_presence_check(
+                checks,
+                errors,
+                check_id=f"capability_visible:{capability_id}",
+                ok=result_count > 0,
+                failure_code="remote_observation_capability_not_visible",
+                failure_message=(
+                    f"Expected capability has no visible package matches: {capability_id}"
+                ),
+                target={"capability_id": capability_id},
+            )
+
+    status = "ok" if not errors else "invalid"
+    return {
+        "schemaVersion": 1,
+        "status": status,
+        "operation": "observe",
+        "registry": registry_url,
+        "target": {
+            "package_ids": expected_package_ids,
+            "package_refs": expected_package_refs,
+            "capability_ids": expected_capability_ids,
+        },
+        "summary": remote_observation_summary(
+            status_report,
+            package_index_report,
+            checks,
+        ),
+        "checks": checks,
+        "observations": {
+            "status": status_report,
+            "package_index": package_index_report,
+            "packages": package_reports,
+            "versions": version_reports,
+            "capabilities": capability_reports,
+        },
+        "errors": errors,
+    }
+
+
+def unique_ordered(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    unique: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        unique.append(value)
+    return unique
+
+
+def append_observation_report_check(
+    checks: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+    *,
+    check_id: str,
+    report: dict[str, Any],
+    failure_code: str,
+    failure_message: str,
+) -> None:
+    ok = report.get("status") == "ok"
+    check = {
+        "id": check_id,
+        "status": "ok" if ok else "failed",
+        "operation": report.get("operation"),
+        "endpoint": report.get("endpoint"),
+        "target": report.get("target", {}),
+    }
+    checks.append(check)
+    if ok:
+        return
+    errors.append(
+        {
+            "severity": "error",
+            "code": failure_code,
+            "message": failure_message,
+            "file": report.get("endpoint"),
+            "field": check_id,
+            "detail": {"report_status": report.get("status"), "errors": report.get("errors", [])},
+        }
+    )
+
+
+def append_observation_presence_check(
+    checks: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+    *,
+    check_id: str,
+    ok: bool,
+    failure_code: str,
+    failure_message: str,
+    target: dict[str, str],
+) -> None:
+    checks.append(
+        {
+            "id": check_id,
+            "status": "ok" if ok else "failed",
+            "operation": "observe",
+            "endpoint": None,
+            "target": target,
+        }
+    )
+    if ok:
+        return
+    errors.append(
+        {
+            "severity": "error",
+            "code": failure_code,
+            "message": failure_message,
+            "field": check_id,
+        }
+    )
+
+
+def remote_package_index_ids(report: dict[str, Any]) -> set[str] | None:
+    if report.get("status") != "ok":
+        return None
+    payload = report.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    packages = payload.get("packages")
+    if not isinstance(packages, list):
+        return None
+    return {
+        package["package_id"]
+        for package in packages
+        if isinstance(package, dict) and isinstance(package.get("package_id"), str)
+    }
+
+
+def remote_capability_result_count(report: dict[str, Any]) -> int | None:
+    if report.get("status") != "ok":
+        return None
+    payload = report.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    result_count = payload.get("result_count")
+    return result_count if isinstance(result_count, int) else None
+
+
+def remote_observation_summary(
+    status_report: dict[str, Any],
+    package_index_report: dict[str, Any],
+    checks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    registry_payload = status_report.get("payload")
+    registry = registry_payload.get("registry") if isinstance(registry_payload, dict) else None
+    package_index_payload = package_index_report.get("payload")
+    return {
+        "registry_status": status_report.get("status"),
+        "package_index_status": package_index_report.get("status"),
+        "package_count": get_int(registry, "package_count")
+        if isinstance(registry, dict)
+        else get_int(package_index_payload, "package_count"),
+        "version_count": get_int(registry, "version_count")
+        if isinstance(registry, dict)
+        else get_int(package_index_payload, "version_count"),
+        "capability_count": get_int(registry, "capability_count")
+        if isinstance(registry, dict)
+        else None,
+        "check_count": len(checks),
+        "failed_check_count": sum(1 for check in checks if check.get("status") != "ok"),
+    }
+
+
+def get_int(mapping: Any, key: str) -> int | None:
+    if isinstance(mapping, dict) and isinstance(mapping.get(key), int):
+        return mapping[key]
+    return None
 
 
 def search_result_from_package(package: dict[str, Any], capability_id: str) -> dict[str, Any]:

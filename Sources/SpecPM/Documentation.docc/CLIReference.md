@@ -74,13 +74,16 @@ specpm remote packages --registry <url> [--json]
 specpm remote package <package-id> --registry <url> [--json]
 specpm remote version <package-id@version> --registry <url> [--json]
 specpm remote search <capability-id> --registry <url> [--json]
+specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--json]
 ```
 
 Remote commands are explicit read-only metadata clients for the post-MVP
 registry contract. `status` and `packages` provide the discovery surface for
 local SpecGraph and ContextBuilder observation before requesting a specific
-package or capability. Remote commands do not download archives, publish
-packages, mutate remote state, or execute package content.
+package or capability. `observe` combines those same read-only lookups into a
+machine-readable registry observation report for downstream evidence. Remote
+commands do not download archives, publish packages, mutate remote state, or
+execute package content.
 
 ## Public Static Index
 

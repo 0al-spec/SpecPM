@@ -885,6 +885,33 @@ Acceptance:
   package set before wiring SpecGraph, SpecNode, or ContextBuilder consumers to
   it.
 
+## Phase 36. Public Registry Observation Report
+
+- [x] Add `specpm remote observe` as a read-only command that aggregates remote
+  status, package index, package metadata, version metadata, and exact
+  capability search into one machine-readable observation report.
+- [x] Add local `public-alpha-report` and deployed `pages-alpha-report` Make
+  targets that write JSON artifacts under `.specpm/`.
+- [x] Use the current alpha seed expectations: `specpm.core`, `specnode.core`,
+  `specpm.core@0.1.0`, `specnode.core@0.1.0`,
+  `specpm.registry.public_alpha_index`, and `specnode.typed_job_protocol`.
+- [x] Update README, JSON contracts, Public Alpha docs, DocC, and self-spec
+  coverage.
+- [x] Add tests for report shape, failure behavior, CLI output, Make targets,
+  and self-spec coverage.
+- [x] Keep observation read-only: no publish, upload, mutation API, auth,
+  package install/download client, online intent-to-spec runtime, or package
+  content execution is added.
+
+Acceptance:
+
+- `specpm remote observe --json` returns a stable observation report with
+  checks, summary, collected remote client reports, and errors.
+- `make public-alpha-report` captures local Docker registry observation evidence
+  for downstream tools.
+- `make pages-alpha-report` captures deployed GitHub Pages registry observation
+  evidence for SpecGraph, SpecNode, ContextBuilder, and manual operators.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
