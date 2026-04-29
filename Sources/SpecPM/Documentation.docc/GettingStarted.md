@@ -54,9 +54,12 @@ For the public alpha seed package set, run:
 
 ```bash
 make pages-alpha-smoke
+make pages-alpha-report
 ```
 
 `pages-alpha-smoke` includes the baseline Pages smoke checks.
+`pages-alpha-report` writes `.specpm/pages-alpha-observation.json` for
+downstream tools.
 
 ```bash
 make dev-down

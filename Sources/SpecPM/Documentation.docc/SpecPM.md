@@ -61,6 +61,7 @@ Package content can describe desired outputs. Package content cannot command the
 ### Start Here
 
 - <doc:GettingStarted>
+- <doc:AddSpecPackage>
 - <doc:PackageModel>
 - <doc:CLIReference>
 

@@ -31,7 +31,8 @@ Issue = {
   code: string,
   message: string,
   file?: string,
-  field?: string
+  field?: string,
+  detail?: object
 }
 ```
 
@@ -309,8 +310,58 @@ The client fetches metadata only. It does not download package archives, mutate
 local state, publish packages, authenticate, sign packages, or execute package
 content. A remote registry error payload remains available under `payload` and
 is reflected as `not_found` or `invalid` with a non-zero CLI exit.
+`specpm remote observe` returns a separate `RemoteRegistryObservationReport`
+documented below.
 
 Golden fixture: `tests/fixtures/golden/remote-search-email-tools.json`.
+
+## Remote Registry Observation Report
+
+Command:
+
+```bash
+specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] --json
+```
+
+Contract:
+
+```text
+RemoteRegistryObservationReport = {
+  schemaVersion: 1,
+  status: "ok" | "invalid",
+  operation: "observe",
+  registry: string,
+  target: {
+    package_ids: string[],
+    package_refs: string[],
+    capability_ids: string[]
+  },
+  summary: {
+    registry_status: string,
+    package_index_status: string,
+    package_count: number | null,
+    version_count: number | null,
+    capability_count: number | null,
+    check_count: number,
+    failed_check_count: number
+  },
+  checks: ObservationCheck[],
+  observations: {
+    status: RemoteRegistryClientReport,
+    package_index: RemoteRegistryClientReport,
+    packages: object,
+    versions: object,
+    capabilities: object
+  },
+  errors: Issue[]
+}
+```
+
+The observation report is a read-only downstream evidence artifact. It combines
+existing `specpm remote` metadata reads and verifies that expected package IDs,
+package versions, and capability IDs are visible. It does not download package
+archives, mutate local state, publish packages, authenticate, sign packages, or
+execute package content.
 
 ## Public Index Generator Result
 

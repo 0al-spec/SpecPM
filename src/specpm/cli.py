@@ -18,6 +18,7 @@ from specpm.core import (
     inspect_inbox_bundle,
     inspect_package,
     list_inbox,
+    observe_remote_registry,
     pack_package,
     search_index,
     search_remote_registry,
@@ -162,6 +163,33 @@ def build_parser() -> argparse.ArgumentParser:
     remote_search.add_argument("capability_id")
     add_remote_registry_options(remote_search)
     remote_search.set_defaults(handler=handle_remote_search)
+
+    remote_observe = remote_subparsers.add_parser(
+        "observe", help="Build a read-only remote registry observation report."
+    )
+    remote_observe.add_argument(
+        "--package",
+        dest="packages",
+        action="append",
+        default=[],
+        help="Expected package id to verify. May be passed more than once.",
+    )
+    remote_observe.add_argument(
+        "--version",
+        dest="versions",
+        action="append",
+        default=[],
+        help="Expected package_id@version to verify. May be passed more than once.",
+    )
+    remote_observe.add_argument(
+        "--capability",
+        dest="capabilities",
+        action="append",
+        default=[],
+        help="Expected capability id to verify. May be passed more than once.",
+    )
+    add_remote_registry_options(remote_observe)
+    remote_observe.set_defaults(handler=handle_remote_observe)
 
     public_index = subparsers.add_parser(
         "public-index", help="Generate public static registry metadata."
@@ -401,6 +429,21 @@ def handle_remote_search(args: argparse.Namespace) -> int:
     return emit_remote_registry_report(report, args.json)
 
 
+def handle_remote_observe(args: argparse.Namespace) -> int:
+    report = observe_remote_registry(
+        args.registry,
+        package_ids=args.packages,
+        package_refs=args.versions,
+        capability_ids=args.capabilities,
+        timeout=args.timeout,
+    )
+    if args.json:
+        print_json(report)
+    else:
+        print_remote_observation(report)
+    return 0 if report["status"] == "ok" else 1
+
+
 def handle_public_index_generate(args: argparse.Namespace) -> int:
     report = generate_public_index_from_inputs(
         [Path(package_dir) for package_dir in args.package_dirs],
@@ -480,6 +523,30 @@ def print_remote_registry(report: dict[str, Any]) -> None:
             )
         return
     print(f"remote {report['operation']}: {kind}")
+
+
+def print_remote_observation(report: dict[str, Any]) -> None:
+    summary = report.get("summary", {})
+    if report["status"] == "ok":
+        package_count = summary.get("package_count")
+        version_count = summary.get("version_count")
+        package_count_display = "unknown" if package_count is None else package_count
+        version_count_display = "unknown" if version_count is None else version_count
+        print(
+            f"observed {report['registry']} "
+            f"[{package_count_display} packages, "
+            f"{version_count_display} versions]"
+        )
+        for check in report.get("checks", []):
+            print(f"ok {check['id']}")
+        return
+
+    print(f"remote observation failed: {report['registry']}", file=sys.stderr)
+    for check in report.get("checks", []):
+        if check.get("status") != "ok":
+            print(f"failed {check['id']}", file=sys.stderr)
+    for issue in report.get("errors", []):
+        print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
 
 
 def print_index_lifecycle(report: dict[str, Any]) -> None:

@@ -37,7 +37,40 @@ specpm remote packages --registry https://0al-spec.github.io/SpecPM --json
 specpm remote package specnode.core --registry https://0al-spec.github.io/SpecPM --json
 specpm remote version specnode.core@0.1.0 --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search specnode.typed_job_protocol --registry https://0al-spec.github.io/SpecPM --json
+specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
 ```
+
+For a reusable downstream evidence artifact:
+
+```bash
+make pages-alpha-report
+```
+
+The report is written to `.specpm/pages-alpha-observation.json`.
+
+## Add a SpecPackage
+
+Anyone can propose a public SpecPackage repository for future inclusion in the
+public alpha registry:
+
+```text
+https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml
+```
+
+Initial requirements:
+
+- the repository is publicly accessible over HTTPS;
+- the repository contains `specpm.yaml` at the root or a declared package path;
+- referenced `specs/*.spec.yaml` files exist;
+- `specpm validate` passes;
+- `metadata.id` is stable and valid;
+- `metadata.version` is SemVer;
+- `metadata.license` is present;
+- package content is data and does not require execution during validation.
+
+The validation workflow comments with pass/fail evidence on the issue. A
+maintainer still reviews the submission before adding a pinned source to
+`public-index/accepted-packages.yml`.
 
 ## Alpha Package Set
 
@@ -72,6 +105,7 @@ Alpha package promotion is still maintainer-reviewed source control:
 3. Merge through a pull request.
 4. Let GitHub Pages publish generated DocC and `/v0` registry metadata.
 5. Verify deployment with `make pages-alpha-smoke`.
+6. Capture downstream observation evidence with `make pages-alpha-report`.
 
 Remote package sources MUST be public HTTPS Git repositories pinned to an exact
 40-character commit revision. If the reviewed ref no longer resolves to the

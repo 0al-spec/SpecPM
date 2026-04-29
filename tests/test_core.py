@@ -29,6 +29,7 @@ from specpm.core import (
     inspect_inbox_bundle,
     inspect_package,
     list_inbox,
+    observe_remote_registry,
     pack_package,
     search_index,
     search_remote_registry,
@@ -72,11 +73,16 @@ DEPLOY_FIRST_DOC = ROOT / "specs/DEPLOY_FIRST.md"
 PUBLIC_ALPHA_DOC = ROOT / "specs/PUBLIC_ALPHA.md"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
+DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
 DOCC_PUBLIC_ALPHA_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md"
 DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
+LANDING_PAGE = ROOT / "landing_page/index.html"
 SPECNODE_MAIN_REVISION = "9b6046777723435d94d66d4149fe5e9a6c52f604"
+ADD_SPECPACKAGES_ISSUE_URL = (
+    "https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml"
+)
 PULL_REQUEST_TEMPLATE = ROOT / ".github/PULL_REQUEST_TEMPLATE.md"
 AGENT_SKILL_ROOT = ROOT / "skills/.experimental"
 AGENT_SKILLS = {
@@ -469,6 +475,41 @@ def test_add_specpackages_issue_template_matches_public_index_contract() -> None
         assert forbidden not in template_text
 
 
+def test_public_index_submission_entrypoints_are_user_visible() -> None:
+    landing = LANDING_PAGE.read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    public_alpha = PUBLIC_ALPHA_DOC.read_text(encoding="utf-8")
+    index_flow = (ROOT / "specs/INDEX_SUBMISSION_FLOW.md").read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    docc_add_package = DOCC_ADD_PACKAGE_PAGE.read_text(encoding="utf-8")
+    docc_public_alpha = DOCC_PUBLIC_ALPHA_PAGE.read_text(encoding="utf-8")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for text in (landing, readme, public_alpha, index_flow, docc_add_package, docc_public_alpha):
+        assert ADD_SPECPACKAGES_ISSUE_URL in text
+        assert "public-index/accepted-packages.yml" in text
+
+    assert 'href="#add-package"' in landing
+    assert 'id="add-package"' in landing
+    assert "Add SpecPackage(s)" in landing
+    assert "Read Submission Guide" in landing
+    assert "https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/" in (landing)
+    assert "passing <code>specpm validate</code>" in landing
+    assert "GitHub Actions validates each package" in landing
+    assert "GitHub Pages republishes static registry metadata" in landing
+
+    assert "<doc:AddSpecPackage>" in docc_overview
+    assert "Submit public `SpecPackage` repositories" in docc_add_package
+    assert "Package content cannot command the host." in docc_add_package
+    assert "See <doc:AddSpecPackage>" in docc_public_alpha
+
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "landing_page/index.html" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/AddSpecPackage.md" in evidence_paths
+
+
 def test_remove_specpackages_issue_template_matches_public_index_boundary() -> None:
     loaded = load_yaml_file(REMOVE_SPECPACKAGES_ISSUE_TEMPLATE)
     assert loaded["name"] == "Remove SpecPackage(s)"
@@ -810,12 +851,14 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     expected_targets = {
         "public-index-reload",
         "public-alpha-smoke",
+        "public-alpha-report",
         "dev-up",
         "dev-reload",
         "dev-smoke",
         "dev-down",
         "pages-smoke",
         "pages-alpha-smoke",
+        "pages-alpha-report",
     }
     for target in expected_targets:
         assert f"{target}:" in makefile
@@ -825,6 +868,11 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "PUBLIC_ALPHA_SMOKE_PACKAGE ?= specnode.core" in makefile
     assert "PUBLIC_ALPHA_SMOKE_VERSION ?= specnode.core@0.1.0" in makefile
     assert "PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol" in makefile
+    assert "PUBLIC_ALPHA_REPORT_OUTPUT ?= .specpm/public-alpha-observation.json" in makefile
+    assert "PAGES_ALPHA_REPORT_OUTPUT ?= .specpm/pages-alpha-observation.json" in makefile
+    assert "--package specpm.core" in makefile
+    assert "--version specpm.core@0.1.0" in makefile
+    assert "--capability specpm.registry.public_alpha_index" in makefile
     assert set(make_target_prerequisites(makefile, "dev-reload")) == {
         "public-index-reload",
         "public-index-smoke",
@@ -857,6 +905,13 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "remote search $(PUBLIC_ALPHA_SMOKE_CAPABILITY)" in public_alpha_recipe
     assert "--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL)" in public_alpha_recipe
 
+    public_alpha_report_recipe = make_target_recipe(makefile, "public-alpha-report")
+    assert set(make_target_prerequisites(makefile, "public-alpha-report")) == {"public-index-wait"}
+    assert "remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS)" in public_alpha_report_recipe
+    assert "--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL)" in public_alpha_report_recipe
+    assert "> $(PUBLIC_ALPHA_REPORT_OUTPUT)" in public_alpha_report_recipe
+    assert "cat $(PUBLIC_ALPHA_REPORT_OUTPUT)" in public_alpha_report_recipe
+
     pages_alpha_recipe = make_target_recipe(makefile, "pages-alpha-smoke")
     assert set(make_target_prerequisites(makefile, "pages-alpha-smoke")) == {"pages-smoke"}
     assert "remote package $(PUBLIC_ALPHA_SMOKE_PACKAGE)" in pages_alpha_recipe
@@ -864,15 +919,25 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "remote search $(PUBLIC_ALPHA_SMOKE_CAPABILITY)" in pages_alpha_recipe
     assert "--registry $(PAGES_REGISTRY_URL)" in pages_alpha_recipe
 
+    pages_alpha_report_recipe = make_target_recipe(makefile, "pages-alpha-report")
+    assert make_target_prerequisites(makefile, "pages-alpha-report") == []
+    assert "remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS)" in pages_alpha_report_recipe
+    assert "--registry $(PAGES_REGISTRY_URL)" in pages_alpha_report_recipe
+    assert "> $(PAGES_ALPHA_REPORT_OUTPUT)" in pages_alpha_report_recipe
+    assert "cat $(PAGES_ALPHA_REPORT_OUTPUT)" in pages_alpha_report_recipe
+
     for text in (readme, agent_instructions, deploy_doc, docc_deployment):
         assert "make dev-reload" in text
         assert "make pages-smoke" in text
 
     for text in (readme, deploy_doc, docc_deployment):
         assert "make pages-alpha-smoke" in text
+        assert "make pages-alpha-report" in text
 
     assert "make public-alpha-smoke" in deploy_doc
+    assert "make public-alpha-report" in deploy_doc
     assert "make public-alpha-smoke" in docc_deployment
+    assert "make public-alpha-report" in docc_deployment
 
     assert "Backup Strategy" in deploy_doc
     assert "Flood and DDoS Boundary" in deploy_doc
@@ -965,8 +1030,11 @@ def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:
     assert "specnode.typed_job_protocol" in public_alpha_doc
     assert "specpm remote package specnode.core" in public_alpha_doc
     assert "specpm remote version specnode.core@0.1.0" in public_alpha_doc
+    assert "specpm remote observe" in public_alpha_doc
     assert "make pages-alpha-smoke" in public_alpha_doc
+    assert "make pages-alpha-report" in public_alpha_doc
     assert "make pages-alpha-smoke" in docc_public_alpha
+    assert "make pages-alpha-report" in docc_public_alpha
     assert SPECNODE_MAIN_REVISION in public_alpha_doc
     assert "<doc:PublicAlphaRegistry>" in docc_overview
 
@@ -976,6 +1044,7 @@ def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:
     evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
     assert "specpm.registry.public_alpha_index" in boundary_capabilities
     assert "specpm.registry.public_alpha_smoke" in boundary_capabilities
+    assert "specpm.registry.public_observation_report" in boundary_capabilities
     assert "specs/PUBLIC_ALPHA.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md" in evidence_paths
 
@@ -1275,6 +1344,7 @@ def test_repository_root_is_self_describing_specpackage() -> None:
         "specpm.documentation.docc_site",
         "specpm.registry.public_alpha_index",
         "specpm.registry.public_alpha_smoke",
+        "specpm.registry.public_observation_report",
         "specpm.deployment.deploy_first_workflow",
         "specpm.deployment.registry_operations_runbook",
     } <= capabilities
@@ -1667,6 +1737,111 @@ def test_remote_registry_status_and_package_index_fetch_expected_endpoints(monke
     assert package_index["payload"]["kind"] == "RemotePackageIndex"
     assert package_index["payload"]["package_count"] == 1
     assert seen == list(payloads)
+
+
+def test_remote_registry_observation_report_fetches_expected_alpha_surface(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    payloads = {
+        "https://registry.example.invalid/v0/status": (
+            load_remote_registry_fixture("registry-status.json")
+        ),
+        "https://registry.example.invalid/v0/packages": (
+            load_remote_registry_fixture("package-index.json")
+        ),
+        "https://registry.example.invalid/v0/packages/document_conversion.email_tools": (
+            load_remote_registry_fixture("package-metadata.json")
+        ),
+        (
+            "https://registry.example.invalid/v0/packages/"
+            "document_conversion.email_tools/versions/0.1.0"
+        ): load_remote_registry_fixture("package-version.json"),
+        (
+            "https://registry.example.invalid/v0/capabilities/"
+            "document_conversion.email_to_markdown/packages"
+        ): load_remote_registry_fixture("capability-search.json"),
+    }
+    seen: list[str] = []
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        seen.append(request.full_url)
+        assert timeout == 2.5
+        return FakeRemoteResponse(payloads[request.full_url])
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = observe_remote_registry(
+        "https://registry.example.invalid",
+        package_ids=["document_conversion.email_tools"],
+        package_refs=["document_conversion.email_tools@0.1.0"],
+        capability_ids=["document_conversion.email_to_markdown"],
+        timeout=2.5,
+    )
+
+    assert report["schemaVersion"] == 1
+    assert report["status"] == "ok"
+    assert report["operation"] == "observe"
+    assert report["summary"] == {
+        "registry_status": "ok",
+        "package_index_status": "ok",
+        "package_count": 1,
+        "version_count": 1,
+        "capability_count": 1,
+        "check_count": 7,
+        "failed_check_count": 0,
+    }
+    assert [check["status"] for check in report["checks"]] == ["ok"] * 7
+    assert report["target"] == {
+        "package_ids": ["document_conversion.email_tools"],
+        "package_refs": ["document_conversion.email_tools@0.1.0"],
+        "capability_ids": ["document_conversion.email_to_markdown"],
+    }
+    assert report["observations"]["packages"]["document_conversion.email_tools"]["status"] == "ok"
+    assert seen == list(payloads)
+
+
+def test_remote_registry_observation_report_fails_for_missing_capability(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    capability_payload = load_remote_registry_fixture("capability-search.json")
+    capability_payload["result_count"] = 0
+    capability_payload["results"] = []
+    payloads = {
+        "https://registry.example.invalid/v0/status": (
+            load_remote_registry_fixture("registry-status.json")
+        ),
+        "https://registry.example.invalid/v0/packages": (
+            load_remote_registry_fixture("package-index.json")
+        ),
+        (
+            "https://registry.example.invalid/v0/capabilities/"
+            "document_conversion.email_to_markdown/packages"
+        ): capability_payload,
+    }
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payloads[request.full_url])
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = observe_remote_registry(
+        "https://registry.example.invalid",
+        capability_ids=["document_conversion.email_to_markdown"],
+    )
+
+    assert report["status"] == "invalid"
+    assert report["summary"]["failed_check_count"] == 1
+    assert issue_codes(report["errors"]) == {"remote_observation_capability_not_visible"}
+
+
+def test_remote_registry_observation_report_omits_unknown_file_and_uses_verification_message() -> (
+    None
+):
+    report = observe_remote_registry("not-a-url")
+
+    assert report["status"] == "invalid"
+    assert report["summary"]["failed_check_count"] == 2
+    for error in report["errors"]:
+        assert "file" not in error
+        assert error["detail"]["endpoint"] is None
+        assert "not available" not in error["message"]
+        assert "could not be verified" in error["message"]
 
 
 def test_remote_registry_error_payload_returns_not_found(monkeypatch) -> None:  # type: ignore[no-untyped-def]
@@ -2398,6 +2573,87 @@ def test_cli_remote_status_and_packages_json(monkeypatch, capsys) -> None:  # ty
     assert status_output["payload"]["kind"] == "RemoteRegistryStatus"
     assert packages_exit == 0
     assert packages_output["payload"]["kind"] == "RemotePackageIndex"
+
+
+def test_cli_remote_observe_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+    payloads = {
+        "https://registry.example.invalid/v0/status": (
+            load_remote_registry_fixture("registry-status.json")
+        ),
+        "https://registry.example.invalid/v0/packages": (
+            load_remote_registry_fixture("package-index.json")
+        ),
+        "https://registry.example.invalid/v0/packages/document_conversion.email_tools": (
+            load_remote_registry_fixture("package-metadata.json")
+        ),
+        (
+            "https://registry.example.invalid/v0/packages/"
+            "document_conversion.email_tools/versions/0.1.0"
+        ): load_remote_registry_fixture("package-version.json"),
+        (
+            "https://registry.example.invalid/v0/capabilities/"
+            "document_conversion.email_to_markdown/packages"
+        ): load_remote_registry_fixture("capability-search.json"),
+    }
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(payloads[request.full_url])
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    exit_code = main(
+        [
+            "remote",
+            "observe",
+            "--registry",
+            "https://registry.example.invalid",
+            "--package",
+            "document_conversion.email_tools",
+            "--version",
+            "document_conversion.email_tools@0.1.0",
+            "--capability",
+            "document_conversion.email_to_markdown",
+            "--json",
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["status"] == "ok"
+    assert payload["operation"] == "observe"
+    assert payload["summary"]["check_count"] == 7
+
+
+def test_cli_remote_observe_text_normalizes_unknown_counts(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+    def fake_observe_remote_registry(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return {
+            "status": "ok",
+            "registry": "https://registry.example.invalid",
+            "summary": {
+                "package_count": None,
+                "version_count": None,
+            },
+            "checks": [],
+        }
+
+    monkeypatch.setattr("specpm.cli.observe_remote_registry", fake_observe_remote_registry)
+
+    exit_code = main(
+        [
+            "remote",
+            "observe",
+            "--registry",
+            "https://registry.example.invalid",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "observed https://registry.example.invalid [unknown packages, unknown versions]" in (
+        captured.out
+    )
+    assert "None packages" not in captured.out
+    assert "None versions" not in captured.out
 
 
 def test_inbox_lists_specgraph_export() -> None:

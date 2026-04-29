@@ -1,4 +1,4 @@
-.PHONY: install test lint format-check docker-build docker-test docs-build public-index-generate public-index-up public-index-reload public-index-down public-index-wait public-index-smoke public-alpha-smoke dev-up dev-reload dev-smoke dev-down pages-smoke pages-alpha-smoke
+.PHONY: install test lint format-check docker-build docker-test docs-build public-index-generate public-index-up public-index-reload public-index-down public-index-wait public-index-smoke public-alpha-smoke public-alpha-report dev-up dev-reload dev-smoke dev-down pages-smoke pages-alpha-smoke pages-alpha-report
 
 SPECPM_PUBLIC_INDEX_PORT ?= 8081
 SPECPM_PUBLIC_INDEX_REGISTRY_URL ?= http://localhost:$(SPECPM_PUBLIC_INDEX_PORT)
@@ -9,6 +9,15 @@ PUBLIC_INDEX_SMOKE_CAPABILITY ?= document_conversion.email_to_markdown
 PUBLIC_ALPHA_SMOKE_PACKAGE ?= specnode.core
 PUBLIC_ALPHA_SMOKE_VERSION ?= specnode.core@0.1.0
 PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol
+PUBLIC_ALPHA_REPORT_OUTPUT ?= .specpm/public-alpha-observation.json
+PAGES_ALPHA_REPORT_OUTPUT ?= .specpm/pages-alpha-observation.json
+PUBLIC_ALPHA_OBSERVE_ARGS ?= \
+	--package specpm.core \
+	--package $(PUBLIC_ALPHA_SMOKE_PACKAGE) \
+	--version specpm.core@0.1.0 \
+	--version $(PUBLIC_ALPHA_SMOKE_VERSION) \
+	--capability specpm.registry.public_alpha_index \
+	--capability $(PUBLIC_ALPHA_SMOKE_CAPABILITY)
 PUBLIC_INDEX_COMPOSE_ARGS ?=
 
 install:
@@ -89,6 +98,13 @@ public-alpha-smoke: public-index-smoke
 		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
 		--json
 
+public-alpha-report: public-index-wait
+	mkdir -p $(dir $(PUBLIC_ALPHA_REPORT_OUTPUT))
+	PYTHONPATH=src python3 -m specpm.cli remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS) \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json > $(PUBLIC_ALPHA_REPORT_OUTPUT)
+	cat $(PUBLIC_ALPHA_REPORT_OUTPUT)
+
 dev-up: public-index-up public-index-smoke
 
 dev-reload: public-index-reload public-index-smoke
@@ -118,3 +134,10 @@ pages-alpha-smoke: pages-smoke
 	PYTHONPATH=src python3 -m specpm.cli remote search $(PUBLIC_ALPHA_SMOKE_CAPABILITY) \
 		--registry $(PAGES_REGISTRY_URL) \
 		--json
+
+pages-alpha-report:
+	mkdir -p $(dir $(PAGES_ALPHA_REPORT_OUTPUT))
+	PYTHONPATH=src python3 -m specpm.cli remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS) \
+		--registry $(PAGES_REGISTRY_URL) \
+		--json > $(PAGES_ALPHA_REPORT_OUTPUT)
+	cat $(PAGES_ALPHA_REPORT_OUTPUT)

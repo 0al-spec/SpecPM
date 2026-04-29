@@ -46,11 +46,14 @@ For full public alpha visibility, run:
 
 ```bash
 make public-alpha-smoke
+make public-alpha-report
 ```
 
 `public-alpha-smoke` includes the baseline public index smoke checks and then
 verifies alpha package, version, and capability visibility for the current seed
-package set. The smoke targets read the registry through `specpm remote`:
+package set. `public-alpha-report` writes the same observation as reusable JSON
+evidence under `.specpm/public-alpha-observation.json`. The smoke and report
+targets read the registry through `specpm remote`:
 
 ```text
 /v0/status
@@ -114,6 +117,8 @@ Current public deployment is push-to-main static deployment:
 4. GitHub Pages serves the new static artifact.
 5. Operators run `make pages-alpha-smoke` after deployment when validating the
    public alpha manually. This includes the baseline `make pages-smoke` checks.
+6. Operators run `make pages-alpha-report` when downstream tooling needs a
+   reusable JSON observation artifact.
 
 Future enterprise deployment work may introduce separate release channels,
 private registry storage, authenticated promotion, staged rollout, and rollback

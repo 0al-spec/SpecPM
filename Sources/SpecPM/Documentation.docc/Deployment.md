@@ -35,9 +35,12 @@ For full alpha package visibility, run:
 
 ```bash
 make public-alpha-smoke
+make public-alpha-report
 ```
 
 `public-alpha-smoke` includes the baseline local public-index smoke checks.
+`public-alpha-report` writes `.specpm/public-alpha-observation.json` for
+downstream tooling.
 
 Stop the local service:
 
@@ -64,9 +67,11 @@ For full public alpha visibility, run:
 
 ```bash
 make pages-alpha-smoke
+make pages-alpha-report
 ```
 
 `pages-alpha-smoke` includes the baseline Pages smoke checks.
+`pages-alpha-report` writes `.specpm/pages-alpha-observation.json`.
 
 ## Boundaries
 

@@ -82,7 +82,9 @@ make dev-up
 make dev-smoke
 make dev-reload
 make public-alpha-smoke
+make public-alpha-report
 make pages-alpha-smoke
+make pages-alpha-report
 make dev-down
 ```
 
@@ -95,7 +97,9 @@ then verifies the alpha seed package and capability surface. `make pages-smoke`
 verifies the GitHub Pages registry baseline at
 `https://0al-spec.github.io/SpecPM`; `make pages-alpha-smoke` includes that
 baseline and then checks `specnode.core@0.1.0` and
-`specnode.typed_job_protocol`.
+`specnode.typed_job_protocol`. `make public-alpha-report` and
+`make pages-alpha-report` write machine-readable observation reports under
+`.specpm/` for downstream tools such as SpecGraph, SpecNode, and ContextBuilder.
 
 Run the post-MVP read-only remote metadata client against a compatible registry:
 
@@ -103,6 +107,7 @@ Run the post-MVP read-only remote metadata client against a compatible registry:
 PYTHONPATH=src python3 -m specpm.cli remote status --registry https://registry.example.invalid --json
 PYTHONPATH=src python3 -m specpm.cli remote packages --registry https://registry.example.invalid --json
 PYTHONPATH=src python3 -m specpm.cli remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
+PYTHONPATH=src python3 -m specpm.cli remote observe --registry https://registry.example.invalid --package document_conversion.email_tools --version document_conversion.email_tools@0.1.0 --capability document_conversion.email_to_markdown --json
 docker compose run --rm specpm remote status --registry https://registry.example.invalid --json
 docker compose run --rm specpm remote packages --registry https://registry.example.invalid --json
 docker compose run --rm specpm remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
@@ -135,6 +140,7 @@ Implemented first slice:
 - `specpm remote package <package-id> --registry <url> [--json]`
 - `specpm remote version <package-id@version> --registry <url> [--json]`
 - `specpm remote search <capability-id> --registry <url> [--json]`
+- `specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--json]`
 - `specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--json]`
 
 Inbox JSON includes bundle layout checks, validation status, handoff continuity
@@ -185,6 +191,16 @@ The public alpha registry is available at `https://0al-spec.github.io/SpecPM`
 with the API served under `/v0`. The current alpha package set is documented in
 `specs/PUBLIC_ALPHA.md` and includes `specpm.core` plus a pinned
 `specnode.core` source for early SpecGraph and SpecNode integration.
+
+To propose a public package for the index, open the
+[Add SpecPackage(s)](https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml)
+issue form. Submissions should point to public HTTPS Git repositories containing
+`specpm.yaml` and referenced `specs/*.spec.yaml` files at the repository root or
+declared package path. The workflow validates each package and comments with a
+report; maintainers review valid submissions before adding pinned sources to
+`public-index/accepted-packages.yml`. The public guide is published in the DocC
+site as
+[Add a SpecPackage](https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/).
 
 SpecPM does not translate plain-text user intent into capability IDs or package
 selections. Natural-language discovery, embeddings, vector search, RAG, and

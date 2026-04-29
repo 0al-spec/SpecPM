@@ -29,6 +29,7 @@ scope:
     - Fetch read-only remote registry metadata for registry status, package index, package lookup, package version lookup, and exact capability search.
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
     - Provide a GitHub Issue form for public SpecPackage index submissions.
+    - Publish a public web and DocC submission guide for issue-based SpecPackage index intake.
     - Provide a GitHub Issue form for public SpecPackage index removal requests.
     - Provide a GitHub Issue form for public SpecPM Index namespace claim requests.
     - Document public SpecPM Index namespace claim review policy and dispute handling.
@@ -41,6 +42,7 @@ scope:
     - Seed the public alpha registry with SpecPM and SpecNode packages for early ecosystem integration.
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
+    - Capture read-only public registry observation reports for local Docker and GitHub Pages endpoints.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
     - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
@@ -141,6 +143,9 @@ provides:
     - id: specpm.registry.public_alpha_smoke
       role: secondary
       summary: Verify local and deployed public alpha registry visibility for seed packages and capabilities through read-only smoke targets.
+    - id: specpm.registry.public_observation_report
+      role: secondary
+      summary: Generate read-only public registry observation reports for downstream evidence consumers.
     - id: specpm.registry.local_dev_service
       role: secondary
       summary: Serve generated public index metadata locally for SpecGraph, ContextBuilder, and manual integration testing.
@@ -256,7 +261,7 @@ interfaces:
             - text/plain
     - id: cli_remote
       kind: cli
-      summary: specpm remote status, specpm remote packages, specpm remote package, specpm remote version, and specpm remote search for read-only registry metadata.
+      summary: specpm remote status, specpm remote packages, specpm remote package, specpm remote version, specpm remote search, and specpm remote observe for read-only registry metadata.
       outputs:
         - name: remote_registry_client_report
           mediaTypes:
@@ -287,6 +292,7 @@ interfaces:
         - get_remote_package
         - get_remote_package_version
         - search_remote_registry
+        - observe_remote_registry
         - validate_remote_registry_payload
         - diff_packages
         - list_inbox
@@ -322,7 +328,7 @@ interfaces:
       summary: Serves generated read-only public index metadata on a local development port.
     - id: deploy_first_smoke_targets
       kind: cli
-      summary: Make targets for local Docker registry reload, local smoke checks, public alpha visibility checks, and GitHub Pages registry smoke checks.
+      summary: Make targets for local Docker registry reload, local smoke checks, public alpha visibility checks, public registry observation reports, and GitHub Pages registry smoke checks.
     - id: registry_operations_runbook
       kind: file
       summary: Documentation for public static index deployment, rollback, restore, and anti-abuse planning.
@@ -396,6 +402,7 @@ evidence:
     supports:
       - interfaces.inbound
       - interfaces.outbound
+      - specpm.registry.public_observation_report
   - id: conformance_docs
     kind: documentation
     path: specs/CONFORMANCE.md
@@ -429,6 +436,17 @@ evidence:
     path: .github/ISSUE_TEMPLATE/add-specpackages.yml
     supports:
       - specpm.registry.index_submission_flow
+  - id: public_index_landing_page
+    kind: documentation
+    path: landing_page/index.html
+    supports:
+      - specpm.registry.index_submission_flow
+  - id: docc_add_specpackage
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/AddSpecPackage.md
+    supports:
+      - specpm.registry.index_submission_flow
+      - specpm.documentation.docc_site
   - id: remove_specpackages_issue_template
     kind: documentation
     path: .github/ISSUE_TEMPLATE/remove-specpackages.yml
@@ -502,6 +520,7 @@ evidence:
     supports:
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke
+      - specpm.registry.public_observation_report
       - specpm.registry.public_pages_deployment
       - scope.includes
       - scope.excludes
@@ -527,6 +546,7 @@ evidence:
     supports:
       - specpm.registry.local_dev_service
       - specpm.registry.public_alpha_smoke
+      - specpm.registry.public_observation_report
       - specpm.deployment.deploy_first_workflow
       - registry_changes_smoked_live
   - id: deploy_first_docs
@@ -536,6 +556,7 @@ evidence:
       - specpm.deployment.deploy_first_workflow
       - specpm.deployment.registry_operations_runbook
       - specpm.registry.public_alpha_smoke
+      - specpm.registry.public_observation_report
       - scope.includes
       - scope.excludes
       - registry_changes_smoked_live
@@ -572,6 +593,7 @@ evidence:
     supports:
       - specpm.cli.public_surface
       - interfaces.inbound
+      - specpm.registry.public_observation_report
   - id: core_source
     kind: source
     path: src/specpm/core.py
@@ -579,6 +601,7 @@ evidence:
       - specpm.public_api.core_functions
       - provides.capabilities
       - specpm.registry.remote_readonly_client
+      - specpm.registry.public_observation_report
   - id: core_tests
     kind: test
     path: tests/test_core.py
@@ -586,6 +609,7 @@ evidence:
       - provides.capabilities
       - constraints
       - specpm.conformance.public_enterprise_registry_suite
+      - specpm.registry.public_observation_report
   - id: docc_overview
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/SpecPM.md
@@ -599,6 +623,7 @@ evidence:
       - specpm.deployment.deploy_first_workflow
       - specpm.deployment.registry_operations_runbook
       - specpm.registry.public_alpha_smoke
+      - specpm.registry.public_observation_report
   - id: docc_registry_operations
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/RegistryOperations.md
@@ -612,6 +637,7 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke
+      - specpm.registry.public_observation_report
   - id: agent_skills_readme
     kind: documentation
     path: skills/README.md
@@ -704,6 +730,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/JSONContracts.md
         - Sources/SpecPM/Documentation.docc/Conformance.md
         - Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
+        - Sources/SpecPM/Documentation.docc/AddSpecPackage.md
         - Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
         - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md
