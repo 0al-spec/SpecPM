@@ -48,8 +48,15 @@ Smoke the deployed GitHub Pages registry:
 
 ```bash
 make pages-smoke
+```
+
+For the public alpha seed package set, run:
+
+```bash
 make pages-alpha-smoke
 ```
+
+`pages-alpha-smoke` includes the baseline Pages smoke checks.
 
 ```bash
 make dev-down

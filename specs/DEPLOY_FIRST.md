@@ -36,14 +36,21 @@ serves the static registry at:
 http://localhost:8081/v0
 ```
 
-Smoke the live service with:
+Smoke the live service with the baseline registry check:
 
 ```bash
 make dev-smoke
+```
+
+For full public alpha visibility, run:
+
+```bash
 make public-alpha-smoke
 ```
 
-The smoke target reads the registry through `specpm remote`:
+`public-alpha-smoke` includes the baseline public index smoke checks and then
+verifies alpha package, version, and capability visibility for the current seed
+package set. The smoke targets read the registry through `specpm remote`:
 
 ```text
 /v0/status
@@ -105,8 +112,8 @@ Current public deployment is push-to-main static deployment:
 2. CI validates package shape and public index generation.
 3. The GitHub Pages workflow builds DocC and generated `/v0` metadata.
 4. GitHub Pages serves the new static artifact.
-5. Operators run `make pages-smoke` and `make pages-alpha-smoke` after
-   deployment when validating manually.
+5. Operators run `make pages-alpha-smoke` after deployment when validating the
+   public alpha manually. This includes the baseline `make pages-smoke` checks.
 
 Future enterprise deployment work may introduce separate release channels,
 private registry storage, authenticated promotion, staged rollout, and rollback
