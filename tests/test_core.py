@@ -1830,6 +1830,20 @@ def test_remote_registry_observation_report_fails_for_missing_capability(monkeyp
     assert issue_codes(report["errors"]) == {"remote_observation_capability_not_visible"}
 
 
+def test_remote_registry_observation_report_omits_unknown_file_and_uses_verification_message() -> (
+    None
+):
+    report = observe_remote_registry("not-a-url")
+
+    assert report["status"] == "invalid"
+    assert report["summary"]["failed_check_count"] == 2
+    for error in report["errors"]:
+        assert "file" not in error
+        assert error["detail"]["endpoint"] is None
+        assert "not available" not in error["message"]
+        assert "could not be verified" in error["message"]
+
+
 def test_remote_registry_error_payload_returns_not_found(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
         return FakeRemoteResponse(load_remote_registry_fixture("error-not-found.json"))

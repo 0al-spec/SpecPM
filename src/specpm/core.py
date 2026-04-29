@@ -902,7 +902,7 @@ def observe_remote_registry(
         check_id="registry_status_available",
         report=status_report,
         failure_code="remote_observation_status_unavailable",
-        failure_message="Remote registry status endpoint is not available.",
+        failure_message="Remote registry status could not be verified.",
     )
     append_observation_report_check(
         checks,
@@ -910,7 +910,7 @@ def observe_remote_registry(
         check_id="package_index_available",
         report=package_index_report,
         failure_code="remote_observation_package_index_unavailable",
-        failure_message="Remote registry package index endpoint is not available.",
+        failure_message="Remote registry package index could not be verified.",
     )
 
     indexed_package_ids = remote_package_index_ids(package_index_report)
@@ -935,7 +935,9 @@ def observe_remote_registry(
             check_id=f"package_visible:{package_id}",
             report=report,
             failure_code="remote_observation_package_unavailable",
-            failure_message=f"Expected package endpoint is not available: {package_id}",
+            failure_message=(
+                f"Expected package could not be verified in the remote registry: {package_id}"
+            ),
         )
 
     for package_ref, report in version_reports.items():
@@ -945,7 +947,10 @@ def observe_remote_registry(
             check_id=f"version_visible:{package_ref}",
             report=report,
             failure_code="remote_observation_version_unavailable",
-            failure_message=f"Expected package version endpoint is not available: {package_ref}",
+            failure_message=(
+                "Expected package version could not be verified in the remote "
+                f"registry: {package_ref}"
+            ),
         )
 
     for capability_id, report in capability_reports.items():
@@ -956,7 +961,8 @@ def observe_remote_registry(
             report=report,
             failure_code="remote_observation_capability_search_unavailable",
             failure_message=(
-                f"Expected capability search endpoint is not available: {capability_id}"
+                "Expected capability search could not be verified in the remote "
+                f"registry: {capability_id}"
             ),
         )
         result_count = remote_capability_result_count(report)
@@ -1032,16 +1038,21 @@ def append_observation_report_check(
     checks.append(check)
     if ok:
         return
-    errors.append(
-        {
-            "severity": "error",
-            "code": failure_code,
-            "message": failure_message,
-            "file": report.get("endpoint"),
-            "field": check_id,
-            "detail": {"report_status": report.get("status"), "errors": report.get("errors", [])},
-        }
-    )
+    endpoint = report.get("endpoint")
+    error = {
+        "severity": "error",
+        "code": failure_code,
+        "message": failure_message,
+        "field": check_id,
+        "detail": {
+            "report_status": report.get("status"),
+            "errors": report.get("errors", []),
+            "endpoint": endpoint,
+        },
+    }
+    if isinstance(endpoint, str) and endpoint:
+        error["file"] = endpoint
+    errors.append(error)
 
 
 def append_observation_presence_check(
