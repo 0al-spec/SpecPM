@@ -73,11 +73,16 @@ DEPLOY_FIRST_DOC = ROOT / "specs/DEPLOY_FIRST.md"
 PUBLIC_ALPHA_DOC = ROOT / "specs/PUBLIC_ALPHA.md"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
+DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
 DOCC_PUBLIC_ALPHA_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md"
 DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
+LANDING_PAGE = ROOT / "landing_page/index.html"
 SPECNODE_MAIN_REVISION = "9b6046777723435d94d66d4149fe5e9a6c52f604"
+ADD_SPECPACKAGES_ISSUE_URL = (
+    "https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml"
+)
 PULL_REQUEST_TEMPLATE = ROOT / ".github/PULL_REQUEST_TEMPLATE.md"
 AGENT_SKILL_ROOT = ROOT / "skills/.experimental"
 AGENT_SKILLS = {
@@ -468,6 +473,41 @@ def test_add_specpackages_issue_template_matches_public_index_contract() -> None
     assert "does not define" in template_text
     for forbidden in ("password", "token", "private key", "signing key", "secret"):
         assert forbidden not in template_text
+
+
+def test_public_index_submission_entrypoints_are_user_visible() -> None:
+    landing = LANDING_PAGE.read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    public_alpha = PUBLIC_ALPHA_DOC.read_text(encoding="utf-8")
+    index_flow = (ROOT / "specs/INDEX_SUBMISSION_FLOW.md").read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    docc_add_package = DOCC_ADD_PACKAGE_PAGE.read_text(encoding="utf-8")
+    docc_public_alpha = DOCC_PUBLIC_ALPHA_PAGE.read_text(encoding="utf-8")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for text in (landing, readme, public_alpha, index_flow, docc_add_package, docc_public_alpha):
+        assert ADD_SPECPACKAGES_ISSUE_URL in text
+        assert "public-index/accepted-packages.yml" in text
+
+    assert 'href="#add-package"' in landing
+    assert 'id="add-package"' in landing
+    assert "Add SpecPackage(s)" in landing
+    assert "Read Submission Guide" in landing
+    assert "https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/" in (landing)
+    assert "passing <code>specpm validate</code>" in landing
+    assert "GitHub Actions validates each package" in landing
+    assert "GitHub Pages republishes static registry metadata" in landing
+
+    assert "<doc:AddSpecPackage>" in docc_overview
+    assert "Submit public `SpecPackage` repositories" in docc_add_package
+    assert "Package content cannot command the host." in docc_add_package
+    assert "See <doc:AddSpecPackage>" in docc_public_alpha
+
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "landing_page/index.html" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/AddSpecPackage.md" in evidence_paths
 
 
 def test_remove_specpackages_issue_template_matches_public_index_boundary() -> None:

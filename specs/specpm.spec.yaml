@@ -29,6 +29,7 @@ scope:
     - Fetch read-only remote registry metadata for registry status, package index, package lookup, package version lookup, and exact capability search.
     - Document the split between public GitHub-backed SpecPM Index submissions and enterprise remote registry deployments.
     - Provide a GitHub Issue form for public SpecPackage index submissions.
+    - Publish a public web and DocC submission guide for issue-based SpecPackage index intake.
     - Provide a GitHub Issue form for public SpecPackage index removal requests.
     - Provide a GitHub Issue form for public SpecPM Index namespace claim requests.
     - Document public SpecPM Index namespace claim review policy and dispute handling.
@@ -435,6 +436,17 @@ evidence:
     path: .github/ISSUE_TEMPLATE/add-specpackages.yml
     supports:
       - specpm.registry.index_submission_flow
+  - id: public_index_landing_page
+    kind: documentation
+    path: landing_page/index.html
+    supports:
+      - specpm.registry.index_submission_flow
+  - id: docc_add_specpackage
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/AddSpecPackage.md
+    supports:
+      - specpm.registry.index_submission_flow
+      - specpm.documentation.docc_site
   - id: remove_specpackages_issue_template
     kind: documentation
     path: .github/ISSUE_TEMPLATE/remove-specpackages.yml
@@ -718,6 +730,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/JSONContracts.md
         - Sources/SpecPM/Documentation.docc/Conformance.md
         - Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
+        - Sources/SpecPM/Documentation.docc/AddSpecPackage.md
         - Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
         - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md

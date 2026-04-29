@@ -192,6 +192,16 @@ with the API served under `/v0`. The current alpha package set is documented in
 `specs/PUBLIC_ALPHA.md` and includes `specpm.core` plus a pinned
 `specnode.core` source for early SpecGraph and SpecNode integration.
 
+To propose a public package for the index, open the
+[Add SpecPackage(s)](https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml)
+issue form. Submissions should point to public HTTPS Git repositories containing
+`specpm.yaml` and referenced `specs/*.spec.yaml` files at the repository root or
+declared package path. The workflow validates each package and comments with a
+report; maintainers review valid submissions before adding pinned sources to
+`public-index/accepted-packages.yml`. The public guide is published in the DocC
+site as
+[Add a SpecPackage](https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/).
+
 SpecPM does not translate plain-text user intent into capability IDs or package
 selections. Natural-language discovery, embeddings, vector search, RAG, and
 semantic reranking belong in ContextBuilder, SpecGraph, or a future downstream

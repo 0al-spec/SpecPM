@@ -86,6 +86,26 @@ The template intentionally does not collect enterprise credentials, private
 repository access, signing keys, upload tokens, or publish permissions. Public
 index submission is reviewable metadata intake, not a remote mutation API.
 
+## Public Web Entry Points
+
+The public website should make the submission path visible without requiring
+users to know repository internals:
+
+- the landing page should expose an `Add SpecPackage` call to action;
+- the DocC site should include an `Add a SpecPackage` guide;
+- both should link to the `Add SpecPackage(s)` GitHub Issue form.
+
+Canonical issue form URL:
+
+```text
+https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml
+```
+
+The web entry points should summarize requirements before sending users to the
+issue form, but they must preserve the same boundary: this is public review
+intake, not `specpm publish`, remote mutation, package installation, or package
+content execution.
+
 ## Removal Request Template
 
 The first reference removal request form lives at:

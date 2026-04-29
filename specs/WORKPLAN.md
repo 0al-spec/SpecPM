@@ -912,6 +912,28 @@ Acceptance:
 - `make pages-alpha-report` captures deployed GitHub Pages registry observation
   evidence for SpecGraph, SpecNode, ContextBuilder, and manual operators.
 
+## Phase 37. Public Index Submission UX
+
+- [x] Add a visible `Add SpecPackage` call to action to the landing page
+  navigation.
+- [x] Add a landing-page section that explains public index requirements,
+  GitHub Issue intake, validation, maintainer review, and static `/v0`
+  publication.
+- [x] Add a DocC `Add a SpecPackage` guide that gives external users a direct
+  submission path and requirements checklist.
+- [x] Link Public Alpha docs and README to the issue form and guide.
+- [x] Keep the flow issue-based and maintainer-reviewed: no `specpm publish`,
+  remote mutation API, package upload, auth, package install/download client,
+  online intent-to-spec runtime, or package content execution is added.
+
+Acceptance:
+
+- The public website has an obvious `Add SpecPackage` entry point.
+- The issue form URL is documented alongside concrete package requirements.
+- The docs explain that validation comments are evidence for maintainer review,
+  not automatic publication.
+- The public index source of truth remains `public-index/accepted-packages.yml`.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

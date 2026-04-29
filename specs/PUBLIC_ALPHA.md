@@ -48,6 +48,30 @@ make pages-alpha-report
 
 The report is written to `.specpm/pages-alpha-observation.json`.
 
+## Add a SpecPackage
+
+Anyone can propose a public SpecPackage repository for future inclusion in the
+public alpha registry:
+
+```text
+https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml
+```
+
+Initial requirements:
+
+- the repository is publicly accessible over HTTPS;
+- the repository contains `specpm.yaml` at the root or a declared package path;
+- referenced `specs/*.spec.yaml` files exist;
+- `specpm validate` passes;
+- `metadata.id` is stable and valid;
+- `metadata.version` is SemVer;
+- `metadata.license` is present;
+- package content is data and does not require execution during validation.
+
+The validation workflow comments with pass/fail evidence on the issue. A
+maintainer still reviews the submission before adding a pinned source to
+`public-index/accepted-packages.yml`.
+
 ## Alpha Package Set
 
 The alpha registry is seeded from `public-index/accepted-packages.yml`.

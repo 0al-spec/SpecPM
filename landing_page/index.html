@@ -868,6 +868,71 @@
       line-height: 1.5;
     }
 
+    .submission {
+      background: color-mix(in oklab, var(--paper) 92%, white);
+    }
+
+    .submission-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.72fr) minmax(540px, 1fr);
+      gap: 72px;
+      align-items: start;
+    }
+
+    .submission-copy h2 {
+      max-width: 500px;
+      margin-top: 24px;
+    }
+
+    .submission-copy .lede {
+      max-width: 540px;
+      margin-top: 24px;
+    }
+
+    .submission-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .submission-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--rule-soft);
+      border-left: 1px solid var(--rule-soft);
+      background: color-mix(in oklab, var(--paper) 88%, white);
+    }
+
+    .submission-block {
+      min-height: 324px;
+      padding: 26px 28px;
+      border-right: 1px solid var(--rule-soft);
+      border-bottom: 1px solid var(--rule-soft);
+    }
+
+    .submission-block h3 {
+      font-family: var(--sans);
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .submission-block ul,
+    .submission-block ol {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.52;
+    }
+
+    .submission-block li::marker {
+      color: var(--accent);
+    }
+
     .agents {
       scroll-margin-top: 86px;
       padding: 72px 0;
@@ -1154,6 +1219,7 @@
       .dark-grid,
       .agents-grid,
       .api-grid,
+      .submission-grid,
       .status-layout {
         grid-template-columns: 1fr;
         gap: 42px;
@@ -1287,6 +1353,7 @@
       .problem-content,
       .examples-head,
       .comparison-grid,
+      .submission-panel,
       .status-grid {
         grid-template-columns: 1fr;
       }
@@ -1431,6 +1498,7 @@
 
       <nav class="nav-links" aria-label="Primary navigation">
         <a href="#registry">Registry</a>
+        <a href="#add-package">Add SpecPackage</a>
         <a href="#status">Current Status</a>
         <a href="#how">How it Works</a>
         <a href="#agents">For Agents</a>
@@ -1439,9 +1507,9 @@
       </nav>
 
       <div class="nav-actions">
-        <a class="btn" href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">RFC on GitHub</a>
-        <a class="btn primary" href="#api">
-          Intent API Soon
+        <a class="btn ghost" href="https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/" target="_blank" rel="noopener">Submission Guide</a>
+        <a class="btn primary" href="https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml" target="_blank" rel="noopener">
+          Add SpecPackage
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
             <path d="M5 12h14" />
             <path d="m13 6 6 6-6 6" />
@@ -1788,6 +1856,56 @@
               <p>Published documentation, JSON contracts, golden fixtures, and self-spec validation for the public surface.</p>
             </article>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section submission" id="add-package" aria-labelledby="add-package-title">
+      <div class="wrap submission-grid">
+        <div class="submission-copy">
+          <p class="eyebrow"><span class="dot"></span>Public Index Intake</p>
+          <h2 id="add-package-title">Add a SpecPackage to the public registry.</h2>
+          <p class="lede">
+            Anyone can propose a public SpecPackage repository. SpecPM validates the submitted package as untrusted data, comments with a pass/fail report, and leaves acceptance to maintainer review before the static <code>/v0</code> registry is regenerated.
+          </p>
+          <div class="submission-actions">
+            <a class="btn primary" href="https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml" target="_blank" rel="noopener">
+              Add SpecPackage(s)
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </a>
+            <a class="btn" href="https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/" target="_blank" rel="noopener">Read Submission Guide</a>
+          </div>
+        </div>
+
+        <div class="submission-panel" aria-label="SpecPackage submission requirements and flow">
+          <article class="submission-block">
+            <span class="status-pill live">Requirements</span>
+            <h3>What a submission needs</h3>
+            <ul>
+              <li>public HTTPS Git repository URL</li>
+              <li><code>specpm.yaml</code> at repository root or a declared package path</li>
+              <li>referenced <code>specs/*.spec.yaml</code> files</li>
+              <li>passing <code>specpm validate</code></li>
+              <li>stable package ID, SemVer version, and license metadata</li>
+              <li>package content that does not require execution during validation</li>
+            </ul>
+          </article>
+
+          <article class="submission-block">
+            <span class="status-pill live">Review Flow</span>
+            <h3>How it reaches /v0</h3>
+            <ol>
+              <li>Open the <code>Add SpecPackage(s)</code> issue form.</li>
+              <li>List one or more public repository URLs.</li>
+              <li>GitHub Actions validates each package and comments with evidence.</li>
+              <li>Maintainers review the issue and accepted package source.</li>
+              <li>A PR updates <code>public-index/accepted-packages.yml</code>.</li>
+              <li>GitHub Pages republishes static registry metadata.</li>
+            </ol>
+          </article>
         </div>
       </div>
     </section>
