@@ -809,17 +809,22 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
 
     expected_targets = {
         "public-index-reload",
+        "public-alpha-smoke",
         "dev-up",
         "dev-reload",
         "dev-smoke",
         "dev-down",
         "pages-smoke",
+        "pages-alpha-smoke",
     }
     for target in expected_targets:
         assert f"{target}:" in makefile
 
     assert "apt-get install -y --no-install-recommends ca-certificates git" in dockerfile
     assert "PAGES_REGISTRY_URL ?= https://0al-spec.github.io/SpecPM" in makefile
+    assert "PUBLIC_ALPHA_SMOKE_PACKAGE ?= specnode.core" in makefile
+    assert "PUBLIC_ALPHA_SMOKE_VERSION ?= specnode.core@0.1.0" in makefile
+    assert "PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol" in makefile
     assert set(make_target_prerequisites(makefile, "dev-reload")) == {
         "public-index-reload",
         "public-index-smoke",
@@ -845,9 +850,29 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "public-index-up" in public_index_reload_recipe
     assert 'PUBLIC_INDEX_COMPOSE_ARGS="--force-recreate"' in public_index_reload_recipe
 
+    public_alpha_recipe = make_target_recipe(makefile, "public-alpha-smoke")
+    assert set(make_target_prerequisites(makefile, "public-alpha-smoke")) == {"public-index-smoke"}
+    assert "remote package $(PUBLIC_ALPHA_SMOKE_PACKAGE)" in public_alpha_recipe
+    assert "remote version $(PUBLIC_ALPHA_SMOKE_VERSION)" in public_alpha_recipe
+    assert "remote search $(PUBLIC_ALPHA_SMOKE_CAPABILITY)" in public_alpha_recipe
+    assert "--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL)" in public_alpha_recipe
+
+    pages_alpha_recipe = make_target_recipe(makefile, "pages-alpha-smoke")
+    assert set(make_target_prerequisites(makefile, "pages-alpha-smoke")) == {"pages-smoke"}
+    assert "remote package $(PUBLIC_ALPHA_SMOKE_PACKAGE)" in pages_alpha_recipe
+    assert "remote version $(PUBLIC_ALPHA_SMOKE_VERSION)" in pages_alpha_recipe
+    assert "remote search $(PUBLIC_ALPHA_SMOKE_CAPABILITY)" in pages_alpha_recipe
+    assert "--registry $(PAGES_REGISTRY_URL)" in pages_alpha_recipe
+
     for text in (readme, agent_instructions, deploy_doc, docc_deployment):
         assert "make dev-reload" in text
         assert "make pages-smoke" in text
+
+    for text in (readme, deploy_doc, docc_deployment):
+        assert "make pages-alpha-smoke" in text
+
+    assert "make public-alpha-smoke" in deploy_doc
+    assert "make public-alpha-smoke" in docc_deployment
 
     assert "Backup Strategy" in deploy_doc
     assert "Flood and DDoS Boundary" in deploy_doc
@@ -938,6 +963,10 @@ def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:
         assert "specnode.core" in text
 
     assert "specnode.typed_job_protocol" in public_alpha_doc
+    assert "specpm remote package specnode.core" in public_alpha_doc
+    assert "specpm remote version specnode.core@0.1.0" in public_alpha_doc
+    assert "make pages-alpha-smoke" in public_alpha_doc
+    assert "make pages-alpha-smoke" in docc_public_alpha
     assert SPECNODE_MAIN_REVISION in public_alpha_doc
     assert "<doc:PublicAlphaRegistry>" in docc_overview
 
@@ -946,6 +975,7 @@ def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:
     }
     evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
     assert "specpm.registry.public_alpha_index" in boundary_capabilities
+    assert "specpm.registry.public_alpha_smoke" in boundary_capabilities
     assert "specs/PUBLIC_ALPHA.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md" in evidence_paths
 
@@ -1244,6 +1274,7 @@ def test_repository_root_is_self_describing_specpackage() -> None:
         "specpm.package.validate",
         "specpm.documentation.docc_site",
         "specpm.registry.public_alpha_index",
+        "specpm.registry.public_alpha_smoke",
         "specpm.deployment.deploy_first_workflow",
         "specpm.deployment.registry_operations_runbook",
     } <= capabilities

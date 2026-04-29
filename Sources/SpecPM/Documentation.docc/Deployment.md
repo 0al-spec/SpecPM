@@ -24,11 +24,20 @@ It generates `.specpm/public-index` from the maintainer-reviewed
 metadata for SpecGraph, ContextBuilder, and manual ecosystem testing.
 
 After changing accepted sources, package metadata, public index generation code,
-or remote registry contract code, recreate the service and smoke it:
+or remote registry contract code, recreate the service and smoke the baseline
+registry surface:
 
 ```bash
 make dev-reload
 ```
+
+For full alpha package visibility, run:
+
+```bash
+make public-alpha-smoke
+```
+
+`public-alpha-smoke` includes the baseline local public-index smoke checks.
 
 Stop the local service:
 
@@ -45,11 +54,19 @@ https://0al-spec.github.io/SpecPM
 ```
 
 The Pages artifact contains both DocC documentation and generated static `/v0`
-registry metadata. Smoke the deployed read-only registry with:
+registry metadata. Smoke the deployed baseline registry with:
 
 ```bash
 make pages-smoke
 ```
+
+For full public alpha visibility, run:
+
+```bash
+make pages-alpha-smoke
+```
+
+`pages-alpha-smoke` includes the baseline Pages smoke checks.
 
 ## Boundaries
 

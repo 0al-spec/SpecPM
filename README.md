@@ -81,7 +81,8 @@ Deploy-first local workflow:
 make dev-up
 make dev-smoke
 make dev-reload
-make pages-smoke
+make public-alpha-smoke
+make pages-alpha-smoke
 make dev-down
 ```
 
@@ -89,8 +90,12 @@ make dev-down
 the live `/v0` surface through `specpm remote`. `make dev-reload` force
 recreates the container so changed package manifests, accepted sources, or
 generator code regenerate `.specpm/public-index` before smoke tests. `make
-pages-smoke` verifies the GitHub Pages registry deployment at
-`https://0al-spec.github.io/SpecPM`.
+public-alpha-smoke` includes the baseline local public-index smoke checks and
+then verifies the alpha seed package and capability surface. `make pages-smoke`
+verifies the GitHub Pages registry baseline at
+`https://0al-spec.github.io/SpecPM`; `make pages-alpha-smoke` includes that
+baseline and then checks `specnode.core@0.1.0` and
+`specnode.typed_job_protocol`.
 
 Run the post-MVP read-only remote metadata client against a compatible registry:
 
