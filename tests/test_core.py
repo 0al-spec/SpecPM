@@ -351,6 +351,7 @@ def update_email_package(
 
 
 def write_fake_specnode_checkout(checkout: Path) -> None:
+    checkout.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ROOT / "examples/email_tools", checkout)
     update_email_package(
         checkout,
