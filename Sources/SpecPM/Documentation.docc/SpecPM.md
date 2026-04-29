@@ -62,6 +62,7 @@ Package content can describe desired outputs. Package content cannot command the
 
 - <doc:GettingStarted>
 - <doc:AddSpecPackage>
+- <doc:StaticRegistryPipeline>
 - <doc:PackageModel>
 - <doc:CLIReference>
 

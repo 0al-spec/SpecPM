@@ -4,6 +4,9 @@ SpecPM's current public registry is intentionally static. Fresh package
 metadata is promoted through reviewed source changes, generated into `/v0`
 JSON, and deployed through GitHub Pages.
 
+See <doc:StaticRegistryPipeline> for a concise external-facing explanation of
+how the static API is generated and served without a mutable public backend.
+
 ## Fresh Deploys
 
 Public static index deployment follows this path:

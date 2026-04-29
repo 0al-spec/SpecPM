@@ -191,6 +191,10 @@ The public alpha registry is available at `https://0al-spec.github.io/SpecPM`
 with the API served under `/v0`. The current alpha package set is documented in
 `specs/PUBLIC_ALPHA.md` and includes `specpm.core` plus a pinned
 `specnode.core` source for early SpecGraph and SpecNode integration.
+The DocC guide
+[Static Registry Pipeline](https://0al-spec.github.io/SpecPM/documentation/specpm/staticregistrypipeline/)
+explains how the public `/v0` API is generated at build time and served by
+GitHub Pages without a mutable public backend.
 
 To propose a public package for the index, open the
 [Add SpecPackage(s)](https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml)

@@ -5,6 +5,9 @@ SpecGraph, SpecNode, ContextBuilder, and manual tools.
 
 It is a static, read-only registry hosted through GitHub Pages.
 
+See <doc:StaticRegistryPipeline> for how the public `/v0` API is generated and
+served without a mutable public backend.
+
 ## Endpoint
 
 Registry base URL:
