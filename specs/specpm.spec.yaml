@@ -43,6 +43,7 @@ scope:
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Capture read-only public registry observation reports for local Docker and GitHub Pages endpoints.
+    - Document the static registry pipeline that turns reviewed accepted package sources into build-time `/v0` API files served by GitHub Pages.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
     - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
@@ -146,6 +147,9 @@ provides:
     - id: specpm.registry.public_observation_report
       role: secondary
       summary: Generate read-only public registry observation reports for downstream evidence consumers.
+    - id: specpm.registry.static_registry_pipeline_docs
+      role: secondary
+      summary: Document the build-time static registry pipeline and request-time GitHub Pages serving boundary.
     - id: specpm.registry.local_dev_service
       role: secondary
       summary: Serve generated public index metadata locally for SpecGraph, ContextBuilder, and manual integration testing.
@@ -615,6 +619,17 @@ evidence:
     path: Sources/SpecPM/Documentation.docc/SpecPM.md
     supports:
       - specpm.documentation.docc_site
+      - specpm.registry.static_registry_pipeline_docs
+  - id: docc_static_registry_pipeline
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.static_registry_pipeline_docs
+      - specpm.registry.public_static_index
+      - specpm.registry.public_pages_deployment
+      - specpm.registry.index_submission_flow
+      - specpm.registry.remote_api_contract
   - id: docc_deployment
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/Deployment.md
@@ -731,6 +746,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/Conformance.md
         - Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
         - Sources/SpecPM/Documentation.docc/AddSpecPackage.md
+        - Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md
         - Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
         - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md

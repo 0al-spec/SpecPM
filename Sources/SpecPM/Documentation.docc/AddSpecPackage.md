@@ -57,6 +57,9 @@ Accepted source is added to public-index/accepted-packages.yml
 GitHub Pages publishes static /v0 registry metadata
 ```
 
+See <doc:StaticRegistryPipeline> for how that generated `/v0` API works without
+a request-time backend.
+
 ## What to Submit
 
 The issue form asks for:

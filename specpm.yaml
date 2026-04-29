@@ -39,6 +39,7 @@ index:
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke
       - specpm.registry.public_observation_report
+      - specpm.registry.static_registry_pipeline_docs
       - specpm.registry.local_dev_service
       - specpm.registry.public_pages_deployment
       - specpm.deployment.deploy_first_workflow

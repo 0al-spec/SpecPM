@@ -75,6 +75,9 @@ REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
 DOCC_PUBLIC_ALPHA_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md"
+DOCC_STATIC_REGISTRY_PIPELINE_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md"
+)
 DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
@@ -485,6 +488,7 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     )
     docc_add_package = DOCC_ADD_PACKAGE_PAGE.read_text(encoding="utf-8")
     docc_public_alpha = DOCC_PUBLIC_ALPHA_PAGE.read_text(encoding="utf-8")
+    docc_static_pipeline = DOCC_STATIC_REGISTRY_PIPELINE_PAGE.read_text(encoding="utf-8")
     boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
 
     for text in (landing, readme, public_alpha, index_flow, docc_add_package, docc_public_alpha):
@@ -501,13 +505,19 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "GitHub Pages republishes static registry metadata" in landing
 
     assert "<doc:AddSpecPackage>" in docc_overview
+    assert "<doc:StaticRegistryPipeline>" in docc_overview
     assert "Submit public `SpecPackage` repositories" in docc_add_package
     assert "Package content cannot command the host." in docc_add_package
     assert "See <doc:AddSpecPackage>" in docc_public_alpha
+    assert "See <doc:StaticRegistryPipeline>" in docc_add_package
+    assert "See <doc:StaticRegistryPipeline>" in docc_public_alpha
+    assert "GitHub Issue: Add SpecPackage(s)" in docc_static_pipeline
+    assert "public-index/accepted-packages.yml" in docc_static_pipeline
 
     evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
     assert "landing_page/index.html" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/AddSpecPackage.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md" in evidence_paths
 
 
 def test_remove_specpackages_issue_template_matches_public_index_boundary() -> None:
@@ -1000,6 +1010,70 @@ def test_registry_operations_runbook_documents_deploy_backup_and_abuse_boundarie
     assert "specpm.deployment.registry_operations_runbook" in boundary_capabilities
     assert "specs/REGISTRY_OPERATIONS.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/RegistryOperations.md" in evidence_paths
+
+
+def test_static_registry_pipeline_doc_explains_build_time_api_boundary() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    docc_pipeline = DOCC_STATIC_REGISTRY_PIPELINE_PAGE.read_text(encoding="utf-8")
+    docc_deployment = DOCC_DEPLOYMENT_PAGE.read_text(encoding="utf-8")
+    docc_registry_operations = DOCC_REGISTRY_OPERATIONS_PAGE.read_text(encoding="utf-8")
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for required_text in (
+        "build-time API",
+        "No request-time server computes registry responses",
+        "GitHub Pages only serves the generated artifact",
+        "GitHub Issue: Add SpecPackage(s)",
+        "GitHub Actions validation",
+        "Maintainer review",
+        "public-index/accepted-packages.yml",
+        "specpm public-index generate",
+        "/v0 static JSON registry API",
+        "GET /v0/status",
+        "GET /v0/packages",
+        "GET /v0/packages/{package_id}",
+        "GET /v0/packages/{package_id}/versions/{version}",
+        "GET /v0/capabilities/{capability_id}/packages",
+        "/v0/status/index.json",
+        "make dev-reload",
+        "Package content cannot command the host.",
+        "online intent-to-spec runtime",
+    ):
+        assert required_text in docc_pipeline
+
+    for forbidden_text in (
+        "package upload",
+        "remote mutation APIs",
+        "package content execution",
+        "semantic search",
+    ):
+        assert forbidden_text in docc_pipeline
+
+    assert "Static Registry Pipeline" in readme
+    assert "<doc:StaticRegistryPipeline>" in docc_overview
+    assert "<doc:StaticRegistryPipeline>" in docc_deployment
+    assert "<doc:StaticRegistryPipeline>" in docc_registry_operations
+    assert "Static Registry Pipeline Documentation" in workplan
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    owned_binding_paths = {
+        path
+        for binding in boundary["implementationBindings"]
+        for path in binding["files"].get("owned", [])
+    }
+    assert "specpm.registry.static_registry_pipeline_docs" in manifest_capabilities
+    assert "specpm.registry.static_registry_pipeline_docs" in boundary_capabilities
+    assert "Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md" in owned_binding_paths
 
 
 def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:

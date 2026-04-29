@@ -73,6 +73,9 @@ make pages-alpha-report
 `pages-alpha-smoke` includes the baseline Pages smoke checks.
 `pages-alpha-report` writes `.specpm/pages-alpha-observation.json`.
 
+See <doc:StaticRegistryPipeline> for the build-time pipeline that turns reviewed
+package sources into the public static registry API.
+
 ## Boundaries
 
 The deploy-first loop does not add:

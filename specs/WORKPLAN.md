@@ -934,6 +934,29 @@ Acceptance:
   not automatic publication.
 - The public index source of truth remains `public-index/accepted-packages.yml`.
 
+## Phase 36. Static Registry Pipeline Documentation
+
+- [x] Add a DocC `Static Registry Pipeline` page that explains how the public
+  `/v0` API works without a mutable backend.
+- [x] Show the full issue intake, validation, maintainer review, accepted
+  manifest, generation, Pages artifact, and static JSON serving pipeline.
+- [x] Document build-time vs request-time responsibilities for the static
+  registry.
+- [x] Document strict JSON `index.json` endpoints for consumers that cannot rely
+  on extensionless GitHub Pages content negotiation.
+- [x] Link the new pipeline page from Add SpecPackage, Public Alpha Registry,
+  Deployment, Registry Operations, README, and the DocC overview.
+
+Acceptance:
+
+- External users can understand why the registry has an API surface even though
+  no public backend process handles requests.
+- Downstream consumers can identify the stable `/v0` metadata endpoints and the
+  strict JSON file path option.
+- The page preserves the existing boundaries: no `specpm publish`, upload API,
+  remote mutation API, auth, package execution, semantic search, or online
+  intent-to-spec runtime is introduced.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
