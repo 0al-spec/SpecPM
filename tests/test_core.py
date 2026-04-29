@@ -1046,13 +1046,13 @@ def test_static_registry_pipeline_doc_explains_build_time_api_boundary() -> None
     ):
         assert required_text in docc_pipeline
 
-    for forbidden_text in (
+    for excluded_feature_text in (
         "package upload",
         "remote mutation APIs",
         "package content execution",
         "semantic search",
     ):
-        assert forbidden_text in docc_pipeline
+        assert excluded_feature_text in docc_pipeline
 
     assert "Static Registry Pipeline" in readme
     assert "<doc:StaticRegistryPipeline>" in docc_overview
