@@ -40,6 +40,7 @@ Smoke the live service with:
 
 ```bash
 make dev-smoke
+make public-alpha-smoke
 ```
 
 The smoke target reads the registry through `specpm remote`:
@@ -87,6 +88,7 @@ Smoke the deployed registry with:
 
 ```bash
 make pages-smoke
+make pages-alpha-smoke
 ```
 
 This command uses `specpm remote` against:
@@ -103,7 +105,8 @@ Current public deployment is push-to-main static deployment:
 2. CI validates package shape and public index generation.
 3. The GitHub Pages workflow builds DocC and generated `/v0` metadata.
 4. GitHub Pages serves the new static artifact.
-5. Operators run `make pages-smoke` after deployment when validating manually.
+5. Operators run `make pages-smoke` and `make pages-alpha-smoke` after
+   deployment when validating manually.
 
 Future enterprise deployment work may introduce separate release channels,
 private registry storage, authenticated promotion, staged rollout, and rollback

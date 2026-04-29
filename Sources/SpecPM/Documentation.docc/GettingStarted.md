@@ -48,6 +48,7 @@ Smoke the deployed GitHub Pages registry:
 
 ```bash
 make pages-smoke
+make pages-alpha-smoke
 ```
 
 ```bash

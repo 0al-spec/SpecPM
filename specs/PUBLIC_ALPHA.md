@@ -34,6 +34,8 @@ Client examples:
 ```bash
 specpm remote status --registry https://0al-spec.github.io/SpecPM --json
 specpm remote packages --registry https://0al-spec.github.io/SpecPM --json
+specpm remote package specnode.core --registry https://0al-spec.github.io/SpecPM --json
+specpm remote version specnode.core@0.1.0 --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search specnode.typed_job_protocol --registry https://0al-spec.github.io/SpecPM --json
 ```
 
@@ -69,7 +71,7 @@ Alpha package promotion is still maintainer-reviewed source control:
 2. Validate local generation with `make dev-reload`.
 3. Merge through a pull request.
 4. Let GitHub Pages publish generated DocC and `/v0` registry metadata.
-5. Verify deployment with `make pages-smoke`.
+5. Verify deployment with `make pages-alpha-smoke`.
 
 Remote package sources MUST be public HTTPS Git repositories pinned to an exact
 40-character commit revision. If the reviewed ref no longer resolves to the

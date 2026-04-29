@@ -138,6 +138,9 @@ provides:
     - id: specpm.registry.public_alpha_index
       role: secondary
       summary: Seed and document the read-only public alpha registry package set for SpecPM, SpecNode, and example packages.
+    - id: specpm.registry.public_alpha_smoke
+      role: secondary
+      summary: Verify local and deployed public alpha registry visibility for seed packages and capabilities through read-only smoke targets.
     - id: specpm.registry.local_dev_service
       role: secondary
       summary: Serve generated public index metadata locally for SpecGraph, ContextBuilder, and manual integration testing.
@@ -319,7 +322,7 @@ interfaces:
       summary: Serves generated read-only public index metadata on a local development port.
     - id: deploy_first_smoke_targets
       kind: cli
-      summary: Make targets for local Docker registry reload, local smoke checks, and GitHub Pages registry smoke checks.
+      summary: Make targets for local Docker registry reload, local smoke checks, public alpha visibility checks, and GitHub Pages registry smoke checks.
     - id: registry_operations_runbook
       kind: file
       summary: Documentation for public static index deployment, rollback, restore, and anti-abuse planning.
@@ -498,6 +501,7 @@ evidence:
     path: specs/PUBLIC_ALPHA.md
     supports:
       - specpm.registry.public_alpha_index
+      - specpm.registry.public_alpha_smoke
       - specpm.registry.public_pages_deployment
       - scope.includes
       - scope.excludes
@@ -522,6 +526,7 @@ evidence:
     path: Makefile
     supports:
       - specpm.registry.local_dev_service
+      - specpm.registry.public_alpha_smoke
       - specpm.deployment.deploy_first_workflow
       - registry_changes_smoked_live
   - id: deploy_first_docs
@@ -530,6 +535,7 @@ evidence:
     supports:
       - specpm.deployment.deploy_first_workflow
       - specpm.deployment.registry_operations_runbook
+      - specpm.registry.public_alpha_smoke
       - scope.includes
       - scope.excludes
       - registry_changes_smoked_live
@@ -592,6 +598,7 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.deployment.deploy_first_workflow
       - specpm.deployment.registry_operations_runbook
+      - specpm.registry.public_alpha_smoke
   - id: docc_registry_operations
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/RegistryOperations.md
@@ -604,6 +611,7 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.public_alpha_index
+      - specpm.registry.public_alpha_smoke
   - id: agent_skills_readme
     kind: documentation
     path: skills/README.md

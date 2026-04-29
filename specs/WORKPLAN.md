@@ -858,6 +858,33 @@ Acceptance:
 - Unit tests avoid live network checkout by faking the remote SpecNode source,
   while live deploy smoke validates the real pinned source.
 
+## Phase 35. Public Alpha Visibility Smoke
+
+- [x] Add a local `public-alpha-smoke` Make target that checks the alpha seed
+  package metadata, version metadata, and SpecNode capability visibility through
+  the read-only remote client.
+- [x] Add a deployed `pages-alpha-smoke` Make target for the GitHub Pages alpha
+  registry endpoint.
+- [x] Keep the generic `pages-smoke` fixture check intact for the baseline
+  public registry contract.
+- [x] Update README, Public Alpha docs, DocC, and self-spec coverage.
+- [x] Add tests that keep alpha smoke target names, package IDs, versions, and
+  capability IDs aligned.
+- [x] Keep the target read-only: no publish, upload, mutation API, auth,
+  package install/download client, online intent-to-spec runtime, or package
+  content execution is added.
+
+Acceptance:
+
+- `make pages-alpha-smoke` checks `specnode.core`, `specnode.core@0.1.0`, and
+  `specnode.typed_job_protocol` against the deployed GitHub Pages `/v0`
+  registry.
+- `make public-alpha-smoke` checks the same alpha surface against the local
+  Docker public-index service after `make dev-reload`.
+- Downstream operators have one command for verifying the deployed alpha
+  package set before wiring SpecGraph, SpecNode, or ContextBuilder consumers to
+  it.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

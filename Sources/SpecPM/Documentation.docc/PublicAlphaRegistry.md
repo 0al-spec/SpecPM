@@ -24,7 +24,15 @@ Try the registry with:
 ```bash
 specpm remote status --registry https://0al-spec.github.io/SpecPM --json
 specpm remote packages --registry https://0al-spec.github.io/SpecPM --json
+specpm remote package specnode.core --registry https://0al-spec.github.io/SpecPM --json
+specpm remote version specnode.core@0.1.0 --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search specnode.typed_job_protocol --registry https://0al-spec.github.io/SpecPM --json
+```
+
+Operators can run the same alpha visibility checks with:
+
+```bash
+make pages-alpha-smoke
 ```
 
 ## Seed Packages

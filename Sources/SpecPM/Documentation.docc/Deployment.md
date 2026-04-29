@@ -28,6 +28,7 @@ or remote registry contract code, recreate the service and smoke it:
 
 ```bash
 make dev-reload
+make public-alpha-smoke
 ```
 
 Stop the local service:
@@ -49,6 +50,7 @@ registry metadata. Smoke the deployed read-only registry with:
 
 ```bash
 make pages-smoke
+make pages-alpha-smoke
 ```
 
 ## Boundaries
