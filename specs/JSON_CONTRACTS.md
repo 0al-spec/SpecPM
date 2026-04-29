@@ -31,7 +31,8 @@ Issue = {
   code: string,
   message: string,
   file?: string,
-  field?: string
+  field?: string,
+  detail?: object
 }
 ```
 
@@ -288,7 +289,6 @@ specpm remote packages --registry <url> --json
 specpm remote package <package-id> --registry <url> --json
 specpm remote version <package-id@version> --registry <url> --json
 specpm remote search <capability-id> --registry <url> --json
-specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] --json
 ```
 
 Contract:
@@ -310,6 +310,8 @@ The client fetches metadata only. It does not download package archives, mutate
 local state, publish packages, authenticate, sign packages, or execute package
 content. A remote registry error payload remains available under `payload` and
 is reflected as `not_found` or `invalid` with a non-zero CLI exit.
+`specpm remote observe` returns a separate `RemoteRegistryObservationReport`
+documented below.
 
 Golden fixture: `tests/fixtures/golden/remote-search-email-tools.json`.
 

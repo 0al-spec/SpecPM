@@ -2624,6 +2624,38 @@ def test_cli_remote_observe_json(monkeypatch, capsys) -> None:  # type: ignore[n
     assert payload["summary"]["check_count"] == 7
 
 
+def test_cli_remote_observe_text_normalizes_unknown_counts(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+    def fake_observe_remote_registry(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return {
+            "status": "ok",
+            "registry": "https://registry.example.invalid",
+            "summary": {
+                "package_count": None,
+                "version_count": None,
+            },
+            "checks": [],
+        }
+
+    monkeypatch.setattr("specpm.cli.observe_remote_registry", fake_observe_remote_registry)
+
+    exit_code = main(
+        [
+            "remote",
+            "observe",
+            "--registry",
+            "https://registry.example.invalid",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "observed https://registry.example.invalid [unknown packages, unknown versions]" in (
+        captured.out
+    )
+    assert "None packages" not in captured.out
+    assert "None versions" not in captured.out
+
+
 def test_inbox_lists_specgraph_export() -> None:
     report = list_inbox(SPECGRAPH_FIXTURE_ROOT)
     bundle = report["bundles"][0]

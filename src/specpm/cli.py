@@ -528,10 +528,14 @@ def print_remote_registry(report: dict[str, Any]) -> None:
 def print_remote_observation(report: dict[str, Any]) -> None:
     summary = report.get("summary", {})
     if report["status"] == "ok":
+        package_count = summary.get("package_count")
+        version_count = summary.get("version_count")
+        package_count_display = "unknown" if package_count is None else package_count
+        version_count_display = "unknown" if version_count is None else version_count
         print(
             f"observed {report['registry']} "
-            f"[{summary.get('package_count', 'unknown')} packages, "
-            f"{summary.get('version_count', 'unknown')} versions]"
+            f"[{package_count_display} packages, "
+            f"{version_count_display} versions]"
         )
         for check in report.get("checks", []):
             print(f"ok {check['id']}")
