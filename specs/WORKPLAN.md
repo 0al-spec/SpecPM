@@ -934,7 +934,7 @@ Acceptance:
   not automatic publication.
 - The public index source of truth remains `public-index/accepted-packages.yml`.
 
-## Phase 36. Static Registry Pipeline Documentation
+## Phase 38. Static Registry Pipeline Documentation
 
 - [x] Add a DocC `Static Registry Pipeline` page that explains how the public
   `/v0` API works without a mutable backend.
@@ -956,6 +956,28 @@ Acceptance:
 - The page preserves the existing boundaries: no `specpm publish`, upload API,
   remote mutation API, auth, package execution, semantic search, or online
   intent-to-spec runtime is introduced.
+
+## Phase 39. Current Roadmap
+
+- [x] Add a root `ROADMAP.md` that summarizes the current public alpha baseline,
+  roadmap principles, milestone tracks, non-goals, and near-term PR candidates.
+- [x] Update the DocC Roadmap page so public readers can see the same milestone
+  structure from the documentation site.
+- [x] Link README to the root roadmap and hosted DocC Roadmap.
+- [x] Update self-spec coverage so roadmap documentation is declared as part of
+  the public repository surface.
+- [x] Normalize completed Workplan phase numbering around the latest
+  documentation phases.
+
+Acceptance:
+
+- Maintainers and downstream developers can distinguish what is live today from
+  planned operator UX, downstream integration, remote acquisition, trust,
+  enterprise, and intent resolver tracks.
+- The roadmap preserves SpecPM's boundary as package substrate rather than
+  graph reasoner, artifact generator, agent runtime, or online intent resolver.
+- The roadmap names concrete near-term PR candidates without implying that
+  post-MVP tracks are already implemented.
 
 ## Post-MVP Tracks
 
