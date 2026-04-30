@@ -44,6 +44,7 @@ index:
       - specpm.registry.public_pages_deployment
       - specpm.deployment.deploy_first_workflow
       - specpm.deployment.registry_operations_runbook
+      - specpm.roadmap.current_status
       - specpm.conformance.remote_registry_payloads
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.documentation.docc_site

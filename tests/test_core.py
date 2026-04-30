@@ -69,6 +69,7 @@ DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
 DOCKERFILE = ROOT / "Dockerfile"
 MAKEFILE = ROOT / "Makefile"
 AGENTS_FILE = ROOT / "AGENTS.md"
+ROADMAP_DOC = ROOT / "ROADMAP.md"
 DEPLOY_FIRST_DOC = ROOT / "specs/DEPLOY_FIRST.md"
 PUBLIC_ALPHA_DOC = ROOT / "specs/PUBLIC_ALPHA.md"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
@@ -79,6 +80,7 @@ DOCC_STATIC_REGISTRY_PIPELINE_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md"
 )
 DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
+DOCC_ROADMAP_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Roadmap.md"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
 LANDING_PAGE = ROOT / "landing_page/index.html"
@@ -1074,6 +1076,75 @@ def test_static_registry_pipeline_doc_explains_build_time_api_boundary() -> None
     assert "specpm.registry.static_registry_pipeline_docs" in boundary_capabilities
     assert "Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md" in owned_binding_paths
+
+
+def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for required_text in (
+        "Current Alpha Baseline",
+        "Roadmap Principles",
+        "Milestone 1: Alpha Stabilization",
+        "Milestone 2: Public Index Operator UX",
+        "Milestone 3: Downstream Consumer Integration",
+        "Milestone 4: Remote Package Acquisition Design",
+        "Milestone 5: Trust, Provenance, and Governance",
+        "Milestone 6: Enterprise Registry Track",
+        "Milestone 7: Intent Resolver Track",
+        "Explicit Non-Goals For SpecPM Core",
+        "Near-Term PR Candidates",
+        "Package content can describe desired outputs. Package content cannot command the host.",
+    ):
+        assert required_text in roadmap
+
+    for required_text in (
+        "Current Alpha Baseline",
+        "Alpha Stabilization",
+        "Public Index Operator UX",
+        "Downstream Consumer Integration",
+        "Remote Package Acquisition Design",
+        "Trust, Provenance, and Governance",
+        "Enterprise Registry Track",
+        "Intent Resolver Track",
+        "Package content can describe desired outputs. Package content cannot command the host.",
+    ):
+        assert required_text in docc_roadmap
+
+    assert "[`ROADMAP.md`](ROADMAP.md)" in readme
+    assert "https://0al-spec.github.io/SpecPM/documentation/specpm/roadmap/" in readme
+    assert "<doc:Roadmap>" in docc_overview
+    assert "Phase 38. Static Registry Pipeline Documentation" in workplan
+    assert "Phase 39. Current Roadmap" in workplan
+
+    phase_numbers = [
+        int(match.group(1)) for match in re.finditer(r"^## Phase (\d+)\.", workplan, re.MULTILINE)
+    ]
+    assert phase_numbers == sorted(phase_numbers)
+    assert len(phase_numbers) == len(set(phase_numbers))
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    owned_binding_paths = {
+        path
+        for binding in boundary["implementationBindings"]
+        for path in binding["files"].get("owned", [])
+    }
+    assert "specpm.roadmap.current_status" in manifest_capabilities
+    assert "specpm.roadmap.current_status" in boundary_capabilities
+    assert "ROADMAP.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/Roadmap.md" in evidence_paths
+    assert "ROADMAP.md" in owned_binding_paths
 
 
 def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:

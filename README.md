@@ -7,6 +7,9 @@ bundles.
 
 License: MIT. See `LICENSE`.
 
+Current status and future tracks are summarized in [`ROADMAP.md`](ROADMAP.md)
+and the DocC [Roadmap](https://0al-spec.github.io/SpecPM/documentation/specpm/roadmap/).
+
 ## MVP baseline
 
 Install locally:

@@ -46,6 +46,7 @@ scope:
     - Document the static registry pipeline that turns reviewed accepted package sources into build-time `/v0` API files served by GitHub Pages.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
     - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
+    - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
     - Provide experimental Agent Skills for authoring and reviewing SpecPM package specs.
@@ -162,6 +163,9 @@ provides:
     - id: specpm.deployment.registry_operations_runbook
       role: secondary
       summary: Document fresh public static index deployment, Git-based rollback, backup/restore boundaries, and flood/DDoS planning.
+    - id: specpm.roadmap.current_status
+      role: secondary
+      summary: Document the current public alpha baseline, milestone tracks, non-goals, and near-term PR candidates.
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
@@ -393,6 +397,17 @@ evidence:
     supports:
       - intent.summary
       - provides.capabilities
+      - specpm.roadmap.current_status
+  - id: roadmap
+    kind: documentation
+    path: ROADMAP.md
+    supports:
+      - specpm.roadmap.current_status
+      - specpm.registry.public_alpha_index
+      - specpm.registry.static_registry_pipeline_docs
+      - specpm.deployment.deploy_first_workflow
+      - scope.includes
+      - scope.excludes
   - id: prd
     kind: documentation
     path: specs/PRD.md
@@ -630,6 +645,13 @@ evidence:
       - specpm.registry.public_pages_deployment
       - specpm.registry.index_submission_flow
       - specpm.registry.remote_api_contract
+  - id: docc_roadmap
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/Roadmap.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.roadmap.current_status
+      - specpm.registry.static_registry_pipeline_docs
   - id: docc_deployment
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/Deployment.md
@@ -754,6 +776,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/RegistryOperations.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
         - Sources/SpecPM/Documentation.docc/AgentSkills.md
+        - ROADMAP.md
   - id: agent_skills
     path: skills/README.md
     files:

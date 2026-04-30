@@ -1,115 +1,95 @@
 # Roadmap
 
-The local MVP phases are complete through conformance artifacts.
+SpecPM is in public alpha as a package and registry substrate for SpecGraph.
 
-Completed areas include:
+The canonical repository roadmap is `ROADMAP.md`. This DocC page summarizes the
+same direction for public documentation readers.
 
-- repository baseline;
-- core data loading;
-- validator;
-- inspect;
-- deterministic pack;
-- local registry index;
-- exact search;
-- add and lock;
-- SpecGraph inbox;
-- structural diff;
-- viewer contract stabilization;
-- release hardening;
-- local registry lifecycle;
-- conformance test artifacts.
-- remote registry API contract documentation and static payload fixtures;
-- read-only remote registry metadata client.
-- public index submission issue form and validation workflow;
-- static public index `/v0` metadata generator.
-- local public index service and discovery endpoints for SpecGraph and
-  ContextBuilder observation.
-- GitHub Pages deployment of generated `/v0` public index metadata alongside
-  DocC documentation.
-- repository-managed experimental Agent Skills for SpecPM spec authoring and
-  review.
-- public static index and enterprise registry conformance cases for the
-  read-only `/v0` metadata contract.
-- deploy-first local Docker and GitHub Pages smoke workflow for the read-only
-  registry surface.
-- registry operations runbook for fresh deploys, Git-based rollback,
-  backup/restore boundaries, and flood/DDoS planning.
-- public alpha registry seed with `specpm.core` and pinned `specnode.core`
-  packages for early SpecGraph and SpecNode integration.
+## Current Alpha Baseline
 
-## Post-MVP Tracks
+SpecPM is usable today for:
 
-Current post-MVP tracks include:
+- local `SpecPackage` and `BoundarySpec` validation, inspection, deterministic
+  packing, structural diff, and local registry operations;
+- exact capability search and deterministic local add/lock behavior;
+- SpecGraph inbox inspection for exported package candidates;
+- read-only remote `/v0` metadata lookup;
+- static public index generation for GitHub Pages;
+- local Docker registry integration at `http://localhost:8081`;
+- public alpha registry metadata at `https://0al-spec.github.io/SpecPM`;
+- GitHub Issue intake for package submissions, removals, and namespace claims;
+- DocC documentation, conformance fixtures, Agent Skills, and self-spec
+  coverage.
 
-- remote registry API;
-- public SpecPM Index submission flow through GitHub Issues, Actions, and
-  GitHub Pages;
-- enterprise remote registry deployment;
-- `specpm publish`;
-- remote package yanking governance;
-- package signing and trust policies;
-- namespace governance;
-- natural-language or semantic capability search;
-- downstream intent discovery with LLMs, embeddings, vector search, or RAG;
-- full dependency solving;
-- expanded conformance suites;
-- fresh-version deployment, backup, restore, flood, abuse, and DDoS controls
-  for service surfaces beyond static hosting;
-- richer import adapters;
-- cross-repo PR workflow automation with SpecGraph;
-- SpecGraph feedback promotion from observed downstream adoption.
+The public registry is metadata-only and static-hosted. See
+<doc:StaticRegistryPipeline> for the build-time generation path.
 
-## Recommended Next Track
+## Milestones
 
-The read-only remote registry API contract, metadata client, public submission
-intake, validation workflow, static metadata generator, local discovery
-surface, GitHub Pages static deployment path, and accepted package manifest are
-implemented. The accepted package manifest can now promote reviewed public Git
-sources with pinned revisions into static `/v0` generation while keeping
-enterprise registry work separate.
+### Alpha Stabilization
 
-The public index can start as an issue-based submission queue with GitHub
-Actions validation and GitHub Pages static `/v0` metadata. The reference
-`Add SpecPackage(s)` issue form is available in
-`.github/ISSUE_TEMPLATE/add-specpackages.yml`, the reference removal request
-form is available in `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, the
-reference namespace claim form is available in
-`.github/ISSUE_TEMPLATE/claim-namespace.yml`, and the reference issue
-validation workflow is available in
-`.github/workflows/package-submission-check.yml`. Namespace claim review
-criteria and dispute handling are documented in
-`specs/NAMESPACE_CLAIM_POLICY.md`, and namespace claim label triage lives in
-`.github/workflows/namespace-claim-triage.yml`. Maintainer-applied namespace
-claim decision labels can be reported by
-`.github/workflows/namespace-claim-decision-report.yml`, and current decision
-labels can be summarized by
-`.github/workflows/namespace-claim-decision-summary.yml`. Static registry
-metadata can be generated with `specpm public-index generate`. Public static
-index and enterprise registry conformance cases now cover the read-only `/v0`
-metadata contract without requiring a live server.
+Keep roadmap, Workplan, README, DocC, landing page, and self-spec coverage
+aligned with the current public alpha state.
 
-The deploy-first loop is now explicit: use `make dev-reload` for live local
-Docker registry changes and `make pages-smoke` for the deployed static Pages
-registry. The registry operations runbook documents fresh deploys, Git-based
-rollback, backup/restore sources, and current flood/DDoS boundaries while
-keeping future non-static registry or online intent-to-spec services separate
-from the current read-only public index boundary.
+### Public Index Operator UX
 
-The public alpha registry now has real ecosystem seed packages:
-`specpm.core@0.1.0` from this repository and `specnode.core@0.1.0` from a
-pinned public SpecNode source. This makes the static registry useful to
-SpecGraph and SpecNode before a mutable backend exists.
+Make valid community submissions easier to accept through maintainer-reviewed
+labels, checklists, and future helper tooling that prepares
+`public-index/accepted-packages.yml` pull requests.
 
-`specpm publish`, auth, signing, namespace governance, remote yanking mutation
-workflows, and online intent-to-spec APIs remain separate follow-up tracks
-unless they are scoped to the enterprise registry or downstream resolver model.
+This does not add `specpm publish`, package upload, or request-time registry
+mutation.
+
+### Downstream Consumer Integration
+
+Document and stabilize how SpecGraph, ContextBuilder, and SpecNode consume
+`/v0/status`, `/v0/packages`, package lookup, version lookup, exact capability
+search, and observation reports.
+
+### Remote Package Acquisition Design
+
+Design remote fetch/cache/add behavior before implementing it. Metadata lookup,
+archive acquisition, digest verification, lockfile changes, and cache layout
+must be explicit.
+
+### Trust, Provenance, and Governance
+
+Design signing, provenance, revocation, yanked/deprecated version semantics,
+namespace claim policy, and audit records without conflating public static index
+needs with enterprise registry needs.
+
+### Enterprise Registry Track
+
+Define an authenticated read-only registry profile compatible with `/v0` for
+private package visibility, access control, audit, retention, backup, restore,
+and staged promotion.
+
+### Intent Resolver Track
+
+Keep natural-language intent resolution outside SpecPM core. ContextBuilder,
+SpecGraph, or downstream resolver tooling may use embeddings, vector search,
+RAG, or LLM reranking to propose reviewable candidate `SpecPackage` and
+`BoundarySpec` IDs. SpecPM verifies exact IDs and package shape.
+
+## Non-Goals For SpecPM Core
+
+SpecPM core does not own:
+
+- PRD, brief, issue breakdown, or test-plan generation;
+- prompt execution or agent runtime behavior;
+- artifact evaluation runtime;
+- graph reasoning or canonical SpecGraph refinement;
+- package-provided host instructions;
+- public request-time mutation APIs;
+- online intent-to-spec runtime.
+
+Package content can describe desired outputs. Package content cannot command the host.
 
 ## References
 
-- `specs/WORKPLAN.md`
-- `specs/RFC_0001_COVERAGE.md`
-- `specs/INDEX_SUBMISSION_FLOW.md`
-- <doc:Conformance>
+- <doc:StaticRegistryPipeline>
+- <doc:AddSpecPackage>
+- <doc:PublicAlphaRegistry>
 - <doc:Deployment>
 - <doc:RegistryOperations>
-- <doc:PublicAlphaRegistry>
+- <doc:SpecGraphIntegration>
