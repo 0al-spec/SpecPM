@@ -334,7 +334,7 @@ function renderRouteAlert() {
       <p class="route-alert-note">${escapeHtml(template.description)}</p>
       <div class="route-builder" aria-label="Endpoint URL builder">
         ${template.parts.map((part) => renderRoutePart(part)).join("")}
-        <button class="btn small primary" type="submit">Open Endpoint</button>
+        <button class="btn primary" type="submit">Open Endpoint</button>
       </div>
       ${state.routeError ? `<div class="route-error">${escapeHtml(state.routeError)}</div>` : ""}
     </form>

@@ -398,7 +398,11 @@ h3 {
 }
 
 .route-alert {
-  margin: -4px 0 24px;
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  right: 0;
+  left: 0;
   padding: 18px;
   border: 1px solid var(--rule);
   background: var(--panel);
@@ -443,14 +447,10 @@ h3 {
   gap: 8px;
 }
 
-.route-builder .btn.small {
-  min-height: 40px;
-}
-
 .route-literal,
 .route-field {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 42px;
   align-items: center;
   border: 1px solid var(--rule-soft);
   background: white;
@@ -483,7 +483,7 @@ h3 {
 
 .route-field input {
   width: clamp(170px, 20vw, 320px);
-  min-height: 34px;
+  min-height: 36px;
   border: 0;
   background: transparent;
   color: var(--ink);
@@ -501,6 +501,7 @@ h3 {
 }
 
 .workspace {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 0.84fr) minmax(360px, 1fr);
   gap: 18px;
