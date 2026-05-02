@@ -52,6 +52,11 @@ Required manifest fields include:
 - `specs`
 - `index.provides.capabilities`
 
+`index.provides.intents` is optional first-class registry metadata. When
+present, every listed `intent.*` ID must be backed by a BoundarySpec capability
+`intentIds` mapping, and every declared capability intent must appear in the
+manifest summary.
+
 Capability entries may optionally include `intentIds`, a list of canonical
 `intent.*` IDs that the package-owned capability satisfies. These mappings are
 exact metadata, not inferred meaning.

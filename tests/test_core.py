@@ -3382,8 +3382,56 @@ def test_validator_rejects_non_canonical_capability_intent_id(tmp_path: Path) ->
     report = validate_package(package)
 
     assert report["status"] == "invalid"
-    assert issue_codes(report["errors"]) == {"intent_id_invalid"}
+    assert issue_codes(report["errors"]) == {
+        "intent_id_invalid",
+        "manifest_intent_not_declared",
+    }
     assert any("'intent.'" in issue["message"] for issue in report["errors"])
+
+
+def test_manifest_intents_must_be_backed_by_capability_intent_ids(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "email-tools")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["index"]["provides"]["intents"] = [
+        "intent.document_conversion.email_to_markdown",
+        "intent.identity.enterprise_sso",
+    ]
+    write_yaml_file(manifest_path, manifest)
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "manifest_intent_not_declared" for issue in report["errors"])
+
+
+def test_manifest_intents_must_include_declared_capability_intents(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "email-tools")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["index"]["provides"]["intents"] = []
+    write_yaml_file(manifest_path, manifest)
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert any(issue["code"] == "manifest_intent_missing" for issue in report["errors"])
+
+
+def test_manifest_rejects_malformed_intent_entries(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "email-tools")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["index"]["provides"]["intents"] = ["identity.enterprise_sso", 123]
+    write_yaml_file(manifest_path, manifest)
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert {issue["code"] for issue in report["errors"]} >= {
+        "intent_id_invalid",
+        "manifest_intent_entry_invalid",
+    }
 
 
 def test_validator_rejects_missing_manifest(tmp_path: Path) -> None:

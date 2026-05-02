@@ -1043,6 +1043,30 @@ Acceptance:
 - The stricter lint does not execute package content and does not add semantic
   intent resolution, artifact generation, or agent runtime behavior.
 
+## Phase 42. First-Class Manifest Intent Summary
+
+- [x] Add optional `index.provides.intents` to the SpecPackage manifest
+  contract as a first-class registry/search summary.
+- [x] Validate manifest intent IDs with the same canonical `intent.` identifier
+  rules used for BoundarySpec capability `intentIds`.
+- [x] Require every manifest intent to be backed by a BoundarySpec
+  `provides.capabilities[*].intentIds` mapping.
+- [x] When manifest intents are present, require every declared capability
+  intent to appear in the manifest summary.
+- [x] Preserve compatibility for packages that omit `index.provides.intents`;
+  SpecPM continues to compute provided intents from BoundarySpec mappings.
+- [x] Update examples, self-spec, JSON fixtures, docs, and tests.
+
+Acceptance:
+
+- `intent.*` IDs are first-class in SpecPackage index metadata without becoming
+  package-owned capability IDs.
+- The manifest summary cannot claim unbacked intents and cannot silently omit
+  declared capability intents when the field is present.
+- Exact capability search and exact intent search keep their current behavior.
+- Plain-text intent interpretation, LLM extraction, embeddings, vector search,
+  RAG, reranking, and package selection authority remain outside SpecPM core.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

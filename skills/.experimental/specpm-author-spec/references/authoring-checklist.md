@@ -31,6 +31,8 @@ index:
   provides:
     capabilities:
       - example.capability
+    intents:
+      - intent.example.capability
   requires:
     capabilities: []
 compatibility:
@@ -137,6 +139,11 @@ intent.authorization.rbac
 
 Do not use package, repository, or publisher names as the `intent.*` authority.
 Those belong in package metadata and capability IDs.
+
+When `index.provides.intents` is present in `specpm.yaml`, keep it as an exact
+summary of the BoundarySpec capability `intentIds`. Do not add an intent to the
+manifest unless a concrete `provides.capabilities[].intentIds` mapping backs it,
+and do not omit a declared capability intent from the manifest summary.
 
 ## Validation Commands
 

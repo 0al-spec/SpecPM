@@ -37,8 +37,9 @@ instructions or generated PRDs.
 
 4. Author `specpm.yaml`.
    - Include stable `apiVersion`, `kind`, `metadata`, `authors`, `specs`,
-     `index.provides.capabilities`, optional `requires`, compatibility,
-     keywords, and package-level foreign artifacts.
+     `index.provides.capabilities`, optional `index.provides.intents`,
+     optional `requires`, compatibility, keywords, and package-level foreign
+     artifacts.
    - Ensure every manifest-provided capability is declared in a referenced
      BoundarySpec.
 
@@ -50,7 +51,8 @@ instructions or generated PRDs.
      `specpm.package.validate`, not broad slogans.
    - When a package capability clearly satisfies a canonical user need, add
      `intentIds` with exact `intent.*` IDs. Do not infer or invent a taxonomy
-     when the mapping is uncertain.
+     when the mapping is uncertain. If `index.provides.intents` is present,
+     keep it as an exact manifest summary of those BoundarySpec mappings.
 
 6. Validate.
    - In SpecPM source checkouts, run:

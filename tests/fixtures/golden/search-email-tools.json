@@ -37,7 +37,7 @@
       "source": {
         "digest": {
           "algorithm": "sha256",
-          "value": "58e9317bbd17ef677ddf5d648af9c7e621804e4807639aa06406568559309df2"
+          "value": "da2be935f9e81c439a8ab7ea85cebcb01c4ad00e7b863a5496c4faee15fc9e55"
         },
         "kind": "directory",
         "path": "<repo>/examples/email_tools"

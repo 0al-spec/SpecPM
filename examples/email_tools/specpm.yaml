@@ -14,6 +14,8 @@ index:
   provides:
     capabilities:
       - document_conversion.email_to_markdown
+    intents:
+      - intent.document_conversion.email_to_markdown
   requires:
     capabilities: []
 compatibility:
@@ -21,4 +23,3 @@ compatibility:
     - any
   languages: []
 foreignArtifacts: []
-
