@@ -75,17 +75,17 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      border-bottom: 1px solid var(--rule);
-      background: color-mix(in oklab, var(--paper) 93%, white);
-      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--rule-soft);
+      background: color-mix(in oklab, var(--paper) 92%, transparent);
+      backdrop-filter: blur(12px);
     }
 
     .nav-inner {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      min-height: 70px;
+      gap: 32px;
+      min-height: 68px;
     }
 
     .brand {
@@ -93,24 +93,34 @@
       align-items: center;
       gap: 12px;
       font-family: var(--serif);
-      font-size: 20px;
+      font-size: 23px;
+      line-height: 1;
     }
 
     .brand-mark {
-      width: 31px;
-      height: 31px;
+      width: 34px;
+      height: 34px;
+      color: var(--ink);
     }
 
     .nav-links {
+      justify-self: end;
       display: flex;
       align-items: center;
-      gap: 22px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
+      gap: 34px;
+      color: var(--ink);
+      font-size: 13px;
     }
 
-    .nav-links a:hover,
+    .nav-links a {
+      opacity: 0.72;
+      transition: opacity 160ms ease;
+    }
+
+    .nav-links a:hover {
+      opacity: 1;
+    }
+
     .inline-link:hover {
       color: var(--accent);
     }
@@ -261,9 +271,18 @@
     .status-line {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 8px;
       color: var(--muted);
       font-size: 12px;
+      line-height: 1;
+    }
+
+    .status-message {
+      display: inline-flex;
+      min-height: 24px;
+      align-items: center;
+      line-height: 1.2;
     }
 
     .pill {
@@ -277,6 +296,7 @@
       font-family: var(--mono);
       font-size: 10px;
       font-weight: 600;
+      line-height: 1;
       text-transform: uppercase;
     }
 
@@ -531,6 +551,18 @@
 
     .json-panel .panel-title {
       color: rgba(255, 255, 255, 0.62);
+      text-transform: none;
+    }
+
+    .json-panel .btn.small {
+      border-color: rgba(255, 255, 255, 0.34);
+      color: #e8e5dc;
+    }
+
+    .json-panel .btn.small:hover {
+      border-color: #e8e5dc;
+      background: #e8e5dc;
+      color: #101111;
     }
 
     pre {
@@ -635,6 +667,7 @@
           <path d="M374 534.5C374 488.384 336.616 451 290.5 451C244.384 451 207 488.384 207 534.5C207 580.616 244.384 618 290.5 618V642C231.129 642 183 593.871 183 534.5C183 475.129 231.129 427 290.5 427C349.871 427 398 475.129 398 534.5C398 593.871 349.871 642 290.5 642V618C336.616 618 374 580.616 374 534.5Z" fill="currentColor" />
           <path d="M881 291.5C881 245.384 843.616 208 797.5 208C751.384 208 714 245.384 714 291.5C714 337.616 751.384 375 797.5 375V399C738.129 399 690 350.871 690 291.5C690 232.129 738.129 184 797.5 184C856.871 184 905 232.129 905 291.5C905 350.871 856.871 399 797.5 399V375C843.616 375 881 337.616 881 291.5Z" fill="currentColor" />
           <path d="M881 777.5C881 731.384 843.616 694 797.5 694C751.384 694 714 731.384 714 777.5C714 823.616 751.384 861 797.5 861V885C738.129 885 690 836.871 690 777.5C690 718.129 738.129 670 797.5 670C856.871 670 905 718.129 905 777.5C905 836.871 856.871 885 797.5 885V861C843.616 861 881 823.616 881 777.5Z" fill="currentColor" />
+          <path d="M606.6 785.6C556.2 785.6 531 758.4 531 704V618.8C531 590.4 527.6 570.6 520.8 559.4C514.4 547.8 504.2 542 490.2 542C485.4 542 483 539.6 483 534.8C483 530 485.4 527.6 490.2 527.6C504.2 527.6 514.4 521.8 520.8 510.2C527.6 498.6 531 478.8 531 450.8V365.6C531 311.2 556.2 284 606.6 284C611.4 284 613.8 286.4 613.8 291.2C613.8 296 611.4 298.4 606.6 298.4C579.4 298.4 565.8 320 565.8 363.2V448.4C565.8 475.2 562.2 494.8 555 507.2C548.2 519.6 537 528.8 521.4 534.8C537 540.8 548.2 550 555 562.4C562.2 574.8 565.8 594.4 565.8 621.2V706.4C565.8 749.6 579.4 771.2 606.6 771.2C611.4 771.2 613.8 773.6 613.8 778.4C613.8 783.2 611.4 785.6 606.6 785.6Z" fill="currentColor" />
         </svg>
         SpecPM
       </a>
@@ -915,7 +948,7 @@
     function setLoadStatus(kind, message) {
       const className = kind === "ok" ? "live" : "warn";
       const label = kind === "ok" ? "Live" : kind === "loading" ? "Loading" : "Issue";
-      loadStatus.innerHTML = `<span class="pill ${className}">${escapeHtml(label)}</span><span>${escapeHtml(message)}</span>`;
+      loadStatus.innerHTML = `<span class="pill ${className}">${escapeHtml(label)}</span><span class="status-message">${escapeHtml(message)}</span>`;
     }
 
     function renderSummary() {
@@ -1174,7 +1207,7 @@
     }
 
     function renderJson() {
-      jsonTitle.textContent = state.payload?.kind || "Raw Payload";
+      jsonTitle.textContent = formatPayloadKind(state.payload?.kind);
       jsonOutput.textContent = JSON.stringify(state.payload || { errors: state.errors }, null, 2);
       rawLink.href = resourceUrl(state.activePath || "status/index.json");
     }
@@ -1309,6 +1342,17 @@
     function endpointDescription(kind) {
       const endpoint = endpoints.find((item) => item.id === kind);
       return endpoint ? endpoint.description : "Static registry payload.";
+    }
+
+    function formatPayloadKind(kind) {
+      if (!kind) {
+        return "Raw payload";
+      }
+      return String(kind)
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .toLowerCase()
+        .replace(/^./, (first) => first.toUpperCase());
     }
 
     function escapeHtml(value) {
