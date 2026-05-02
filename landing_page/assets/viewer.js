@@ -86,7 +86,6 @@ const endpointTree = document.querySelector("#endpoint-tree");
 const catalogFilter = document.querySelector("#catalog-filter");
 const catalogList = document.querySelector("#catalog-list");
 const catalogCount = document.querySelector("#catalog-count");
-const routeAlert = document.querySelector("#route-alert");
 const detailPanel = document.querySelector("#detail-panel");
 const jsonOutput = document.querySelector("#json-output");
 const jsonTitle = document.querySelector("#json-title");
@@ -225,7 +224,6 @@ function renderAll() {
   renderSummary();
   renderEndpointTree();
   renderCatalog();
-  renderRouteAlert();
   renderDetail();
   renderJson();
 }
@@ -309,29 +307,21 @@ function renderCatalog() {
   ` : `<div class="empty">No catalog items match this search.</div>`;
 }
 
-function renderRouteAlert() {
-  if (!state.routePrompt) {
-    routeAlert.hidden = true;
-    routeAlert.innerHTML = "";
-    return;
-  }
+function renderRouteTemplateDetail() {
   const template = routeTemplates[state.routePrompt.kind];
   if (!template) {
-    routeAlert.hidden = true;
-    routeAlert.innerHTML = "";
+    renderEndpointDetail();
     return;
   }
-  routeAlert.hidden = false;
-  routeAlert.innerHTML = `
+  detailPanel.innerHTML = `
     <form class="route-template-form" data-route-template="${escapeAttr(state.routePrompt.kind)}">
-      <div class="route-alert-head">
-        <div class="route-alert-title">
+      <div class="detail-head">
+        <div class="detail-title">
           <span class="pill live">Route Template</span>
-          <strong>${escapeHtml(template.title)}</strong>
+          <h2>${escapeHtml(template.title)}</h2>
+          <p>${escapeHtml(template.description)}</p>
         </div>
-        <button class="btn small" type="button" data-action="route-dismiss">Close</button>
       </div>
-      <p class="route-alert-note">${escapeHtml(template.description)}</p>
       <div class="route-builder" aria-label="Endpoint URL builder">
         ${template.parts.map((part) => renderRoutePart(part)).join("")}
         <button class="btn primary" type="submit">Open Endpoint</button>
@@ -372,6 +362,10 @@ function renderDetail() {
     return;
   }
 
+  if (state.routePrompt) {
+    renderRouteTemplateDetail();
+    return;
+  }
   if (state.activeKind === "package") {
     renderPackageDetail();
     return;
@@ -636,7 +630,8 @@ function renderIntentPackagesDetail() {
 function renderJson() {
   jsonTitle.textContent = formatPayloadKind(state.payload?.kind);
   jsonOutput.textContent = JSON.stringify(state.payload || { errors: state.errors }, null, 2);
-  rawLink.href = resourceUrl(state.activePath || "status/index.json");
+  rawLink.hidden = !state.activePath;
+  rawLink.href = state.activePath ? resourceUrl(state.activePath) : "#";
 }
 
 function bindFilters() {
@@ -655,10 +650,6 @@ function bindActions() {
         await showEndpoint(target.dataset.kind, target.dataset.path);
       } else if (action === "route-template") {
         showRoutePrompt(target.dataset.kind);
-      } else if (action === "route-dismiss") {
-        clearRoutePrompt();
-        renderEndpointTree();
-        renderRouteAlert();
       } else if (action === "catalog-mode") {
         state.catalogMode = target.dataset.mode || "all";
         renderCatalog();
@@ -694,7 +685,8 @@ function bindActions() {
       state.routePrompt = { kind: routeForm.dataset.routeTemplate };
       state.routeError = error.message;
       renderEndpointTree();
-      renderRouteAlert();
+      renderDetail();
+      renderJson();
     }
   });
 }
@@ -705,9 +697,12 @@ function showRoutePrompt(kind) {
   }
   state.routePrompt = { kind };
   state.routeError = null;
-  renderEndpointTree();
-  renderRouteAlert();
-  const input = routeAlert.querySelector("input");
+  state.activeKind = kind;
+  state.activeId = null;
+  state.activePath = null;
+  state.payload = routeTemplatePayload(kind);
+  renderAll();
+  const input = detailPanel.querySelector("input");
   if (input) {
     input.focus();
   }
@@ -907,6 +902,20 @@ function routePlaceholder(param) {
     return intentItems()[0]?.intent_id || "intent.registry.intent_lookup";
   }
   return param;
+}
+
+function routeTemplatePayload(kind) {
+  const template = routeTemplates[kind] || {};
+  return {
+    apiVersion: "specpm.registry/viewer",
+    kind: "RemoteRouteTemplate",
+    status: "local_template",
+    title: template.title || "Route template",
+    description: template.description || "",
+    parameters: (template.parts || [])
+      .filter((part) => typeof part !== "string")
+      .map((part) => part.param)
+  };
 }
 
 function clearRoutePrompt() {

@@ -122,6 +122,10 @@ input {
     transform 160ms ease;
 }
 
+.btn[hidden] {
+  display: none;
+}
+
 .btn:hover {
   transform: translateY(-1px);
   background: var(--ink);

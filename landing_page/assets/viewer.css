@@ -393,57 +393,27 @@ h3 {
   line-height: 1;
 }
 
-.route-alert[hidden] {
-  display: none;
-}
-
-.route-alert {
-  position: absolute;
-  z-index: 20;
-  top: 0;
-  right: 0;
-  left: 0;
-  padding: 18px;
-  border: 1px solid var(--rule);
-  background: var(--panel);
-}
-
 .route-template-form {
   display: grid;
-  gap: 13px;
+  gap: 18px;
 }
 
-.route-alert-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+.route-template-form .detail-title {
+  min-width: 0;
 }
 
-.route-alert-title {
-  display: grid;
-  justify-items: start;
-  gap: 8px;
-}
-
-.route-alert-title strong {
+.route-template-form .detail-title h2 {
   font-family: var(--mono);
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-
-.route-alert-note {
-  max-width: 760px;
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .route-builder {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
 }
 
@@ -465,6 +435,9 @@ h3 {
 
 .route-field {
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0 10px;
   border-color: var(--rule);
 }
@@ -482,7 +455,8 @@ h3 {
 }
 
 .route-field input {
-  width: clamp(170px, 20vw, 320px);
+  width: 100%;
+  min-width: 0;
   min-height: 36px;
   border: 0;
   background: transparent;
@@ -501,7 +475,6 @@ h3 {
 }
 
 .workspace {
-  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 0.84fr) minmax(360px, 1fr);
   gap: 18px;
@@ -766,15 +739,6 @@ pre {
   .nav-links {
     display: grid;
     gap: 10px;
-  }
-
-  .route-alert-head,
-  .route-builder {
-    align-items: stretch;
-  }
-
-  .route-alert-head {
-    display: grid;
   }
 
   .route-field input {
