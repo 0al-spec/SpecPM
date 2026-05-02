@@ -43,6 +43,10 @@ evidence:
     supports:
       - metadata.license
       - provides.capabilities.conformance.spec_authoring_quality_warning
+  - id: ambiguous_evidence_kind
+    kind: unknown
+    supports:
+      - provides.capabilities
 provenance:
   sourceConfidence:
     intent: low

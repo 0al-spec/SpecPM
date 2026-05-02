@@ -3387,6 +3387,13 @@ def test_validator_warns_on_spec_authoring_quality_gaps(tmp_path: Path) -> None:
         "metadata.license",
         "provides.capabilities.document_conversion.email_to_markdown",
     ]
+    spec["evidence"].append(
+        {
+            "id": "review_unknown_kind",
+            "kind": "unknown",
+            "supports": ["provides.capabilities"],
+        }
+    )
     write_yaml_file(spec_path, spec)
 
     report = validate_package(package)
@@ -3395,6 +3402,7 @@ def test_validator_warns_on_spec_authoring_quality_gaps(tmp_path: Path) -> None:
     warning_codes = issue_codes(report["warnings"])
     assert "duplicate_boundary_document_id" in warning_codes
     assert "evidence_support_target_unknown" in warning_codes
+    assert "unspecified_evidence_kind" in warning_codes
     assert "unspecified_effect_kind" in warning_codes
     assert "unspecified_interface_kind" in warning_codes
     assert not any(

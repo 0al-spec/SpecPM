@@ -70,7 +70,7 @@
         "warning_codes": [
           "duplicate_boundary_document_id",
           "evidence_support_target_unknown",
-          "manual_assertion_only_evidence",
+          "unspecified_evidence_kind",
           "unspecified_effect_kind",
           "unspecified_interface_kind"
         ]

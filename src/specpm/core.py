@@ -3350,7 +3350,7 @@ def validate_boundary_document_ids(rel: str, spec: dict[str, Any], warnings: lis
                     "warning",
                     "duplicate_boundary_document_id",
                     (
-                        "BoundarySpec id is reused in multiple places: "
+                        "ID is reused across BoundarySpec sections: "
                         f"{value} ({seen[value]}, {field})"
                     ),
                     rel,
