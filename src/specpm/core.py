@@ -349,8 +349,9 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
                         "index.provides.capabilities",
                     )
                 )
-        manifest_intents = intent_ids(get_field(manifest, "index.provides.intents"))
-        if get_field(manifest, "index.provides.intents") is not None:
+        manifest_intents_raw = get_field(manifest, "index.provides.intents")
+        manifest_intents = intent_ids(manifest_intents_raw)
+        if isinstance(manifest_intents_raw, list):
             declared_intent_set = set(declared_intents)
             manifest_intent_set = set(manifest_intents)
             for intent_id in manifest_intents:

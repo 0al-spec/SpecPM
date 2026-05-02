@@ -3434,6 +3434,24 @@ def test_manifest_rejects_malformed_intent_entries(tmp_path: Path) -> None:
     }
 
 
+def test_manifest_intent_shape_error_does_not_emit_consistency_noise(
+    tmp_path: Path,
+) -> None:
+    package = copy_email_package(tmp_path, "email-tools")
+    manifest_path = package / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["index"]["provides"]["intents"] = "intent.document_conversion.email_to_markdown"
+    write_yaml_file(manifest_path, manifest)
+
+    report = validate_package(package)
+    codes = issue_codes(report["errors"])
+
+    assert report["status"] == "invalid"
+    assert "manifest_intents_invalid" in codes
+    assert "manifest_intent_missing" not in codes
+    assert "manifest_intent_not_declared" not in codes
+
+
 def test_validator_rejects_missing_manifest(tmp_path: Path) -> None:
     package = tmp_path / "missing-manifest"
     package.mkdir()
