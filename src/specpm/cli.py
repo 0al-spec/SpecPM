@@ -21,7 +21,9 @@ from specpm.core import (
     observe_remote_registry,
     pack_package,
     search_index,
+    search_intent_index,
     search_remote_registry,
+    search_remote_registry_intent,
     unyank_index_package,
     validate_package,
     yank_index_package,
@@ -85,6 +87,16 @@ def build_parser() -> argparse.ArgumentParser:
     search.add_argument("--index", default=".specpm/index.json")
     search.add_argument("--json", action="store_true", help="Emit a stable JSON search report.")
     search.set_defaults(handler=handle_search)
+
+    search_intent = subparsers.add_parser(
+        "search-intent", help="Search an index by exact canonical intent id."
+    )
+    search_intent.add_argument("intent_id")
+    search_intent.add_argument("--index", default=".specpm/index.json")
+    search_intent.add_argument(
+        "--json", action="store_true", help="Emit a stable JSON intent search report."
+    )
+    search_intent.set_defaults(handler=handle_search_intent)
 
     add = subparsers.add_parser("add", help="Add a package to local project state.")
     add.add_argument(
@@ -163,6 +175,13 @@ def build_parser() -> argparse.ArgumentParser:
     remote_search.add_argument("capability_id")
     add_remote_registry_options(remote_search)
     remote_search.set_defaults(handler=handle_remote_search)
+
+    remote_search_intent = remote_subparsers.add_parser(
+        "search-intent", help="Search a remote registry by exact canonical intent id."
+    )
+    remote_search_intent.add_argument("intent_id")
+    add_remote_registry_options(remote_search_intent)
+    remote_search_intent.set_defaults(handler=handle_remote_search_intent)
 
     remote_observe = remote_subparsers.add_parser(
         "observe", help="Build a read-only remote registry observation report."
@@ -301,6 +320,24 @@ def handle_search(args: argparse.Namespace) -> int:
     return 0 if report["status"] == "ok" else 1
 
 
+def handle_search_intent(args: argparse.Namespace) -> int:
+    report = search_intent_index(args.intent_id, Path(args.index))
+    if args.json:
+        print_json(report)
+    else:
+        if report["status"] == "ok":
+            if not report["results"]:
+                print(f"No packages found for intent: {args.intent_id}")
+            for result in report["results"]:
+                matched = ", ".join(result.get("matched_capabilities", []))
+                print(f"{result['package_id']} {result['version']} [{matched}]")
+        else:
+            print(f"intent search failed: {args.intent_id}", file=sys.stderr)
+            for issue in report.get("errors", []):
+                print(f"error {issue['code']}: {issue['message']}", file=sys.stderr)
+    return 0 if report["status"] == "ok" else 1
+
+
 def handle_add(args: argparse.Namespace) -> int:
     report = add_package(args.target, Path(args.index), Path(args.project))
     if args.json:
@@ -429,6 +466,11 @@ def handle_remote_search(args: argparse.Namespace) -> int:
     return emit_remote_registry_report(report, args.json)
 
 
+def handle_remote_search_intent(args: argparse.Namespace) -> int:
+    report = search_remote_registry_intent(args.registry, args.intent_id, args.timeout)
+    return emit_remote_registry_report(report, args.json)
+
+
 def handle_remote_observe(args: argparse.Namespace) -> int:
     report = observe_remote_registry(
         args.registry,
@@ -521,6 +563,15 @@ def print_remote_registry(report: dict[str, Any]) -> None:
                 f"{result['package_id']} {result['version']} "
                 f"[{result['matched_capability']}]{suffix}"
             )
+        return
+    if kind == "RemoteIntentSearch":
+        if not payload["results"]:
+            print(f"No remote packages found for intent: {payload['query']['intent_id']}")
+            return
+        for result in payload["results"]:
+            suffix = " [yanked]" if result["yanked"] else ""
+            matched = ", ".join(result.get("matched_capabilities", []))
+            print(f"{result['package_id']} {result['version']} [{matched}]{suffix}")
         return
     print(f"remote {report['operation']}: {kind}")
 

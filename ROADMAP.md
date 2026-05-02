@@ -18,6 +18,7 @@ Implemented surfaces:
 - local `SpecPackage` and `BoundarySpec` validation, inspection, deterministic
   packing, structural diff, and local registry operations;
 - exact capability search and deterministic local add/lock behavior;
+- exact `intent.*` lookup over explicit capability-to-intent mappings;
 - SpecGraph inbox inspection for exported package candidates;
 - read-only remote `/v0` metadata client commands;
 - static public index generation for GitHub Pages;
@@ -46,6 +47,8 @@ deployment.
 
 - Keep SpecPM narrow: package substrate first, product reasoning elsewhere.
 - Keep package content untrusted data.
+- Keep package-owned capability IDs separate from package-neutral `intent.*`
+  IDs.
 - Keep public registry mutation out of request-time APIs.
 - Prefer reviewed source changes, deterministic generation, and static hosting
   before introducing mutable services.
@@ -182,16 +185,21 @@ package-manager boundary.
 
 Tasks:
 
+- maintain the identifier model that separates package IDs, capability IDs, and
+  canonical `intent.*` IDs;
+- expose exact intent lookup only for explicitly declared `intentIds`;
 - define the resolver as ContextBuilder, SpecGraph, or downstream service work;
 - use embeddings, vector search, RAG, or LLM reranking outside SpecPM core;
-- return reviewable candidate `SpecPackage` and `BoundarySpec` IDs;
+- return reviewable candidate `intent.*`, `SpecPackage`, `BoundarySpec`, and
+  capability IDs;
 - make candidate selection explicit and auditable;
 - keep exact package verification in SpecPM.
 
 Success criteria:
 
 - plain-text needs can become reviewable package candidates;
-- SpecPM verifies exact IDs and package shape;
+- SpecPM verifies exact intent IDs, capability IDs, package IDs, and package
+  shape;
 - semantic resolution does not become normative package-manager behavior.
 
 ## Explicit Non-Goals For SpecPM Core
@@ -221,3 +229,6 @@ Package content can describe desired outputs. Package content cannot command the
    - show SpecGraph, ContextBuilder, and SpecNode read-only consumption flows.
 5. `design: remote package acquisition boundary`
    - decide fetch/cache/add semantics before adding remote package acquisition.
+6. `design: intent taxonomy governance`
+   - define how canonical `intent.*` domains are proposed, reviewed, and mapped
+     to package capabilities.

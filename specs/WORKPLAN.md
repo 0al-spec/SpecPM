@@ -979,6 +979,36 @@ Acceptance:
 - The roadmap names concrete near-term PR candidates without implying that
   post-MVP tracks are already implemented.
 
+## Phase 40. Identifier Model and Exact Intent Lookup
+
+- [x] Define the three identifier namespaces: package IDs, package-owned
+  capability IDs, and package-neutral canonical `intent.*` IDs.
+- [x] Document why `intent.*` IDs are not provider or repository namespaces.
+- [x] Allow BoundarySpec capability entries to declare optional `intentIds`.
+- [x] Validate that declared intent IDs start with `intent.` and use the normal
+  SpecPM identifier syntax.
+- [x] Add local index metadata for exact intent lookup without replacing exact
+  capability search.
+- [x] Add `specpm search-intent <intent-id>` for deterministic local lookup of
+  declared intent mappings.
+- [x] Add generated static `/v0/intents/{intent_id}/packages` payloads and
+  read-only `specpm remote search-intent` lookup.
+- [x] Update JSON contracts, remote registry API docs, DocC, README, roadmap,
+  and self-spec coverage.
+- [x] Keep plain-text interpretation, LLM extraction, embeddings, vector search,
+  RAG, reranking, and package selection authority outside SpecPM core.
+
+Acceptance:
+
+- Existing package and capability IDs remain valid.
+- Packages without `intentIds` remain valid and searchable by capability ID.
+- Exact intent lookup returns packages and matched package-owned capabilities
+  only when BoundarySpecs explicitly declare the mapping.
+- Remote and local intent lookup are metadata-only and do not download, install,
+  execute, or select packages automatically.
+- SpecPM remains the exact lookup and verification layer; ContextBuilder,
+  SpecGraph, or downstream resolvers own plain-text intent interpretation.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -1136,7 +1166,8 @@ Status: Deferred.
 #### Goal
 
 Define a downstream resolver that can map plain-text user intent to candidate
-capability IDs or package IDs without making SpecPM core a semantic authority.
+`intent.*` IDs, capability IDs, or package IDs without making SpecPM core a
+semantic authority.
 
 Example user intent:
 
@@ -1147,22 +1178,26 @@ I need a package that converts email messages into Markdown.
 The resolver may propose:
 
 ```text
+intent.document_conversion.email_to_markdown
 document_conversion.email_to_markdown
 ```
 
-SpecPM then verifies the candidate through exact lookup, validation, inspection,
-and package metadata contracts.
+SpecPM then verifies the candidate through exact intent lookup, exact
+capability lookup, validation, inspection, and package metadata contracts.
 
 #### Boundary
 
 - SpecPM remains the package and verification substrate.
-- SpecPM exact search remains the normative package-manager resolution path.
+- SpecPM exact capability search remains the normative package-manager
+  resolution path.
+- SpecPM exact intent search is a metadata lookup over explicitly declared
+  `intentIds`; it is not semantic search.
 - ContextBuilder, SpecGraph, or a downstream resolver owns plain-text intent
   interpretation.
 - A resolver may use LLM extraction, embeddings, vector search, lexical search,
   reranking, ontology traversal, graph context, and human review.
-- Resolver output must be candidate `capability_id` or `package_id` values, not
-  trusted package selections.
+- Resolver output must be candidate `intent_id`, `capability_id`, or
+  `package_id` values, not trusted package selections.
 - Ambiguous matches must remain review-required.
 
 #### Non-Goals
@@ -1174,13 +1209,16 @@ and package metadata contracts.
 - This track does not allow package content to become trusted prompt
   instructions.
 - This track does not change the exact capability search contract.
+- This track does not make `intent.*` IDs package, provider, or publisher
+  ownership namespaces.
 
 #### Future Investigation Areas
 
 Future work may explore:
 
 - metadata exports optimized for external embedding;
-- candidate generation from package summaries, capabilities, constraints,
+- candidate generation from package summaries, declared intent mappings,
+  capabilities, constraints,
   evidence, and provenance;
 - confidence and traceability reports for candidate mappings;
 - policy gates before `specpm add`;

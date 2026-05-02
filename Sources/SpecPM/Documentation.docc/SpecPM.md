@@ -17,6 +17,7 @@ The local MVP supports:
 - deterministic `.specpm.tgz` packing;
 - local file-backed registry indexing;
 - exact capability search;
+- exact `intent.*` lookup over declared capability-to-intent mappings;
 - deterministic local add and lock metadata;
 - local yank and unyank lifecycle state;
 - structural diff;
@@ -27,8 +28,9 @@ The local MVP supports:
 
 SpecPM does not perform natural-language intent resolution, embedding
 generation, vector search, RAG orchestration, or semantic package selection.
-That layer belongs in ContextBuilder, SpecGraph, or a downstream resolver; SpecPM
-verifies exact candidate IDs.
+That layer belongs in ContextBuilder, SpecGraph, or a downstream resolver.
+SpecPM verifies exact candidate IDs and can expose exact `intent.*` mappings
+declared by BoundarySpecs.
 
 ## Source Documents
 
@@ -40,6 +42,7 @@ The canonical source files remain in the repository:
 - `specs/JSON_CONTRACTS.md`
 - `specs/CONFORMANCE.md`
 - `specs/REMOTE_REGISTRY_API.md`
+- `specs/IDENTIFIER_MODEL.md`
 - `specs/INDEX_SUBMISSION_FLOW.md`
 - `specs/PUBLIC_ALPHA.md`
 - `specs/DEPLOY_FIRST.md`
@@ -63,6 +66,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:GettingStarted>
 - <doc:AddSpecPackage>
 - <doc:StaticRegistryPipeline>
+- <doc:IdentifierModel>
 - <doc:PackageModel>
 - <doc:CLIReference>
 

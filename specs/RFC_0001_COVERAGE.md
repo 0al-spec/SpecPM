@@ -26,6 +26,7 @@ intentionally left for post-MVP tracks.
 | Local registry index | Implemented | File-backed local index stores package identity, digest, capabilities, requirements, license, compatibility, evidence summary, source, and yanked state. |
 | Local registry lifecycle | Implemented | `specpm yank` and `specpm unyank` update local yanked state without removing packages from exact search. |
 | Exact capability search | Implemented | Search is exact-match only for normative resolution. Missing local indexes return empty results. |
+| Exact intent search | Implemented additive metadata contract | Optional capability-level `intentIds` allow exact lookup by canonical `intent.*` IDs without semantic inference. |
 | Add / local project state | Implemented | `specpm.lock`, `.specpm/index.json`, and `.specpm/packages/.../package.json` are deterministic local metadata. |
 | Inspect | Implemented | Package, BoundarySpec, evidence, effects, compatibility, provenance, implementation binding, and contract warning summaries are exposed. |
 | Structural diff | Implemented | Diff detects capability, required capability, interface, MUST constraint, package metadata, and compatibility changes with conservative classification. |
@@ -44,7 +45,7 @@ intentionally left for post-MVP tracks.
 | Remote archive download/install/cache behavior | Post-MVP | Remote metadata does not imply package archive download or local project mutation. |
 | Package signing / trust web | Post-MVP | Signing, trust policy, and revocation are explicitly non-goals for the MVP. |
 | Full dependency solving | Post-MVP | `add` resolves one exact package or capability at a time. |
-| Keyword/fuzzy/semantic search | Post-MVP for normative resolution | Exact capability ID matching is the only normative search path. |
+| Keyword/fuzzy/semantic search | Post-MVP for normative resolution | Exact capability ID matching is the normative package-manager search path. Exact `intent.*` lookup is metadata-only and requires declared mappings. |
 | Plain-text intent discovery | Post-MVP downstream resolver | LLM extraction, embeddings, vector search, RAG, and reranking belong outside SpecPM core. SpecPM verifies candidate exact IDs. |
 | Full semantic diffing | Post-MVP | MVP diff is structural and conservative. |
 | Foreign artifact semantic understanding | Post-MVP | Foreign artifacts are preserved as data and never override validation behavior. |

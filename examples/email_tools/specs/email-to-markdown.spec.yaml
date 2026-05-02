@@ -22,6 +22,8 @@ provides:
     - id: document_conversion.email_to_markdown
       role: primary
       summary: Convert email content into Markdown.
+      intentIds:
+        - intent.document_conversion.email_to_markdown
 requires:
   capabilities: []
 interfaces:
@@ -61,4 +63,3 @@ provenance:
     intent: medium
     boundary: medium
     behavior: low
-

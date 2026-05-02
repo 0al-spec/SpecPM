@@ -18,6 +18,7 @@ scope:
     - Pack packages into deterministic specpm-tar-gzip-v0 archives.
     - Maintain a local file-backed registry index.
     - Search the local registry by exact capability IDs.
+    - Search local and remote registry metadata by exact declared canonical intent IDs.
     - Add selected packages into deterministic local project state.
     - Mark local indexed packages as yanked or unyanked.
     - Diff package versions using conservative structural classification.
@@ -47,6 +48,7 @@ scope:
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
     - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
     - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
+    - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
     - Provide experimental Agent Skills for authoring and reviewing SpecPM package specs.
@@ -62,6 +64,7 @@ scope:
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
     - LLM, embedding, vector search, or RAG-based intent resolution.
+    - Plain-text inference of canonical intent IDs.
     - Full dependency solving.
     - PRD, brief, issue breakdown, test plan, or review report generation.
     - Artifact evaluation runtime.
@@ -88,6 +91,11 @@ provides:
     - id: specpm.registry.search
       role: secondary
       summary: Search indexed packages by exact capability ID.
+    - id: specpm.registry.intent_search
+      role: secondary
+      summary: Search local and remote registry metadata by exact canonical intent ID when package capabilities declare intentIds.
+      intentIds:
+        - intent.registry.intent_lookup
     - id: specpm.registry.add
       role: secondary
       summary: Add exact package references or uniquely resolved capabilities to local project state.
@@ -166,6 +174,11 @@ provides:
     - id: specpm.roadmap.current_status
       role: secondary
       summary: Document the current public alpha baseline, milestone tracks, non-goals, and near-term PR candidates.
+    - id: specpm.intent.identifier_model
+      role: secondary
+      summary: Document package IDs, capability IDs, canonical intent IDs, and exact capability-to-intent mappings.
+      intentIds:
+        - intent.specification.identifier_model
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
@@ -230,6 +243,14 @@ interfaces:
           mediaTypes:
             - application/json
             - text/plain
+    - id: cli_search-intent
+      kind: cli
+      summary: specpm search-intent <intent-id> [--index <path>] [--json]
+      outputs:
+        - name: intent_search_report
+          mediaTypes:
+            - application/json
+            - text/plain
     - id: cli_add
       kind: cli
       summary: specpm add <capability-id-or-package-ref> [--index <path>] [--project <dir>] [--json]
@@ -269,7 +290,7 @@ interfaces:
             - text/plain
     - id: cli_remote
       kind: cli
-      summary: specpm remote status, specpm remote packages, specpm remote package, specpm remote version, specpm remote search, and specpm remote observe for read-only registry metadata.
+      summary: specpm remote status, specpm remote packages, specpm remote package, specpm remote version, specpm remote search, specpm remote search-intent, and specpm remote observe for read-only registry metadata.
       outputs:
         - name: remote_registry_client_report
           mediaTypes:
@@ -292,6 +313,7 @@ interfaces:
         - pack_package
         - index_package
         - search_index
+        - search_intent_index
         - add_package
         - yank_index_package
         - unyank_index_package
@@ -300,6 +322,7 @@ interfaces:
         - get_remote_package
         - get_remote_package_version
         - search_remote_registry
+        - search_remote_registry_intent
         - observe_remote_registry
         - validate_remote_registry_payload
         - diff_packages
@@ -367,6 +390,9 @@ constraints:
   - id: exact_search_normative
     level: MUST
     statement: MVP search must use exact capability ID matching for normative resolution.
+  - id: exact_intent_lookup_metadata_only
+    level: MUST
+    statement: Intent lookup must use exact declared intentIds and must not infer package meaning from natural language or embeddings.
   - id: no_semantic_authority
     level: MUST
     statement: SpecPM must not treat LLM, embedding, vector search, or RAG output as authoritative package meaning.
@@ -398,6 +424,7 @@ evidence:
       - intent.summary
       - provides.capabilities
       - specpm.roadmap.current_status
+      - specpm.intent.identifier_model
   - id: roadmap
     kind: documentation
     path: ROADMAP.md
@@ -406,6 +433,7 @@ evidence:
       - specpm.registry.public_alpha_index
       - specpm.registry.static_registry_pipeline_docs
       - specpm.deployment.deploy_first_workflow
+      - specpm.intent.identifier_model
       - scope.includes
       - scope.excludes
   - id: prd
@@ -415,6 +443,8 @@ evidence:
       - scope.includes
       - scope.excludes
       - provides.capabilities
+      - specpm.registry.intent_search
+      - specpm.intent.identifier_model
   - id: json_contracts
     kind: schema
     path: specs/JSON_CONTRACTS.md
@@ -422,6 +452,7 @@ evidence:
       - interfaces.inbound
       - interfaces.outbound
       - specpm.registry.public_observation_report
+      - specpm.registry.intent_search
   - id: conformance_docs
     kind: documentation
     path: specs/CONFORMANCE.md
@@ -429,6 +460,7 @@ evidence:
       - specpm.conformance.local_suite
       - specpm.conformance.remote_registry_payloads
       - specpm.conformance.public_enterprise_registry_suite
+      - specpm.registry.intent_search
   - id: conformance_fixtures
     kind: test
     path: tests/fixtures/conformance
@@ -444,12 +476,14 @@ evidence:
       - specpm.registry.remote_readonly_client
       - specpm.conformance.remote_registry_payloads
       - specpm.conformance.public_enterprise_registry_suite
+      - specpm.registry.intent_search
   - id: index_submission_flow
     kind: documentation
     path: specs/INDEX_SUBMISSION_FLOW.md
     supports:
       - specpm.registry.index_submission_flow
       - specpm.registry.remote_api_contract
+      - specpm.registry.intent_search
   - id: add_specpackages_issue_template
     kind: documentation
     path: .github/ISSUE_TEMPLATE/add-specpackages.yml
@@ -525,6 +559,7 @@ evidence:
       - specpm.registry.public_index_remote_sources
       - specpm.registry.local_dev_service
       - specpm.registry.remote_api_contract
+      - specpm.registry.intent_search
   - id: public_index_accepted_manifest
     kind: package_manifest
     path: public-index/accepted-packages.yml
@@ -598,8 +633,19 @@ evidence:
     path: specs/INTENT_DISCOVERY_BOUNDARY.md
     supports:
       - exact_search_normative
+      - exact_intent_lookup_metadata_only
       - no_semantic_authority
+      - specpm.registry.intent_search
+      - specpm.intent.identifier_model
       - scope.excludes
+  - id: identifier_model
+    kind: documentation
+    path: specs/IDENTIFIER_MODEL.md
+    supports:
+      - specpm.intent.identifier_model
+      - specpm.registry.intent_search
+      - exact_intent_lookup_metadata_only
+      - no_semantic_authority
   - id: derived_boundary
     kind: adr
     path: specs/0001_Derived_Artifact_Profile_Decision.md
@@ -613,6 +659,7 @@ evidence:
       - specpm.cli.public_surface
       - interfaces.inbound
       - specpm.registry.public_observation_report
+      - specpm.registry.intent_search
   - id: core_source
     kind: source
     path: src/specpm/core.py
@@ -621,6 +668,7 @@ evidence:
       - provides.capabilities
       - specpm.registry.remote_readonly_client
       - specpm.registry.public_observation_report
+      - specpm.registry.intent_search
   - id: core_tests
     kind: test
     path: tests/test_core.py
@@ -629,12 +677,22 @@ evidence:
       - constraints
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.public_observation_report
+      - specpm.registry.intent_search
   - id: docc_overview
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/SpecPM.md
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.static_registry_pipeline_docs
+      - specpm.intent.identifier_model
+  - id: docc_identifier_model
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/IdentifierModel.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.intent.identifier_model
+      - specpm.registry.intent_search
+      - exact_intent_lookup_metadata_only
   - id: docc_static_registry_pipeline
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md
@@ -645,6 +703,7 @@ evidence:
       - specpm.registry.public_pages_deployment
       - specpm.registry.index_submission_flow
       - specpm.registry.remote_api_contract
+      - specpm.registry.intent_search
   - id: docc_roadmap
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/Roadmap.md
@@ -652,6 +711,7 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.roadmap.current_status
       - specpm.registry.static_registry_pipeline_docs
+      - specpm.intent.identifier_model
   - id: docc_deployment
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/Deployment.md
@@ -772,6 +832,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
         - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md
+        - Sources/SpecPM/Documentation.docc/IdentifierModel.md
         - Sources/SpecPM/Documentation.docc/Deployment.md
         - Sources/SpecPM/Documentation.docc/RegistryOperations.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md

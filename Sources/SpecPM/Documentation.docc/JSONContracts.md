@@ -9,6 +9,7 @@ The MVP treats these output shapes as stable contracts:
 - inspection reports;
 - pack results;
 - search results;
+- intent search results;
 - add results;
 - registry lifecycle results;
 - remote registry client results, including status and package index discovery;
@@ -36,6 +37,7 @@ Current status vocabularies include:
 - pack: `packed`, `invalid`;
 - index: `indexed`, `unchanged`, `invalid`;
 - search: `ok`, `invalid`;
+- intent search: `ok`, `invalid`;
 - add: `added`, `unchanged`, `ambiguous`, `invalid`;
 - registry lifecycle: `yanked`, `unyanked`, `unchanged`, `invalid`;
 - remote registry client: `ok`, `not_found`, `invalid`;
@@ -57,5 +59,6 @@ fields in runtime payloads.
 ## References
 
 - `specs/JSON_CONTRACTS.md`
+- <doc:IdentifierModel>
 - `tests/fixtures/golden/`
 - <doc:Conformance>
