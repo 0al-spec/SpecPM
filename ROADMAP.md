@@ -1,7 +1,7 @@
 # SpecPM Roadmap
 
 Status: Public alpha roadmap
-Updated: 2026-04-30
+Updated: 2026-05-02
 
 SpecPM is the package substrate for SpecGraph. It packages, validates, indexes,
 inspects, preserves, and exposes reusable specification intent. It does not own
@@ -63,6 +63,8 @@ Tasks:
 - keep DocC, README, and landing page consistent about the static registry
   pipeline and public alpha state;
 - keep the self-spec aligned with public repository surfaces;
+- add stricter spec-authoring lint for evidence references, ambiguous IDs,
+  weak enum choices, and external self-spec review quality;
 - run local Docker and Pages smoke checks for registry-facing changes.
 
 Success criteria:
@@ -212,12 +214,15 @@ Package content can describe desired outputs. Package content cannot command the
 
 1. `docs: normalize roadmap and workplan status`
    - keep this roadmap, DocC Roadmap, and Workplan aligned.
-2. `operator: document accepted package maintainer checklist`
+2. `validator: add strict spec authoring lint`
+   - catch dangling evidence `supports` targets, ambiguous IDs, weak
+     `unknown` kinds, and external self-spec PR hygiene before review bots do.
+3. `operator: document accepted package maintainer checklist`
    - define labels, review steps, and manifest PR expectations.
-3. `operator: prototype accepted manifest PR helper`
+4. `operator: prototype accepted manifest PR helper`
    - prepare a reviewed manifest update from a validated issue without
      publishing automatically.
-4. `docs: add downstream consumer registry guide`
+5. `docs: add downstream consumer registry guide`
    - show SpecGraph, ContextBuilder, and SpecNode read-only consumption flows.
-5. `design: remote package acquisition boundary`
+6. `design: remote package acquisition boundary`
    - decide fetch/cache/add semantics before adding remote package acquisition.

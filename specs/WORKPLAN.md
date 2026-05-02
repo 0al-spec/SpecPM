@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-04-28
+Updated: 2026-05-02
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -978,6 +978,40 @@ Acceptance:
   graph reasoner, artifact generator, agent runtime, or online intent resolver.
 - The roadmap names concrete near-term PR candidates without implying that
   post-MVP tracks are already implemented.
+
+## Phase 40. Spec Authoring Quality Gates
+
+- [ ] Add strict lint for evidence `supports` references so dangling targets
+  such as non-existent BoundarySpec fields are reported before review.
+- [ ] Define the allowed target forms for evidence support references:
+  capability IDs, constraint IDs, effect IDs, interface IDs, implementation
+  binding IDs, and explicitly permitted structural paths.
+- [ ] Add document-scoped duplicate ID detection across constraints, evidence,
+  interfaces, effects, implementation bindings, and foreign artifacts.
+- [ ] Warn when `kind: unknown` is used for interfaces, evidence, or effects
+  where a more specific known enum value is available.
+- [ ] Update conformance fixtures and JSON validation reports for the new
+  lint warnings or errors.
+- [ ] Update `specpm-author-spec` and `specpm-review-spec` skill checklists so
+  agents check evidence references, duplicate IDs, weak enum choices, and
+  unsupported implementation claims before opening external PRs.
+- [ ] Add an external self-spec PR checklist covering motivation text,
+  no-runtime-change scope, changeset/versioning policy, validation commands,
+  and pack smoke.
+- [ ] Document that AI review suggestions must be checked against the current
+  SpecPM enum/schema contract before being applied.
+
+Acceptance:
+
+- `specpm validate` catches dangling evidence references and ambiguous IDs that
+  are currently only caught by human or AI review.
+- External self-spec pull requests include a short motivation, explain why
+  runtime package behavior is unchanged, and state whether a changeset or
+  version bump is required.
+- The author/review skills guide agents to run `validate`, `inspect`, `pack`,
+  and semantic consistency checks before PR creation.
+- The stricter lint does not execute package content and does not add semantic
+  intent resolution, artifact generation, or agent runtime behavior.
 
 ## Post-MVP Tracks
 
