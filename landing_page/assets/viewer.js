@@ -50,6 +50,7 @@ const endpointGroups = [
 ];
 
 const endpoints = endpointGroups.flatMap((group) => group.items);
+const defaultViewerRoute = { type: "endpoint", kind: "status" };
 
 const routeTemplates = {
   "package-template": {
@@ -96,6 +97,21 @@ document.addEventListener("DOMContentLoaded", () => {
   bindFilters();
   bindActions();
   loadRegistry();
+});
+
+window.addEventListener("popstate", async (event) => {
+  if (!state.status) {
+    return;
+  }
+  const route = event.state?.specpmViewerRoute || routeFromLocation();
+  try {
+    await navigateToRoute(route, { historyMode: "none" });
+  } catch (error) {
+    state.payload = { status: "invalid", error: { message: error.message } };
+    state.errors.push(error.message);
+    setLoadStatus("error", error.message);
+    renderAll();
+  }
 });
 
 form.addEventListener("submit", (event) => {
@@ -163,7 +179,13 @@ async function loadRegistry() {
     clearRoutePrompt();
 
     setLoadStatus("ok", `Loaded ${state.base}`);
-    renderAll();
+    try {
+      await navigateToRoute(routeFromLocation(), { historyMode: "replace" });
+    } catch (routeError) {
+      state.errors.push(routeError.message);
+      setLoadStatus("error", routeError.message);
+      await showEndpoint("status", "status/index.json", { historyMode: "replace" });
+    }
   } catch (error) {
     state.errors.push(error.message);
     setLoadStatus("error", error.message);
@@ -696,7 +718,7 @@ function bindActions() {
   });
 }
 
-function showRoutePrompt(kind) {
+function showRoutePrompt(kind, options = {}) {
   if (!routeTemplates[kind]) {
     return;
   }
@@ -707,6 +729,7 @@ function showRoutePrompt(kind) {
   state.activePath = null;
   state.payload = routeTemplatePayload(kind);
   renderAll();
+  commitViewerRoute({ type: "route-template", kind }, options);
   const input = detailPanel.querySelector("input");
   if (input) {
     input.focus();
@@ -742,7 +765,7 @@ async function submitRoutePrompt(routeForm) {
   }
 }
 
-async function showEndpoint(kind, path) {
+async function showEndpoint(kind, path, options = {}) {
   clearRoutePrompt();
   state.activeKind = kind;
   state.activeId = null;
@@ -759,51 +782,191 @@ async function showEndpoint(kind, path) {
     state.payload = await fetchRequired(path);
   }
   renderAll();
+  commitViewerRoute({ type: "endpoint", kind }, options);
 }
 
-async function showPackage(packageId) {
+async function showPackage(packageId, options = {}) {
   clearRoutePrompt();
   state.activeKind = "package";
   state.activeId = packageId;
   state.activePath = `packages/${segment(packageId)}/index.json`;
   state.payload = await fetchRequired(state.activePath);
   renderAll();
+  commitViewerRoute({ type: "package", packageId }, options);
 }
 
-async function showVersion(packageId, version) {
+async function showVersion(packageId, version, options = {}) {
   clearRoutePrompt();
   state.activeKind = "version";
   state.activeId = `${packageId}@${version}`;
   state.activePath = `packages/${segment(packageId)}/versions/${segment(version)}/index.json`;
   state.payload = await fetchRequired(state.activePath);
   renderAll();
+  commitViewerRoute({ type: "version", packageId, version }, options);
 }
 
-async function showCapability(capabilityId) {
+async function showCapability(capabilityId, options = {}) {
   clearRoutePrompt();
   state.activeKind = "capability";
   state.activeId = capabilityId;
   state.activePath = `capabilities/${segment(capabilityId)}/packages/index.json`;
   state.payload = await fetchRequired(state.activePath);
   renderAll();
+  commitViewerRoute({ type: "capability", capabilityId }, options);
 }
 
-async function showIntent(intentId) {
+async function showIntent(intentId, options = {}) {
   clearRoutePrompt();
   state.activeKind = "intent";
   state.activeId = intentId;
   state.activePath = `intents/${segment(intentId)}/index.json`;
   state.payload = await fetchRequired(state.activePath);
   renderAll();
+  commitViewerRoute({ type: "intent", intentId }, options);
 }
 
-async function showIntentPackages(intentId) {
+async function showIntentPackages(intentId, options = {}) {
   clearRoutePrompt();
   state.activeKind = "intent-packages";
   state.activeId = intentId;
   state.activePath = `intents/${segment(intentId)}/packages/index.json`;
   state.payload = await fetchRequired(state.activePath);
   renderAll();
+  commitViewerRoute({ type: "intent-packages", intentId }, options);
+}
+
+async function navigateToRoute(route, options = {}) {
+  const next = normalizeViewerRoute(route);
+  if (next.type === "route-template") {
+    showRoutePrompt(next.kind, options);
+    return;
+  }
+  if (next.type === "endpoint") {
+    const endpoint = endpoints.find((item) => item.id === next.kind && item.path);
+    if (!endpoint) {
+      throw new Error(`Unknown endpoint route: ${next.kind}`);
+    }
+    await showEndpoint(endpoint.id, endpoint.path, options);
+    return;
+  }
+  if (next.type === "package") {
+    await showPackage(next.packageId, options);
+    return;
+  }
+  if (next.type === "version") {
+    await showVersion(next.packageId, next.version, options);
+    return;
+  }
+  if (next.type === "capability") {
+    await showCapability(next.capabilityId, options);
+    return;
+  }
+  if (next.type === "intent") {
+    await showIntent(next.intentId, options);
+    return;
+  }
+  if (next.type === "intent-packages") {
+    await showIntentPackages(next.intentId, options);
+    return;
+  }
+  await showEndpoint("status", "status/index.json", options);
+}
+
+function commitViewerRoute(route, options = {}) {
+  const mode = options.historyMode || "push";
+  if (mode === "none" || !window.history?.pushState) {
+    return;
+  }
+  const normalized = normalizeViewerRoute(route);
+  const nextUrl = new URL(window.location.href);
+  nextUrl.hash = routeToHash(normalized);
+  if (nextUrl.href === window.location.href && mode !== "replace") {
+    return;
+  }
+  const historyState = { specpmViewerRoute: normalized };
+  if (mode === "replace") {
+    window.history.replaceState(historyState, "", nextUrl);
+  } else {
+    window.history.pushState(historyState, "", nextUrl);
+  }
+}
+
+function routeFromLocation() {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  if (!hash) {
+    return { ...defaultViewerRoute };
+  }
+  const parts = hash.split("/").filter(Boolean).map(decodeRouteSegment);
+  if (parts[0] === "endpoint" && parts[1]) {
+    return { type: "endpoint", kind: parts[1] };
+  }
+  if (parts[0] === "route" && parts[1]) {
+    return { type: "route-template", kind: parts[1] };
+  }
+  if (parts[0] === "package" && parts[1]) {
+    return { type: "package", packageId: parts[1] };
+  }
+  if (parts[0] === "version" && parts[1] && parts[2]) {
+    return { type: "version", packageId: parts[1], version: parts[2] };
+  }
+  if (parts[0] === "capability" && parts[1]) {
+    return { type: "capability", capabilityId: parts[1] };
+  }
+  if (parts[0] === "intent" && parts[1]) {
+    return { type: "intent", intentId: parts[1] };
+  }
+  if (parts[0] === "intent-packages" && parts[1]) {
+    return { type: "intent-packages", intentId: parts[1] };
+  }
+  return { ...defaultViewerRoute };
+}
+
+function normalizeViewerRoute(route) {
+  const next = route || defaultViewerRoute;
+  if (next.type === "route-template" && routeTemplates[next.kind]) {
+    return { type: "route-template", kind: next.kind };
+  }
+  if (next.type === "endpoint" && endpoints.some((item) => item.id === next.kind && item.path)) {
+    return { type: "endpoint", kind: next.kind };
+  }
+  if (next.type === "package" && next.packageId) {
+    return { type: "package", packageId: String(next.packageId) };
+  }
+  if (next.type === "version" && next.packageId && next.version) {
+    return { type: "version", packageId: String(next.packageId), version: String(next.version) };
+  }
+  if (next.type === "capability" && next.capabilityId) {
+    return { type: "capability", capabilityId: String(next.capabilityId) };
+  }
+  if (next.type === "intent" && next.intentId) {
+    return { type: "intent", intentId: String(next.intentId) };
+  }
+  if (next.type === "intent-packages" && next.intentId) {
+    return { type: "intent-packages", intentId: String(next.intentId) };
+  }
+  return { ...defaultViewerRoute };
+}
+
+function routeToHash(route) {
+  if (route.type === "route-template") {
+    return `route/${encodeRouteSegment(route.kind)}`;
+  }
+  if (route.type === "package") {
+    return `package/${encodeRouteSegment(route.packageId)}`;
+  }
+  if (route.type === "version") {
+    return `version/${encodeRouteSegment(route.packageId)}/${encodeRouteSegment(route.version)}`;
+  }
+  if (route.type === "capability") {
+    return `capability/${encodeRouteSegment(route.capabilityId)}`;
+  }
+  if (route.type === "intent") {
+    return `intent/${encodeRouteSegment(route.intentId)}`;
+  }
+  if (route.type === "intent-packages") {
+    return `intent-packages/${encodeRouteSegment(route.intentId)}`;
+  }
+  return `endpoint/${encodeRouteSegment(route.kind || defaultViewerRoute.kind)}`;
 }
 
 function catalogItems() {
@@ -891,6 +1054,18 @@ function intentItems() {
 
 function segment(value) {
   return encodeURIComponent(String(value || ""));
+}
+
+function encodeRouteSegment(value) {
+  return encodeURIComponent(String(value || ""));
+}
+
+function decodeRouteSegment(value) {
+  try {
+    return decodeURIComponent(value || "");
+  } catch (_error) {
+    return "";
+  }
 }
 
 function routePlaceholder(param) {
