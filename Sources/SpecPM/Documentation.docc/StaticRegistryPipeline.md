@@ -74,6 +74,7 @@ The read-only registry API is served under:
 Current metadata endpoints include:
 
 ```text
+GET /v0
 GET /v0/status
 GET /v0/packages
 GET /v0/packages/{package_id}
@@ -95,12 +96,15 @@ canonical.
 ## Static Host Details
 
 SpecPM writes both JSON files and adjacent static-host index files. This lets
-GitHub Pages serve extensionless URLs such as `/v0/status` while preserving a
-direct strict JSON path for consumers that need one.
+GitHub Pages serve extensionless URLs such as `/v0` and `/v0/status` while
+preserving a direct strict JSON path for consumers that need one.
 
 For example:
 
 ```text
+/v0
+/v0/
+/v0/index.json
 /v0/status
 /v0/status/
 /v0/status/index.json
@@ -110,6 +114,7 @@ The extensionless path may redirect and can be served by GitHub Pages with a
 static-host content type. Strict JSON consumers should use `index.json`, such as:
 
 ```text
+https://0al-spec.github.io/SpecPM/v0/index.json
 https://0al-spec.github.io/SpecPM/v0/status/index.json
 ```
 

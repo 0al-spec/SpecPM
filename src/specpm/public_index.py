@@ -484,6 +484,10 @@ def build_public_index_payloads(packages: list[dict[str, Any]]) -> list[dict[str
     intent_matches = observed_intent_matches(packages)
     payloads: list[dict[str, Any]] = [
         {
+            "path": registry_root_payload_path(),
+            "payload": remote_registry_root_payload(packages),
+        },
+        {
             "path": registry_status_payload_path(),
             "payload": remote_registry_status_payload(packages),
         },
@@ -553,6 +557,31 @@ def observed_intent_matches(packages: list[dict[str, Any]]) -> dict[str, list[di
 
 
 def remote_registry_status_payload(packages: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "apiVersion": REMOTE_REGISTRY_API_VERSION,
+        "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
+        "kind": "RemoteRegistryStatus",
+        "status": "ok",
+        "registry": remote_registry_summary(packages),
+    }
+
+
+def remote_registry_root_payload(packages: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "apiVersion": REMOTE_REGISTRY_API_VERSION,
+        "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
+        "kind": "RemoteRegistryRoot",
+        "status": "ok",
+        "registry": remote_registry_summary(packages),
+        "endpoints": {
+            "status": registry_status_payload_path(),
+            "packages": package_index_payload_path(),
+            "intents": intent_index_payload_path(),
+        },
+    }
+
+
+def remote_registry_summary(packages: list[dict[str, Any]]) -> dict[str, Any]:
     package_ids = {package["package_id"] for package in packages}
     capabilities = {
         capability
@@ -567,20 +596,14 @@ def remote_registry_status_payload(packages: list[dict[str, Any]]) -> dict[str, 
         if isinstance(intent, str)
     }
     return {
-        "apiVersion": REMOTE_REGISTRY_API_VERSION,
-        "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
-        "kind": "RemoteRegistryStatus",
-        "status": "ok",
-        "registry": {
-            "profile": "public_static_index",
-            "api_version": "v0",
-            "read_only": True,
-            "authority": "metadata_only",
-            "package_count": len(package_ids),
-            "version_count": len(packages),
-            "capability_count": len(capabilities),
-            "intent_count": len(intents),
-        },
+        "profile": "public_static_index",
+        "api_version": "v0",
+        "read_only": True,
+        "authority": "metadata_only",
+        "package_count": len(package_ids),
+        "version_count": len(packages),
+        "capability_count": len(capabilities),
+        "intent_count": len(intents),
     }
 
 
@@ -895,6 +918,10 @@ def public_index_semver_key(
         else:
             identifiers.append((1, identifier))
     return (base_version, 0, tuple(identifiers), version)
+
+
+def registry_root_payload_path() -> str:
+    return "v0/index.json"
 
 
 def package_payload_path(package_id: str) -> str:

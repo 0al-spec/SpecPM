@@ -121,7 +121,7 @@ provides:
       summary: Provide repository-relative conformance fixtures for validation and local registry lifecycle behavior.
     - id: specpm.registry.remote_api_contract
       role: secondary
-      summary: Document the post-MVP read-only remote registry API contract.
+      summary: Document the post-MVP read-only remote registry API contract, including the static `/v0` root entrypoint and endpoint payloads.
     - id: specpm.registry.index_submission_flow
       role: secondary
       summary: Document issue-based public index submissions and enterprise registry deployment boundaries.
@@ -148,7 +148,7 @@ provides:
       summary: Fetch and validate read-only remote registry status, package index, package metadata, and observed intent catalog metadata without downloading archives or mutating local state.
     - id: specpm.registry.public_static_index
       role: secondary
-      summary: Generate static /v0 public index metadata and deterministic archives for read-only hosting.
+      summary: Generate static /v0 public index metadata, root entrypoint, and deterministic archives for read-only hosting.
     - id: specpm.registry.public_index_accepted_manifest
       role: secondary
       summary: Track reviewed package sources that feed generated public index deployment.
@@ -306,7 +306,7 @@ interfaces:
             - text/plain
     - id: cli_public-index
       kind: cli
-      summary: specpm public-index generate for static read-only /v0 registry metadata output from package directories or an accepted package manifest.
+      summary: specpm public-index generate for static read-only /v0 registry metadata, root entrypoint, and package archives from package directories or an accepted package manifest.
       outputs:
         - name: public_index_generator_report
           mediaTypes:
@@ -360,7 +360,7 @@ interfaces:
       summary: Static DocC documentation output deployed to GitHub Pages.
     - id: public_index_static_site
       kind: file
-      summary: Static /v0 public index metadata and deterministic package archives.
+      summary: Static /v0 public index root entrypoint, metadata endpoints, and deterministic package archives.
     - id: public_index_accepted_manifest
       kind: file
       summary: Maintainer-reviewed local and pinned public Git package sources that feed generated public index output.

@@ -119,6 +119,7 @@ REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemotePackage",
     "RemotePackageIndex",
     "RemotePackageVersion",
+    "RemoteRegistryRoot",
     "RemoteRegistryStatus",
     "RemoteRegistryError",
 }
@@ -373,7 +374,7 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
             assert_remote_registry_source(result["source"])
         return
 
-    if payload["kind"] == "RemoteRegistryStatus":
+    if payload["kind"] in {"RemoteRegistryRoot", "RemoteRegistryStatus"}:
         registry = payload["registry"]
         assert isinstance(registry["profile"], str)
         assert registry["profile"]
@@ -385,6 +386,11 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
         assert isinstance(registry["capability_count"], int)
         if "intent_count" in registry:
             assert isinstance(registry["intent_count"], int)
+        if payload["kind"] == "RemoteRegistryRoot":
+            assert isinstance(payload["endpoints"], dict)
+            assert isinstance(payload["endpoints"]["status"], str)
+            assert isinstance(payload["endpoints"]["packages"], str)
+            assert isinstance(payload["endpoints"]["intents"], str)
         return
 
     assert payload["kind"] == "RemoteRegistryError"
@@ -1766,21 +1772,21 @@ def test_conformance_remote_registry_payload_cases() -> None:
         if "package_count" in expected:
             actual = (
                 payload["registry"]["package_count"]
-                if payload["kind"] == "RemoteRegistryStatus"
+                if payload["kind"] in {"RemoteRegistryRoot", "RemoteRegistryStatus"}
                 else payload["package_count"]
             )
             assert actual == expected["package_count"], case["id"]
         if "version_count" in expected:
             actual = (
                 payload["registry"]["version_count"]
-                if payload["kind"] == "RemoteRegistryStatus"
+                if payload["kind"] in {"RemoteRegistryRoot", "RemoteRegistryStatus"}
                 else payload["version_count"]
             )
             assert actual == expected["version_count"], case["id"]
         if "intent_count" in expected:
             actual = (
                 payload["registry"]["intent_count"]
-                if payload["kind"] == "RemoteRegistryStatus"
+                if payload["kind"] in {"RemoteRegistryRoot", "RemoteRegistryStatus"}
                 else payload["intent_count"]
             )
             assert actual == expected["intent_count"], case["id"]
@@ -1831,21 +1837,21 @@ def test_conformance_public_registry_static_index_cases(tmp_path: Path) -> None:
             if "package_count" in endpoint:
                 actual = (
                     payload["registry"]["package_count"]
-                    if payload["kind"] == "RemoteRegistryStatus"
+                    if payload["kind"] in {"RemoteRegistryRoot", "RemoteRegistryStatus"}
                     else payload["package_count"]
                 )
                 assert actual == endpoint["package_count"], case["id"]
             if "version_count" in endpoint:
                 actual = (
                     payload["registry"]["version_count"]
-                    if payload["kind"] == "RemoteRegistryStatus"
+                    if payload["kind"] in {"RemoteRegistryRoot", "RemoteRegistryStatus"}
                     else payload["version_count"]
                 )
                 assert actual == endpoint["version_count"], case["id"]
             if "intent_count" in endpoint:
                 actual = (
                     payload["registry"]["intent_count"]
-                    if payload["kind"] == "RemoteRegistryStatus"
+                    if payload["kind"] in {"RemoteRegistryRoot", "RemoteRegistryStatus"}
                     else payload["intent_count"]
                 )
                 assert actual == endpoint["intent_count"], case["id"]
@@ -2249,6 +2255,8 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     )
 
     assert report["status"] == "ok"
+    root_payload = json.loads((output / "v0/index.json").read_text(encoding="utf-8"))
+    root_directory_index = json.loads((output / "v0/index.html").read_text(encoding="utf-8"))
     status_payload = json.loads((output / "v0/status/index.json").read_text(encoding="utf-8"))
     package_index_payload = json.loads(
         (output / "v0/packages/index.json").read_text(encoding="utf-8")
@@ -2293,6 +2301,8 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     )
 
     assert archive.is_file()
+    assert_remote_registry_payload_shape(root_payload)
+    assert root_directory_index == root_payload
     assert_remote_registry_payload_shape(status_payload)
     assert_remote_registry_payload_shape(package_index_payload)
     assert_remote_registry_payload_shape(intent_index_payload)
@@ -2302,6 +2312,12 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     assert_remote_registry_payload_shape(capability_payload)
     assert_remote_registry_payload_shape(intent_payload)
     assert_remote_registry_payload_shape(intent_entry_payload)
+    assert root_payload["registry"] == status_payload["registry"]
+    assert root_payload["endpoints"] == {
+        "status": "v0/status/index.json",
+        "packages": "v0/packages/index.json",
+        "intents": "v0/intents/index.json",
+    }
     assert status_payload["registry"] == {
         "profile": "public_static_index",
         "api_version": "v0",
@@ -2804,7 +2820,7 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
     payload = json.loads(captured.out)
     assert exit_code == 0
     assert payload["status"] == "ok"
-    assert payload["written_count"] == 17
+    assert payload["written_count"] == 19
 
 
 def test_cli_public_index_generate_accepts_reviewed_manifest(

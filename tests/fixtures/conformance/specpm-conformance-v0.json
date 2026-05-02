@@ -257,6 +257,13 @@
         ],
         "endpoints": [
           {
+            "path": "v0/index.json",
+            "kind": "RemoteRegistryRoot",
+            "status": "ok",
+            "package_count": 1,
+            "version_count": 1
+          },
+          {
             "path": "v0/status/index.json",
             "kind": "RemoteRegistryStatus",
             "status": "ok",

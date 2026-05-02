@@ -22,6 +22,18 @@ API prefix:
 /v0
 ```
 
+Live browser entrypoint:
+
+```text
+https://0al-spec.github.io/SpecPM/v0
+```
+
+Strict JSON root payload:
+
+```text
+https://0al-spec.github.io/SpecPM/v0/index.json
+```
+
 Try the registry with:
 
 ```bash

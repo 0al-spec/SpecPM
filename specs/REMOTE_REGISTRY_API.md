@@ -169,6 +169,23 @@ JSON payload shape within this draft family.
 
 ## Endpoints
 
+### Registry Root
+
+```text
+GET /v0
+```
+
+Returns the static registry entrypoint with registry summary counts and links to
+the primary JSON metadata endpoints. This exists so browsers, documentation,
+and downstream tools can open the `/v0` namespace directly instead of guessing
+the first endpoint.
+
+Response kind:
+
+```text
+RemoteRegistryRoot
+```
+
 ### Registry Status
 
 ```text
