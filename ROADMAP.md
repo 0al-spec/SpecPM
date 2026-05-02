@@ -20,6 +20,7 @@ Implemented surfaces:
   operations;
 - exact capability search and deterministic local add/lock behavior;
 - exact `intent.*` lookup over explicit capability-to-intent mappings;
+- observed intent catalog metadata for authoring and duplicate detection;
 - SpecGraph inbox inspection for exported package candidates;
 - read-only remote `/v0` metadata client commands;
 - static public index generation for GitHub Pages;
@@ -107,7 +108,7 @@ as a stable observation surface.
 Tasks:
 
 - document consumer examples for `/v0/status`, `/v0/packages`, package lookup,
-  version lookup, and exact capability search;
+  version lookup, observed intent catalog metadata, and exact capability search;
 - define the SpecGraph public registry observation contract;
 - expose registry availability, visible package counts, and drift in
   ContextBuilder;

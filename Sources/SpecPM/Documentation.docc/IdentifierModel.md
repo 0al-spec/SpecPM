@@ -79,6 +79,19 @@ The manifest `intents` list is a registry summary. The BoundarySpec
 `intentIds` mapping remains the reviewable source of truth for which concrete
 capability satisfies each intent.
 
+## Observed Catalog
+
+The public registry can expose all accepted package `intent.*` IDs as observed
+metadata:
+
+```bash
+specpm remote intents --registry https://0al-spec.github.io/SpecPM --json
+specpm remote intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
+```
+
+Observed catalog entries help authors reuse existing IDs. They are not a
+canonical dictionary and do not decide product meaning.
+
 ## Commands
 
 ```bash

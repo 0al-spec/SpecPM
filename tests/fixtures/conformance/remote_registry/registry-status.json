@@ -10,6 +10,7 @@
     "authority": "metadata_only",
     "package_count": 1,
     "version_count": 1,
-    "capability_count": 1
+    "capability_count": 1,
+    "intent_count": 1
   }
 }

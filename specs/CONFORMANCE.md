@@ -138,8 +138,9 @@ The initial conformance suite covers:
   support targets, ambiguous IDs, and weak `unknown` kinds;
 - local registry yank and unyank behavior.
 - remote registry status, package index, package metadata, package version,
-  exact capability search, exact intent search, yanked version, deprecated
-  version, not-found error, and invalid-shape payloads.
+  exact capability search, observed intent catalog metadata, exact intent
+  search, yanked version, deprecated version, not-found error, and
+  invalid-shape payloads.
 - read-only remote registry client behavior using fixture-backed fetch stubs.
 - generated public static `/v0` endpoint shape, adjacent static-host HTML
   payloads, archive digest metadata, and absent missing package/capability

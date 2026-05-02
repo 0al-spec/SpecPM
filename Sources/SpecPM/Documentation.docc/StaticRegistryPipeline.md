@@ -79,12 +79,18 @@ GET /v0/packages
 GET /v0/packages/{package_id}
 GET /v0/packages/{package_id}/versions/{version}
 GET /v0/capabilities/{capability_id}/packages
+GET /v0/intents
+GET /v0/intents/{intent_id}
 GET /v0/intents/{intent_id}/packages
 ```
 
 These endpoints are metadata lookup surfaces. They do not install packages,
 download archives into a project, execute package content, authenticate users,
 or publish new packages.
+
+`/v0/intents` and `/v0/intents/{intent_id}` are observed catalog endpoints.
+They show intent IDs found in accepted packages, but they do not make those IDs
+canonical.
 
 ## Static Host Details
 

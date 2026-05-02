@@ -10,6 +10,8 @@ from specpm import __version__
 from specpm.core import (
     add_package,
     diff_packages,
+    get_remote_intent,
+    get_remote_intent_index,
     get_remote_package,
     get_remote_package_index,
     get_remote_package_version,
@@ -156,6 +158,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_remote_registry_options(remote_packages)
     remote_packages.set_defaults(handler=handle_remote_packages)
+
+    remote_intents = remote_subparsers.add_parser(
+        "intents", help="Fetch the observed remote intent catalog."
+    )
+    add_remote_registry_options(remote_intents)
+    remote_intents.set_defaults(handler=handle_remote_intents)
+
+    remote_intent = remote_subparsers.add_parser(
+        "intent", help="Fetch one observed remote intent entry."
+    )
+    remote_intent.add_argument("intent_id")
+    add_remote_registry_options(remote_intent)
+    remote_intent.set_defaults(handler=handle_remote_intent)
 
     remote_package = remote_subparsers.add_parser("package", help="Fetch remote package metadata.")
     remote_package.add_argument("package_id")
@@ -456,6 +471,16 @@ def handle_remote_packages(args: argparse.Namespace) -> int:
     return emit_remote_registry_report(report, args.json)
 
 
+def handle_remote_intents(args: argparse.Namespace) -> int:
+    report = get_remote_intent_index(args.registry, args.timeout)
+    return emit_remote_registry_report(report, args.json)
+
+
+def handle_remote_intent(args: argparse.Namespace) -> int:
+    report = get_remote_intent(args.registry, args.intent_id, args.timeout)
+    return emit_remote_registry_report(report, args.json)
+
+
 def handle_remote_version(args: argparse.Namespace) -> int:
     report = get_remote_package_version(args.registry, args.package_ref, args.timeout)
     return emit_remote_registry_report(report, args.json)
@@ -537,6 +562,21 @@ def print_remote_registry(report: dict[str, Any]) -> None:
         print(f"{payload['package_count']} remote packages [{payload['version_count']} versions]")
         for package in payload["packages"]:
             print(f"{package['package_id']} {package.get('latest_version', 'unknown')}")
+        return
+    if kind == "RemoteIntentIndex":
+        print(f"{payload['intent_count']} observed remote intents")
+        for intent in payload["intents"]:
+            print(
+                f"{intent['intent_id']} "
+                f"[{intent['package_count']} packages, {intent['capability_count']} capabilities]"
+            )
+        return
+    if kind == "RemoteIntent":
+        intent = payload["intent"]
+        print(
+            f"{intent['intent_id']} "
+            f"[{intent['package_count']} packages, {intent['capability_count']} capabilities]"
+        )
         return
     if kind == "RemotePackage":
         package = payload["package"]

@@ -61,6 +61,8 @@ The MVP must solve the practical local workflow first:
 - Support exact capability ID search as the normative MVP resolution behavior.
 - Support package-neutral `intent.*` IDs as exact metadata mappings from
   package-owned capabilities, without making SpecPM a semantic resolver.
+- Publish observed intent catalog metadata from accepted packages without
+  treating observations as canonical dictionary entries.
 - Preserve evidence, provenance, foreign artifacts, and implementation bindings
   as data.
 - Support SpecGraph materialized bundles under `.specgraph_exports/` as local
@@ -165,7 +167,9 @@ for future enterprise or online service profiles.
 The public alpha registry is documented in `specs/PUBLIC_ALPHA.md`. It exposes
 the static read-only `/v0` registry at `https://0al-spec.github.io/SpecPM` and
 is seeded with `document_conversion.email_tools`, `specpm.core`, and the pinned
-public `specnode.core` package for early SpecGraph and SpecNode integration.
+public `specnode.core` package for early SpecGraph and SpecNode integration. It
+also exposes an observed intent catalog generated from accepted package
+metadata.
 
 ## 5. Primary Users
 
@@ -575,11 +579,12 @@ artifact profiles.
 
 The first post-MVP remote increment is limited to a read-only registry metadata
 client. It may fetch registry status, package index, package metadata, package
-version metadata, and exact capability search payloads from an explicitly
-provided registry URL. It MUST NOT download archives, install remote packages,
-publish packages, mutate remote state, execute package content, define
-authentication, define namespace governance, or treat remote metadata as
-trusted host instructions.
+version metadata, observed intent catalog metadata, and exact capability/intent
+search payloads from an explicitly provided registry URL. It MUST NOT download
+archives, install remote packages, publish packages, mutate remote state,
+execute package content, define authentication, define namespace governance,
+make observed intent IDs canonical, or treat remote metadata as trusted host
+instructions.
 
 ## 18. Implementation Environment
 

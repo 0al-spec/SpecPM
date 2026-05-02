@@ -163,6 +163,39 @@ intent.identity.enterprise_sso
         +-- specnode.auth.enterprise_sso
 ```
 
+## Observed Intent Registry
+
+SpecPM can collect all `intent.*` IDs visible in accepted public index packages
+into an observed catalog:
+
+```text
+accepted SpecPackages
+        |
+        v
+index.provides.intents + capability intentIds
+        |
+        v
+observed intent catalog
+```
+
+This catalog helps authors and downstream tools with autocomplete, duplicate
+detection, and exact lookup discovery. It is not a canonical intent dictionary.
+If a package declares `intent.identity.enterprise_sso`, that declaration is a
+useful signal, not an automatic standardization decision.
+
+Generated public registry metadata exposes the observed catalog through:
+
+```text
+GET /v0/intents
+GET /v0/intents/{intent_id}
+GET /v0/intents/{intent_id}/packages
+```
+
+Observed catalog entries use `status: observed` and `canonical: false`.
+Canonical intent meaning remains curated by SpecGraph, ContextBuilder, or a
+future governance process. SpecPM's responsibility is to preserve and expose the
+package metadata deterministically.
+
 ## Resolution Flow
 
 SpecPM does not convert plain text to intents. That belongs to ContextBuilder,
@@ -220,6 +253,7 @@ Current support is exact and metadata-only:
 - validation that intent IDs start with `intent.`;
 - local index metadata for exact intent lookup;
 - generated public `/v0/intents/{intent_id}/packages` metadata;
+- generated public `/v0/intents` observed catalog metadata;
 - read-only remote intent search against compatible registries.
 
 This does not replace exact capability search. Capability search remains the

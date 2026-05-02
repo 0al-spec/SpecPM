@@ -13,6 +13,7 @@ SpecPM is usable today for:
   packing, structural diff, and local registry operations;
 - exact capability search and deterministic local add/lock behavior;
 - exact `intent.*` lookup over explicit capability-to-intent mappings;
+- observed intent catalog metadata for authoring and duplicate detection;
 - SpecGraph inbox inspection for exported package candidates;
 - read-only remote `/v0` metadata lookup;
 - static public index generation for GitHub Pages;
@@ -45,7 +46,7 @@ mutation.
 
 Document and stabilize how SpecGraph, ContextBuilder, and SpecNode consume
 `/v0/status`, `/v0/packages`, package lookup, version lookup, exact capability
-search, and observation reports.
+search, observed intent catalog metadata, and observation reports.
 
 ### Remote Package Acquisition Design
 

@@ -27,12 +27,13 @@ intentionally left for post-MVP tracks.
 | Local registry lifecycle | Implemented | `specpm yank` and `specpm unyank` update local yanked state without removing packages from exact search. |
 | Exact capability search | Implemented | Search is exact-match only for normative resolution. Missing local indexes return empty results. |
 | Exact intent search | Implemented additive metadata contract | Optional capability-level `intentIds` allow exact lookup by canonical `intent.*` IDs without semantic inference. |
+| Observed intent catalog | Implemented additive metadata contract | Static registries expose observed `intent.*` IDs from accepted packages for authoring/discovery without making them canonical. |
 | Add / local project state | Implemented | `specpm.lock`, `.specpm/index.json`, and `.specpm/packages/.../package.json` are deterministic local metadata. |
 | Inspect | Implemented | Package, BoundarySpec, evidence, effects, compatibility, provenance, implementation binding, and contract warning summaries are exposed. |
 | Structural diff | Implemented | Diff detects capability, required capability, interface, MUST constraint, package metadata, and compatibility changes with conservative classification. |
 | Conformance artifacts | Implemented | `tests/fixtures/conformance/specpm-conformance-v0.json` covers validation outcomes, local registry lifecycle behavior, and static remote registry payload shape. |
 | Remote registry API contract | Documented post-MVP contract | Read-only JSON payloads are documented in `specs/REMOTE_REGISTRY_API.md`; static conformance fixtures validate shape. |
-| Read-only remote registry client | Implemented post-MVP increment | `specpm remote status`, `specpm remote packages`, `specpm remote package`, `specpm remote version`, and `specpm remote search` fetch metadata only and validate response shape before success. |
+| Read-only remote registry client | Implemented post-MVP increment | `specpm remote status`, `specpm remote packages`, `specpm remote package`, `specpm remote version`, `specpm remote search`, `specpm remote intents`, `specpm remote intent`, and `specpm remote search-intent` fetch metadata only and validate response shape before success. |
 | Security handling | Implemented for MVP | Packages are untrusted data; path traversal, symlinks, unsafe archive members, malformed YAML/JSON, and script execution are blocked or avoided. |
 | SpecGraph inbox | Implemented as local bridge | `.specgraph_exports/` bundles are listed and inspected without mutating canonical SpecGraph files. This extends the local MVP bridge. |
 

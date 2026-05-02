@@ -19,6 +19,7 @@ scope:
     - Maintain a local file-backed registry index.
     - Search the local registry by exact capability IDs.
     - Search local and remote registry metadata by exact declared canonical intent IDs.
+    - Publish and read observed intent catalog metadata from accepted package declarations.
     - Add selected packages into deterministic local project state.
     - Mark local indexed packages as yanked or unyanked.
     - Diff package versions using conservative structural classification.
@@ -50,6 +51,7 @@ scope:
     - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
     - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
     - Validate first-class manifest intent summaries through `index.provides.intents` backed by BoundarySpec capability `intentIds`.
+    - Expose observed intent catalog metadata without treating observations as canonical dictionary entries.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
     - Provide experimental Agent Skills for authoring and reviewing SpecPM package specs.
@@ -97,6 +99,11 @@ provides:
       summary: Search local and remote registry metadata by exact canonical intent ID when package capabilities declare intentIds.
       intentIds:
         - intent.registry.intent_lookup
+    - id: specpm.registry.observed_intent_catalog
+      role: secondary
+      summary: Generate and read observed intent catalog metadata from accepted packages without making observations canonical.
+      intentIds:
+        - intent.registry.intent_lookup
     - id: specpm.registry.add
       role: secondary
       summary: Add exact package references or uniquely resolved capabilities to local project state.
@@ -138,7 +145,7 @@ provides:
       summary: Aggregate namespace claim decision labels into read-only workflow summaries and artifacts.
     - id: specpm.registry.remote_readonly_client
       role: secondary
-      summary: Fetch and validate read-only remote registry status, package index, and package metadata without downloading archives or mutating local state.
+      summary: Fetch and validate read-only remote registry status, package index, package metadata, and observed intent catalog metadata without downloading archives or mutating local state.
     - id: specpm.registry.public_static_index
       role: secondary
       summary: Generate static /v0 public index metadata and deterministic archives for read-only hosting.
@@ -291,7 +298,7 @@ interfaces:
             - text/plain
     - id: cli_remote
       kind: cli
-      summary: specpm remote status, specpm remote packages, specpm remote package, specpm remote version, specpm remote search, specpm remote search-intent, and specpm remote observe for read-only registry metadata.
+      summary: specpm remote status, specpm remote packages, specpm remote package, specpm remote version, specpm remote search, specpm remote intents, specpm remote intent, specpm remote search-intent, and specpm remote observe for read-only registry metadata.
       outputs:
         - name: remote_registry_client_report
           mediaTypes:
@@ -320,6 +327,8 @@ interfaces:
         - unyank_index_package
         - get_remote_registry_status
         - get_remote_package_index
+        - get_remote_intent_index
+        - get_remote_intent
         - get_remote_package
         - get_remote_package_version
         - search_remote_registry
@@ -458,6 +467,7 @@ evidence:
       - interfaces.outbound
       - specpm.registry.public_observation_report
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
   - id: conformance_docs
     kind: documentation
     path: specs/CONFORMANCE.md
@@ -466,6 +476,7 @@ evidence:
       - specpm.conformance.remote_registry_payloads
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
   - id: conformance_fixtures
     kind: test
     path: tests/fixtures/conformance
@@ -482,6 +493,7 @@ evidence:
       - specpm.conformance.remote_registry_payloads
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
   - id: index_submission_flow
     kind: documentation
     path: specs/INDEX_SUBMISSION_FLOW.md
@@ -489,6 +501,7 @@ evidence:
       - specpm.registry.index_submission_flow
       - specpm.registry.remote_api_contract
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
   - id: add_specpackages_issue_template
     kind: documentation
     path: .github/ISSUE_TEMPLATE/add-specpackages.yml
@@ -649,6 +662,7 @@ evidence:
     supports:
       - specpm.intent.identifier_model
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
       - exact_intent_lookup_metadata_only
       - manifest_intents_backed_by_capabilities
       - no_semantic_authority
@@ -666,6 +680,7 @@ evidence:
       - interfaces.inbound
       - specpm.registry.public_observation_report
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
   - id: core_source
     kind: source
     path: src/specpm/core.py
@@ -675,6 +690,7 @@ evidence:
       - specpm.registry.remote_readonly_client
       - specpm.registry.public_observation_report
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
       - manifest_intents_backed_by_capabilities
   - id: core_tests
     kind: test
@@ -685,6 +701,7 @@ evidence:
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.public_observation_report
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
       - manifest_intents_backed_by_capabilities
   - id: docc_overview
     kind: documentation

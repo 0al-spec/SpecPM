@@ -20,6 +20,8 @@ SpecPM accepts exact structured identifiers:
 ```bash
 specpm search-intent intent.document_conversion.email_to_markdown --index .specpm/index.json --json
 specpm search document_conversion.email_to_markdown --index .specpm/index.json --json
+specpm remote intents --registry http://localhost:8081 --json
+specpm remote intent intent.document_conversion.email_to_markdown --registry http://localhost:8081 --json
 specpm remote search-intent intent.document_conversion.email_to_markdown --registry http://localhost:8081 --json
 specpm remote search document_conversion.email_to_markdown --registry http://localhost:8081 --json
 ```
@@ -27,6 +29,9 @@ specpm remote search document_conversion.email_to_markdown --registry http://loc
 The package-manager contract is exact lookup plus validation, inspection, and
 metadata verification. `search-intent` only matches explicit capability
 `intentIds`; it does not infer intent from package text.
+
+The remote intent catalog is observed metadata from accepted packages. It helps
+authors discover existing IDs, but it is not a canonical dictionary.
 
 ## Downstream Resolver
 

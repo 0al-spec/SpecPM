@@ -76,6 +76,8 @@ specpm remote packages --registry <url> [--json]
 specpm remote package <package-id> --registry <url> [--json]
 specpm remote version <package-id@version> --registry <url> [--json]
 specpm remote search <capability-id> --registry <url> [--json]
+specpm remote intents --registry <url> [--json]
+specpm remote intent <intent-id> --registry <url> [--json]
 specpm remote search-intent <intent-id> --registry <url> [--json]
 specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--json]
 ```
@@ -83,7 +85,9 @@ specpm remote observe --registry <url> [--package <package-id>] [--version <pack
 Remote commands are explicit read-only metadata clients for the post-MVP
 registry contract. `status` and `packages` provide the discovery surface for
 local SpecGraph and ContextBuilder observation before requesting a specific
-package, capability, or declared intent. `observe` combines those same read-only lookups into a
+package, capability, or declared intent. `intents` and `intent` expose an
+observed intent catalog from accepted packages; they are not a canonical
+dictionary. `observe` combines those same read-only lookups into a
 machine-readable registry observation report for downstream evidence. Remote
 commands do not download archives, publish packages, mutate remote state, or
 execute package content.
@@ -97,8 +101,8 @@ specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.y
 The public index generator validates and deterministically packs package
 directories, then writes static `/v0` remote registry metadata for package
 status, package index, package lookup, package version lookup, and exact
-capability and intent search. The output can be hosted by GitHub Pages or
-another static host.
+capability search, observed intent catalog, and exact intent search. The output
+can be hosted by GitHub Pages or another static host.
 
 The command generates metadata and mirrored deterministic archives only. It
 can read the maintainer-reviewed `public-index/accepted-packages.yml` manifest
