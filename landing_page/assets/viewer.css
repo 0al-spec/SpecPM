@@ -742,6 +742,7 @@ pre {
   }
 
   .nav-inner {
+    display: flex;
     padding: 16px 0;
     flex-direction: column;
   }

@@ -616,6 +616,10 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert ".route-error" in registry_viewer_css
     assert ".tree-group" in registry_viewer_css
     assert ".catalog-grid" in registry_viewer_css
+    assert (
+        ".nav-inner {\n    display: flex;\n    padding: 16px 0;\n    flex-direction: column;"
+        in (registry_viewer_css)
+    )
     assert "routeTemplates" in registry_viewer_js
     assert "RemoteRouteTemplate" in registry_viewer_js
     assert "clearLoadedRegistryState" in registry_viewer_js
@@ -623,6 +627,7 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "buildCatalogItems" in registry_viewer_js
     assert "searchText" in registry_viewer_js
     assert "RemoteRegistryLoadError" in registry_viewer_js
+    assert 'url.protocol !== "http:" && url.protocol !== "https:"' in registry_viewer_js
     assert 'window.addEventListener("popstate"' in registry_viewer_js
     assert "history.pushState" in registry_viewer_js
     assert "history.replaceState" in registry_viewer_js

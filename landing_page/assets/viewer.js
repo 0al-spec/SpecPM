@@ -142,6 +142,9 @@ function normalizeRegistryBase(value) {
   }
   try {
     const url = new URL(trimmed, window.location.href);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return fallback;
+    }
     const marker = url.pathname.indexOf("/v0");
     if (marker >= 0) {
       url.pathname = url.pathname.slice(0, marker + 3) + "/";
