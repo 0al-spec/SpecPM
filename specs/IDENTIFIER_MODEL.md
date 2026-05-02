@@ -85,9 +85,9 @@ Candidate canonical intents:
 SpecPM can then perform deterministic exact lookup for packages whose
 capabilities declare those intent IDs.
 
-## Why `intent.identity.enterprise_sso`, Not `0auth.auth.enterprise_sso`
+## Why `intent.identity.enterprise_sso`, Not `acmeauth.auth.enterprise_sso`
 
-`0auth.auth.enterprise_sso` looks like a provider-owned capability. It answers:
+`acmeauth.auth.enterprise_sso` looks like a provider-owned capability. It answers:
 
 ```text
 Which package/provider claims this behavior?
@@ -105,7 +105,7 @@ canonical intent:
 ```text
 intent.identity.enterprise_sso
         |
-        +-- 0auth.auth.enterprise_sso
+        +-- acmeauth.auth.enterprise_sso
         +-- specnode.auth.enterprise_sso
         +-- example_identity.saml_sso
 ```

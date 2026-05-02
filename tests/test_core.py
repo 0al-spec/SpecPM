@@ -1825,6 +1825,21 @@ def test_remote_registry_payload_validator_rejects_incomplete_source() -> None:
     )
 
 
+def test_remote_registry_payload_validator_rejects_non_string_result_lists() -> None:
+    payload = load_remote_registry_fixture("intent-search.json")
+    payload["results"][0]["matched_capabilities"] = ["document_conversion.email_to_markdown", 123]
+    payload["results"][0]["provided_capabilities"] = [None]
+    payload["results"][0]["required_capabilities"] = [""]
+
+    errors = validate_remote_registry_payload(payload)
+
+    assert {issue.field for issue in errors if issue.code == "remote_registry_field_invalid"} >= {
+        "results.0.matched_capabilities.1",
+        "results.0.provided_capabilities.0",
+        "results.0.required_capabilities.0",
+    }
+
+
 def test_remote_registry_search_fetches_exact_capability(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     captured: dict[str, Any] = {}
     payload = load_remote_registry_fixture("capability-search.json")
@@ -3368,6 +3383,7 @@ def test_validator_rejects_non_canonical_capability_intent_id(tmp_path: Path) ->
 
     assert report["status"] == "invalid"
     assert issue_codes(report["errors"]) == {"intent_id_invalid"}
+    assert any("'intent.'" in issue["message"] for issue in report["errors"])
 
 
 def test_validator_rejects_missing_manifest(tmp_path: Path) -> None:

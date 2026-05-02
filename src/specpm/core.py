@@ -1889,7 +1889,7 @@ def validate_remote_package_summary(
 ) -> None:
     require_remote_string(package, "package_id", errors, f"{field}.package_id")
     require_remote_string(package, "name", errors, f"{field}.name")
-    require_remote_list(package, "capabilities", errors, f"{field}.capabilities")
+    validate_required_remote_string_list(package, "capabilities", errors, f"{field}.capabilities")
     validate_optional_remote_string_list(package, "intents", errors, f"{field}.intents")
     versions = require_remote_list(package, "versions", errors, f"{field}.versions")
     if versions is None:
@@ -1943,8 +1943,12 @@ def validate_remote_package_version_payload(
     require_remote_string(package, "package_id", errors, "package.package_id")
     require_remote_string(package, "name", errors, "package.name")
     require_remote_string(package, "version", errors, "package.version")
-    require_remote_list(package, "provided_capabilities", errors, "package.provided_capabilities")
-    require_remote_list(package, "required_capabilities", errors, "package.required_capabilities")
+    validate_required_remote_string_list(
+        package, "provided_capabilities", errors, "package.provided_capabilities"
+    )
+    validate_required_remote_string_list(
+        package, "required_capabilities", errors, "package.required_capabilities"
+    )
     validate_optional_remote_string_list(
         package, "provided_intents", errors, "package.provided_intents"
     )
@@ -1981,13 +1985,13 @@ def validate_remote_capability_search_payload(
         require_remote_string(result, "package_id", errors, f"{field}.package_id")
         require_remote_string(result, "version", errors, f"{field}.version")
         require_remote_string(result, "matched_capability", errors, f"{field}.matched_capability")
-        require_remote_list(
+        validate_required_remote_string_list(
             result,
             "provided_capabilities",
             errors,
             f"{field}.provided_capabilities",
         )
-        require_remote_list(
+        validate_required_remote_string_list(
             result,
             "required_capabilities",
             errors,
@@ -2030,13 +2034,13 @@ def validate_remote_intent_search_payload(
         require_remote_string(result, "package_id", errors, f"{field}.package_id")
         require_remote_string(result, "version", errors, f"{field}.version")
         require_remote_string(result, "matched_intent", errors, f"{field}.matched_intent")
-        require_remote_list(
+        validate_required_remote_string_list(
             result,
             "matched_capabilities",
             errors,
             f"{field}.matched_capabilities",
         )
-        require_remote_list(
+        validate_required_remote_string_list(
             result,
             "provided_capabilities",
             errors,
@@ -2048,7 +2052,7 @@ def validate_remote_intent_search_payload(
             errors,
             f"{field}.provided_intents",
         )
-        require_remote_list(
+        validate_required_remote_string_list(
             result,
             "required_capabilities",
             errors,
@@ -2123,6 +2127,20 @@ def validate_remote_registry_digest(
         int(value, 16)
     except ValueError:
         errors.append(remote_field_invalid(f"{field}.value", "must be hexadecimal"))
+
+
+def validate_required_remote_string_list(
+    mapping: dict[str, Any],
+    key: str,
+    errors: list[Issue],
+    field: str,
+) -> None:
+    values = require_remote_list(mapping, key, errors, field)
+    if values is None:
+        return
+    for index, value in enumerate(values):
+        if not isinstance(value, str) or not value:
+            errors.append(remote_field_invalid(f"{field}.{index}", "must be a non-empty string"))
 
 
 def validate_optional_remote_string_list(
@@ -5186,7 +5204,7 @@ def validate_intent_id(
             Issue(
                 "error",
                 code,
-                "Intent ID must match the identifier pattern and start with intent.",
+                "Intent ID must match the identifier pattern and start with 'intent.'.",
                 file,
                 field,
             )
