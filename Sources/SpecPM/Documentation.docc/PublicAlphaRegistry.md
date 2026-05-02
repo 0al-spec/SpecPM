@@ -25,13 +25,13 @@ API prefix:
 Live browser entrypoint:
 
 ```text
-https://0al-spec.github.io/SpecPM/v0
+https://0al-spec.github.io/SpecPM/v0/status/
 ```
 
-Strict JSON root payload:
+Strict JSON status payload:
 
 ```text
-https://0al-spec.github.io/SpecPM/v0/index.json
+https://0al-spec.github.io/SpecPM/v0/status/index.json
 ```
 
 Try the registry with:

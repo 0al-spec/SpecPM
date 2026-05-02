@@ -10,12 +10,12 @@ License: MIT. See `LICENSE`.
 Current status and future tracks are summarized in [`ROADMAP.md`](ROADMAP.md)
 and the DocC [Roadmap](https://0al-spec.github.io/SpecPM/documentation/specpm/roadmap/).
 
-Live public registry API:
-[https://0al-spec.github.io/SpecPM/v0](https://0al-spec.github.io/SpecPM/v0).
+Live public registry status:
+[https://0al-spec.github.io/SpecPM/v0/status/](https://0al-spec.github.io/SpecPM/v0/status/).
 Use `https://0al-spec.github.io/SpecPM` as the `specpm remote --registry`
 root; the remote client reads the `/v0` endpoints under that root. Strict JSON
 consumers can use
-[https://0al-spec.github.io/SpecPM/v0/index.json](https://0al-spec.github.io/SpecPM/v0/index.json).
+[https://0al-spec.github.io/SpecPM/v0/status/index.json](https://0al-spec.github.io/SpecPM/v0/status/index.json).
 
 ## MVP baseline
 
@@ -204,10 +204,10 @@ package content.
 SpecGraph, ContextBuilder, and manual integration testing.
 
 The public alpha registry is available at `https://0al-spec.github.io/SpecPM`.
-Its live read-only API root is
-[https://0al-spec.github.io/SpecPM/v0](https://0al-spec.github.io/SpecPM/v0).
-The strict JSON root payload is
-[https://0al-spec.github.io/SpecPM/v0/index.json](https://0al-spec.github.io/SpecPM/v0/index.json).
+Its live read-only registry status endpoint is
+[https://0al-spec.github.io/SpecPM/v0/status/](https://0al-spec.github.io/SpecPM/v0/status/).
+The strict JSON status payload is
+[https://0al-spec.github.io/SpecPM/v0/status/index.json](https://0al-spec.github.io/SpecPM/v0/status/index.json).
 The current alpha package set is documented in `specs/PUBLIC_ALPHA.md` and
 includes `specpm.core` plus a pinned `specnode.core` source for early SpecGraph
 and SpecNode integration.
