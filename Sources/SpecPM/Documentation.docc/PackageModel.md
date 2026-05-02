@@ -52,6 +52,10 @@ Required manifest fields include:
 - `specs`
 - `index.provides.capabilities`
 
+Capability entries may optionally include `intentIds`, a list of canonical
+`intent.*` IDs that the package-owned capability satisfies. These mappings are
+exact metadata, not inferred meaning.
+
 ## BoundarySpec
 
 A `BoundarySpec` describes a bounded package contract. Required fields include:
@@ -90,5 +94,7 @@ instructions and do not grant authority over host behavior.
 ## References
 
 - `specs/PRD.md`
+- `specs/IDENTIFIER_MODEL.md`
 - `RFC/SpecGraph-RFC-0001.md`
+- <doc:IdentifierModel>
 - <doc:BoundariesAndTrust>

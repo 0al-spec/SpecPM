@@ -24,6 +24,7 @@ LOCK_SCHEMA_VERSION = 1
 REMOTE_REGISTRY_API_VERSION = "specpm.registry/v0"
 REMOTE_REGISTRY_SCHEMA_VERSION = 1
 ID_RE = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
+INTENT_ID_PREFIX = "intent."
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
     r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
@@ -82,6 +83,7 @@ KNOWN_CONSTRAINT_LEVELS = {"MUST", "SHOULD", "MAY"}
 KNOWN_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
 REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteCapabilitySearch",
+    "RemoteIntentSearch",
     "RemotePackage",
     "RemotePackageIndex",
     "RemotePackageVersion",
@@ -103,7 +105,9 @@ __all__ = [
     "observe_remote_registry",
     "pack_package",
     "search_index",
+    "search_intent_index",
     "search_remote_registry",
+    "search_remote_registry_intent",
     "unyank_index_package",
     "validate_package",
     "validate_remote_registry_payload",
@@ -291,9 +295,11 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
                 errors.extend(exc.issues)
 
     provided_by_specs: set[str] = set()
+    intent_mappings: list[dict[str, str]] = []
     spec_ids: list[str] = []
     for rel, spec in specs:
         provided_by_specs.update(validate_boundary_spec(rel, spec, root, errors, warnings))
+        intent_mappings.extend(capability_intent_mappings(get_field(spec, "provides.capabilities")))
         spec_id = get_field(spec, "metadata.id")
         if isinstance(spec_id, str):
             spec_ids.append(spec_id)
@@ -321,6 +327,7 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
         manifest,
         sorted(set(manifest_capabilities or provided_by_specs)),
         checked_files,
+        intent_mappings,
     )
 
 
@@ -340,8 +347,26 @@ def inspect_package(package_dir: Path) -> dict[str, Any]:
                 continue
             boundary_specs.append(summarize_boundary_spec(relative_path(root, resolved), spec))
 
+    package_summary = summarize_manifest(manifest)
+    package_summary["intents"] = sorted(
+        {
+            intent_id
+            for spec in boundary_specs
+            for intent_id in spec.get("intents", [])
+            if isinstance(intent_id, str)
+        }
+    )
+    package_summary["intent_mappings"] = normalize_intent_mappings(
+        [
+            mapping
+            for spec in boundary_specs
+            for mapping in spec.get("intent_mappings", [])
+            if isinstance(mapping, dict)
+        ]
+    )
+
     return {
-        "package": summarize_manifest(manifest),
+        "package": package_summary,
         "boundary_specs": boundary_specs,
         "contract_warnings": inspect_contract_warnings(boundary_specs),
         "validation": validation,
@@ -705,6 +730,47 @@ def search_index(capability_id: str, index_path: Path) -> dict[str, Any]:
     }
 
 
+def search_intent_index(intent_id: str, index_path: Path) -> dict[str, Any]:
+    errors: list[Issue] = []
+    validate_intent_id(intent_id, "intent_id_invalid", errors, "intent search")
+    if errors:
+        return {
+            "status": "invalid",
+            "index": str(index_path),
+            "query": {"intent_id": intent_id},
+            "result_count": 0,
+            "results": [],
+            "errors": [issue.to_dict() for issue in errors],
+        }
+
+    resolved_index = index_path.resolve()
+    index_data, load_errors = load_index(resolved_index)
+    if load_errors:
+        return {
+            "status": "invalid",
+            "index": str(resolved_index),
+            "query": {"intent_id": intent_id},
+            "result_count": 0,
+            "results": [],
+            "errors": [issue.to_dict() for issue in load_errors],
+        }
+
+    results = [
+        intent_search_result_from_package(package, intent_id, capability_ids)
+        for package, capability_ids in packages_for_intent(index_data, intent_id)
+    ]
+
+    results.sort(key=lambda item: (item["package_id"], item["version"]))
+    return {
+        "status": "ok",
+        "index": str(resolved_index),
+        "query": {"intent_id": intent_id},
+        "result_count": len(results),
+        "results": results,
+        "errors": [],
+    }
+
+
 def get_remote_package(
     registry_url: str,
     package_id: str,
@@ -862,6 +928,44 @@ def search_remote_registry(
         endpoint,
         "RemoteCapabilitySearch",
         {"capability_id": capability_id},
+        timeout,
+    )
+
+
+def search_remote_registry_intent(
+    registry_url: str,
+    intent_id: str,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    errors: list[Issue] = []
+    validate_intent_id(intent_id, "intent_id_invalid", errors, "remote intent search")
+    if errors:
+        return remote_registry_invalid_report(
+            "intent-search",
+            registry_url,
+            None,
+            {"intent_id": intent_id},
+            errors,
+        )
+    endpoint, endpoint_errors = build_remote_registry_endpoint(
+        registry_url,
+        ["v0", "intents", intent_id, "packages"],
+    )
+    if endpoint_errors:
+        return remote_registry_invalid_report(
+            "intent-search",
+            registry_url,
+            endpoint,
+            {"intent_id": intent_id},
+            endpoint_errors,
+        )
+    assert endpoint is not None
+    return read_remote_registry_endpoint(
+        "intent-search",
+        registry_url,
+        endpoint,
+        "RemoteIntentSearch",
+        {"intent_id": intent_id},
         timeout,
     )
 
@@ -1151,6 +1255,33 @@ def search_result_from_package(package: dict[str, Any], capability_id: str) -> d
         "summary": package.get("summary"),
         "license": package.get("license"),
         "matched_capability": capability_id,
+        "provided_intents": package.get("provided_intents", []),
+        "provided_capabilities": package.get("provided_capabilities", []),
+        "required_capabilities": package.get("required_capabilities", []),
+        "compatibility": package.get("compatibility", {}),
+        "confidence_summary": {
+            "validation_status": package.get("validation_status"),
+            "evidence": package.get("evidence_summary", {}),
+        },
+        "source": package.get("source", {}),
+        "yanked": package.get("yanked", False),
+    }
+
+
+def intent_search_result_from_package(
+    package: dict[str, Any],
+    intent_id: str,
+    capability_ids: list[str],
+) -> dict[str, Any]:
+    return {
+        "package_id": package.get("package_id"),
+        "version": package.get("version"),
+        "name": package.get("name"),
+        "summary": package.get("summary"),
+        "license": package.get("license"),
+        "matched_intent": intent_id,
+        "matched_capabilities": capability_ids,
+        "provided_intents": package.get("provided_intents", []),
         "provided_capabilities": package.get("provided_capabilities", []),
         "required_capabilities": package.get("required_capabilities", []),
         "compatibility": package.get("compatibility", {}),
@@ -1183,6 +1314,37 @@ def packages_for_capability(index_data: dict[str, Any], capability_id: str) -> l
         if package is None:
             continue
         packages.append(package)
+    return packages
+
+
+def packages_for_intent(
+    index_data: dict[str, Any],
+    intent_id: str,
+) -> list[tuple[dict[str, Any], list[str]]]:
+    intent_index = index_data.get("intents")
+    if not isinstance(intent_index, dict):
+        intent_index = build_intent_index(index_data["packages"])
+    matches = intent_index.get(intent_id, [])
+    if not isinstance(matches, list):
+        matches = []
+    packages_by_identity = {
+        (package.get("package_id"), package.get("version")): package
+        for package in index_data["packages"]
+        if isinstance(package, dict)
+    }
+    packages = []
+    for match in matches:
+        if not isinstance(match, dict):
+            continue
+        package = packages_by_identity.get((match.get("package_id"), match.get("version")))
+        if package is None:
+            continue
+        capability_ids = [
+            capability_id
+            for capability_id in match.get("capability_ids", [])
+            if isinstance(capability_id, str)
+        ]
+        packages.append((package, sorted(capability_ids)))
     return packages
 
 
@@ -1510,6 +1672,8 @@ def validate_remote_registry_target(
         return validate_remote_package_version_target(payload, target, endpoint)
     if kind == "RemoteCapabilitySearch":
         return validate_remote_capability_search_target(payload, target, endpoint)
+    if kind == "RemoteIntentSearch":
+        return validate_remote_intent_search_target(payload, target, endpoint)
     return []
 
 
@@ -1582,6 +1746,41 @@ def validate_remote_capability_search_target(
                     f"results.{index}.matched_capability",
                     f"Remote registry returned matched_capability {matched_capability!r}, "
                     f"expected {capability_id!r}.",
+                )
+            )
+    return errors
+
+
+def validate_remote_intent_search_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    intent_id = target.get("intent_id")
+    if intent_id is None:
+        return []
+
+    errors: list[Issue] = []
+    query_intent_id = payload["query"].get("intent_id")
+    if query_intent_id != intent_id:
+        errors.append(
+            remote_target_mismatch(
+                endpoint,
+                "query.intent_id",
+                f"Remote registry returned query intent_id {query_intent_id!r}, "
+                f"expected {intent_id!r}.",
+            )
+        )
+
+    for index, result in enumerate(payload["results"]):
+        matched_intent = result.get("matched_intent")
+        if matched_intent != intent_id:
+            errors.append(
+                remote_target_mismatch(
+                    endpoint,
+                    f"results.{index}.matched_intent",
+                    f"Remote registry returned matched_intent {matched_intent!r}, "
+                    f"expected {intent_id!r}.",
                 )
             )
     return errors
@@ -1667,6 +1866,8 @@ def validate_remote_registry_payload(payload: Any) -> list[Issue]:
         validate_remote_package_version_payload(payload, errors)
     elif kind == "RemoteCapabilitySearch":
         validate_remote_capability_search_payload(payload, errors)
+    elif kind == "RemoteIntentSearch":
+        validate_remote_intent_search_payload(payload, errors)
     elif kind == "RemoteRegistryStatus":
         validate_remote_registry_status_payload(payload, errors)
     elif kind == "RemoteRegistryError":
@@ -1689,6 +1890,7 @@ def validate_remote_package_summary(
     require_remote_string(package, "package_id", errors, f"{field}.package_id")
     require_remote_string(package, "name", errors, f"{field}.name")
     require_remote_list(package, "capabilities", errors, f"{field}.capabilities")
+    validate_optional_remote_string_list(package, "intents", errors, f"{field}.intents")
     versions = require_remote_list(package, "versions", errors, f"{field}.versions")
     if versions is None:
         return
@@ -1743,6 +1945,9 @@ def validate_remote_package_version_payload(
     require_remote_string(package, "version", errors, "package.version")
     require_remote_list(package, "provided_capabilities", errors, "package.provided_capabilities")
     require_remote_list(package, "required_capabilities", errors, "package.required_capabilities")
+    validate_optional_remote_string_list(
+        package, "provided_intents", errors, "package.provided_intents"
+    )
     state = require_remote_mapping(package, "state", errors, "package.state")
     if state is not None:
         require_remote_bool(state, "yanked", errors, "package.state.yanked")
@@ -1781,6 +1986,67 @@ def validate_remote_capability_search_payload(
             "provided_capabilities",
             errors,
             f"{field}.provided_capabilities",
+        )
+        require_remote_list(
+            result,
+            "required_capabilities",
+            errors,
+            f"{field}.required_capabilities",
+        )
+        validate_optional_remote_string_list(
+            result,
+            "provided_intents",
+            errors,
+            f"{field}.provided_intents",
+        )
+        require_remote_bool(result, "yanked", errors, f"{field}.yanked")
+        require_remote_bool(result, "deprecated", errors, f"{field}.deprecated")
+        source = require_remote_mapping(result, "source", errors, f"{field}.source")
+        if source is not None:
+            validate_remote_registry_source(source, errors, f"{field}.source")
+
+
+def validate_remote_intent_search_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    query = require_remote_mapping(payload, "query", errors, "query")
+    if query is not None:
+        require_remote_string(query, "intent_id", errors, "query.intent_id")
+        match = require_remote_string(query, "match", errors, "query.match")
+        if match is not None and match != "exact":
+            errors.append(remote_field_invalid("query.match", "must be exact"))
+    result_count = require_remote_int(payload, "result_count", errors, "result_count")
+    results = require_remote_list(payload, "results", errors, "results")
+    if results is None:
+        return
+    if result_count is not None and result_count != len(results):
+        errors.append(remote_field_invalid("result_count", "must match results length"))
+    for index, result in enumerate(results):
+        field = f"results.{index}"
+        if not isinstance(result, dict):
+            errors.append(remote_field_invalid(field, "must be an object"))
+            continue
+        require_remote_string(result, "package_id", errors, f"{field}.package_id")
+        require_remote_string(result, "version", errors, f"{field}.version")
+        require_remote_string(result, "matched_intent", errors, f"{field}.matched_intent")
+        require_remote_list(
+            result,
+            "matched_capabilities",
+            errors,
+            f"{field}.matched_capabilities",
+        )
+        require_remote_list(
+            result,
+            "provided_capabilities",
+            errors,
+            f"{field}.provided_capabilities",
+        )
+        validate_optional_remote_string_list(
+            result,
+            "provided_intents",
+            errors,
+            f"{field}.provided_intents",
         )
         require_remote_list(
             result,
@@ -1857,6 +2123,22 @@ def validate_remote_registry_digest(
         int(value, 16)
     except ValueError:
         errors.append(remote_field_invalid(f"{field}.value", "must be hexadecimal"))
+
+
+def validate_optional_remote_string_list(
+    mapping: dict[str, Any],
+    key: str,
+    errors: list[Issue],
+    field: str,
+) -> None:
+    if key not in mapping:
+        return
+    values = require_remote_list(mapping, key, errors, field)
+    if values is None:
+        return
+    for index, value in enumerate(values):
+        if not isinstance(value, str) or not value:
+            errors.append(remote_field_invalid(f"{field}.{index}", "must be a non-empty string"))
 
 
 def require_remote_mapping(
@@ -2755,6 +3037,9 @@ def validate_boundary_spec(
     )
     for capability_id in provided:
         validate_id(capability_id, "capability_id_invalid", errors, rel)
+    validate_capability_intent_ids(
+        provided_capability_entries, errors, rel, "provides.capabilities"
+    )
     warn_duplicates(provided, "duplicate_spec_capability", "Duplicate spec capability", warnings)
     if provided and not has_primary_capability(provided_capability_entries):
         warnings.append(
@@ -3325,6 +3610,8 @@ def summarize_manifest(manifest: dict[str, Any] | None) -> dict[str, Any]:
         "license": metadata.get("license"),
         "capabilities": capability_ids(get_field(manifest, "index.provides.capabilities")),
         "required_capabilities": capability_ids(get_field(manifest, "index.requires.capabilities")),
+        "intents": [],
+        "intent_mappings": [],
         "compatibility": compatibility if isinstance(compatibility, dict) else {},
         "preview_only": manifest.get("preview_only", False),
         "keywords": manifest.get("keywords", []),
@@ -3349,6 +3636,13 @@ def summarize_boundary_spec(rel: str, spec: dict[str, Any]) -> dict[str, Any]:
         "bounded_context": get_field(spec, "scope.boundedContext"),
         "provides": capability_ids(get_field(spec, "provides.capabilities")),
         "requires": capability_ids(get_field(spec, "requires.capabilities")),
+        "intents": sorted(
+            {
+                item["intent_id"]
+                for item in capability_intent_mappings(get_field(spec, "provides.capabilities"))
+            }
+        ),
+        "intent_mappings": capability_intent_mappings(get_field(spec, "provides.capabilities")),
         "interfaces": spec.get("interfaces", {}),
         "effects": spec.get("effects", {}),
         "constraints": spec.get("constraints", []),
@@ -3851,6 +4145,13 @@ def build_index_entry(
     evidence_entries = [
         item for spec in specs for item in spec.get("evidence", []) if isinstance(item, dict)
     ]
+    intent_mappings = normalize_intent_mappings(
+        [
+            mapping
+            for spec in specs
+            for mapping in capability_intent_mappings(get_field(spec, "provides.capabilities"))
+        ]
+    )
     return {
         "package_id": metadata.get("id"),
         "name": metadata.get("name"),
@@ -3859,6 +4160,8 @@ def build_index_entry(
         "license": metadata.get("license"),
         "provided_capabilities": sorted(validation.get("capabilities", [])),
         "required_capabilities": required_capabilities,
+        "provided_intents": sorted({item["intent_id"] for item in intent_mappings}),
+        "intent_mappings": intent_mappings,
         "compatibility": manifest.get("compatibility", {}),
         "evidence_summary": summarize_evidence_entries(evidence_entries),
         "source": {
@@ -3950,6 +4253,7 @@ def write_index_entry(
     packages.append(entry)
     packages.sort(key=lambda item: (item.get("package_id") or "", item.get("version") or ""))
     index_data["capabilities"] = build_capability_index(packages)
+    index_data["intents"] = build_intent_index(packages)
     try:
         write_json_file(resolved_index, index_data)
     except OSError as exc:
@@ -4020,6 +4324,8 @@ def load_index(index_path: Path) -> tuple[dict[str, Any], list[Issue]]:
         ]
     if not isinstance(loaded.get("capabilities"), dict):
         loaded["capabilities"] = build_capability_index(packages)
+    if not isinstance(loaded.get("intents"), dict):
+        loaded["intents"] = build_intent_index(packages)
     return loaded, []
 
 
@@ -4028,6 +4334,7 @@ def empty_index() -> dict[str, Any]:
         "schemaVersion": INDEX_SCHEMA_VERSION,
         "packages": [],
         "capabilities": {},
+        "intents": {},
     }
 
 
@@ -4047,6 +4354,39 @@ def build_capability_index(packages: list[dict[str, Any]]) -> dict[str, list[dic
     return {
         capability: sorted(entries, key=lambda item: (item["package_id"], item["version"]))
         for capability, entries in sorted(capability_index.items())
+    }
+
+
+def build_intent_index(packages: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    intent_index: dict[str, list[dict[str, Any]]] = {}
+    for package in packages:
+        package_id = package.get("package_id")
+        version = package.get("version")
+        if not isinstance(package_id, str) or not isinstance(version, str):
+            continue
+        mappings = package.get("intent_mappings")
+        if not isinstance(mappings, list):
+            continue
+        capabilities_by_intent: dict[str, set[str]] = {}
+        for mapping in mappings:
+            if not isinstance(mapping, dict):
+                continue
+            intent_id = mapping.get("intent_id")
+            capability_id = mapping.get("capability_id")
+            if not isinstance(intent_id, str) or not isinstance(capability_id, str):
+                continue
+            capabilities_by_intent.setdefault(intent_id, set()).add(capability_id)
+        for intent_id, capability_ids in capabilities_by_intent.items():
+            intent_index.setdefault(intent_id, []).append(
+                {
+                    "package_id": package_id,
+                    "version": version,
+                    "capability_ids": sorted(capability_ids),
+                }
+            )
+    return {
+        intent: sorted(entries, key=lambda item: (item["package_id"], item["version"]))
+        for intent, entries in sorted(intent_index.items())
     }
 
 
@@ -4196,6 +4536,8 @@ def build_lock_entry(package: dict[str, Any], cache_entry: str) -> dict[str, Any
         "license": package.get("license"),
         "provided_capabilities": package.get("provided_capabilities", []),
         "required_capabilities": package.get("required_capabilities", []),
+        "provided_intents": package.get("provided_intents", []),
+        "intent_mappings": package.get("intent_mappings", []),
         "compatibility": package.get("compatibility", {}),
         "source": package.get("source", {}),
         "validation_status": package.get("validation_status"),
@@ -4564,7 +4906,9 @@ def validation_report(
     manifest: dict[str, Any] | None,
     capabilities: list[str],
     checked_files: list[str],
+    intent_mappings: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
+    mappings = normalize_intent_mappings(intent_mappings or [])
     status = "invalid" if errors else "warning_only" if warnings else "valid"
     return {
         "status": status,
@@ -4574,6 +4918,8 @@ def validation_report(
         "warnings": [issue.to_dict() for issue in warnings],
         "package_identity": package_identity(manifest),
         "capabilities": sorted(set(capabilities)),
+        "intents": sorted({item["intent_id"] for item in mappings}),
+        "intent_mappings": mappings,
         "checked_files": sorted(checked_files),
     }
 
@@ -4753,6 +5099,69 @@ def capability_ids(value: Any) -> list[str]:
     return ids
 
 
+def capability_intent_mappings(value: Any) -> list[dict[str, str]]:
+    if not isinstance(value, list):
+        return []
+    mappings: list[dict[str, str]] = []
+    for item in value:
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            continue
+        capability_id = item["id"]
+        intent_ids = item.get("intentIds")
+        if not isinstance(intent_ids, list):
+            continue
+        for intent_id in intent_ids:
+            if is_valid_intent_id(intent_id):
+                mappings.append({"capability_id": capability_id, "intent_id": intent_id})
+    return normalize_intent_mappings(mappings)
+
+
+def normalize_intent_mappings(mappings: list[dict[str, str]]) -> list[dict[str, str]]:
+    seen: set[tuple[str, str]] = set()
+    normalized: list[dict[str, str]] = []
+    for mapping in mappings:
+        capability_id = mapping.get("capability_id")
+        intent_id = mapping.get("intent_id")
+        if not isinstance(capability_id, str) or not isinstance(intent_id, str):
+            continue
+        key = (intent_id, capability_id)
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append({"intent_id": intent_id, "capability_id": capability_id})
+    return sorted(normalized, key=lambda item: (item["intent_id"], item["capability_id"]))
+
+
+def validate_capability_intent_ids(
+    value: Any,
+    errors: list[Issue],
+    file: str,
+    field: str,
+) -> None:
+    if not isinstance(value, list):
+        return
+    for index, entry in enumerate(value):
+        if not isinstance(entry, dict) or "intentIds" not in entry:
+            continue
+        intent_ids = entry.get("intentIds")
+        item_field = f"{field}.{index}.intentIds"
+        if not isinstance(intent_ids, list):
+            errors.append(
+                Issue(
+                    "error",
+                    "capability_intent_ids_invalid",
+                    "Capability intentIds must be a list when present.",
+                    file,
+                    item_field,
+                )
+            )
+            continue
+        for intent_index, intent_id in enumerate(intent_ids):
+            validate_intent_id(
+                intent_id, "intent_id_invalid", errors, file, f"{item_field}.{intent_index}"
+            )
+
+
 def validate_id(value: Any, code: str, errors: list[Issue], file: str) -> None:
     if not isinstance(value, str) or not ID_RE.match(value):
         errors.append(
@@ -4763,6 +5172,33 @@ def validate_id(value: Any, code: str, errors: list[Issue], file: str) -> None:
                 file,
             )
         )
+
+
+def validate_intent_id(
+    value: Any,
+    code: str,
+    errors: list[Issue],
+    file: str,
+    field: str | None = None,
+) -> None:
+    if not is_valid_intent_id(value):
+        errors.append(
+            Issue(
+                "error",
+                code,
+                "Intent ID must match the identifier pattern and start with intent.",
+                file,
+                field,
+            )
+        )
+
+
+def is_valid_intent_id(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and ID_RE.match(value) is not None
+        and value.startswith(INTENT_ID_PREFIX)
+    )
 
 
 def validate_semver(value: Any, code: str, errors: list[Issue], file: str) -> None:

@@ -315,6 +315,8 @@ index repo
       packages/{package_id}/versions/{version}/{package_id}-{version}.specpm.tgz
       capabilities/{capability_id}/packages/index.json
       capabilities/{capability_id}/packages/index.html
+      intents/{intent_id}/packages/index.json
+      intents/{intent_id}/packages/index.html
 ```
 
 GitHub Pages can serve those generated files as the read-only registry API.
@@ -375,7 +377,8 @@ The service:
 - generates `.specpm/public-index` from `public-index/accepted-packages.yml`;
 - serves the generated static `/v0` tree at `http://localhost:8081` by default;
 - exposes `/v0/status`, `/v0/packages`, package lookup, package version lookup,
-  and exact capability search metadata;
+  exact capability search metadata, and exact intent search metadata for
+  declared `intentIds`;
 - can be pointed at another host-visible URL with
   `SPECPM_PUBLIC_INDEX_REGISTRY_URL`;
 - can use another accepted package manifest with

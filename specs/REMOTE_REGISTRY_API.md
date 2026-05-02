@@ -32,6 +32,7 @@ The remote registry API contract defines read-only discovery surfaces:
 - package metadata lookup;
 - package version lookup;
 - exact capability search;
+- exact intent search over explicitly declared `intentIds`;
 - yanked and deprecated package version state;
 - stable error payloads.
 
@@ -108,6 +109,7 @@ specpm remote packages --registry <url> [--json]
 specpm remote package <package-id> --registry <url> [--json]
 specpm remote version <package-id@version> --registry <url> [--json]
 specpm remote search <capability-id> --registry <url> [--json]
+specpm remote search-intent <intent-id> --registry <url> [--json]
 ```
 
 These commands fetch metadata only. They do not download package archives,
@@ -126,6 +128,8 @@ returning success:
   `version`;
 - exact capability search responses must echo the requested `capability_id` and
   each result `matched_capability` must equal that capability ID.
+- exact intent search responses must echo the requested `intent_id` and each
+  result `matched_intent` must equal that intent ID.
 
 ## Transport
 
@@ -238,6 +242,24 @@ Response kind:
 RemoteCapabilitySearch
 ```
 
+### Exact Intent Search
+
+```text
+GET /v0/intents/{intent_id}/packages
+```
+
+Returns package versions whose BoundarySpecs explicitly map at least one
+provided capability to the exact canonical `intent.*` ID. This endpoint is
+exact-match metadata lookup. It does not infer intent from package text, run
+LLM extraction, use embeddings, perform vector search, or select packages
+automatically.
+
+Response kind:
+
+```text
+RemoteIntentSearch
+```
+
 ## Common Types
 
 ### Package Identity
@@ -260,7 +282,8 @@ RegistryStatus = {
   authority: string,
   package_count: integer,
   version_count: integer,
-  capability_count: integer
+  capability_count: integer,
+  intent_count?: integer
 }
 ```
 
@@ -278,6 +301,7 @@ PackageSummary = {
   license?: string,
   latest_version?: string,
   capabilities: string[],
+  intents?: string[],
   keywords?: string[],
   versions: {
     version: string,
@@ -363,9 +387,11 @@ Initial error codes:
 - `package_not_found`
 - `package_version_not_found`
 - `capability_not_found`
+- `intent_not_found`
 - `invalid_package_id`
 - `invalid_package_version`
 - `invalid_capability_id`
+- `invalid_intent_id`
 
 ## Conformance Fixtures
 
@@ -385,9 +411,9 @@ Client tests may use fixture-backed HTTP fetch stubs so the repository test
 suite does not require a live registry service.
 
 The initial fixture set covers registry status, package index, package
-metadata, package version metadata, exact capability search, yanked version
-visibility, deprecated version visibility, invalid count detection, not-found
-errors, and enterprise registry status shape.
+metadata, package version metadata, exact capability search, exact intent
+search, yanked version visibility, deprecated version visibility, invalid count
+detection, not-found errors, and enterprise registry status shape.
 
 The suite also includes `public_registry_static_index` cases that generate a
 static public `/v0` tree and verify the same endpoint payloads produced by

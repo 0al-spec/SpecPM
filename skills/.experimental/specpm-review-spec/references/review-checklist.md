@@ -20,6 +20,8 @@
   behavior or accepted intent.
 - `scope.excludes` protects adjacent systems and deferred tracks.
 - `provides.capabilities[].id` is precise and valid.
+- `provides.capabilities[].intentIds`, when present, are exact `intent.*` IDs
+  and describe package-neutral needs rather than package ownership.
 - `requires.capabilities` is not used as a vague dependency bucket.
 - `interfaces` describe real CLI/API/file/HTTP contracts when available.
 - `constraints` use MUST/SHOULD language only where intended.

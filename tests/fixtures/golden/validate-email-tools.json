@@ -8,6 +8,15 @@
   ],
   "error_count": 0,
   "errors": [],
+  "intent_mappings": [
+    {
+      "capability_id": "document_conversion.email_to_markdown",
+      "intent_id": "intent.document_conversion.email_to_markdown"
+    }
+  ],
+  "intents": [
+    "intent.document_conversion.email_to_markdown"
+  ],
   "package_identity": {
     "name": "Email Tools",
     "package_id": "document_conversion.email_tools",

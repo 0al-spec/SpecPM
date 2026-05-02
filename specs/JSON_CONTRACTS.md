@@ -92,6 +92,8 @@ ValidationReport = {
   warnings: Issue[],
   package_identity: PackageIdentity | null,
   capabilities: string[],
+  intents: string[],
+  intent_mappings: { intent_id: string, capability_id: string }[],
   checked_files: string[]
 }
 ```
@@ -117,6 +119,8 @@ InspectionReport = {
     license?: string,
     capabilities: string[],
     required_capabilities: string[],
+    intents: string[],
+    intent_mappings: { intent_id: string, capability_id: string }[],
     compatibility: object,
     preview_only: boolean,
     keywords: string[]
@@ -137,6 +141,8 @@ BoundarySpecSummary = {
   bounded_context?: string,
   provides: string[],
   requires: string[],
+  intents: string[],
+  intent_mappings: { intent_id: string, capability_id: string }[],
   interfaces: object,
   effects: object,
   constraints: object[],
@@ -208,6 +214,7 @@ SearchResult = {
   summary?: string,
   license?: string,
   matched_capability: string,
+  provided_intents: string[],
   provided_capabilities: string[],
   required_capabilities: string[],
   compatibility: object,
@@ -225,6 +232,54 @@ SearchResult = {
 ```
 
 Golden fixture: `tests/fixtures/golden/search-email-tools.json`.
+
+## Intent Search Result
+
+Command:
+
+```bash
+specpm search-intent <intent-id> --index <path> --json
+```
+
+Contract:
+
+```text
+IntentSearchReport = {
+  status: "ok" | "invalid",
+  index: string,
+  query: { intent_id: string },
+  result_count: number,
+  results: IntentSearchResult[],
+  errors: Issue[]
+}
+
+IntentSearchResult = {
+  package_id: string,
+  version: string,
+  name?: string,
+  summary?: string,
+  license?: string,
+  matched_intent: string,
+  matched_capabilities: string[],
+  provided_intents: string[],
+  provided_capabilities: string[],
+  required_capabilities: string[],
+  compatibility: object,
+  confidence_summary: {
+    validation_status?: ValidationStatus,
+    evidence: object
+  },
+  source: {
+    kind: "directory" | "archive",
+    path: string,
+    digest: Digest
+  },
+  yanked: boolean
+}
+```
+
+Intent search is exact lookup over declared `intentIds`. It does not infer
+intent from package text.
 
 ## Add Result
 
@@ -289,6 +344,7 @@ specpm remote packages --registry <url> --json
 specpm remote package <package-id> --registry <url> --json
 specpm remote version <package-id@version> --registry <url> --json
 specpm remote search <capability-id> --registry <url> --json
+specpm remote search-intent <intent-id> --registry <url> --json
 ```
 
 Contract:
@@ -296,12 +352,14 @@ Contract:
 ```text
 RemoteRegistryClientReport = {
   status: "ok" | "not_found" | "invalid",
-  operation: "status" | "packages" | "package" | "version" | "search",
+  operation: "status" | "packages" | "package" | "version" | "search" |
+    "intent-search",
   registry: string,
   endpoint: string | null,
   target: object,
   payload: RemoteRegistryStatus | RemotePackageIndex | RemotePackage |
-    RemotePackageVersion | RemoteCapabilitySearch | RemoteRegistryError | null,
+    RemotePackageVersion | RemoteCapabilitySearch | RemoteIntentSearch |
+    RemoteRegistryError | null,
   errors: Issue[]
 }
 ```
@@ -399,6 +457,8 @@ v0/packages/{package_id}/versions/{version}/index.html
 v0/packages/{package_id}/versions/{version}/{package_id}-{version}.specpm.tgz
 v0/capabilities/{capability_id}/packages/index.json
 v0/capabilities/{capability_id}/packages/index.html
+v0/intents/{intent_id}/packages/index.json
+v0/intents/{intent_id}/packages/index.html
 ```
 
 Generated JSON payloads must validate against the remote registry API contract.

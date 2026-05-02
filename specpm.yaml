@@ -19,6 +19,7 @@ index:
       - specpm.package.pack
       - specpm.registry.index
       - specpm.registry.search
+      - specpm.registry.intent_search
       - specpm.registry.add
       - specpm.registry.local_lifecycle
       - specpm.package.diff
@@ -45,6 +46,7 @@ index:
       - specpm.deployment.deploy_first_workflow
       - specpm.deployment.registry_operations_runbook
       - specpm.roadmap.current_status
+      - specpm.intent.identifier_model
       - specpm.conformance.remote_registry_payloads
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.documentation.docc_site

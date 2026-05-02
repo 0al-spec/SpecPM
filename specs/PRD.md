@@ -59,6 +59,8 @@ The MVP must solve the practical local workflow first:
 - Keep package contents untrusted: no script execution, no automatic remote
   fetches, no implicit code execution from Markdown or foreign artifacts.
 - Support exact capability ID search as the normative MVP resolution behavior.
+- Support package-neutral `intent.*` IDs as exact metadata mappings from
+  package-owned capabilities, without making SpecPM a semantic resolver.
 - Preserve evidence, provenance, foreign artifacts, and implementation bindings
   as data.
 - Support SpecGraph materialized bundles under `.specgraph_exports/` as local
@@ -75,6 +77,7 @@ The MVP must solve the practical local workflow first:
 - Remote public registry service implementation or publish APIs.
 - Package signing and trust web.
 - AI semantic search as normative resolution.
+- Plain-text to `intent.*` interpretation.
 - Full dependency solving.
 - Automatic code generation.
 - Automatic import into SpecGraph canonical specs.
@@ -220,6 +223,15 @@ Required BoundarySpec fields:
 - `interfaces`
 - `evidence`
 
+Optional capability metadata:
+
+- `provides.capabilities[*].intentIds`
+
+`intentIds` map package-owned capabilities to canonical package-neutral
+`intent.*` IDs. SpecPM validates their shape and can index them for exact
+lookup, but it does not infer them from natural language and does not treat them
+as semantic authority.
+
 The accepted authoring format is restricted YAML using JSON-compatible maps,
 arrays, strings, numbers, booleans, and null values. Anchors, aliases, custom
 tags, multiple documents, executable tags, and implicit non-JSON scalar tricks
@@ -235,6 +247,7 @@ specpm inspect <package-ref-or-dir> [--json]
 specpm pack <package-dir> [-o <archive>]
 specpm index <package-dir-or-archive> [--index <path>]
 specpm search <capability-id> [--index <path>] [--json]
+specpm search-intent <intent-id> [--index <path>] [--json]
 specpm add <capability-id-or-package-ref> [--index <path>] [--project <dir>]
 specpm yank <package-id@version> [--index <path>] --reason <reason> [--json]
 specpm unyank <package-id@version> [--index <path>] [--json]
@@ -323,6 +336,10 @@ The local MVP registry index should store:
 
 `specpm search` must support exact capability ID matching. Keyword or fuzzy
 search can exist only as advisory UX, not normative resolution.
+
+`specpm search-intent` must support exact canonical `intent.*` ID matching
+against explicit capability-to-intent mappings. It must not infer intents from
+natural language, summaries, evidence, or package names.
 
 `specpm add` should:
 

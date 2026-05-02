@@ -46,8 +46,11 @@ instructions or generated PRDs.
    - Include metadata, intent, scope includes/excludes, provided capabilities,
      requirements, interfaces, constraints, effects, evidence, provenance, and
      implementation bindings when the repository has concrete files.
-   - Use precise capability IDs such as `specpm.package.validate`, not broad
-     slogans.
+   - Use precise package-owned capability IDs such as
+     `specpm.package.validate`, not broad slogans.
+   - When a package capability clearly satisfies a canonical user need, add
+     `intentIds` with exact `intent.*` IDs. Do not infer or invent a taxonomy
+     when the mapping is uncertain.
 
 6. Validate.
    - In SpecPM source checkouts, run:

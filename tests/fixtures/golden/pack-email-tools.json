@@ -1,9 +1,9 @@
 {
   "archive": "<tmp>/email_tools.specpm.tgz",
-  "archive_size": 1048,
+  "archive_size": 1059,
   "digest": {
     "algorithm": "sha256",
-    "value": "0a237a4c48a092b5b60243277208433cb57309d68672e2cec8df6d59bb8fa34c"
+    "value": "4b97ac7f7f45fd155d6a5db9f5b9836cacc2440c7aee5e98406057bdd146b1d6"
   },
   "errors": [],
   "format": "specpm-tar-gzip-v0",
@@ -23,6 +23,15 @@
     ],
     "error_count": 0,
     "errors": [],
+    "intent_mappings": [
+      {
+        "capability_id": "document_conversion.email_to_markdown",
+        "intent_id": "intent.document_conversion.email_to_markdown"
+      }
+    ],
+    "intents": [
+      "intent.document_conversion.email_to_markdown"
+    ],
     "package_identity": {
       "name": "Email Tools",
       "package_id": "document_conversion.email_tools",

@@ -132,6 +132,7 @@ Implemented first slice:
 - `specpm pack <package-dir> [-o <archive>] [--json]`
 - `specpm index <package-dir-or-archive> [--index <path>] [--json]`
 - `specpm search <capability-id> [--index <path>] [--json]`
+- `specpm search-intent <intent-id> [--index <path>] [--json]`
 - `specpm add <capability-id-or-package-ref> [--index <path>] [--project <dir>] [--json]`
 - `specpm yank <package-id@version> [--index <path>] --reason <reason> [--json]`
 - `specpm unyank <package-id@version> [--index <path>] [--json]`
@@ -143,6 +144,7 @@ Implemented first slice:
 - `specpm remote package <package-id> --registry <url> [--json]`
 - `specpm remote version <package-id@version> --registry <url> [--json]`
 - `specpm remote search <capability-id> --registry <url> [--json]`
+- `specpm remote search-intent <intent-id> --registry <url> [--json]`
 - `specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--json]`
 - `specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--json]`
 
@@ -209,12 +211,16 @@ report; maintainers review valid submissions before adding pinned sources to
 site as
 [Add a SpecPackage](https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/).
 
-SpecPM does not translate plain-text user intent into capability IDs or package
-selections. Natural-language discovery, embeddings, vector search, RAG, and
-semantic reranking belong in ContextBuilder, SpecGraph, or a future downstream
-intent resolver. SpecPM remains the exact lookup and verification layer for
-structured package metadata. This boundary is documented in
-`specs/INTENT_DISCOVERY_BOUNDARY.md`.
+SpecPM does not translate plain-text user intent into canonical `intent.*`
+IDs, capability IDs, or package selections. Natural-language discovery,
+embeddings, vector search, RAG, and semantic reranking belong in
+ContextBuilder, SpecGraph, or a future downstream intent resolver. SpecPM
+remains the exact lookup and verification layer for structured package
+metadata. Packages may declare explicit capability-to-intent mappings through
+`provides.capabilities[*].intentIds`, which can be queried with exact
+`search-intent` commands. This boundary is documented in
+`specs/INTENT_DISCOVERY_BOUNDARY.md`; the identifier model is documented in
+`specs/IDENTIFIER_MODEL.md`.
 
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.
