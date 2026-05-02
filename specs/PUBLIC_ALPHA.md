@@ -37,9 +37,15 @@ specpm remote packages --registry https://0al-spec.github.io/SpecPM --json
 specpm remote package specnode.core --registry https://0al-spec.github.io/SpecPM --json
 specpm remote version specnode.core@0.1.0 --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search specnode.typed_job_protocol --registry https://0al-spec.github.io/SpecPM --json
+specpm remote intents --registry https://0al-spec.github.io/SpecPM --json
+specpm remote intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search-intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
 specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
 ```
+
+The `remote intents` and `remote intent` commands expose an observed intent
+catalog built from accepted package metadata. Observed intent IDs are useful for
+authoring and discovery, but they are not a canonical intent dictionary.
 
 For a reusable downstream evidence artifact:
 

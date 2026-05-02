@@ -64,8 +64,8 @@ make public-index-smoke
 The default registry URL is `http://localhost:8081`. The service regenerates
 `.specpm/public-index` from `public-index/accepted-packages.yml` and serves the
 static `/v0` tree through Docker Compose. `make public-index-smoke` reads
-`/v0/status`, `/v0/packages`, and an exact capability search endpoint. Stop it
-with:
+`/v0/status`, `/v0/packages`, observed intent catalog endpoints, and exact
+capability/intent search endpoints. Stop it with:
 
 ```bash
 make public-index-down
@@ -109,10 +109,12 @@ Run the post-MVP read-only remote metadata client against a compatible registry:
 ```bash
 PYTHONPATH=src python3 -m specpm.cli remote status --registry https://registry.example.invalid --json
 PYTHONPATH=src python3 -m specpm.cli remote packages --registry https://registry.example.invalid --json
+PYTHONPATH=src python3 -m specpm.cli remote intents --registry https://registry.example.invalid --json
 PYTHONPATH=src python3 -m specpm.cli remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
 PYTHONPATH=src python3 -m specpm.cli remote observe --registry https://registry.example.invalid --package document_conversion.email_tools --version document_conversion.email_tools@0.1.0 --capability document_conversion.email_to_markdown --json
 docker compose run --rm specpm remote status --registry https://registry.example.invalid --json
 docker compose run --rm specpm remote packages --registry https://registry.example.invalid --json
+docker compose run --rm specpm remote intents --registry https://registry.example.invalid --json
 docker compose run --rm specpm remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
 ```
 
@@ -144,6 +146,8 @@ Implemented first slice:
 - `specpm remote package <package-id> --registry <url> [--json]`
 - `specpm remote version <package-id@version> --registry <url> [--json]`
 - `specpm remote search <capability-id> --registry <url> [--json]`
+- `specpm remote intents --registry <url> [--json]`
+- `specpm remote intent <intent-id> --registry <url> [--json]`
 - `specpm remote search-intent <intent-id> --registry <url> [--json]`
 - `specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--json]`
 - `specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--json]`

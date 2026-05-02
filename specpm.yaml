@@ -20,6 +20,7 @@ index:
       - specpm.registry.index
       - specpm.registry.search
       - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
       - specpm.registry.add
       - specpm.registry.local_lifecycle
       - specpm.package.diff

@@ -1,0 +1,46 @@
+{
+  "apiVersion": "specpm.registry/v0",
+  "schemaVersion": 1,
+  "kind": "RemoteIntent",
+  "status": "ok",
+  "catalog": {
+    "authority": "observed_metadata_only",
+    "canonical": false,
+    "description": "Observed intent IDs are collected from accepted package metadata; package declaration does not make an intent ID canonical."
+  },
+  "intent": {
+    "intent_id": "intent.document_conversion.email_to_markdown",
+    "status": "observed",
+    "canonical": false,
+    "package_count": 1,
+    "version_count": 1,
+    "capability_count": 1,
+    "package_ids": [
+      "document_conversion.email_tools"
+    ],
+    "capabilities": [
+      "document_conversion.email_to_markdown"
+    ]
+  },
+  "packages": [
+    {
+      "package_id": "document_conversion.email_tools",
+      "version": "0.1.0",
+      "name": "Email Tools",
+      "summary": "Boundary specifications for email document conversion.",
+      "matched_capabilities": [
+        "document_conversion.email_to_markdown"
+      ],
+      "provided_intents": [
+        "intent.document_conversion.email_to_markdown"
+      ],
+      "provided_capabilities": [
+        "document_conversion.email_to_markdown"
+      ],
+      "required_capabilities": [],
+      "license": "MIT",
+      "yanked": false,
+      "deprecated": false
+    }
+  ]
+}

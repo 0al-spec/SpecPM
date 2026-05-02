@@ -18,6 +18,7 @@ The local MVP supports:
 - local file-backed registry indexing;
 - exact capability search;
 - exact `intent.*` lookup over declared capability-to-intent mappings;
+- observed intent catalog metadata from accepted packages;
 - deterministic local add and lock metadata;
 - local yank and unyank lifecycle state;
 - structural diff;

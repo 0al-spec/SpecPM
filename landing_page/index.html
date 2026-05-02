@@ -1548,7 +1548,7 @@
             </a>
             <a class="btn" href="https://0al-spec.github.io/SpecPM" target="_blank" rel="noopener">Read Docs</a>
           </div>
-          <p class="positioning">Available now: validation, inspect, deterministic pack, local/public index, exact capability and intent lookup, <span class="serif-name">SpecGraph</span> inbox, and read-only registry metadata.</p>
+          <p class="positioning">Available now: validation, inspect, deterministic pack, local/public index, exact capability and intent lookup, observed intent catalog, <span class="serif-name">SpecGraph</span> inbox, and read-only registry metadata.</p>
         </div>
 
         <div class="hero-mock-wrap">
@@ -1609,7 +1609,7 @@
                     <path d="M12 3 5 6v6c0 4.5 3 7.3 7 9 4-1.7 7-4.5 7-9V6l-7-3Z" />
                     <path d="M9.5 12.5 11 14l3.5-4" />
                   </svg>
-                  Static /v0 registry metadata
+                  Static /v0 + observed intents
                 </li>
                 <li>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -1649,7 +1649,7 @@
             <p>Traditional package managers expose code first.</p>
             <p><span class="serif-name">SpecPM</span> works differently.</p>
             <p>
-              It stores specifications as the primary unit: structured, reusable definitions of what a module, subsystem, or product boundary should do. Today, <span class="serif-name">SpecPM</span> validates, packs, indexes, and exposes package data, capability IDs, and backed <code>intent.*</code> IDs. The intent-to-spec resolver is the next online/API layer built on top.
+              It stores specifications as the primary unit: structured, reusable definitions of what a module, subsystem, or product boundary should do. Today, <span class="serif-name">SpecPM</span> validates, packs, indexes, and exposes package data, capability IDs, backed <code>intent.*</code> IDs, and an observed intent catalog. The intent-to-spec resolver is the next online/API layer built on top.
             </p>
           </div>
           <p class="punchline">
@@ -1696,7 +1696,7 @@
           <p class="eyebrow"><span class="dot"></span>Current Status</p>
           <h2 id="status-title">The package and registry substrate is working now.</h2>
           <p class="lede">
-            <span class="serif-name">SpecPM</span> already provides the deterministic substrate that an intent-to-spec service needs: trusted outputs, exact capability lookup, exact <code>intent.*</code> lookup, package validation, and read-only registry metadata.
+            <span class="serif-name">SpecPM</span> already provides the deterministic substrate that an intent-to-spec service needs: trusted outputs, exact capability lookup, exact <code>intent.*</code> lookup, observed intent catalog metadata, package validation, and read-only registry metadata.
           </p>
         </div>
 
@@ -1717,6 +1717,7 @@
             <ul>
               <li>index, search, add, lock, yank, and unyank locally</li>
               <li>expose first-class <code>index.provides.intents</code></li>
+              <li>publish observed intent catalog endpoints</li>
               <li>generate static public <code>/v0</code> registry files</li>
               <li>serve the public index locally through Docker</li>
             </ul>
@@ -1727,7 +1728,7 @@
             <h3>SpecGraph and viewer contracts</h3>
             <ul>
               <li>inspect <span class="serif-name">SpecGraph</span> inbox bundles</li>
-              <li>read remote registry status, packages, capability search, and intent search</li>
+              <li>read remote registry status, packages, intent catalog, capability search, and intent search</li>
               <li>publish DocC documentation and conformance fixtures</li>
             </ul>
           </article>

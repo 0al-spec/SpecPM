@@ -32,6 +32,7 @@ The remote registry API contract defines read-only discovery surfaces:
 - package metadata lookup;
 - package version lookup;
 - exact capability search;
+- observed intent catalog lookup;
 - exact intent search over explicitly declared `intentIds`;
 - yanked and deprecated package version state;
 - stable error payloads.
@@ -109,6 +110,8 @@ specpm remote packages --registry <url> [--json]
 specpm remote package <package-id> --registry <url> [--json]
 specpm remote version <package-id@version> --registry <url> [--json]
 specpm remote search <capability-id> --registry <url> [--json]
+specpm remote intents --registry <url> [--json]
+specpm remote intent <intent-id> --registry <url> [--json]
 specpm remote search-intent <intent-id> --registry <url> [--json]
 ```
 
@@ -128,6 +131,7 @@ returning success:
   `version`;
 - exact capability search responses must echo the requested `capability_id` and
   each result `matched_capability` must equal that capability ID.
+- observed intent metadata responses must echo the requested `intent_id`.
 - exact intent search responses must echo the requested `intent_id` and each
   result `matched_intent` must equal that intent ID.
 
@@ -242,6 +246,41 @@ Response kind:
 RemoteCapabilitySearch
 ```
 
+### Observed Intent Catalog
+
+```text
+GET /v0/intents
+```
+
+Returns the deterministic catalog of `intent.*` IDs observed in accepted
+packages. The catalog is built from package metadata and BoundarySpec-backed
+capability `intentIds`.
+
+This endpoint is an authoring and discovery aid. It is not a canonical intent
+dictionary, namespace governance decision, semantic authority, or package
+selection mechanism.
+
+Response kind:
+
+```text
+RemoteIntentIndex
+```
+
+### Observed Intent Metadata
+
+```text
+GET /v0/intents/{intent_id}
+```
+
+Returns observed metadata for one exact `intent.*` ID, including package IDs and
+capabilities that declared the mapping.
+
+Response kind:
+
+```text
+RemoteIntent
+```
+
 ### Exact Intent Search
 
 ```text
@@ -310,6 +349,63 @@ PackageSummary = {
   }[]
 }
 ```
+
+### Observed Intent Catalog
+
+```text
+ObservedIntentCatalog = {
+  authority: "observed_metadata_only",
+  canonical: false,
+  description: string
+}
+
+ObservedIntentSummary = {
+  intent_id: string,
+  status: "observed",
+  canonical: false,
+  package_count: integer,
+  version_count: integer,
+  capability_count: integer,
+  package_ids: string[],
+  capabilities: string[]
+}
+
+RemoteIntentIndex = {
+  apiVersion: "specpm.registry/v0",
+  schemaVersion: 1,
+  kind: "RemoteIntentIndex",
+  status: "ok",
+  catalog: ObservedIntentCatalog,
+  intent_count: integer,
+  intents: ObservedIntentSummary[]
+}
+
+RemoteIntent = {
+  apiVersion: "specpm.registry/v0",
+  schemaVersion: 1,
+  kind: "RemoteIntent",
+  status: "ok",
+  catalog: ObservedIntentCatalog,
+  intent: ObservedIntentSummary,
+  packages: {
+    package_id: string,
+    version: string,
+    name?: string,
+    summary?: string,
+    matched_capabilities: string[],
+    provided_intents?: string[],
+    provided_capabilities: string[],
+    required_capabilities: string[],
+    license?: string,
+    yanked: boolean,
+    deprecated: boolean
+  }[]
+}
+```
+
+Observed intent status means the ID appeared in accepted package metadata. It
+does not make the ID canonical. Canonical meaning and lifecycle decisions remain
+outside SpecPM's package-manager contract.
 
 ### Digest
 
@@ -411,9 +507,10 @@ Client tests may use fixture-backed HTTP fetch stubs so the repository test
 suite does not require a live registry service.
 
 The initial fixture set covers registry status, package index, package
-metadata, package version metadata, exact capability search, exact intent
-search, yanked version visibility, deprecated version visibility, invalid count
-detection, not-found errors, and enterprise registry status shape.
+metadata, package version metadata, exact capability search, observed intent
+catalog metadata, exact intent search, yanked version visibility, deprecated
+version visibility, invalid count detection, not-found errors, and enterprise
+registry status shape.
 
 The suite also includes `public_registry_static_index` cases that generate a
 static public `/v0` tree and verify the same endpoint payloads produced by

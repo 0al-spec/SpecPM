@@ -53,6 +53,7 @@ metadata:
 - deterministic packing;
 - local indexing;
 - exact capability search;
+- observed intent catalog metadata from accepted packages;
 - read-only remote metadata lookup;
 - package inspection;
 - structural diff;
@@ -66,8 +67,14 @@ BoundarySpec explicitly declares them. For example:
 specpm search document_conversion.email_to_markdown --index .specpm/index.json --json
 specpm search-intent intent.document_conversion.email_to_markdown --index .specpm/index.json --json
 specpm remote search document_conversion.email_to_markdown --registry http://localhost:8081 --json
+specpm remote intents --registry http://localhost:8081 --json
+specpm remote intent intent.document_conversion.email_to_markdown --registry http://localhost:8081 --json
 specpm remote search-intent intent.document_conversion.email_to_markdown --registry http://localhost:8081 --json
 ```
+
+The remote intent catalog is observed metadata. It can help authors discover
+which `intent.*` IDs have appeared in accepted packages, but it does not make
+those IDs canonical and does not decide package meaning.
 
 ## Where Plain-Text Discovery Belongs
 

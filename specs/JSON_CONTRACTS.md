@@ -349,6 +349,8 @@ specpm remote packages --registry <url> --json
 specpm remote package <package-id> --registry <url> --json
 specpm remote version <package-id@version> --registry <url> --json
 specpm remote search <capability-id> --registry <url> --json
+specpm remote intents --registry <url> --json
+specpm remote intent <intent-id> --registry <url> --json
 specpm remote search-intent <intent-id> --registry <url> --json
 ```
 
@@ -358,14 +360,64 @@ Contract:
 RemoteRegistryClientReport = {
   status: "ok" | "not_found" | "invalid",
   operation: "status" | "packages" | "package" | "version" | "search" |
-    "intent-search",
+    "intents" | "intent" | "intent-search",
   registry: string,
   endpoint: string | null,
   target: object,
   payload: RemoteRegistryStatus | RemotePackageIndex | RemotePackage |
-    RemotePackageVersion | RemoteCapabilitySearch | RemoteIntentSearch |
-    RemoteRegistryError | null,
+    RemotePackageVersion | RemoteCapabilitySearch | RemoteIntentIndex |
+    RemoteIntent | RemoteIntentSearch | RemoteRegistryError | null,
   errors: Issue[]
+}
+```
+
+`RemoteIntentIndex` and `RemoteIntent` expose an observed intent catalog from
+accepted package metadata. They are authoring/discovery metadata, not a
+canonical intent dictionary.
+
+```text
+RemoteIntentIndex = {
+  kind: "RemoteIntentIndex",
+  status: "ok",
+  catalog: {
+    authority: "observed_metadata_only",
+    canonical: false,
+    description: string
+  },
+  intent_count: number,
+  intents: ObservedIntentSummary[]
+}
+
+ObservedIntentSummary = {
+  intent_id: string,
+  status: "observed",
+  canonical: false,
+  package_count: number,
+  version_count: number,
+  capability_count: number,
+  package_ids: string[],
+  capabilities: string[]
+}
+
+RemoteIntent = {
+  kind: "RemoteIntent",
+  status: "ok",
+  catalog: {
+    authority: "observed_metadata_only",
+    canonical: false,
+    description: string
+  },
+  intent: ObservedIntentSummary,
+  packages: {
+    package_id: string,
+    version: string,
+    matched_capabilities: string[],
+    provided_intents: string[],
+    provided_capabilities: string[],
+    required_capabilities: string[],
+    yanked: boolean,
+    deprecated: boolean
+  }[]
 }
 ```
 
@@ -462,6 +514,10 @@ v0/packages/{package_id}/versions/{version}/index.html
 v0/packages/{package_id}/versions/{version}/{package_id}-{version}.specpm.tgz
 v0/capabilities/{capability_id}/packages/index.json
 v0/capabilities/{capability_id}/packages/index.html
+v0/intents/index.json
+v0/intents/index.html
+v0/intents/{intent_id}/index.json
+v0/intents/{intent_id}/index.html
 v0/intents/{intent_id}/packages/index.json
 v0/intents/{intent_id}/packages/index.html
 ```

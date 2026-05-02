@@ -71,9 +71,9 @@ contract.
 
 `public_registry_static_index` generates a static public `/v0` tree from
 repository fixtures and checks the registry status, package index, package
-metadata, package version, exact capability search, exact intent search,
-adjacent `index.html` static-host payloads, archive digest metadata, and absent
-missing package/capability/intent paths.
+metadata, package version, exact capability search, observed intent catalog,
+exact intent search, adjacent `index.html` static-host payloads, archive digest
+metadata, and absent missing package/capability/intent paths.
 
 Read-only remote registry client tests reuse those payloads behind HTTP fetch
 stubs. They verify endpoint construction and stable client reports without a

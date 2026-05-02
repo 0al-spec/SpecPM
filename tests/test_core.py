@@ -21,6 +21,8 @@ from specpm.cli import build_parser, main
 from specpm.core import (
     add_package,
     diff_packages,
+    get_remote_intent,
+    get_remote_intent_index,
     get_remote_package,
     get_remote_package_index,
     get_remote_package_version,
@@ -111,6 +113,8 @@ CONFORMANCE_CASE_KINDS = {
 REMOTE_REGISTRY_API_VERSION = "specpm.registry/v0"
 REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteCapabilitySearch",
+    "RemoteIntent",
+    "RemoteIntentIndex",
     "RemoteIntentSearch",
     "RemotePackage",
     "RemotePackageIndex",
@@ -277,6 +281,49 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
             if "intents" in package:
                 assert isinstance(package["intents"], list)
             assert isinstance(package["versions"], list)
+        return
+
+    if payload["kind"] == "RemoteIntentIndex":
+        assert payload["catalog"]["authority"] == "observed_metadata_only"
+        assert payload["catalog"]["canonical"] is False
+        assert isinstance(payload["catalog"]["description"], str)
+        assert isinstance(payload["intent_count"], int)
+        assert isinstance(payload["intents"], list)
+        assert payload["intent_count"] == len(payload["intents"])
+        for intent in payload["intents"]:
+            assert isinstance(intent["intent_id"], str)
+            assert intent["status"] == "observed"
+            assert intent["canonical"] is False
+            assert isinstance(intent["package_count"], int)
+            assert isinstance(intent["version_count"], int)
+            assert isinstance(intent["capability_count"], int)
+            assert isinstance(intent["package_ids"], list)
+            assert isinstance(intent["capabilities"], list)
+            assert intent["package_count"] == len(intent["package_ids"])
+            assert intent["capability_count"] == len(intent["capabilities"])
+        return
+
+    if payload["kind"] == "RemoteIntent":
+        assert payload["catalog"]["authority"] == "observed_metadata_only"
+        assert payload["catalog"]["canonical"] is False
+        assert isinstance(payload["catalog"]["description"], str)
+        intent = payload["intent"]
+        assert isinstance(intent["intent_id"], str)
+        assert intent["status"] == "observed"
+        assert intent["canonical"] is False
+        assert isinstance(intent["package_ids"], list)
+        assert isinstance(intent["capabilities"], list)
+        assert isinstance(payload["packages"], list)
+        assert intent["version_count"] == len(payload["packages"])
+        for package in payload["packages"]:
+            assert isinstance(package["package_id"], str)
+            assert isinstance(package["version"], str)
+            assert isinstance(package["matched_capabilities"], list)
+            assert isinstance(package["provided_intents"], list)
+            assert isinstance(package["provided_capabilities"], list)
+            assert isinstance(package["required_capabilities"], list)
+            assert isinstance(package["yanked"], bool)
+            assert isinstance(package["deprecated"], bool)
         return
 
     if payload["kind"] == "RemotePackageVersion":
@@ -1730,8 +1777,17 @@ def test_conformance_remote_registry_payload_cases() -> None:
                 else payload["version_count"]
             )
             assert actual == expected["version_count"], case["id"]
+        if "intent_count" in expected:
+            actual = (
+                payload["registry"]["intent_count"]
+                if payload["kind"] == "RemoteRegistryStatus"
+                else payload["intent_count"]
+            )
+            assert actual == expected["intent_count"], case["id"]
         if "package_id" in expected:
             assert payload["package"]["package_id"] == expected["package_id"], case["id"]
+        if expected.get("intent_entry_id"):
+            assert payload["intent"]["intent_id"] == expected["intent_entry_id"], case["id"]
         if "version" in expected:
             assert payload["package"]["version"] == expected["version"], case["id"]
         if "yanked" in expected:
@@ -1786,8 +1842,17 @@ def test_conformance_public_registry_static_index_cases(tmp_path: Path) -> None:
                     else payload["version_count"]
                 )
                 assert actual == endpoint["version_count"], case["id"]
+            if "intent_count" in endpoint:
+                actual = (
+                    payload["registry"]["intent_count"]
+                    if payload["kind"] == "RemoteRegistryStatus"
+                    else payload["intent_count"]
+                )
+                assert actual == endpoint["intent_count"], case["id"]
             if "package_id" in endpoint:
                 assert payload["package"]["package_id"] == endpoint["package_id"], case["id"]
+            if endpoint.get("intent_entry_id"):
+                assert payload["intent"]["intent_id"] == endpoint["intent_entry_id"], case["id"]
             if "version" in endpoint:
                 assert payload["package"]["version"] == endpoint["version"], case["id"]
             if "capability_id" in endpoint:
@@ -1936,7 +2001,7 @@ def test_remote_registry_package_and_version_fetch_expected_endpoints(monkeypatc
     assert seen == list(payloads)
 
 
-def test_remote_registry_status_and_package_index_fetch_expected_endpoints(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_remote_registry_status_and_index_fetch_expected_endpoints(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     payloads = {
         "https://registry.example.invalid/v0/status": (
             load_remote_registry_fixture("registry-status.json")
@@ -1944,6 +2009,13 @@ def test_remote_registry_status_and_package_index_fetch_expected_endpoints(monke
         "https://registry.example.invalid/v0/packages": (
             load_remote_registry_fixture("package-index.json")
         ),
+        "https://registry.example.invalid/v0/intents": (
+            load_remote_registry_fixture("intent-index.json")
+        ),
+        (
+            "https://registry.example.invalid/v0/intents/"
+            "intent.document_conversion.email_to_markdown"
+        ): load_remote_registry_fixture("intent-metadata.json"),
     }
     seen: list[str] = []
 
@@ -1955,6 +2027,11 @@ def test_remote_registry_status_and_package_index_fetch_expected_endpoints(monke
 
     status = get_remote_registry_status("https://registry.example.invalid")
     package_index = get_remote_package_index("https://registry.example.invalid")
+    intent_index = get_remote_intent_index("https://registry.example.invalid")
+    intent = get_remote_intent(
+        "https://registry.example.invalid",
+        "intent.document_conversion.email_to_markdown",
+    )
 
     assert status["status"] == "ok"
     assert status["payload"]["kind"] == "RemoteRegistryStatus"
@@ -1962,6 +2039,12 @@ def test_remote_registry_status_and_package_index_fetch_expected_endpoints(monke
     assert package_index["status"] == "ok"
     assert package_index["payload"]["kind"] == "RemotePackageIndex"
     assert package_index["payload"]["package_count"] == 1
+    assert intent_index["status"] == "ok"
+    assert intent_index["payload"]["kind"] == "RemoteIntentIndex"
+    assert intent_index["payload"]["intent_count"] == 1
+    assert intent["status"] == "ok"
+    assert intent["payload"]["kind"] == "RemoteIntent"
+    assert intent["payload"]["intent"]["status"] == "observed"
     assert seen == list(payloads)
 
 
@@ -2170,6 +2253,9 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     package_index_payload = json.loads(
         (output / "v0/packages/index.json").read_text(encoding="utf-8")
     )
+    intent_index_payload = json.loads(
+        (output / "v0/intents/index.json").read_text(encoding="utf-8")
+    )
     package_payload = json.loads(
         (output / "v0/packages/document_conversion.email_tools/index.json").read_text(
             encoding="utf-8"
@@ -2195,6 +2281,11 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
             output / "v0/intents/intent.document_conversion.email_to_markdown/packages/index.json"
         ).read_text(encoding="utf-8")
     )
+    intent_entry_payload = json.loads(
+        (output / "v0/intents/intent.document_conversion.email_to_markdown/index.json").read_text(
+            encoding="utf-8"
+        )
+    )
     archive = (
         output
         / "v0/packages/document_conversion.email_tools/versions/0.1.0/"
@@ -2204,11 +2295,13 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     assert archive.is_file()
     assert_remote_registry_payload_shape(status_payload)
     assert_remote_registry_payload_shape(package_index_payload)
+    assert_remote_registry_payload_shape(intent_index_payload)
     assert_remote_registry_payload_shape(package_payload)
     assert package_directory_index == package_payload
     assert_remote_registry_payload_shape(version_payload)
     assert_remote_registry_payload_shape(capability_payload)
     assert_remote_registry_payload_shape(intent_payload)
+    assert_remote_registry_payload_shape(intent_entry_payload)
     assert status_payload["registry"] == {
         "profile": "public_static_index",
         "api_version": "v0",
@@ -2219,6 +2312,27 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
         "capability_count": 1,
         "intent_count": 1,
     }
+    assert intent_index_payload["catalog"] == {
+        "authority": "observed_metadata_only",
+        "canonical": False,
+        "description": (
+            "Observed intent IDs are collected from accepted package metadata; "
+            "package declaration does not make an intent ID canonical."
+        ),
+    }
+    assert intent_index_payload["intents"][0]["intent_id"] == (
+        "intent.document_conversion.email_to_markdown"
+    )
+    assert intent_index_payload["intents"][0]["status"] == "observed"
+    assert intent_index_payload["intents"][0]["canonical"] is False
+    assert intent_index_payload["intents"][0]["package_ids"] == ["document_conversion.email_tools"]
+    assert intent_entry_payload["intent"]["intent_id"] == (
+        "intent.document_conversion.email_to_markdown"
+    )
+    assert intent_entry_payload["intent"]["status"] == "observed"
+    assert intent_entry_payload["packages"][0]["matched_capabilities"] == [
+        "document_conversion.email_to_markdown"
+    ]
     assert package_index_payload["packages"][0]["package_id"] == ("document_conversion.email_tools")
     assert package_payload["package"]["latest_version"] == "0.1.0"
     assert capability_payload["results"][0]["matched_capability"] == (
@@ -2690,7 +2804,7 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
     payload = json.loads(captured.out)
     assert exit_code == 0
     assert payload["status"] == "ok"
-    assert payload["written_count"] == 13
+    assert payload["written_count"] == 17
 
 
 def test_cli_public_index_generate_accepts_reviewed_manifest(
@@ -2796,7 +2910,7 @@ def test_cli_remote_search_intent_json(monkeypatch, capsys) -> None:  # type: ig
     assert payload["payload"]["kind"] == "RemoteIntentSearch"
 
 
-def test_cli_remote_status_and_packages_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+def test_cli_remote_status_and_indexes_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
     payloads = {
         "https://registry.example.invalid/v0/status": (
             load_remote_registry_fixture("registry-status.json")
@@ -2804,6 +2918,13 @@ def test_cli_remote_status_and_packages_json(monkeypatch, capsys) -> None:  # ty
         "https://registry.example.invalid/v0/packages": (
             load_remote_registry_fixture("package-index.json")
         ),
+        "https://registry.example.invalid/v0/intents": (
+            load_remote_registry_fixture("intent-index.json")
+        ),
+        (
+            "https://registry.example.invalid/v0/intents/"
+            "intent.document_conversion.email_to_markdown"
+        ): load_remote_registry_fixture("intent-metadata.json"),
     }
 
     def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
@@ -2831,11 +2952,36 @@ def test_cli_remote_status_and_packages_json(monkeypatch, capsys) -> None:  # ty
         ]
     )
     packages_output = json.loads(capsys.readouterr().out)
+    intents_exit = main(
+        [
+            "remote",
+            "intents",
+            "--registry",
+            "https://registry.example.invalid",
+            "--json",
+        ]
+    )
+    intents_output = json.loads(capsys.readouterr().out)
+    intent_exit = main(
+        [
+            "remote",
+            "intent",
+            "intent.document_conversion.email_to_markdown",
+            "--registry",
+            "https://registry.example.invalid",
+            "--json",
+        ]
+    )
+    intent_output = json.loads(capsys.readouterr().out)
 
     assert status_exit == 0
     assert status_output["payload"]["kind"] == "RemoteRegistryStatus"
     assert packages_exit == 0
     assert packages_output["payload"]["kind"] == "RemotePackageIndex"
+    assert intents_exit == 0
+    assert intents_output["payload"]["kind"] == "RemoteIntentIndex"
+    assert intent_exit == 0
+    assert intent_output["payload"]["kind"] == "RemoteIntent"
 
 
 def test_cli_remote_observe_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]

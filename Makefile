@@ -6,6 +6,7 @@ PAGES_REGISTRY_URL ?= https://0al-spec.github.io/SpecPM
 PUBLIC_INDEX_OUTPUT ?= .specpm/public-index
 PUBLIC_INDEX_MANIFEST ?= public-index/accepted-packages.yml
 PUBLIC_INDEX_SMOKE_CAPABILITY ?= document_conversion.email_to_markdown
+PUBLIC_INDEX_SMOKE_INTENT ?= intent.document_conversion.email_to_markdown
 PUBLIC_ALPHA_SMOKE_PACKAGE ?= specnode.core
 PUBLIC_ALPHA_SMOKE_VERSION ?= specnode.core@0.1.0
 PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol
@@ -83,7 +84,16 @@ public-index-smoke: public-index-wait
 	PYTHONPATH=src python3 -m specpm.cli remote packages \
 		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
 		--json
+	PYTHONPATH=src python3 -m specpm.cli remote intents \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json
+	PYTHONPATH=src python3 -m specpm.cli remote intent $(PUBLIC_INDEX_SMOKE_INTENT) \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json
 	PYTHONPATH=src python3 -m specpm.cli remote search $(PUBLIC_INDEX_SMOKE_CAPABILITY) \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json
+	PYTHONPATH=src python3 -m specpm.cli remote search-intent $(PUBLIC_INDEX_SMOKE_INTENT) \
 		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
 		--json
 
@@ -120,7 +130,16 @@ pages-smoke:
 	PYTHONPATH=src python3 -m specpm.cli remote packages \
 		--registry $(PAGES_REGISTRY_URL) \
 		--json
+	PYTHONPATH=src python3 -m specpm.cli remote intents \
+		--registry $(PAGES_REGISTRY_URL) \
+		--json
+	PYTHONPATH=src python3 -m specpm.cli remote intent $(PUBLIC_INDEX_SMOKE_INTENT) \
+		--registry $(PAGES_REGISTRY_URL) \
+		--json
 	PYTHONPATH=src python3 -m specpm.cli remote search $(PUBLIC_INDEX_SMOKE_CAPABILITY) \
+		--registry $(PAGES_REGISTRY_URL) \
+		--json
+	PYTHONPATH=src python3 -m specpm.cli remote search-intent $(PUBLIC_INDEX_SMOKE_INTENT) \
 		--registry $(PAGES_REGISTRY_URL) \
 		--json
 

@@ -110,6 +110,8 @@ EVIDENCE_STRUCTURAL_SUPPORT_TARGETS = {
 }
 REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteCapabilitySearch",
+    "RemoteIntent",
+    "RemoteIntentIndex",
     "RemoteIntentSearch",
     "RemotePackage",
     "RemotePackageIndex",
@@ -121,6 +123,8 @@ REMOTE_REGISTRY_STATUS_VALUES = {"ok", "not_found", "invalid"}
 __all__ = [
     "add_package",
     "diff_packages",
+    "get_remote_intent",
+    "get_remote_intent_index",
     "get_remote_package",
     "get_remote_package_index",
     "get_remote_package_version",
@@ -914,6 +918,68 @@ def get_remote_package_index(
         endpoint,
         "RemotePackageIndex",
         {},
+        timeout,
+    )
+
+
+def get_remote_intent_index(
+    registry_url: str,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    endpoint, endpoint_errors = build_remote_registry_endpoint(registry_url, ["v0", "intents"])
+    if endpoint_errors:
+        return remote_registry_invalid_report(
+            "intents",
+            registry_url,
+            endpoint,
+            {},
+            endpoint_errors,
+        )
+    assert endpoint is not None
+    return read_remote_registry_endpoint(
+        "intents",
+        registry_url,
+        endpoint,
+        "RemoteIntentIndex",
+        {},
+        timeout,
+    )
+
+
+def get_remote_intent(
+    registry_url: str,
+    intent_id: str,
+    timeout: float = 10.0,
+) -> dict[str, Any]:
+    errors: list[Issue] = []
+    validate_intent_id(intent_id, "intent_id_invalid", errors, "remote intent")
+    if errors:
+        return remote_registry_invalid_report(
+            "intent",
+            registry_url,
+            None,
+            {"intent_id": intent_id},
+            errors,
+        )
+    endpoint, endpoint_errors = build_remote_registry_endpoint(
+        registry_url,
+        ["v0", "intents", intent_id],
+    )
+    if endpoint_errors:
+        return remote_registry_invalid_report(
+            "intent",
+            registry_url,
+            endpoint,
+            {"intent_id": intent_id},
+            endpoint_errors,
+        )
+    assert endpoint is not None
+    return read_remote_registry_endpoint(
+        "intent",
+        registry_url,
+        endpoint,
+        "RemoteIntent",
+        {"intent_id": intent_id},
         timeout,
     )
 
@@ -1731,6 +1797,8 @@ def validate_remote_registry_target(
         return validate_remote_package_target(payload, target, endpoint)
     if kind == "RemotePackageVersion":
         return validate_remote_package_version_target(payload, target, endpoint)
+    if kind == "RemoteIntent":
+        return validate_remote_intent_target(payload, target, endpoint)
     if kind == "RemoteCapabilitySearch":
         return validate_remote_capability_search_target(payload, target, endpoint)
     if kind == "RemoteIntentSearch":
@@ -1810,6 +1878,28 @@ def validate_remote_capability_search_target(
                 )
             )
     return errors
+
+
+def validate_remote_intent_target(
+    payload: dict[str, Any],
+    target: dict[str, str],
+    endpoint: str,
+) -> list[Issue]:
+    intent_id = target.get("intent_id")
+    if intent_id is None:
+        return []
+
+    intent = payload["intent"]
+    if intent.get("intent_id") != intent_id:
+        return [
+            remote_target_mismatch(
+                endpoint,
+                "intent.intent_id",
+                f"Remote registry returned intent_id {intent.get('intent_id')!r}, "
+                f"expected {intent_id!r}.",
+            )
+        ]
+    return []
 
 
 def validate_remote_intent_search_target(
@@ -1925,6 +2015,10 @@ def validate_remote_registry_payload(payload: Any) -> list[Issue]:
         validate_remote_package_index_payload(payload, errors)
     elif kind == "RemotePackageVersion":
         validate_remote_package_version_payload(payload, errors)
+    elif kind == "RemoteIntentIndex":
+        validate_remote_intent_index_payload(payload, errors)
+    elif kind == "RemoteIntent":
+        validate_remote_intent_payload(payload, errors)
     elif kind == "RemoteCapabilitySearch":
         validate_remote_capability_search_payload(payload, errors)
     elif kind == "RemoteIntentSearch":
@@ -1992,6 +2086,162 @@ def validate_remote_package_index_payload(
             computed_version_count += len(versions)
     if version_count is not None and version_count != computed_version_count:
         errors.append(remote_field_invalid("version_count", "must match listed package versions"))
+
+
+def validate_remote_intent_index_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    catalog = require_remote_mapping(payload, "catalog", errors, "catalog")
+    if catalog is not None:
+        require_remote_string(catalog, "authority", errors, "catalog.authority")
+        require_remote_string(catalog, "description", errors, "catalog.description")
+        canonical = require_remote_bool(catalog, "canonical", errors, "catalog.canonical")
+        if canonical is not None and canonical is not False:
+            errors.append(remote_field_invalid("catalog.canonical", "must be false"))
+
+    intent_count = require_remote_int(payload, "intent_count", errors, "intent_count")
+    intents = require_remote_list(payload, "intents", errors, "intents")
+    if intents is None:
+        return
+    if intent_count is not None and intent_count != len(intents):
+        errors.append(remote_field_invalid("intent_count", "must match intents length"))
+    for index, intent in enumerate(intents):
+        field = f"intents.{index}"
+        if not isinstance(intent, dict):
+            errors.append(remote_field_invalid(field, "must be an object"))
+            continue
+        validate_remote_intent_summary(intent, errors, field)
+
+
+def validate_remote_intent_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    catalog = require_remote_mapping(payload, "catalog", errors, "catalog")
+    if catalog is not None:
+        require_remote_string(catalog, "authority", errors, "catalog.authority")
+        require_remote_string(catalog, "description", errors, "catalog.description")
+        canonical = require_remote_bool(catalog, "canonical", errors, "catalog.canonical")
+        if canonical is not None and canonical is not False:
+            errors.append(remote_field_invalid("catalog.canonical", "must be false"))
+
+    intent = require_remote_mapping(payload, "intent", errors, "intent")
+    if intent is not None:
+        validate_remote_intent_summary(intent, errors, "intent")
+
+    packages = require_remote_list(payload, "packages", errors, "packages")
+    if packages is None:
+        return
+    if intent is not None:
+        version_count = intent.get("version_count")
+        if isinstance(version_count, int) and not isinstance(version_count, bool):
+            if version_count != len(packages):
+                errors.append(
+                    remote_field_invalid(
+                        "intent.version_count",
+                        "must match packages length",
+                    )
+                )
+    for index, package in enumerate(packages):
+        field = f"packages.{index}"
+        if not isinstance(package, dict):
+            errors.append(remote_field_invalid(field, "must be an object"))
+            continue
+        validate_remote_intent_package(package, errors, field)
+
+
+def validate_remote_intent_summary(
+    intent: dict[str, Any],
+    errors: list[Issue],
+    field: str,
+) -> None:
+    require_remote_string(intent, "intent_id", errors, f"{field}.intent_id")
+    status = require_remote_string(intent, "status", errors, f"{field}.status")
+    if status is not None and status != "observed":
+        errors.append(remote_field_invalid(f"{field}.status", "must be observed"))
+    canonical = require_remote_bool(intent, "canonical", errors, f"{field}.canonical")
+    if canonical is not None and canonical is not False:
+        errors.append(remote_field_invalid(f"{field}.canonical", "must be false"))
+
+    package_count = require_remote_int(intent, "package_count", errors, f"{field}.package_count")
+    version_count = require_remote_int(intent, "version_count", errors, f"{field}.version_count")
+    capability_count = require_remote_int(
+        intent, "capability_count", errors, f"{field}.capability_count"
+    )
+    for key, value in (
+        ("package_count", package_count),
+        ("version_count", version_count),
+        ("capability_count", capability_count),
+    ):
+        if value is not None and value < 0:
+            errors.append(remote_field_invalid(f"{field}.{key}", "must not be negative"))
+
+    validate_required_remote_string_list(
+        intent,
+        "package_ids",
+        errors,
+        f"{field}.package_ids",
+    )
+    validate_required_remote_string_list(
+        intent,
+        "capabilities",
+        errors,
+        f"{field}.capabilities",
+    )
+    package_ids = intent.get("package_ids")
+    if package_count is not None and isinstance(package_ids, list):
+        if package_count != len(package_ids):
+            errors.append(
+                remote_field_invalid(
+                    f"{field}.package_count",
+                    "must match package_ids length",
+                )
+            )
+    capabilities = intent.get("capabilities")
+    if capability_count is not None and isinstance(capabilities, list):
+        if capability_count != len(capabilities):
+            errors.append(
+                remote_field_invalid(
+                    f"{field}.capability_count",
+                    "must match capabilities length",
+                )
+            )
+
+
+def validate_remote_intent_package(
+    package: dict[str, Any],
+    errors: list[Issue],
+    field: str,
+) -> None:
+    require_remote_string(package, "package_id", errors, f"{field}.package_id")
+    require_remote_string(package, "version", errors, f"{field}.version")
+    validate_required_remote_string_list(
+        package,
+        "matched_capabilities",
+        errors,
+        f"{field}.matched_capabilities",
+    )
+    validate_required_remote_string_list(
+        package,
+        "provided_capabilities",
+        errors,
+        f"{field}.provided_capabilities",
+    )
+    validate_required_remote_string_list(
+        package,
+        "required_capabilities",
+        errors,
+        f"{field}.required_capabilities",
+    )
+    validate_optional_remote_string_list(
+        package,
+        "provided_intents",
+        errors,
+        f"{field}.provided_intents",
+    )
+    require_remote_bool(package, "yanked", errors, f"{field}.yanked")
+    require_remote_bool(package, "deprecated", errors, f"{field}.deprecated")
 
 
 def validate_remote_package_version_payload(
@@ -2141,6 +2391,10 @@ def validate_remote_registry_status_payload(
         value = require_remote_int(registry, key, errors, f"registry.{key}")
         if value is not None and value < 0:
             errors.append(remote_field_invalid(f"registry.{key}", "must not be negative"))
+    if "intent_count" in registry:
+        value = require_remote_int(registry, "intent_count", errors, "registry.intent_count")
+        if value is not None and value < 0:
+            errors.append(remote_field_invalid("registry.intent_count", "must not be negative"))
 
 
 def validate_remote_registry_error_payload(payload: dict[str, Any], errors: list[Issue]) -> None:

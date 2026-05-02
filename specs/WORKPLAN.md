@@ -1067,6 +1067,32 @@ Acceptance:
 - Plain-text intent interpretation, LLM extraction, embeddings, vector search,
   RAG, reranking, and package selection authority remain outside SpecPM core.
 
+## Phase 43. Observed Intent Registry
+
+- [x] Generate a static observed intent catalog from accepted package metadata.
+- [x] Publish `/v0/intents` as an aggregate list of observed `intent.*` IDs.
+- [x] Publish `/v0/intents/{intent_id}` as exact observed metadata for one
+  intent ID.
+- [x] Preserve existing `/v0/intents/{intent_id}/packages` exact reverse lookup.
+- [x] Add read-only `specpm remote intents` and `specpm remote intent
+  <intent-id>` client commands.
+- [x] Validate `RemoteIntentIndex` and `RemoteIntent` payload shape in the
+  remote registry contract and conformance suite.
+- [x] Document that observed intent entries are not canonical dictionary entries
+  and do not grant package content authority.
+
+Acceptance:
+
+- Public index generation emits deterministic observed intent catalog JSON and
+  adjacent `index.html` files for static hosts.
+- Observed entries report `status: observed` and `canonical: false`.
+- The catalog helps authoring, autocomplete, duplicate detection, and exact
+  lookup discovery without creating semantic authority inside SpecPM.
+- SpecGraph, ContextBuilder, or future governance decide canonical intent
+  meaning; SpecPM only preserves and exposes package metadata.
+- The change does not add LLM extraction, embeddings, vector search, RAG,
+  semantic ranking, package selection authority, or package content execution.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

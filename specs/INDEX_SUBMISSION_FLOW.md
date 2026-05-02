@@ -315,6 +315,10 @@ index repo
       packages/{package_id}/versions/{version}/{package_id}-{version}.specpm.tgz
       capabilities/{capability_id}/packages/index.json
       capabilities/{capability_id}/packages/index.html
+      intents/index.json
+      intents/index.html
+      intents/{intent_id}/index.json
+      intents/{intent_id}/index.html
       intents/{intent_id}/packages/index.json
       intents/{intent_id}/packages/index.html
 ```
@@ -377,8 +381,8 @@ The service:
 - generates `.specpm/public-index` from `public-index/accepted-packages.yml`;
 - serves the generated static `/v0` tree at `http://localhost:8081` by default;
 - exposes `/v0/status`, `/v0/packages`, package lookup, package version lookup,
-  exact capability search metadata, and exact intent search metadata for
-  declared `intentIds`;
+  exact capability search metadata, observed intent catalog metadata, and exact
+  intent search metadata for declared `intentIds`;
 - can be pointed at another host-visible URL with
   `SPECPM_PUBLIC_INDEX_REGISTRY_URL`;
 - can use another accepted package manifest with
@@ -388,7 +392,8 @@ The service:
 This service is intended for local SpecGraph, ContextBuilder, and manual
 ecosystem testing. It is not a remote registry server implementation and does
 not add publish, auth, signing, issue mutation, package installation, or
-package execution behavior.
+package execution behavior. It also does not make observed intent IDs canonical
+or enforce canonical intent governance.
 
 ## Enterprise Remote Registry
 
