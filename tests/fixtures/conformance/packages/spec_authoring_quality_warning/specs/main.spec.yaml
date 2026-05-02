@@ -1,0 +1,50 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: conformance.spec_authoring_quality_warning
+  title: Spec Authoring Quality Warning
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Demonstrate strict authoring warnings for ambiguous IDs, dangling evidence targets, and weak kinds.
+scope:
+  boundedContext: conformance_spec_authoring_quality
+  includes:
+    - Emit authoring quality warnings without validation errors.
+  excludes: []
+provides:
+  capabilities:
+    - id: conformance.spec_authoring_quality_warning
+      role: primary
+      summary: Demonstrate strict authoring quality warnings.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: conformance_input
+      kind: file
+      summary: Reads local fixture data.
+  outbound:
+    - id: conformance_output
+      kind: unknown
+      summary: Uses an intentionally weak interface kind.
+effects:
+  sideEffects:
+    - id: conformance_effect
+      kind: unknown
+      summary: Uses an intentionally weak effect kind.
+constraints:
+  - id: no_execution
+    level: MUST
+    statement: This fixture must not require package code execution.
+evidence:
+  - id: no_execution
+    kind: manual_assertion
+    supports:
+      - metadata.license
+      - provides.capabilities.conformance.spec_authoring_quality_warning
+provenance:
+  sourceConfidence:
+    intent: low
+    boundary: low
+    behavior: low

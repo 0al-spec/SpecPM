@@ -80,6 +80,33 @@ KNOWN_FOREIGN_ARTIFACT_ROLES = {
 }
 KNOWN_CONSTRAINT_LEVELS = {"MUST", "SHOULD", "MAY"}
 KNOWN_CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
+EVIDENCE_STRUCTURAL_SUPPORT_TARGETS = {
+    "metadata.id",
+    "metadata.title",
+    "metadata.version",
+    "metadata.status",
+    "metadata.authors",
+    "intent.summary",
+    "scope",
+    "scope.boundedContext",
+    "scope.includes",
+    "scope.excludes",
+    "provides.capabilities",
+    "requires.capabilities",
+    "interfaces",
+    "interfaces.inbound",
+    "interfaces.outbound",
+    "effects",
+    "effects.sideEffects",
+    "constraints",
+    "evidence",
+    "foreignArtifacts",
+    "implementationBindings",
+    "provenance",
+    "provenance.sourceConfidence",
+    "compatibility",
+    "keywords",
+}
 REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteCapabilitySearch",
     "RemotePackage",
@@ -2798,6 +2825,8 @@ def validate_boundary_spec(
         rel, spec.get("implementationBindings"), root, warnings, errors
     )
     validate_provenance(rel, spec, warnings, errors)
+    validate_boundary_document_ids(rel, spec, warnings)
+    validate_evidence_support_targets(rel, spec, warnings)
     validate_string_list(spec.get("keywords"), "keywords", errors, rel, allow_missing=True)
     return set(provided)
 
@@ -2878,6 +2907,16 @@ def validate_interfaces(
                         f"interfaces.{direction}.{index}.kind",
                     )
                 )
+            elif kind == "unknown":
+                warnings.append(
+                    Issue(
+                        "warning",
+                        "unspecified_interface_kind",
+                        "Interface kind is unknown; use a more specific known kind when possible.",
+                        rel,
+                        f"interfaces.{direction}.{index}.kind",
+                    )
+                )
         warn_duplicates(
             ids,
             "duplicate_interface_id",
@@ -2943,6 +2982,16 @@ def validate_evidence_paths(
                     "warning",
                     "unknown_evidence_kind",
                     f"Unknown evidence kind: {kind}",
+                    rel,
+                    f"evidence.{index}.kind",
+                )
+            )
+        elif kind == "unknown":
+            warnings.append(
+                Issue(
+                    "warning",
+                    "unspecified_evidence_kind",
+                    "Evidence kind is unknown; use a more specific known kind when possible.",
                     rel,
                     f"evidence.{index}.kind",
                 )
@@ -3028,6 +3077,16 @@ def validate_effects(
                     "warning",
                     "unknown_effect_kind",
                     f"Unknown effect kind: {kind}",
+                    rel,
+                    f"effects.sideEffects.{index}.kind",
+                )
+            )
+        elif kind == "unknown":
+            warnings.append(
+                Issue(
+                    "warning",
+                    "unspecified_effect_kind",
+                    "Effect kind is unknown; use a more specific known kind when possible.",
                     rel,
                     f"effects.sideEffects.{index}.kind",
                 )
@@ -3278,6 +3337,153 @@ def validate_provenance(
                     f"provenance.sourceConfidence.{key}",
                 )
             )
+
+
+def validate_boundary_document_ids(
+    rel: str, spec: dict[str, Any], warnings: list[Issue]
+) -> None:
+    entries = collect_boundary_document_id_entries(spec)
+    seen: dict[str, str] = {}
+    warned: set[str] = set()
+    for value, field in entries:
+        if value in seen and value not in warned:
+            warnings.append(
+                Issue(
+                    "warning",
+                    "duplicate_boundary_document_id",
+                    (
+                        "BoundarySpec id is reused in multiple places: "
+                        f"{value} ({seen[value]}, {field})"
+                    ),
+                    rel,
+                    field,
+                )
+            )
+            warned.add(value)
+        else:
+            seen[value] = field
+
+
+def validate_evidence_support_targets(
+    rel: str, spec: dict[str, Any], warnings: list[Issue]
+) -> None:
+    evidence = get_field(spec, "evidence")
+    if not isinstance(evidence, list):
+        return
+    known_targets = collect_evidence_support_targets(spec)
+    for evidence_index, item in enumerate(evidence):
+        if not isinstance(item, dict):
+            continue
+        supports = item.get("supports")
+        if supports is None:
+            continue
+        if not isinstance(supports, list):
+            warnings.append(
+                Issue(
+                    "warning",
+                    "evidence_supports_invalid",
+                    "Evidence supports must be a list when present.",
+                    rel,
+                    f"evidence.{evidence_index}.supports",
+                )
+            )
+            continue
+        for support_index, target in enumerate(supports):
+            field = f"evidence.{evidence_index}.supports.{support_index}"
+            if not isinstance(target, str):
+                warnings.append(
+                    Issue(
+                        "warning",
+                        "evidence_support_target_invalid",
+                        "Evidence support targets must be strings.",
+                        rel,
+                        field,
+                    )
+                )
+                continue
+            if target not in known_targets:
+                warnings.append(
+                    Issue(
+                        "warning",
+                        "evidence_support_target_unknown",
+                        f"Evidence support target is not declared by this BoundarySpec: {target}",
+                        rel,
+                        field,
+                    )
+                )
+
+
+def collect_boundary_document_id_entries(spec: dict[str, Any]) -> list[tuple[str, str]]:
+    entries: list[tuple[str, str]] = []
+    entries.extend(id_entries_from_list(spec.get("constraints"), "constraints"))
+    entries.extend(
+        id_entries_from_list(get_field(spec, "effects.sideEffects"), "effects.sideEffects")
+    )
+    entries.extend(id_entries_from_list(spec.get("evidence"), "evidence"))
+    entries.extend(id_entries_from_list(spec.get("foreignArtifacts"), "foreignArtifacts"))
+    entries.extend(
+        id_entries_from_list(spec.get("implementationBindings"), "implementationBindings")
+    )
+    interfaces = spec.get("interfaces")
+    if isinstance(interfaces, dict):
+        for direction in ("inbound", "outbound"):
+            entries.extend(
+                id_entries_from_list(interfaces.get(direction), f"interfaces.{direction}")
+            )
+    return entries
+
+
+def collect_evidence_support_targets(spec: dict[str, Any]) -> set[str]:
+    targets = set(EVIDENCE_STRUCTURAL_SUPPORT_TARGETS)
+
+    for capability_id in capability_ids(get_field(spec, "provides.capabilities")):
+        targets.add(capability_id)
+        targets.add(f"provides.capabilities.{capability_id}")
+    for capability_id in capability_ids(get_field(spec, "requires.capabilities")):
+        targets.add(capability_id)
+        targets.add(f"requires.capabilities.{capability_id}")
+
+    for value, _field in id_entries_from_list(spec.get("constraints"), "constraints"):
+        add_id_targets(targets, "constraints", value)
+    for value, _field in id_entries_from_list(
+        get_field(spec, "effects.sideEffects"), "effects.sideEffects"
+    ):
+        add_id_targets(targets, "effects", value)
+        add_id_targets(targets, "effects.sideEffects", value)
+    for value, _field in id_entries_from_list(spec.get("evidence"), "evidence"):
+        add_id_targets(targets, "evidence", value)
+    for value, _field in id_entries_from_list(spec.get("foreignArtifacts"), "foreignArtifacts"):
+        add_id_targets(targets, "foreignArtifacts", value)
+    for value, _field in id_entries_from_list(
+        spec.get("implementationBindings"), "implementationBindings"
+    ):
+        add_id_targets(targets, "implementationBindings", value)
+
+    interfaces = spec.get("interfaces")
+    if isinstance(interfaces, dict):
+        for direction in ("inbound", "outbound"):
+            for value, _field in id_entries_from_list(
+                interfaces.get(direction), f"interfaces.{direction}"
+            ):
+                add_id_targets(targets, "interfaces", value)
+                add_id_targets(targets, f"interfaces.{direction}", value)
+
+    return targets
+
+
+def id_entries_from_list(items: Any, field_prefix: str) -> list[tuple[str, str]]:
+    if not isinstance(items, list):
+        return []
+    entries: list[tuple[str, str]] = []
+    for index, item in enumerate(items):
+        if isinstance(item, dict) and isinstance(item.get("id"), str):
+            entries.append((item["id"], f"{field_prefix}.{index}.id"))
+    return entries
+
+
+def add_id_targets(targets: set[str], prefix: str, value: str) -> None:
+    targets.add(value)
+    targets.add(f"{prefix}.{value}")
 
 
 def iter_manifest_spec_paths(manifest: dict[str, Any], errors: list[Issue]) -> list[str]:

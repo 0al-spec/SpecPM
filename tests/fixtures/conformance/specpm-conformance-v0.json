@@ -62,6 +62,21 @@
       }
     },
     {
+      "id": "validate.spec_authoring_quality_warning",
+      "kind": "validate_package",
+      "package": "tests/fixtures/conformance/packages/spec_authoring_quality_warning",
+      "expected": {
+        "status": "warning_only",
+        "warning_codes": [
+          "duplicate_boundary_document_id",
+          "evidence_support_target_unknown",
+          "manual_assertion_only_evidence",
+          "unspecified_effect_kind",
+          "unspecified_interface_kind"
+        ]
+      }
+    },
+    {
       "id": "registry.yank_blocks_add_and_unyank_restores_add",
       "kind": "registry_lifecycle",
       "package": "examples/email_tools",

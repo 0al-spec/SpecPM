@@ -1,7 +1,7 @@
 # SpecPM Conformance Artifacts
 
 Status: Draft
-Updated: 2026-04-28
+Updated: 2026-05-02
 Scope: local SpecPM package-manager behavior and post-MVP registry contract payloads
 
 ## Purpose
@@ -133,6 +133,8 @@ The initial conformance suite covers:
 - a missing referenced BoundarySpec;
 - a spec path escape;
 - a warning-only manual-assertion evidence package;
+- a warning-only strict authoring quality package for dangling evidence
+  support targets, ambiguous IDs, and weak `unknown` kinds;
 - local registry yank and unyank behavior.
 - remote registry status, package index, package metadata, package version,
   exact capability search, yanked version, deprecated version, not-found error,

@@ -981,24 +981,24 @@ Acceptance:
 
 ## Phase 40. Spec Authoring Quality Gates
 
-- [ ] Add strict lint for evidence `supports` references so dangling targets
+- [x] Add strict lint for evidence `supports` references so dangling targets
   such as non-existent BoundarySpec fields are reported before review.
-- [ ] Define the allowed target forms for evidence support references:
+- [x] Define the allowed target forms for evidence support references:
   capability IDs, constraint IDs, effect IDs, interface IDs, implementation
   binding IDs, and explicitly permitted structural paths.
-- [ ] Add document-scoped duplicate ID detection across constraints, evidence,
+- [x] Add document-scoped duplicate ID detection across constraints, evidence,
   interfaces, effects, implementation bindings, and foreign artifacts.
-- [ ] Warn when `kind: unknown` is used for interfaces, evidence, or effects
+- [x] Warn when `kind: unknown` is used for interfaces, evidence, or effects
   where a more specific known enum value is available.
-- [ ] Update conformance fixtures and JSON validation reports for the new
+- [x] Update conformance fixtures and JSON validation reports for the new
   lint warnings or errors.
-- [ ] Update `specpm-author-spec` and `specpm-review-spec` skill checklists so
+- [x] Update `specpm-author-spec` and `specpm-review-spec` skill checklists so
   agents check evidence references, duplicate IDs, weak enum choices, and
   unsupported implementation claims before opening external PRs.
-- [ ] Add an external self-spec PR checklist covering motivation text,
+- [x] Add an external self-spec PR checklist covering motivation text,
   no-runtime-change scope, changeset/versioning policy, validation commands,
   and pack smoke.
-- [ ] Document that AI review suggestions must be checked against the current
+- [x] Document that AI review suggestions must be checked against the current
   SpecPM enum/schema contract before being applied.
 
 Acceptance:

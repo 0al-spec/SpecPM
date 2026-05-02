@@ -16,7 +16,8 @@ substrate.
 Implemented surfaces:
 
 - local `SpecPackage` and `BoundarySpec` validation, inspection, deterministic
-  packing, structural diff, and local registry operations;
+  packing, structural diff, strict spec-authoring warnings, and local registry
+  operations;
 - exact capability search and deterministic local add/lock behavior;
 - SpecGraph inbox inspection for exported package candidates;
 - read-only remote `/v0` metadata client commands;
@@ -63,8 +64,6 @@ Tasks:
 - keep DocC, README, and landing page consistent about the static registry
   pipeline and public alpha state;
 - keep the self-spec aligned with public repository surfaces;
-- add stricter spec-authoring lint for evidence references, ambiguous IDs,
-  weak enum choices, and external self-spec review quality;
 - run local Docker and Pages smoke checks for registry-facing changes.
 
 Success criteria:
@@ -214,15 +213,12 @@ Package content can describe desired outputs. Package content cannot command the
 
 1. `docs: normalize roadmap and workplan status`
    - keep this roadmap, DocC Roadmap, and Workplan aligned.
-2. `validator: add strict spec authoring lint`
-   - catch dangling evidence `supports` targets, ambiguous IDs, weak
-     `unknown` kinds, and external self-spec PR hygiene before review bots do.
-3. `operator: document accepted package maintainer checklist`
+2. `operator: document accepted package maintainer checklist`
    - define labels, review steps, and manifest PR expectations.
-4. `operator: prototype accepted manifest PR helper`
+3. `operator: prototype accepted manifest PR helper`
    - prepare a reviewed manifest update from a validated issue without
      publishing automatically.
-5. `docs: add downstream consumer registry guide`
+4. `docs: add downstream consumer registry guide`
    - show SpecGraph, ContextBuilder, and SpecNode read-only consumption flows.
-6. `design: remote package acquisition boundary`
+5. `design: remote package acquisition boundary`
    - decide fetch/cache/add semantics before adding remote package acquisition.

@@ -27,7 +27,12 @@
   relevant.
 - `evidence[].path` points to files that exist or is intentionally documented
   as external evidence.
+- `evidence[].supports` points to real BoundarySpec targets; avoid dangling
+  paths such as `metadata.license` when the field only exists in the manifest.
 - `implementationBindings` point to real owned/border files.
+- IDs are not reused ambiguously across constraints, evidence, interfaces,
+  effects, implementation bindings, or foreign artifacts.
+- `kind: unknown` is used only when no more specific known enum value applies.
 
 ## Boundary Red Flags
 
@@ -45,6 +50,13 @@ Run at least:
 
 ```bash
 PYTHONPATH=src python3 -m specpm.cli validate . --json
+```
+
+For external self-spec PRs, also prefer:
+
+```bash
+PYTHONPATH=src python3 -m specpm.cli inspect . --json
+PYTHONPATH=src python3 -m specpm.cli pack . -o /tmp/package.specpm.tgz --json
 ```
 
 For SpecPM repository changes, also prefer:
