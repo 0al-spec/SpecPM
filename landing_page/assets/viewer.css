@@ -395,7 +395,7 @@ h3 {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 0.84fr) minmax(360px, 0.66fr);
+  grid-template-columns: minmax(0, 0.84fr) minmax(360px, 1fr);
   gap: 18px;
   align-items: start;
 }
@@ -554,7 +554,7 @@ h3 {
 
 .json-panel .panel-title {
   color: rgba(255, 255, 255, 0.62);
-  text-transform: none;
+  text-transform: uppercase;
 }
 
 .json-panel .btn.small {
