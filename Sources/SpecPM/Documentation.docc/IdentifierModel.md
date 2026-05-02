@@ -63,6 +63,22 @@ provides:
 SpecPM validates and indexes these mappings exactly. It does not infer them
 from text, embeddings, or package names.
 
+SpecPackage manifests may also expose the backed intents as first-class index
+metadata:
+
+```yaml
+index:
+  provides:
+    capabilities:
+      - document_conversion.email_to_markdown
+    intents:
+      - intent.document_conversion.email_to_markdown
+```
+
+The manifest `intents` list is a registry summary. The BoundarySpec
+`intentIds` mapping remains the reviewable source of truth for which concrete
+capability satisfies each intent.
+
 ## Commands
 
 ```bash

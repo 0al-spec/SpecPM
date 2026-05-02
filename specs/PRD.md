@@ -227,10 +227,20 @@ Optional capability metadata:
 
 - `provides.capabilities[*].intentIds`
 
+Optional manifest index metadata:
+
+- `index.provides.intents`
+
 `intentIds` map package-owned capabilities to canonical package-neutral
 `intent.*` IDs. SpecPM validates their shape and can index them for exact
 lookup, but it does not infer them from natural language and does not treat them
 as semantic authority.
+
+`index.provides.intents` is a first-class manifest summary of the package's
+provided canonical intents. When present, it must match the set of
+BoundarySpec-declared capability `intentIds`. The manifest summary is for
+registry discovery; the BoundarySpec capability mapping remains the source of
+truth for which concrete package-owned capability satisfies each intent.
 
 The accepted authoring format is restricted YAML using JSON-compatible maps,
 arrays, strings, numbers, booleans, and null values. Anchors, aliases, custom

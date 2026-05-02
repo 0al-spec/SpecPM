@@ -27,6 +27,8 @@ traceability, boundary discipline, and validation stability over prose polish.
    - `specpm.yaml` references existing spec paths.
    - Manifest `index.provides.capabilities` is a subset of capabilities
      declared by referenced BoundarySpecs.
+   - Manifest `index.provides.intents`, when present, is exactly backed by
+     BoundarySpec capability `intentIds`.
    - Package ID, capability IDs, and SemVer are stable and valid.
    - Capability `intentIds`, when present, are package-neutral `intent.*` IDs
      and do not reuse provider or repository namespaces.

@@ -334,6 +334,8 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
     warn_duplicates(spec_ids, "duplicate_spec_id", "Duplicate BoundarySpec id", warnings)
 
     manifest_capabilities = []
+    manifest_intents = []
+    declared_intents = sorted({mapping["intent_id"] for mapping in intent_mappings})
     if manifest is not None:
         manifest_capabilities = capability_ids(get_field(manifest, "index.provides.capabilities"))
         for capability_id in manifest_capabilities:
@@ -347,6 +349,35 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
                         "index.provides.capabilities",
                     )
                 )
+        manifest_intents_raw = get_field(manifest, "index.provides.intents")
+        manifest_intents = intent_ids(manifest_intents_raw)
+        if isinstance(manifest_intents_raw, list):
+            declared_intent_set = set(declared_intents)
+            manifest_intent_set = set(manifest_intents)
+            for intent_id in manifest_intents:
+                if intent_id not in declared_intent_set:
+                    errors.append(
+                        Issue(
+                            "error",
+                            "manifest_intent_not_declared",
+                            "Manifest intent is not declared by any BoundarySpec "
+                            f"capability intentIds: {intent_id}",
+                            "specpm.yaml",
+                            "index.provides.intents",
+                        )
+                    )
+            for intent_id in declared_intents:
+                if intent_id not in manifest_intent_set:
+                    errors.append(
+                        Issue(
+                            "error",
+                            "manifest_intent_missing",
+                            "BoundarySpec capability intentIds are missing from "
+                            f"manifest index.provides.intents: {intent_id}",
+                            "specpm.yaml",
+                            "index.provides.intents",
+                        )
+                    )
 
     return validation_report(
         errors,
@@ -355,6 +386,7 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
         sorted(set(manifest_capabilities or provided_by_specs)),
         checked_files,
         intent_mappings,
+        manifest_intents if manifest_intents else declared_intents,
     )
 
 
@@ -375,7 +407,7 @@ def inspect_package(package_dir: Path) -> dict[str, Any]:
             boundary_specs.append(summarize_boundary_spec(relative_path(root, resolved), spec))
 
     package_summary = summarize_manifest(manifest)
-    package_summary["intents"] = sorted(
+    declared_intents = sorted(
         {
             intent_id
             for spec in boundary_specs
@@ -383,6 +415,8 @@ def inspect_package(package_dir: Path) -> dict[str, Any]:
             if isinstance(intent_id, str)
         }
     )
+    manifest_intents = intent_ids(get_field(manifest, "index.provides.intents"))
+    package_summary["intents"] = sorted(set(manifest_intents or declared_intents))
     package_summary["intent_mappings"] = normalize_intent_mappings(
         [
             mapping
@@ -2993,6 +3027,21 @@ def validate_manifest(
         "Duplicate manifest capability",
         warnings,
     )
+    manifest_intent_ids = validate_intent_entries(
+        get_field(manifest, "index.provides.intents"),
+        errors,
+        "specpm.yaml",
+        "index.provides.intents",
+        invalid_list_code="manifest_intents_invalid",
+        invalid_entry_code="manifest_intent_entry_invalid",
+        allow_missing=True,
+    )
+    warn_duplicates(
+        manifest_intent_ids,
+        "duplicate_manifest_intent",
+        "Duplicate manifest intent",
+        warnings,
+    )
 
     validate_capability_entries(
         get_field(manifest, "index.requires.capabilities"),
@@ -3832,7 +3881,7 @@ def summarize_manifest(manifest: dict[str, Any] | None) -> dict[str, Any]:
         "license": metadata.get("license"),
         "capabilities": capability_ids(get_field(manifest, "index.provides.capabilities")),
         "required_capabilities": capability_ids(get_field(manifest, "index.requires.capabilities")),
-        "intents": [],
+        "intents": intent_ids(get_field(manifest, "index.provides.intents")),
         "intent_mappings": [],
         "compatibility": compatibility if isinstance(compatibility, dict) else {},
         "preview_only": manifest.get("preview_only", False),
@@ -4374,6 +4423,7 @@ def build_index_entry(
             for mapping in capability_intent_mappings(get_field(spec, "provides.capabilities"))
         ]
     )
+    manifest_intents = intent_ids(get_field(manifest, "index.provides.intents"))
     return {
         "package_id": metadata.get("id"),
         "name": metadata.get("name"),
@@ -4382,7 +4432,9 @@ def build_index_entry(
         "license": metadata.get("license"),
         "provided_capabilities": sorted(validation.get("capabilities", [])),
         "required_capabilities": required_capabilities,
-        "provided_intents": sorted({item["intent_id"] for item in intent_mappings}),
+        "provided_intents": sorted(
+            set(manifest_intents or [item["intent_id"] for item in intent_mappings])
+        ),
         "intent_mappings": intent_mappings,
         "compatibility": manifest.get("compatibility", {}),
         "evidence_summary": summarize_evidence_entries(evidence_entries),
@@ -5129,8 +5181,11 @@ def validation_report(
     capabilities: list[str],
     checked_files: list[str],
     intent_mappings: list[dict[str, str]] | None = None,
+    intents: list[str] | None = None,
 ) -> dict[str, Any]:
     mappings = normalize_intent_mappings(intent_mappings or [])
+    reported_intents = set(intents or [])
+    reported_intents.update(item["intent_id"] for item in mappings)
     status = "invalid" if errors else "warning_only" if warnings else "valid"
     return {
         "status": status,
@@ -5140,7 +5195,7 @@ def validation_report(
         "warnings": [issue.to_dict() for issue in warnings],
         "package_identity": package_identity(manifest),
         "capabilities": sorted(set(capabilities)),
-        "intents": sorted({item["intent_id"] for item in mappings}),
+        "intents": sorted(reported_intents),
         "intent_mappings": mappings,
         "checked_files": sorted(checked_files),
     }
@@ -5321,6 +5376,12 @@ def capability_ids(value: Any) -> list[str]:
     return ids
 
 
+def intent_ids(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str)]
+
+
 def capability_intent_mappings(value: Any) -> list[dict[str, str]]:
     if not isinstance(value, list):
         return []
@@ -5382,6 +5443,47 @@ def validate_capability_intent_ids(
             validate_intent_id(
                 intent_id, "intent_id_invalid", errors, file, f"{item_field}.{intent_index}"
             )
+
+
+def validate_intent_entries(
+    value: Any,
+    errors: list[Issue],
+    file: str,
+    field: str,
+    *,
+    invalid_list_code: str,
+    invalid_entry_code: str,
+    allow_missing: bool = False,
+) -> list[str]:
+    if value is None and allow_missing:
+        return []
+    if not isinstance(value, list):
+        errors.append(
+            Issue(
+                "error",
+                invalid_list_code,
+                f"{field} must be a list of intent IDs.",
+                file,
+                field,
+            )
+        )
+        return []
+    ids: list[str] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, str):
+            errors.append(
+                Issue(
+                    "error",
+                    invalid_entry_code,
+                    f"{field} entries must be intent ID strings.",
+                    file,
+                    f"{field}.{index}",
+                )
+            )
+            continue
+        ids.append(item)
+        validate_intent_id(item, "intent_id_invalid", errors, file, f"{field}.{index}")
+    return ids
 
 
 def validate_id(value: Any, code: str, errors: list[Issue], file: str) -> None:

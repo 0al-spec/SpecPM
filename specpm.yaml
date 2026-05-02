@@ -54,6 +54,9 @@ index:
       - specpm.agent_skills.spec_review
       - specpm.cli.public_surface
       - specpm.public_api.core_functions
+    intents:
+      - intent.registry.intent_lookup
+      - intent.specification.identifier_model
   requires:
     capabilities: []
 compatibility:

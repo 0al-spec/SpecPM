@@ -1,9 +1,9 @@
 {
   "archive": "<tmp>/email_tools.specpm.tgz",
-  "archive_size": 1059,
+  "archive_size": 1064,
   "digest": {
     "algorithm": "sha256",
-    "value": "4b97ac7f7f45fd155d6a5db9f5b9836cacc2440c7aee5e98406057bdd146b1d6"
+    "value": "a0d490e28e6605ef6ed78701d2c372fb5c9d335e3edef8ae59a93bd2b8f6599e"
   },
   "errors": [],
   "format": "specpm-tar-gzip-v0",

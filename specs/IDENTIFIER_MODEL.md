@@ -134,6 +134,35 @@ rules.
 SpecPM validates that each listed intent ID is a normal identifier starting with
 `intent.`.
 
+## Manifest Intent Summary
+
+SpecPackage manifests may expose the package-neutral intents as first-class
+index metadata:
+
+```yaml
+index:
+  provides:
+    capabilities:
+      - specnode.auth.enterprise_sso
+    intents:
+      - intent.identity.enterprise_sso
+      - intent.identity.oidc_login
+```
+
+`index.provides.intents` is an index summary, not the source of truth for the
+capability relationship. Each manifest intent must be backed by at least one
+BoundarySpec capability `intentIds` entry, and when the manifest field is
+present it must include every declared capability intent.
+
+This keeps intent IDs first-class for registry consumers while preserving the
+reviewable mapping:
+
+```text
+intent.identity.enterprise_sso
+        |
+        +-- specnode.auth.enterprise_sso
+```
+
 ## Resolution Flow
 
 SpecPM does not convert plain text to intents. That belongs to ContextBuilder,
@@ -186,6 +215,8 @@ Package content can describe desired outputs. Package content cannot command the
 Current support is exact and metadata-only:
 
 - optional capability-level `intentIds`;
+- optional manifest-level `index.provides.intents` backed by capability
+  `intentIds`;
 - validation that intent IDs start with `intent.`;
 - local index metadata for exact intent lookup;
 - generated public `/v0/intents/{intent_id}/packages` metadata;

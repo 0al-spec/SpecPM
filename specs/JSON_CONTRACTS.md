@@ -100,6 +100,11 @@ ValidationReport = {
 
 Golden fixture: `tests/fixtures/golden/validate-email-tools.json`.
 
+`intents` is the package's first-class provided intent summary. If the manifest
+contains `index.provides.intents`, that list must match the BoundarySpec-backed
+capability `intentIds`. If the manifest omits it, SpecPM reports the computed
+set of declared capability intents.
+
 ## Inspection Report
 
 Command:

@@ -49,6 +49,7 @@ scope:
     - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
     - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
     - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
+    - Validate first-class manifest intent summaries through `index.provides.intents` backed by BoundarySpec capability `intentIds`.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
     - Build and deploy DocC documentation for the package contract.
     - Provide experimental Agent Skills for authoring and reviewing SpecPM package specs.
@@ -393,6 +394,9 @@ constraints:
   - id: exact_intent_lookup_metadata_only
     level: MUST
     statement: Intent lookup must use exact declared intentIds and must not infer package meaning from natural language or embeddings.
+  - id: manifest_intents_backed_by_capabilities
+    level: MUST
+    statement: Manifest index.provides.intents entries must be backed by BoundarySpec capability intentIds when present.
   - id: no_semantic_authority
     level: MUST
     statement: SpecPM must not treat LLM, embedding, vector search, or RAG output as authoritative package meaning.
@@ -443,6 +447,7 @@ evidence:
       - scope.includes
       - scope.excludes
       - provides.capabilities
+      - manifest_intents_backed_by_capabilities
       - specpm.registry.intent_search
       - specpm.intent.identifier_model
   - id: json_contracts
@@ -645,6 +650,7 @@ evidence:
       - specpm.intent.identifier_model
       - specpm.registry.intent_search
       - exact_intent_lookup_metadata_only
+      - manifest_intents_backed_by_capabilities
       - no_semantic_authority
   - id: derived_boundary
     kind: adr
@@ -669,6 +675,7 @@ evidence:
       - specpm.registry.remote_readonly_client
       - specpm.registry.public_observation_report
       - specpm.registry.intent_search
+      - manifest_intents_backed_by_capabilities
   - id: core_tests
     kind: test
     path: tests/test_core.py
@@ -678,6 +685,7 @@ evidence:
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.public_observation_report
       - specpm.registry.intent_search
+      - manifest_intents_backed_by_capabilities
   - id: docc_overview
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/SpecPM.md
@@ -693,6 +701,7 @@ evidence:
       - specpm.intent.identifier_model
       - specpm.registry.intent_search
       - exact_intent_lookup_metadata_only
+      - manifest_intents_backed_by_capabilities
   - id: docc_static_registry_pipeline
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md

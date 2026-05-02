@@ -10,6 +10,8 @@
 - Every `specs[].path` exists and stays inside package root.
 - Every `index.provides.capabilities[]` is declared by a referenced
   BoundarySpec.
+- `index.provides.intents[]`, when present, exactly summarizes the
+  BoundarySpec-backed `provides.capabilities[].intentIds` set.
 - No unknown non-extension top-level fields are introduced accidentally.
 
 ## BoundarySpec Checks
