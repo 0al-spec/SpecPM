@@ -56,6 +56,10 @@ executed.
 - `error_codes`
 - `warning_codes`
 
+Validation fixtures include strict authoring quality warnings for dangling
+evidence support targets, ambiguous document IDs, and weak `kind: unknown`
+entries.
+
 `registry_lifecycle` checks local index, yank, exact search visibility, add
 rejection for yanked packages, unyank, and add success.
 

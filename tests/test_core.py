@@ -3507,6 +3507,54 @@ implementationBindings:
     assert "implementation_binding_path_missing" in warning_codes
 
 
+def test_validator_warns_on_spec_authoring_quality_gaps(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "authoring-quality")
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["interfaces"]["outbound"].append(
+        {
+            "id": "review_output",
+            "kind": "unknown",
+            "summary": "Review output with an intentionally weak kind.",
+        }
+    )
+    spec["effects"]["sideEffects"].append(
+        {
+            "id": "review_effect",
+            "kind": "unknown",
+            "summary": "Effect with an intentionally weak kind.",
+        }
+    )
+    spec["evidence"][0]["id"] = "no_network_access_required"
+    spec["evidence"][0]["supports"] = [
+        "metadata.license",
+        "provides.capabilities.document_conversion.email_to_markdown",
+    ]
+    spec["evidence"].append(
+        {
+            "id": "review_unknown_kind",
+            "kind": "unknown",
+            "supports": ["provides.capabilities"],
+        }
+    )
+    write_yaml_file(spec_path, spec)
+
+    report = validate_package(package)
+
+    assert report["status"] == "warning_only"
+    warning_codes = issue_codes(report["warnings"])
+    assert "duplicate_boundary_document_id" in warning_codes
+    assert "evidence_support_target_unknown" in warning_codes
+    assert "unspecified_evidence_kind" in warning_codes
+    assert "unspecified_effect_kind" in warning_codes
+    assert "unspecified_interface_kind" in warning_codes
+    assert not any(
+        issue["code"] == "evidence_support_target_unknown"
+        and issue["message"].endswith("provides.capabilities.document_conversion.email_to_markdown")
+        for issue in report["warnings"]
+    )
+
+
 def test_pack_is_deterministic(tmp_path: Path) -> None:
     first = tmp_path / "first.specpm.tgz"
     second = tmp_path / "second.specpm.tgz"

@@ -177,13 +177,20 @@
         "version": "0.1.0"
       },
       "status": "warning_only",
-      "warning_count": 1,
+      "warning_count": 2,
       "warnings": [
         {
           "code": "preview_only_package",
           "field": "preview_only",
           "file": "specpm.yaml",
           "message": "Package is marked preview_only and should be reviewed before publication.",
+          "severity": "warning"
+        },
+        {
+          "code": "unspecified_interface_kind",
+          "field": "interfaces.inbound.0.kind",
+          "file": "specs/main.spec.yaml",
+          "message": "Interface kind is unknown; use a more specific known kind when possible.",
           "severity": "warning"
         }
       ]

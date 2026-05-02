@@ -59,6 +59,19 @@ instructions or generated PRDs.
      `specpm validate <package-dir> --json`
    - Fix validation errors. Treat warnings as review items and document why
      they remain if not fixed.
+   - For external self-spec PRs, also run inspect and pack smoke, then include
+     a short motivation, no-runtime-change scope, and changeset/versioning
+     policy in the PR description.
+
+7. Check authoring quality before PR.
+   - Evidence `supports` targets should point to actual capability IDs,
+     constraint IDs, interface IDs, effect IDs, implementation binding IDs, or
+     allowed structural BoundarySpec fields.
+   - Avoid document-scoped duplicate IDs across evidence, constraints,
+     interfaces, effects, implementation bindings, and foreign artifacts.
+   - Avoid `kind: unknown` when a more specific known enum value applies.
+   - Verify AI review suggestions against the current SpecPM schema and enum
+     contract before applying them.
 
 ## Boundaries
 

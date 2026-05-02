@@ -1,7 +1,7 @@
 # SpecPM Roadmap
 
 Status: Public alpha roadmap
-Updated: 2026-04-30
+Updated: 2026-05-02
 
 SpecPM is the package substrate for SpecGraph. It packages, validates, indexes,
 inspects, preserves, and exposes reusable specification intent. It does not own
@@ -16,7 +16,8 @@ substrate.
 Implemented surfaces:
 
 - local `SpecPackage` and `BoundarySpec` validation, inspection, deterministic
-  packing, structural diff, and local registry operations;
+  packing, structural diff, strict spec-authoring warnings, and local registry
+  operations;
 - exact capability search and deterministic local add/lock behavior;
 - exact `intent.*` lookup over explicit capability-to-intent mappings;
 - SpecGraph inbox inspection for exported package candidates;

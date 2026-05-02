@@ -38,6 +38,12 @@ traceability, boundary discipline, and validation stability over prose polish.
    - Excludes protect adjacent responsibilities and future tracks.
    - Interfaces, constraints, effects, evidence, provenance, and
      implementation bindings are grounded in files or docs.
+   - Evidence `supports` targets resolve to real capabilities, constraints,
+     effects, interfaces, implementation bindings, foreign artifacts, or
+     allowed structural fields.
+   - IDs are not reused ambiguously across evidence, constraints, interfaces,
+     effects, implementation bindings, and foreign artifacts.
+   - `kind: unknown` is justified or replaced with a specific known enum value.
 
 5. Check boundary risks.
    - SpecPM must not become a PRD generator, artifact eval runtime, prompt
@@ -51,6 +57,8 @@ traceability, boundary discipline, and validation stability over prose polish.
    - If a PRD/Workplan gap is discovered, update those docs with the actual
      boundary and status.
    - Re-run validation and relevant tests after edits.
+   - Check AI review suggestions against the current SpecPM schema and enum
+     contract before applying them.
 
 ## Output Style
 

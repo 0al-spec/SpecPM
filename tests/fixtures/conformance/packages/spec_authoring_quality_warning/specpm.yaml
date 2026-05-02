@@ -1,0 +1,21 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: conformance.spec_authoring_quality_warning
+  name: Spec Authoring Quality Warning
+  version: 0.1.0
+  summary: Conformance package that validates with strict spec authoring quality warnings.
+  license: MIT
+specs:
+  - path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+      - conformance.spec_authoring_quality_warning
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - any
+  languages: []
+foreignArtifacts: []

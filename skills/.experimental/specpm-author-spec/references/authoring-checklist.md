@@ -98,6 +98,17 @@ Prefer evidence that a reviewer can inspect:
 Avoid unsupported claims such as "production-ready", "secure", or "complete"
 unless the repository evidence directly supports them.
 
+Evidence `supports` entries should reference real targets in the BoundarySpec:
+capability IDs, constraint IDs, interface IDs, effect IDs, implementation
+binding IDs, foreign artifact IDs, or explicitly supported structural fields
+such as `intent.summary`, `scope.includes`, and `provides.capabilities`.
+Do not point BoundarySpec evidence at fields that only exist in the manifest,
+such as `metadata.license`.
+
+Keep IDs unambiguous across document sections. Do not reuse the same id for an
+evidence entry and a constraint, interface, effect, implementation binding, or
+foreign artifact.
+
 ## Capability IDs
 
 Use lowercase dotted IDs:
@@ -131,5 +142,11 @@ Those belong in package metadata and capability IDs.
 
 ```bash
 PYTHONPATH=src python3 -m specpm.cli validate . --json
+PYTHONPATH=src python3 -m specpm.cli inspect . --json
+PYTHONPATH=src python3 -m specpm.cli pack . -o /tmp/package.specpm.tgz --json
 specpm validate <package-dir> --json
 ```
+
+For PRs to external repositories, include a short motivation paragraph, state
+that runtime package behavior is unchanged when applicable, and explain whether
+a changeset or version bump is required.

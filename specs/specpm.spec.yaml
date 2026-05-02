@@ -377,10 +377,10 @@ effects:
     - id: read_public_index_source_repositories
       kind: network_read
       summary: Checks out pinned public Git package sources listed in the accepted public-index manifest for static generation.
-    - id: no_package_execution
-      kind: unknown
-      summary: Package content is treated as data and is not executed by SpecPM core.
 constraints:
+  - id: mit_license
+    level: MUST
+    statement: SpecPM package metadata declares the MIT license and the repository includes the MIT license text.
   - id: package_content_untrusted
     level: MUST
     statement: SpecPM must treat package content as untrusted data.
@@ -416,7 +416,7 @@ evidence:
     kind: documentation
     path: LICENSE
     supports:
-      - metadata.license
+      - mit_license
   - id: readme
     kind: documentation
     path: README.md
@@ -545,12 +545,12 @@ evidence:
     path: .github/workflows/package-submission-check.yml
     supports:
       - specpm.registry.index_submission_flow
-  - id: index_submission_validator
+  - id: index_submission_validator_source
     kind: source
     path: src/specpm/index_submission.py
     supports:
       - specpm.registry.index_submission_flow
-  - id: public_index_generator
+  - id: public_index_generator_source
     kind: source
     path: src/specpm/public_index.py
     supports:
@@ -560,7 +560,7 @@ evidence:
       - specpm.registry.local_dev_service
       - specpm.registry.remote_api_contract
       - specpm.registry.intent_search
-  - id: public_index_accepted_manifest
+  - id: public_index_accepted_manifest_file
     kind: package_manifest
     path: public-index/accepted-packages.yml
     supports:
