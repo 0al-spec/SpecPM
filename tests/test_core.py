@@ -89,6 +89,9 @@ COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
 LANDING_PAGE = ROOT / "landing_page/index.html"
 REGISTRY_VIEWER_PAGE = ROOT / "landing_page/viewer.html"
+REGISTRY_VIEWER_DESIGN_CSS = ROOT / "landing_page/assets/specpm-design.css"
+REGISTRY_VIEWER_CSS = ROOT / "landing_page/assets/viewer.css"
+REGISTRY_VIEWER_JS = ROOT / "landing_page/assets/viewer.js"
 SPECNODE_MAIN_REVISION = "9b6046777723435d94d66d4149fe5e9a6c52f604"
 ADD_SPECPACKAGES_ISSUE_URL = (
     "https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml"
@@ -566,6 +569,9 @@ def test_add_specpackages_issue_template_matches_public_index_contract() -> None
 def test_public_index_submission_entrypoints_are_user_visible() -> None:
     landing = LANDING_PAGE.read_text(encoding="utf-8")
     registry_viewer = REGISTRY_VIEWER_PAGE.read_text(encoding="utf-8")
+    registry_viewer_design_css = REGISTRY_VIEWER_DESIGN_CSS.read_text(encoding="utf-8")
+    registry_viewer_css = REGISTRY_VIEWER_CSS.read_text(encoding="utf-8")
+    registry_viewer_js = REGISTRY_VIEWER_JS.read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     public_alpha = PUBLIC_ALPHA_DOC.read_text(encoding="utf-8")
     index_flow = (ROOT / "specs/INDEX_SUBMISSION_FLOW.md").read_text(encoding="utf-8")
@@ -592,12 +598,20 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "https://0al-spec.github.io/SpecPM/viewer/" in landing
     assert "Live public registry viewer" in readme
     assert "https://0al-spec.github.io/SpecPM/viewer/" in readme
+    assert '<link rel="stylesheet" href="./assets/specpm-design.css" />' in landing
+    assert '<link rel="stylesheet" href="./assets/specpm-design.css" />' in registry_viewer
+    assert '<link rel="stylesheet" href="./assets/viewer.css" />' in registry_viewer
+    assert '<script src="./assets/viewer.js" defer></script>' in registry_viewer
     assert "Static Registry Viewer" in registry_viewer
-    assert "GET /v0/packages/{package_id}/versions/{version}" in registry_viewer
-    assert "GET /v0/capabilities/{capability_id}/packages" in registry_viewer
-    assert "GET /v0/intents/{intent_id}/packages" in registry_viewer
-    assert 'new URL("../v0/", window.location.href)' in registry_viewer
-    assert "https://0al-spec.github.io/SpecPM/v0/" in registry_viewer
+    assert "SpecPM Registry Viewer" in registry_viewer
+    assert "Instrument Serif" in registry_viewer_design_css
+    assert ".brand-mark" in registry_viewer_design_css
+    assert ".json-panel" in registry_viewer_css
+    assert "GET /v0/packages/{package_id}/versions/{version}" in registry_viewer_js
+    assert "GET /v0/capabilities/{capability_id}/packages" in registry_viewer_js
+    assert "GET /v0/intents/{intent_id}/packages" in registry_viewer_js
+    assert 'new URL("../v0/", window.location.href)' in registry_viewer_js
+    assert "https://0al-spec.github.io/SpecPM/v0/" in registry_viewer_js
 
     assert "<doc:AddSpecPackage>" in docc_overview
     assert "<doc:StaticRegistryPipeline>" in docc_overview
@@ -930,6 +944,19 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     copy_viewer = steps_by_name["Copy registry viewer"]
     assert "mkdir -p ./.docc-build/viewer" in copy_viewer["run"]
     assert "cp landing_page/viewer.html ./.docc-build/viewer/index.html" in (copy_viewer["run"])
+    assert "mkdir -p ./.docc-build/viewer/assets" in copy_viewer["run"]
+    assert (
+        "cp landing_page/assets/specpm-design.css ./.docc-build/viewer/assets/specpm-design.css"
+        in copy_viewer["run"]
+    )
+    assert (
+        "cp landing_page/assets/viewer.css ./.docc-build/viewer/assets/viewer.css"
+        in (copy_viewer["run"])
+    )
+    assert (
+        "cp landing_page/assets/viewer.js ./.docc-build/viewer/assets/viewer.js"
+        in (copy_viewer["run"])
+    )
 
     upload = steps_by_name["Upload artifact"]
     assert upload["with"]["path"] == "./.docc-build"

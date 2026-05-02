@@ -48,6 +48,10 @@ docs-build:
 		--hosting-base-path SpecPM
 	mkdir -p ./.docc-build/viewer
 	cp landing_page/viewer.html ./.docc-build/viewer/index.html
+	mkdir -p ./.docc-build/viewer/assets
+	cp landing_page/assets/specpm-design.css ./.docc-build/viewer/assets/specpm-design.css
+	cp landing_page/assets/viewer.css ./.docc-build/viewer/assets/viewer.css
+	cp landing_page/assets/viewer.js ./.docc-build/viewer/assets/viewer.js
 
 public-index-generate:
 	PYTHONPATH=src python3 -m specpm.cli public-index generate \

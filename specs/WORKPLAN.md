@@ -1095,12 +1095,15 @@ Acceptance:
 
 ## Phase 44. Static Public Registry Viewer
 
-- [x] Add a static HTML/CSS/JS viewer for the generated `/v0` registry API.
+- [x] Add a static HTML/CSS/JS viewer bundle for the generated `/v0`
+  registry API.
 - [x] Let the viewer load registry root, status, package index, package
   metadata, package versions, capability reverse lookups, observed intents, and
   intent package matches.
 - [x] Serve the viewer from the GitHub Pages artifact at `/viewer/` alongside
   DocC documentation and generated `/v0` metadata.
+- [x] Share the landing page design stylesheet with the registry viewer instead
+  of duplicating the header, logo, button, and typography primitives inline.
 - [x] Link the landing page and README to the viewer instead of sending users
   directly to raw JSON.
 - [x] Keep the viewer static and read-only, with no mutable backend, package

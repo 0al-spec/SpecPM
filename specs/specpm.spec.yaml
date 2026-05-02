@@ -525,6 +525,25 @@ evidence:
       - specpm.registry.public_static_index
       - specpm.registry.remote_api_contract
       - specpm.registry.observed_intent_catalog
+  - id: public_registry_viewer_assets
+    kind: source
+    path: landing_page/assets/viewer.js
+    supports:
+      - specpm.registry.public_api_viewer
+      - specpm.registry.public_static_index
+      - specpm.registry.remote_api_contract
+      - specpm.registry.observed_intent_catalog
+  - id: public_registry_viewer_styles
+    kind: source
+    path: landing_page/assets/viewer.css
+    supports:
+      - specpm.registry.public_api_viewer
+  - id: landing_page_design_system
+    kind: source
+    path: landing_page/assets/specpm-design.css
+    supports:
+      - specpm.registry.index_submission_flow
+      - specpm.registry.public_api_viewer
   - id: docc_add_specpackage
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/AddSpecPackage.md
