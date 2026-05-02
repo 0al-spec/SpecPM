@@ -1104,6 +1104,8 @@ Acceptance:
   DocC documentation and generated `/v0` metadata.
 - [x] Share the landing page design stylesheet with the registry viewer instead
   of duplicating the header, logo, button, and typography primitives inline.
+- [x] Organize the viewer as an API tree plus a bounded catalog search instead
+  of rendering separate unbounded package, intent, and capability side lists.
 - [x] Link the landing page and README to the viewer instead of sending users
   directly to raw JSON.
 - [x] Keep the viewer static and read-only, with no mutable backend, package
@@ -1117,6 +1119,8 @@ Acceptance:
   normal browsing does not depend on cross-origin access.
 - The viewer can also inspect local or enterprise registries through an
   explicit `registry` query parameter.
+- Clicking aggregate endpoints such as `GET /v0/packages` and
+  `GET /v0/intents` renders browsable catalog cards as well as raw JSON.
 - The deployment workflow copies the viewer into the Pages artifact.
 - Raw `/v0` JSON endpoints remain stable machine-readable contracts for CLI,
   SpecGraph, SpecNode, ContextBuilder, and other downstream tools.

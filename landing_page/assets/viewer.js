@@ -8,29 +8,54 @@ const state = {
   activePath: "status/index.json",
   activeKind: "status",
   activeId: null,
+  catalogMode: "all",
   payload: null,
   errors: []
 };
 
-const endpoints = [
-  { id: "root", title: "GET /v0", path: "index.json", description: "Registry root entrypoint" },
-  { id: "status", title: "GET /v0/status", path: "status/index.json", description: "Availability and counts" },
-  { id: "packages", title: "GET /v0/packages", path: "packages/index.json", description: "Package index" },
-  { id: "package-template", title: "GET /v0/packages/{package_id}", description: "Select a package to load this endpoint" },
-  { id: "version-template", title: "GET /v0/packages/{package_id}/versions/{version}", description: "Select a package version to load this endpoint" },
-  { id: "capability-template", title: "GET /v0/capabilities/{capability_id}/packages", description: "Select a capability to load this endpoint" },
-  { id: "intents", title: "GET /v0/intents", path: "intents/index.json", description: "Observed intent catalog" },
-  { id: "intent-template", title: "GET /v0/intents/{intent_id}", description: "Select an intent to load this endpoint" },
-  { id: "intent-packages-template", title: "GET /v0/intents/{intent_id}/packages", description: "Select an intent, then open package matches" }
+const catalogVisibleLimit = 80;
+
+const endpointGroups = [
+  {
+    title: "Registry",
+    items: [
+      { id: "root", title: "GET /v0", path: "index.json", description: "Registry root entrypoint" },
+      { id: "status", title: "GET /v0/status", path: "status/index.json", description: "Availability and counts" }
+    ]
+  },
+  {
+    title: "Packages",
+    items: [
+      { id: "packages", title: "GET /v0/packages", path: "packages/index.json", description: "Browse package index" },
+      { id: "package-template", title: "GET /v0/packages/{package_id}", description: "Select a package from catalog search" },
+      { id: "version-template", title: "GET /v0/packages/{package_id}/versions/{version}", description: "Select a package version" }
+    ]
+  },
+  {
+    title: "Capabilities",
+    items: [
+      { id: "capability-template", title: "GET /v0/capabilities/{capability_id}/packages", description: "Select a capability from catalog search" }
+    ]
+  },
+  {
+    title: "Observed Intents",
+    items: [
+      { id: "intents", title: "GET /v0/intents", path: "intents/index.json", description: "Browse observed intent catalog" },
+      { id: "intent-template", title: "GET /v0/intents/{intent_id}", description: "Select an intent from catalog search" },
+      { id: "intent-packages-template", title: "GET /v0/intents/{intent_id}/packages", description: "Select an intent, then open package matches" }
+    ]
+  }
 ];
+
+const endpoints = endpointGroups.flatMap((group) => group.items);
 
 const form = document.querySelector("#registry-form");
 const baseInput = document.querySelector("#registry-base");
 const loadStatus = document.querySelector("#load-status");
-const endpointList = document.querySelector("#endpoint-list");
-const packageList = document.querySelector("#package-list");
-const intentList = document.querySelector("#intent-list");
-const capabilityList = document.querySelector("#capability-list");
+const endpointTree = document.querySelector("#endpoint-tree");
+const catalogFilter = document.querySelector("#catalog-filter");
+const catalogList = document.querySelector("#catalog-list");
+const catalogCount = document.querySelector("#catalog-count");
 const detailPanel = document.querySelector("#detail-panel");
 const jsonOutput = document.querySelector("#json-output");
 const jsonTitle = document.querySelector("#json-title");
@@ -87,7 +112,7 @@ function normalizeRegistryBase(value) {
 async function loadRegistry() {
   state.errors = [];
   setLoadStatus("loading", "Loading static registry metadata...");
-  renderEndpointList();
+  renderEndpointTree();
   try {
     const [root, status, packages, intents] = await Promise.all([
       fetchOptional("index.json"),
@@ -166,10 +191,8 @@ function collectCapabilities(packageIndex) {
 
 function renderAll() {
   renderSummary();
-  renderEndpointList();
-  renderPackageList();
-  renderIntentList();
-  renderCapabilityList();
+  renderEndpointTree();
+  renderCatalog();
   renderDetail();
   renderJson();
 }
@@ -196,49 +219,53 @@ function renderSummary() {
   `).join("");
 }
 
-function renderEndpointList() {
-  endpointList.innerHTML = endpoints.map((endpoint) => `
-    ${endpoint.path ? `<button class="list-item ${state.activeKind === endpoint.id ? "active" : ""}" data-action="endpoint" data-path="${escapeAttr(endpoint.path)}" data-kind="${escapeAttr(endpoint.id)}">` : `<div class="list-item static">`}
-      <span class="list-id">${escapeHtml(endpoint.title)}</span>
-      <span class="list-meta">${escapeHtml(endpoint.description)}</span>
-    ${endpoint.path ? `</button>` : `</div>`}
+function renderEndpointTree() {
+  endpointTree.innerHTML = endpointGroups.map((group) => `
+    <div class="tree-group">
+      <div class="tree-group-title">${escapeHtml(group.title)}</div>
+      ${group.items.map((endpoint) => {
+        const active = isEndpointActive(endpoint.id) ? "active" : "";
+        if (!endpoint.path) {
+          return `
+            <div class="tree-item static ${active}">
+              <span class="tree-path">${escapeHtml(endpoint.title)}</span>
+              <span class="tree-desc">${escapeHtml(endpoint.description)}</span>
+            </div>
+          `;
+        }
+        return `
+          <button class="tree-item ${active}" data-action="endpoint" data-path="${escapeAttr(endpoint.path)}" data-kind="${escapeAttr(endpoint.id)}">
+            <span class="tree-path">${escapeHtml(endpoint.title)}</span>
+            <span class="tree-desc">${escapeHtml(endpoint.description)}</span>
+          </button>
+        `;
+      }).join("")}
+    </div>
   `).join("");
 }
 
-function renderPackageList() {
-  const filter = getFilter("#package-filter");
-  const packages = packageItems().filter((pkg) => matchesFilter(pkg.package_id, pkg.name, filter));
-  document.querySelector("#package-count").textContent = String(packageItems().length);
-  packageList.innerHTML = packages.length ? packages.map((pkg) => `
-    <button class="list-item ${state.activeKind === "package" && state.activeId === pkg.package_id ? "active" : ""}" data-action="package" data-id="${escapeAttr(pkg.package_id)}">
-      <span class="list-id">${escapeHtml(pkg.package_id)}</span>
-      <span class="list-meta">${escapeHtml(pkg.name || "")} - ${escapeHtml(pkg.latest_version || "")}</span>
-    </button>
-  `).join("") : `<div class="empty">No packages match this filter.</div>`;
-}
-
-function renderIntentList() {
-  const filter = getFilter("#intent-filter");
-  const intents = intentItems().filter((intent) => matchesFilter(intent.intent_id, intent.capabilities?.join(" "), filter));
-  document.querySelector("#intent-count").textContent = String(intentItems().length);
-  intentList.innerHTML = intents.length ? intents.map((intent) => `
-    <button class="list-item ${state.activeKind === "intent" && state.activeId === intent.intent_id ? "active" : ""}" data-action="intent" data-id="${escapeAttr(intent.intent_id)}">
-      <span class="list-id">${escapeHtml(intent.intent_id)}</span>
-      <span class="list-meta">${escapeHtml(String(intent.package_count || 0))} package(s), ${escapeHtml(String(intent.capability_count || 0))} capability match(es)</span>
-    </button>
-  `).join("") : `<div class="empty">No intents match this filter.</div>`;
-}
-
-function renderCapabilityList() {
-  const filter = getFilter("#capability-filter");
-  const capabilities = state.capabilities.filter((capability) => matchesFilter(capability.id, capability.packages.join(" "), filter));
-  document.querySelector("#capability-count").textContent = String(state.capabilities.length);
-  capabilityList.innerHTML = capabilities.length ? capabilities.map((capability) => `
-    <button class="list-item ${state.activeKind === "capability" && state.activeId === capability.id ? "active" : ""}" data-action="capability" data-id="${escapeAttr(capability.id)}">
-      <span class="list-id">${escapeHtml(capability.id)}</span>
-      <span class="list-meta">${escapeHtml(String(capability.packages.length))} package source(s)</span>
-    </button>
-  `).join("") : `<div class="empty">No capabilities match this filter.</div>`;
+function renderCatalog() {
+  const results = catalogItems().filter((item) => {
+    if (state.catalogMode !== "all" && item.type !== state.catalogMode) {
+      return false;
+    }
+    return matchesFilter(item.id, item.search, catalogFilter.value.trim().toLowerCase());
+  });
+  const visible = results.slice(0, catalogVisibleLimit);
+  catalogCount.textContent = String(results.length);
+  document.querySelectorAll("[data-action='catalog-mode']").forEach((button) => {
+    button.classList.toggle("active", button.dataset.mode === state.catalogMode);
+  });
+  catalogList.innerHTML = visible.length ? `
+    ${visible.map((item) => `
+      <button class="list-item ${isCatalogItemActive(item) ? "active" : ""}" data-action="${escapeAttr(item.action)}" data-id="${escapeAttr(item.id)}">
+        <span class="list-type">${escapeHtml(item.type)}</span>
+        <span class="list-id">${escapeHtml(item.id)}</span>
+        <span class="list-meta">${escapeHtml(item.meta)}</span>
+      </button>
+    `).join("")}
+    ${results.length > visible.length ? `<div class="list-note">Showing ${escapeHtml(String(visible.length))} of ${escapeHtml(String(results.length))}. Narrow the search to see more.</div>` : ""}
+  ` : `<div class="empty">No catalog items match this search.</div>`;
 }
 
 function renderDetail() {
@@ -275,6 +302,14 @@ function renderDetail() {
     renderIntentPackagesDetail();
     return;
   }
+  if (state.activeKind === "packages") {
+    renderPackageIndexDetail();
+    return;
+  }
+  if (state.activeKind === "intents") {
+    renderIntentIndexDetail();
+    return;
+  }
   renderEndpointDetail();
 }
 
@@ -298,6 +333,79 @@ function renderEndpointDetail() {
       <div class="fact"><span>Read Only</span><strong>${escapeHtml(String(registry.read_only ?? true))}</strong></div>
     </div>
     ${state.errors.length ? `<div class="error">${escapeHtml(state.errors.join(" "))}</div>` : ""}
+  `;
+}
+
+function renderPackageIndexDetail() {
+  const packages = packageItems();
+  const visible = packages.slice(0, catalogVisibleLimit);
+  detailPanel.innerHTML = `
+    <div class="detail-head">
+      <div class="detail-title">
+        <span class="pill live">Package Index</span>
+        <h2>Browse packages</h2>
+        <p>Static package index from <code>GET /v0/packages</code>. Select a package to load its exact metadata endpoint.</p>
+      </div>
+      <div class="actions">
+        <a class="btn small" href="${escapeAttr(resourceUrl(state.activePath))}" target="_blank" rel="noopener">Open Raw</a>
+      </div>
+    </div>
+    <div class="facts">
+      <div class="fact"><span>Packages</span><strong>${escapeHtml(String(packages.length))}</strong></div>
+      <div class="fact"><span>Rendered</span><strong>${escapeHtml(String(visible.length))}</strong></div>
+      <div class="fact"><span>Endpoint</span><strong>GET /v0/packages</strong></div>
+      <div class="fact"><span>Next</span><strong>GET /v0/packages/{package_id}</strong></div>
+    </div>
+    <div class="catalog-grid">
+      ${visible.map((pkg) => `
+        <button class="catalog-row" data-action="package" data-id="${escapeAttr(pkg.package_id)}">
+          <span class="catalog-row-head">
+            <span class="list-type">package</span>
+            <span class="catalog-row-id">${escapeHtml(pkg.package_id)}</span>
+          </span>
+          <span class="catalog-row-meta">${escapeHtml(pkg.name || "")} - ${escapeHtml(pkg.summary || "")}</span>
+          <span class="catalog-row-meta">${escapeHtml(String(pkg.capabilities?.length || 0))} capability ID(s), ${escapeHtml(String(pkg.intents?.length || 0))} observed intent ID(s), latest ${escapeHtml(pkg.latest_version || "")}</span>
+        </button>
+      `).join("") || `<div class="empty">No packages are published in this registry.</div>`}
+    </div>
+    ${packages.length > visible.length ? `<div class="list-note">Showing ${escapeHtml(String(visible.length))} of ${escapeHtml(String(packages.length))}. Use catalog search to narrow the list.</div>` : ""}
+  `;
+}
+
+function renderIntentIndexDetail() {
+  const intents = intentItems();
+  const visible = intents.slice(0, catalogVisibleLimit);
+  const catalog = state.intents?.catalog || {};
+  detailPanel.innerHTML = `
+    <div class="detail-head">
+      <div class="detail-title">
+        <span class="pill live">Observed Intent Catalog</span>
+        <h2>Browse observed intents</h2>
+        <p>Static observed intent catalog from <code>GET /v0/intents</code>. These IDs are observed metadata, not canonical semantic authority.</p>
+      </div>
+      <div class="actions">
+        <a class="btn small" href="${escapeAttr(resourceUrl(state.activePath))}" target="_blank" rel="noopener">Open Raw</a>
+      </div>
+    </div>
+    <div class="facts">
+      <div class="fact"><span>Intents</span><strong>${escapeHtml(String(intents.length))}</strong></div>
+      <div class="fact"><span>Rendered</span><strong>${escapeHtml(String(visible.length))}</strong></div>
+      <div class="fact"><span>Authority</span><strong>${escapeHtml(catalog.authority || "observed_metadata_only")}</strong></div>
+      <div class="fact"><span>Canonical</span><strong>${escapeHtml(String(catalog.canonical ?? false))}</strong></div>
+    </div>
+    <div class="catalog-grid">
+      ${visible.map((intent) => `
+        <button class="catalog-row" data-action="intent" data-id="${escapeAttr(intent.intent_id)}">
+          <span class="catalog-row-head">
+            <span class="list-type">intent</span>
+            <span class="catalog-row-id">${escapeHtml(intent.intent_id)}</span>
+          </span>
+          <span class="catalog-row-meta">${escapeHtml(String(intent.package_count || 0))} package match(es), ${escapeHtml(String(intent.capability_count || 0))} capability match(es)</span>
+          <span class="catalog-row-meta">${escapeHtml((intent.capabilities || []).slice(0, 4).join(", ") || "No capability matches listed.")}</span>
+        </button>
+      `).join("") || `<div class="empty">No observed intents are published in this registry.</div>`}
+    </div>
+    ${intents.length > visible.length ? `<div class="list-note">Showing ${escapeHtml(String(visible.length))} of ${escapeHtml(String(intents.length))}. Use catalog search to narrow the list.</div>` : ""}
   `;
 }
 
@@ -442,13 +550,7 @@ function renderJson() {
 }
 
 function bindFilters() {
-  for (const selector of ["#package-filter", "#intent-filter", "#capability-filter"]) {
-    document.querySelector(selector).addEventListener("input", () => {
-      renderPackageList();
-      renderIntentList();
-      renderCapabilityList();
-    });
-  }
+  catalogFilter.addEventListener("input", renderCatalog);
 }
 
 function bindActions() {
@@ -461,6 +563,9 @@ function bindActions() {
     try {
       if (action === "endpoint") {
         await showEndpoint(target.dataset.kind, target.dataset.path);
+      } else if (action === "catalog-mode") {
+        state.catalogMode = target.dataset.mode || "all";
+        renderCatalog();
       } else if (action === "package") {
         await showPackage(target.dataset.id);
       } else if (action === "version") {
@@ -540,6 +645,78 @@ async function showIntentPackages(intentId) {
   renderAll();
 }
 
+function catalogItems() {
+  const packages = packageItems().map((pkg) => ({
+    type: "package",
+    action: "package",
+    id: pkg.package_id,
+    meta: `${pkg.name || ""} - ${pkg.summary || ""}`,
+    search: [
+      pkg.name,
+      pkg.summary,
+      pkg.latest_version,
+      pkg.license,
+      ...(pkg.capabilities || []),
+      ...(pkg.intents || []),
+      ...(pkg.keywords || [])
+    ].join(" ")
+  }));
+  const intents = intentItems().map((intent) => ({
+    type: "intent",
+    action: "intent",
+    id: intent.intent_id,
+    meta: `${intent.package_count || 0} package(s), ${intent.capability_count || 0} capability match(es)`,
+    search: [
+      intent.status,
+      ...(intent.package_ids || []),
+      ...(intent.capabilities || [])
+    ].join(" ")
+  }));
+  const capabilities = state.capabilities.map((capability) => ({
+    type: "capability",
+    action: "capability",
+    id: capability.id,
+    meta: `${capability.packages.length} package source(s)`,
+    search: capability.packages.join(" ")
+  }));
+  return [...packages, ...intents, ...capabilities].sort((left, right) => {
+    if (left.type === right.type) {
+      return left.id.localeCompare(right.id);
+    }
+    return typeRank(left.type) - typeRank(right.type);
+  });
+}
+
+function typeRank(type) {
+  return { package: 0, intent: 1, capability: 2 }[type] ?? 9;
+}
+
+function isCatalogItemActive(item) {
+  return state.activeKind === item.type && state.activeId === item.id;
+}
+
+function isEndpointActive(endpointId) {
+  if (state.activeKind === endpointId) {
+    return true;
+  }
+  if (endpointId === "package-template") {
+    return state.activeKind === "package";
+  }
+  if (endpointId === "version-template") {
+    return state.activeKind === "version";
+  }
+  if (endpointId === "capability-template") {
+    return state.activeKind === "capability";
+  }
+  if (endpointId === "intent-template") {
+    return state.activeKind === "intent";
+  }
+  if (endpointId === "intent-packages-template") {
+    return state.activeKind === "intent-packages";
+  }
+  return false;
+}
+
 function packageItems() {
   return state.packages?.packages || [];
 }
@@ -550,10 +727,6 @@ function intentItems() {
 
 function segment(value) {
   return encodeURIComponent(String(value || ""));
-}
-
-function getFilter(selector) {
-  return document.querySelector(selector).value.trim().toLowerCase();
 }
 
 function matchesFilter(primary, secondary, filter) {

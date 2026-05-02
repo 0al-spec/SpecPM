@@ -70,36 +70,26 @@
         <div class="sidebar-inner">
           <section class="panel">
             <div class="panel-head">
-              <span class="panel-title">Endpoints</span>
+              <span class="panel-title">Registry Tree</span>
             </div>
-            <div class="list" id="endpoint-list"></div>
+            <div class="tree" id="endpoint-tree"></div>
           </section>
 
           <section class="panel">
             <div class="panel-head">
-              <span class="panel-title">Packages</span>
-              <span class="pill" id="package-count">0</span>
+              <span class="panel-title">Catalog Search</span>
+              <span class="pill" id="catalog-count">0</span>
             </div>
-            <input class="search-input" id="package-filter" placeholder="Filter packages" />
-            <div class="list" id="package-list"></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head">
-              <span class="panel-title">Observed Intents</span>
-              <span class="pill" id="intent-count">0</span>
+            <div class="catalog-search">
+              <input class="search-input" id="catalog-filter" placeholder="Search packages, intents, capabilities" />
+              <div class="segmented" aria-label="Catalog search scope">
+                <button class="segment active" type="button" data-action="catalog-mode" data-mode="all">All</button>
+                <button class="segment" type="button" data-action="catalog-mode" data-mode="package">Packages</button>
+                <button class="segment" type="button" data-action="catalog-mode" data-mode="intent">Intents</button>
+                <button class="segment" type="button" data-action="catalog-mode" data-mode="capability">Capabilities</button>
+              </div>
             </div>
-            <input class="search-input" id="intent-filter" placeholder="Filter intents" />
-            <div class="list" id="intent-list"></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head">
-              <span class="panel-title">Capabilities</span>
-              <span class="pill" id="capability-count">0</span>
-            </div>
-            <input class="search-input" id="capability-filter" placeholder="Filter capabilities" />
-            <div class="list" id="capability-list"></div>
+            <div class="list catalog-list" id="catalog-list"></div>
           </section>
         </div>
       </aside>

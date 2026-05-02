@@ -604,12 +604,20 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert '<script src="./assets/viewer.js" defer></script>' in registry_viewer
     assert "Static Registry Viewer" in registry_viewer
     assert "SpecPM Registry Viewer" in registry_viewer
+    assert "Registry Tree" in registry_viewer
+    assert "Catalog Search" in registry_viewer
+    assert "Search packages, intents, capabilities" in registry_viewer
     assert "Instrument Serif" in registry_viewer_design_css
     assert ".brand-mark" in registry_viewer_design_css
     assert ".json-panel" in registry_viewer_css
+    assert ".tree-group" in registry_viewer_css
+    assert ".catalog-grid" in registry_viewer_css
     assert "GET /v0/packages/{package_id}/versions/{version}" in registry_viewer_js
     assert "GET /v0/capabilities/{capability_id}/packages" in registry_viewer_js
     assert "GET /v0/intents/{intent_id}/packages" in registry_viewer_js
+    assert "Browse observed intents" in registry_viewer_js
+    assert "catalogVisibleLimit" in registry_viewer_js
+    assert "Narrow the search to see more" in registry_viewer_js
     assert 'new URL("../v0/", window.location.href)' in registry_viewer_js
     assert "https://0al-spec.github.io/SpecPM/v0/" in registry_viewer_js
 
