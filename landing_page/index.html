@@ -816,7 +816,7 @@
       font-size: 25px;
     }
 
-    .formula span:nth-child(3) {
+    .formula .formula-emphasis {
       color: #7ab4e8;
     }
 
@@ -1530,10 +1530,11 @@
             <em>Implementations come included.</em>
           </h1>
           <p class="lede hero-sub">
-            SpecPM is building the need resolution engine for reusable specification intent. The package and registry layer is live now; the upcoming resolver will turn plain-text needs into exact, reviewable <span class="term" title="SpecPackage: a versioned package that groups specs, metadata, capabilities, evidence, and registry data." aria-label="SpecPackage: a versioned package that groups specs, metadata, capabilities, evidence, and registry data.">SpecPackage</span> and <span class="term" title="BoundarySpec: one concrete specification for a product, module, subsystem, or integration boundary." aria-label="BoundarySpec: one concrete specification for a product, module, subsystem, or integration boundary.">BoundarySpec</span> candidates.
+            <span class="serif-name">SpecPM</span> is building the need resolution engine for reusable specification intent. The package and registry layer is live now with exact <code>intent.*</code> metadata; the upcoming resolver will turn plain-text needs into reviewable <span class="term" title="SpecPackage: a versioned package that groups specs, metadata, capabilities, evidence, and registry data." aria-label="SpecPackage: a versioned package that groups specs, metadata, capabilities, evidence, and registry data.">SpecPackage</span> and <span class="term" title="BoundarySpec: one concrete specification for a product, module, subsystem, or integration boundary." aria-label="BoundarySpec: one concrete specification for a product, module, subsystem, or integration boundary.">BoundarySpec</span> candidates.
           </p>
           <div class="hero-badges" aria-label="SpecPM availability">
             <span class="status-pill live">Package Layer Live</span>
+            <span class="status-pill live">Intent Index Live</span>
             <span class="status-pill live">Docker Local Service Live</span>
             <span class="status-pill soon">Need Resolution API Soon</span>
           </div>
@@ -1547,7 +1548,7 @@
             </a>
             <a class="btn" href="https://0al-spec.github.io/SpecPM" target="_blank" rel="noopener">Read Docs</a>
           </div>
-          <p class="positioning">Available now: validation, inspect, deterministic pack, local/public index, exact search, SpecGraph inbox, and read-only registry metadata.</p>
+          <p class="positioning">Available now: validation, inspect, deterministic pack, local/public index, exact capability and intent lookup, <span class="serif-name">SpecGraph</span> inbox, and read-only registry metadata.</p>
         </div>
 
         <div class="hero-mock-wrap">
@@ -1555,6 +1556,17 @@
             <div class="resolve-row">
               <span class="label">Intent Input - Coming Soon</span>
               <div class="mock-input">I need enterprise authentication for a B2B SaaS dashboard.</div>
+            </div>
+
+            <div class="resolve-row split">
+              <div>
+                <span class="label">Canonical Intent</span>
+                <div class="spec-name">intent.identity.enterprise_sso</div>
+              </div>
+              <div>
+                <span class="label">Status</span>
+                <div class="fit-score">Live <span>exact lookup</span></div>
+              </div>
             </div>
 
             <div class="resolve-row split">
@@ -1599,13 +1611,20 @@
                   </svg>
                   Static /v0 registry metadata
                 </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M4 6h16M4 12h16M4 18h16" />
+                    <path d="M8 6v12M16 6v12" />
+                  </svg>
+                  First-class <code>index.provides.intents</code>
+                </li>
               </ul>
             </div>
 
             <div class="resolve-row">
               <span class="label">Boundary</span>
               <p class="why-copy">
-                The future resolver may propose candidates. <span class="serif-name">SpecPM</span> verifies exact package data, paths, provenance, and registry metadata.
+                The future resolver may propose candidates. <span class="serif-name">SpecPM</span> verifies exact package data, backed intent IDs, paths, provenance, and registry metadata.
               </p>
             </div>
           </article>
@@ -1630,7 +1649,7 @@
             <p>Traditional package managers expose code first.</p>
             <p><span class="serif-name">SpecPM</span> works differently.</p>
             <p>
-              It stores specifications as the primary unit: structured, reusable definitions of what a module, subsystem, or product boundary should do. Today, <span class="serif-name">SpecPM</span> validates, packs, indexes, and exposes that package data. The intent-to-spec resolver is the next online/API layer built on top.
+              It stores specifications as the primary unit: structured, reusable definitions of what a module, subsystem, or product boundary should do. Today, <span class="serif-name">SpecPM</span> validates, packs, indexes, and exposes package data, capability IDs, and backed <code>intent.*</code> IDs. The intent-to-spec resolver is the next online/API layer built on top.
             </p>
           </div>
           <p class="punchline">
@@ -1647,7 +1666,7 @@
             <div class="problem-title">
               <h3 id="problem-title">Plain text intent still needs a verified package layer.</h3>
               <p>
-                The future resolver can turn a need into candidate specs. <span class="serif-name">SpecPM</span> makes those candidates reviewable by validating exact package structure, capability IDs, evidence, provenance, and registry metadata.
+                The future resolver can turn a need into candidate specs. <span class="serif-name">SpecPM</span> makes those candidates reviewable by validating exact package structure, capability IDs, backed intent IDs, evidence, provenance, and registry metadata.
               </p>
             </div>
             <div class="loop">
@@ -1656,7 +1675,7 @@
                 <li><b>01</b><span>Validate package shape.</span></li>
                 <li><b>02</b><span>Inspect <span class="serif-name">BoundarySpec</span> intent.</span></li>
                 <li><b>03</b><span>Pack deterministic archives.</span></li>
-                <li><b>04</b><span>Index exact capabilities.</span></li>
+                <li><b>04</b><span>Index exact capabilities and intents.</span></li>
                 <li><b>05</b><span>Expose static /v0 metadata.</span></li>
                 <li><b>06</b><span>Let <span class="serif-name">SpecGraph</span> observe package visibility.</span></li>
               </ol>
@@ -1677,7 +1696,7 @@
           <p class="eyebrow"><span class="dot"></span>Current Status</p>
           <h2 id="status-title">The package and registry substrate is working now.</h2>
           <p class="lede">
-            <span class="serif-name">SpecPM</span> already provides the deterministic substrate that an intent-to-spec service needs: trusted outputs, exact lookup, package validation, and read-only registry metadata.
+            <span class="serif-name">SpecPM</span> already provides the deterministic substrate that an intent-to-spec service needs: trusted outputs, exact capability lookup, exact <code>intent.*</code> lookup, package validation, and read-only registry metadata.
           </p>
         </div>
 
@@ -1697,6 +1716,7 @@
             <h3>Local and public registry metadata</h3>
             <ul>
               <li>index, search, add, lock, yank, and unyank locally</li>
+              <li>expose first-class <code>index.provides.intents</code></li>
               <li>generate static public <code>/v0</code> registry files</li>
               <li>serve the public index locally through Docker</li>
             </ul>
@@ -1707,7 +1727,7 @@
             <h3>SpecGraph and viewer contracts</h3>
             <ul>
               <li>inspect <span class="serif-name">SpecGraph</span> inbox bundles</li>
-              <li>read remote registry status, packages, and capability search</li>
+              <li>read remote registry status, packages, capability search, and intent search</li>
               <li>publish DocC documentation and conformance fixtures</li>
             </ul>
           </article>
@@ -1761,7 +1781,7 @@
               <path d="m12 25 12 6 12-6M12 33l12 6 12-6" stroke-width="1.5" />
             </svg>
             <h3>Index and <span class="step-title-break">expose</span></h3>
-            <p>Packages become searchable by exact capability ID through local indexes, generated public <code>/v0</code> metadata, and read-only remote registry client commands.</p>
+            <p>Packages become searchable by exact capability ID and backed <code>intent.*</code> ID through local indexes, generated public <code>/v0</code> metadata, and read-only remote registry client commands.</p>
           </article>
 
           <article class="step">
@@ -1785,7 +1805,7 @@
           <p class="eyebrow">Registry Surface</p>
           <h2 id="registry-title">Specification packages are the dependency layer.</h2>
           <p class="lede">
-            Code dependencies tell you what you installed. Specification packages tell downstream tools what a boundary means, which capabilities it provides, what evidence supports it, and how it can be verified.
+            Code dependencies tell you what you installed. Specification packages tell downstream tools what a boundary means, which capabilities and canonical intents it provides, what evidence supports it, and how it can be verified.
           </p>
           <p class="lede">
             <span class="serif-name">SpecPM</span> already publishes static read-only registry metadata that <span class="serif-name">SpecGraph</span>, ContextBuilder, and other consumers can observe.
@@ -1793,7 +1813,9 @@
           <div class="formula" aria-label="Need to specification to implementation">
             <span>Intent</span>
             <span>&rarr;</span>
-            <span>SpecPackage</span>
+            <span class="formula-emphasis">Capability</span>
+            <span>&rarr;</span>
+            <span class="formula-emphasis">SpecPackage</span>
             <span>&rarr;</span>
             <span>Registry Metadata</span>
           </div>
@@ -1808,7 +1830,7 @@
                 <path d="M8 10V7a4 4 0 0 1 8 0v3" />
               </svg>
               <h3>SpecPackage</h3>
-              <p>The package manifest, referenced <span class="serif-name">BoundarySpecs</span>, evidence, foreign inputs, metadata, and compatibility declarations.</p>
+              <p>The package manifest, referenced <span class="serif-name">BoundarySpecs</span>, evidence, foreign inputs, metadata, compatibility, and first-class intent declarations.</p>
             </article>
 
             <article class="category-card">
@@ -1817,7 +1839,7 @@
                 <path d="M3 10h18M7 15h5" />
               </svg>
               <h3>BoundarySpec</h3>
-              <p>Structured intent, scope, provided capabilities, required capabilities, interfaces, effects, and provenance.</p>
+              <p>Structured intent, scope, provided capabilities, capability-backed <code>intentIds</code>, interfaces, effects, and provenance.</p>
             </article>
 
             <article class="category-card">
@@ -1826,7 +1848,7 @@
                 <path d="M10 21h4" />
               </svg>
               <h3>Exact Search</h3>
-              <p>Local and remote lookup by exact capability ID, with semantic discovery intentionally kept outside core.</p>
+              <p>Local and remote lookup by exact capability ID or canonical <code>intent.*</code> ID, with semantic discovery intentionally kept outside core.</p>
             </article>
 
             <article class="category-card">
@@ -1836,7 +1858,7 @@
                 <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
               </svg>
               <h3>Public /v0 Index</h3>
-              <p>Generated static registry status, package index, version metadata, capability search, and deterministic archives.</p>
+              <p>Generated static registry status, package index, version metadata, capability search, intent search, and deterministic archives.</p>
             </article>
 
             <article class="category-card">
@@ -1867,7 +1889,7 @@
           <p class="eyebrow"><span class="dot"></span>Public Index Intake</p>
           <h2 id="add-package-title">Add a SpecPackage to the public registry.</h2>
           <p class="lede">
-            Anyone can propose a public SpecPackage repository. SpecPM validates the submitted package as untrusted data, comments with a pass/fail report, and leaves acceptance to maintainer review before the static <code>/v0</code> registry is regenerated.
+            Anyone can propose a public SpecPackage repository. <span class="serif-name">SpecPM</span> validates the submitted package as untrusted data, comments with a pass/fail report, and leaves acceptance to maintainer review before the static <code>/v0</code> registry is regenerated.
           </p>
           <div class="submission-actions">
             <a class="btn primary" href="https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml" target="_blank" rel="noopener">
@@ -1917,7 +1939,7 @@
           <p class="eyebrow"><span class="dot"></span>Built for Agents</p>
           <h2 id="agents-title">Built for agents that need verified spec candidates.</h2>
           <p class="lede">
-            <a href="https://0al-spec.github.io/SpecGraph/"><span class="serif-name">SpecGraph</span></a> and ContextBuilder can consume <span class="serif-name">SpecPM</span> packages as verified metadata today. The future resolver will add plain-text intent intake before that exact package verification step.
+            <a href="https://0al-spec.github.io/SpecGraph/"><span class="serif-name">SpecGraph</span></a> and ContextBuilder can consume <span class="serif-name">SpecPM</span> packages as verified metadata today, including exact package-neutral <code>intent.*</code> IDs. The future resolver will add plain-text intent intake before that exact package verification step.
           </p>
         </div>
 
@@ -1949,11 +1971,11 @@
               <div class="dialogue-status">
                 <div class="dialogue-status-row">
                   <span class="status-pill soon">Soon</span>
-                  <p>Propose <code>auth.enterprise-sso</code> as a candidate from plain-text intent.</p>
+                  <p>Map plain text to <code>intent.identity.enterprise_sso</code> and candidate packages.</p>
                 </div>
                 <div class="dialogue-status-row">
                   <span class="status-pill live">Live</span>
-                  <p>Verify package shape, evidence, capability IDs, and registry metadata before selection.</p>
+                  <p>Verify package shape, evidence, capability IDs, backed intent IDs, and registry metadata before selection.</p>
                 </div>
               </div>
             </div>
@@ -1970,7 +1992,7 @@
             <h2 id="examples-title">From package files to intent-aware discovery.</h2>
           </div>
           <p class="lede">
-            Package managers expose implementation. <span class="serif-name">SpecPM</span> exposes verified specification intent. The upcoming resolver adds the semantic front door; the current CLI and registry keep the result machine-checkable.
+            Package managers expose implementation. <span class="serif-name">SpecPM</span> exposes verified specification intent through exact capabilities and first-class <code>intent.*</code> metadata. The upcoming resolver adds the semantic front door; the current CLI and registry keep the result machine-checkable.
           </p>
         </div>
 
@@ -1981,7 +2003,7 @@
               <li>Validate package and <span class="serif-name">BoundarySpec</span> shape</li>
               <li>Inspect capabilities, evidence, and provenance</li>
               <li>Pack deterministic archives</li>
-              <li>Index and search exact capability IDs</li>
+              <li>Index and search exact capability and intent IDs</li>
               <li>Expose static public registry metadata</li>
               <li>Let <span class="serif-name">SpecGraph</span> observe package visibility</li>
             </ol>
@@ -1990,7 +2012,7 @@
             <h3>Intent-to-Spec Soon</h3>
             <ol>
               <li>Accept a plain-text product or engineering need</li>
-              <li>Use semantic discovery to find candidate packages</li>
+              <li>Use semantic discovery to propose canonical <code>intent.*</code> IDs</li>
               <li>Return exact <span class="serif-name">SpecPackage</span> and <span class="serif-name">BoundarySpec</span> references</li>
               <li>Mark candidates as reviewable, not automatically trusted</li>
               <li>Verify every candidate through <span class="serif-name">SpecPM</span> metadata</li>
@@ -2003,7 +2025,7 @@
             <p class="eyebrow">Intent-to-Spec API Coming Soon</p>
             <h2>Built for humans, agents, and downstream tools.</h2>
             <p class="lede">
-              The hosted resolver will accept plain-text intent and return exact, reviewable package candidates. The local CLI already provides the verification and registry substrate behind that flow.
+              The hosted resolver will accept plain-text intent and return exact, reviewable package candidates. The local CLI already provides exact capability lookup, exact intent lookup, and the registry substrate behind that flow.
             </p>
           </div>
 
@@ -2017,12 +2039,14 @@ POST /v0/resolve-intent
 }
 
 candidate:
+  intent: intent.identity.enterprise_sso
   package: auth.enterprise-sso
   status: review_required
 
 <span class="cmd"># available today: exact verification layer</span>
 $ specpm validate examples/email_tools --json
 $ specpm inspect examples/email_tools --json
+$ specpm search-intent intent.document_conversion.email_to_markdown --json
 $ specpm public-index generate --manifest public-index/accepted-packages.yml --json</code></pre>
           </div>
         </div>
