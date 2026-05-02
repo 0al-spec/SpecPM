@@ -318,7 +318,7 @@ function renderEndpointDetail() {
   detailPanel.innerHTML = `
     <div class="detail-head">
       <div class="detail-title">
-        <span class="pill live">Static JSON</span>
+        <span class="pill live">Static</span>
         <h2>${escapeHtml(endpointTitle(state.activeKind))}</h2>
         <p>${escapeHtml(endpointDescription(state.activeKind))}</p>
       </div>
@@ -342,7 +342,7 @@ function renderPackageIndexDetail() {
   detailPanel.innerHTML = `
     <div class="detail-head">
       <div class="detail-title">
-        <span class="pill live">Package Index</span>
+        <span class="pill live">Index</span>
         <h2>Browse packages</h2>
         <p>Static package index from <code>GET /v0/packages</code>. Select a package to load its exact metadata endpoint.</p>
       </div>
@@ -379,7 +379,7 @@ function renderIntentIndexDetail() {
   detailPanel.innerHTML = `
     <div class="detail-head">
       <div class="detail-title">
-        <span class="pill live">Observed Intent Catalog</span>
+        <span class="pill live">Observed</span>
         <h2>Browse observed intents</h2>
         <p>Static observed intent catalog from <code>GET /v0/intents</code>. These IDs are observed metadata, not canonical semantic authority.</p>
       </div>
@@ -475,7 +475,7 @@ function renderCapabilityDetail() {
   detailPanel.innerHTML = `
     <div class="detail-head">
       <div class="detail-title">
-        <span class="pill live">Capability Lookup</span>
+        <span class="pill live">Lookup</span>
         <h2>${escapeHtml(state.activeId || "")}</h2>
         <p>Exact reverse lookup for packages that provide this capability.</p>
       </div>
@@ -525,7 +525,7 @@ function renderIntentPackagesDetail() {
   detailPanel.innerHTML = `
     <div class="detail-head">
       <div class="detail-title">
-        <span class="pill live">Intent Package Lookup</span>
+        <span class="pill live">Lookup</span>
         <h2>${escapeHtml(state.activeId || "")}</h2>
         <p>Exact reverse lookup for packages that declare this observed intent.</p>
       </div>
