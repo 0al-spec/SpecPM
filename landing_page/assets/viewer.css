@@ -421,6 +421,11 @@ h3 {
   justify-items: start;
 }
 
+.detail-title > .pill {
+  width: fit-content;
+  justify-self: start;
+}
+
 .detail-title h2 {
   overflow-wrap: anywhere;
 }
