@@ -612,10 +612,12 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert ".json-panel" in registry_viewer_css
     assert ".route-template-form" in registry_viewer_css
     assert ".route-builder" in registry_viewer_css
+    assert ".route-error" in registry_viewer_css
     assert ".tree-group" in registry_viewer_css
     assert ".catalog-grid" in registry_viewer_css
     assert "routeTemplates" in registry_viewer_js
     assert "RemoteRouteTemplate" in registry_viewer_js
+    assert '<span class="pill warn">Issue</span>' in registry_viewer_js
     assert 'data-action="route-template"' in registry_viewer_js
     assert 'data-route-template="${escapeAttr(state.routePrompt.kind)}"' in registry_viewer_js
     assert "GET /v0/packages/{package_id}/versions/{version}" in registry_viewer_js

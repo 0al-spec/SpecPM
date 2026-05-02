@@ -326,7 +326,12 @@ function renderRouteTemplateDetail() {
         ${template.parts.map((part) => renderRoutePart(part)).join("")}
         <button class="btn primary" type="submit">Open Endpoint</button>
       </div>
-      ${state.routeError ? `<div class="route-error">${escapeHtml(state.routeError)}</div>` : ""}
+      ${state.routeError ? `
+        <div class="route-error">
+          <span class="pill warn">Issue</span>
+          <span>${escapeHtml(state.routeError)}</span>
+        </div>
+      ` : ""}
     </form>
   `;
 }
