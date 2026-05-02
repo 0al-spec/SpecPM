@@ -3339,9 +3339,7 @@ def validate_provenance(
             )
 
 
-def validate_boundary_document_ids(
-    rel: str, spec: dict[str, Any], warnings: list[Issue]
-) -> None:
+def validate_boundary_document_ids(rel: str, spec: dict[str, Any], warnings: list[Issue]) -> None:
     entries = collect_boundary_document_id_entries(spec)
     seen: dict[str, str] = {}
     warned: set[str] = set()
