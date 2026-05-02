@@ -8,6 +8,8 @@ const state = {
   activePath: "status/index.json",
   activeKind: "status",
   activeId: null,
+  routePrompt: null,
+  routeError: null,
   catalogMode: "all",
   payload: null,
   errors: []
@@ -49,6 +51,34 @@ const endpointGroups = [
 
 const endpoints = endpointGroups.flatMap((group) => group.items);
 
+const routeTemplates = {
+  "package-template": {
+    title: "GET /v0/packages/{package_id}",
+    description: "Build a concrete package metadata endpoint.",
+    parts: ["/v0/packages/", { param: "package_id" }]
+  },
+  "version-template": {
+    title: "GET /v0/packages/{package_id}/versions/{version}",
+    description: "Build a concrete package version endpoint.",
+    parts: ["/v0/packages/", { param: "package_id" }, "/versions/", { param: "version" }]
+  },
+  "capability-template": {
+    title: "GET /v0/capabilities/{capability_id}/packages",
+    description: "Build a concrete capability reverse lookup endpoint.",
+    parts: ["/v0/capabilities/", { param: "capability_id" }, "/packages"]
+  },
+  "intent-template": {
+    title: "GET /v0/intents/{intent_id}",
+    description: "Build a concrete observed intent endpoint.",
+    parts: ["/v0/intents/", { param: "intent_id" }]
+  },
+  "intent-packages-template": {
+    title: "GET /v0/intents/{intent_id}/packages",
+    description: "Build a concrete observed intent package lookup endpoint.",
+    parts: ["/v0/intents/", { param: "intent_id" }, "/packages"]
+  }
+};
+
 const form = document.querySelector("#registry-form");
 const baseInput = document.querySelector("#registry-base");
 const loadStatus = document.querySelector("#load-status");
@@ -56,6 +86,7 @@ const endpointTree = document.querySelector("#endpoint-tree");
 const catalogFilter = document.querySelector("#catalog-filter");
 const catalogList = document.querySelector("#catalog-list");
 const catalogCount = document.querySelector("#catalog-count");
+const routeAlert = document.querySelector("#route-alert");
 const detailPanel = document.querySelector("#detail-panel");
 const jsonOutput = document.querySelector("#json-output");
 const jsonTitle = document.querySelector("#json-title");
@@ -130,6 +161,7 @@ async function loadRegistry() {
     state.activePath = "status/index.json";
     state.activeKind = "status";
     state.activeId = null;
+    clearRoutePrompt();
 
     setLoadStatus("ok", `Loaded ${state.base}`);
     renderAll();
@@ -193,6 +225,7 @@ function renderAll() {
   renderSummary();
   renderEndpointTree();
   renderCatalog();
+  renderRouteAlert();
   renderDetail();
   renderJson();
 }
@@ -225,6 +258,14 @@ function renderEndpointTree() {
       <div class="tree-group-title">${escapeHtml(group.title)}</div>
       ${group.items.map((endpoint) => {
         const active = isEndpointActive(endpoint.id) ? "active" : "";
+        if (routeTemplates[endpoint.id]) {
+          return `
+            <button class="tree-item ${active}" data-action="route-template" data-kind="${escapeAttr(endpoint.id)}">
+              <span class="tree-path">${escapeHtml(endpoint.title)}</span>
+              <span class="tree-desc">${escapeHtml(endpoint.description)}</span>
+            </button>
+          `;
+        }
         if (!endpoint.path) {
           return `
             <div class="tree-item static ${active}">
@@ -266,6 +307,55 @@ function renderCatalog() {
     `).join("")}
     ${results.length > visible.length ? `<div class="list-note">Showing ${escapeHtml(String(visible.length))} of ${escapeHtml(String(results.length))}. Narrow the search to see more.</div>` : ""}
   ` : `<div class="empty">No catalog items match this search.</div>`;
+}
+
+function renderRouteAlert() {
+  if (!state.routePrompt) {
+    routeAlert.hidden = true;
+    routeAlert.innerHTML = "";
+    return;
+  }
+  const template = routeTemplates[state.routePrompt.kind];
+  if (!template) {
+    routeAlert.hidden = true;
+    routeAlert.innerHTML = "";
+    return;
+  }
+  routeAlert.hidden = false;
+  routeAlert.innerHTML = `
+    <form class="route-template-form" data-route-template="${escapeAttr(state.routePrompt.kind)}">
+      <div class="route-alert-head">
+        <div class="route-alert-title">
+          <span class="pill live">Route Template</span>
+          <strong>${escapeHtml(template.title)}</strong>
+        </div>
+        <button class="btn small" type="button" data-action="route-dismiss">Close</button>
+      </div>
+      <p class="route-alert-note">${escapeHtml(template.description)}</p>
+      <div class="route-builder" aria-label="Endpoint URL builder">
+        ${template.parts.map((part) => renderRoutePart(part)).join("")}
+        <button class="btn small primary" type="submit">Open Endpoint</button>
+      </div>
+      ${state.routeError ? `<div class="route-error">${escapeHtml(state.routeError)}</div>` : ""}
+    </form>
+  `;
+}
+
+function renderRoutePart(part) {
+  if (typeof part === "string") {
+    return `<span class="route-literal">${escapeHtml(part)}</span>`;
+  }
+  return `
+    <label class="route-field">
+      <span>{${escapeHtml(part.param)}}</span>
+      <input
+        name="${escapeAttr(part.param)}"
+        placeholder="${escapeAttr(routePlaceholder(part.param))}"
+        autocomplete="off"
+        required
+      />
+    </label>
+  `;
 }
 
 function renderDetail() {
@@ -563,6 +653,12 @@ function bindActions() {
     try {
       if (action === "endpoint") {
         await showEndpoint(target.dataset.kind, target.dataset.path);
+      } else if (action === "route-template") {
+        showRoutePrompt(target.dataset.kind);
+      } else if (action === "route-dismiss") {
+        clearRoutePrompt();
+        renderEndpointTree();
+        renderRouteAlert();
       } else if (action === "catalog-mode") {
         state.catalogMode = target.dataset.mode || "all";
         renderCatalog();
@@ -585,9 +681,69 @@ function bindActions() {
       renderJson();
     }
   });
+
+  document.body.addEventListener("submit", async (event) => {
+    const routeForm = event.target.closest(".route-template-form");
+    if (!routeForm) {
+      return;
+    }
+    event.preventDefault();
+    try {
+      await submitRoutePrompt(routeForm);
+    } catch (error) {
+      state.routePrompt = { kind: routeForm.dataset.routeTemplate };
+      state.routeError = error.message;
+      renderEndpointTree();
+      renderRouteAlert();
+    }
+  });
+}
+
+function showRoutePrompt(kind) {
+  if (!routeTemplates[kind]) {
+    return;
+  }
+  state.routePrompt = { kind };
+  state.routeError = null;
+  renderEndpointTree();
+  renderRouteAlert();
+  const input = routeAlert.querySelector("input");
+  if (input) {
+    input.focus();
+  }
+}
+
+async function submitRoutePrompt(routeForm) {
+  const kind = routeForm.dataset.routeTemplate;
+  const template = routeTemplates[kind];
+  if (!template) {
+    throw new Error("Unknown endpoint template.");
+  }
+  const values = Object.fromEntries([...new FormData(routeForm).entries()].map(([key, value]) => [
+    key,
+    String(value || "").trim()
+  ]));
+  const missing = template.parts
+    .filter((part) => typeof part !== "string" && !values[part.param])
+    .map((part) => part.param);
+  if (missing.length) {
+    throw new Error(`Missing required id: ${missing.join(", ")}`);
+  }
+  if (kind === "package-template") {
+    await showPackage(values.package_id);
+  } else if (kind === "version-template") {
+    await showVersion(values.package_id, values.version);
+  } else if (kind === "capability-template") {
+    await showCapability(values.capability_id);
+  } else if (kind === "intent-template") {
+    await showIntent(values.intent_id);
+  } else if (kind === "intent-packages-template") {
+    await showIntentPackages(values.intent_id);
+  }
 }
 
 async function showEndpoint(kind, path) {
+  clearRoutePrompt();
   state.activeKind = kind;
   state.activeId = null;
   state.activePath = path;
@@ -606,6 +762,7 @@ async function showEndpoint(kind, path) {
 }
 
 async function showPackage(packageId) {
+  clearRoutePrompt();
   state.activeKind = "package";
   state.activeId = packageId;
   state.activePath = `packages/${segment(packageId)}/index.json`;
@@ -614,6 +771,7 @@ async function showPackage(packageId) {
 }
 
 async function showVersion(packageId, version) {
+  clearRoutePrompt();
   state.activeKind = "version";
   state.activeId = `${packageId}@${version}`;
   state.activePath = `packages/${segment(packageId)}/versions/${segment(version)}/index.json`;
@@ -622,6 +780,7 @@ async function showVersion(packageId, version) {
 }
 
 async function showCapability(capabilityId) {
+  clearRoutePrompt();
   state.activeKind = "capability";
   state.activeId = capabilityId;
   state.activePath = `capabilities/${segment(capabilityId)}/packages/index.json`;
@@ -630,6 +789,7 @@ async function showCapability(capabilityId) {
 }
 
 async function showIntent(intentId) {
+  clearRoutePrompt();
   state.activeKind = "intent";
   state.activeId = intentId;
   state.activePath = `intents/${segment(intentId)}/index.json`;
@@ -638,6 +798,7 @@ async function showIntent(intentId) {
 }
 
 async function showIntentPackages(intentId) {
+  clearRoutePrompt();
   state.activeKind = "intent-packages";
   state.activeId = intentId;
   state.activePath = `intents/${segment(intentId)}/packages/index.json`;
@@ -696,6 +857,9 @@ function isCatalogItemActive(item) {
 }
 
 function isEndpointActive(endpointId) {
+  if (state.routePrompt?.kind === endpointId) {
+    return true;
+  }
   if (state.activeKind === endpointId) {
     return true;
   }
@@ -727,6 +891,27 @@ function intentItems() {
 
 function segment(value) {
   return encodeURIComponent(String(value || ""));
+}
+
+function routePlaceholder(param) {
+  if (param === "package_id") {
+    return packageItems()[0]?.package_id || "specpm.core";
+  }
+  if (param === "version") {
+    return packageItems()[0]?.latest_version || "0.1.0";
+  }
+  if (param === "capability_id") {
+    return state.capabilities[0]?.id || "specpm.registry.search";
+  }
+  if (param === "intent_id") {
+    return intentItems()[0]?.intent_id || "intent.registry.intent_lookup";
+  }
+  return param;
+}
+
+function clearRoutePrompt() {
+  state.routePrompt = null;
+  state.routeError = null;
 }
 
 function matchesFilter(primary, secondary, filter) {

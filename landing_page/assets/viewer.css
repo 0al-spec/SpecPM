@@ -393,6 +393,109 @@ h3 {
   line-height: 1;
 }
 
+.route-alert[hidden] {
+  display: none;
+}
+
+.route-alert {
+  margin: -4px 0 24px;
+  padding: 18px;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+}
+
+.route-template-form {
+  display: grid;
+  gap: 13px;
+}
+
+.route-alert-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.route-alert-title {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.route-alert-title strong {
+  font-family: var(--mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.route-alert-note {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.route-builder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.route-literal,
+.route-field {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  border: 1px solid var(--rule-soft);
+  background: white;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.route-literal {
+  padding: 0 10px;
+  color: var(--ink);
+}
+
+.route-field {
+  gap: 8px;
+  padding: 0 10px;
+  border-color: var(--rule);
+}
+
+.route-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.route-field span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.route-field input {
+  width: clamp(170px, 20vw, 320px);
+  min-height: 34px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 0;
+  font-size: 12px;
+}
+
+.route-field input:focus {
+  outline: none;
+}
+
+.route-error {
+  color: #9c2f28;
+  font-size: 13px;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 0.84fr) minmax(360px, 1fr);
@@ -658,6 +761,19 @@ pre {
   .nav-links {
     display: grid;
     gap: 10px;
+  }
+
+  .route-alert-head,
+  .route-builder {
+    align-items: stretch;
+  }
+
+  .route-alert-head {
+    display: grid;
+  }
+
+  .route-field input {
+    width: 100%;
   }
 
   .content {
