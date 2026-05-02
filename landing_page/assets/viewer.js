@@ -5,6 +5,7 @@ const state = {
   packages: null,
   intents: null,
   capabilities: [],
+  catalogItems: [],
   activePath: "status/index.json",
   activeKind: "status",
   activeId: null,
@@ -157,8 +158,9 @@ function normalizeRegistryBase(value) {
 
 async function loadRegistry() {
   state.errors = [];
+  clearLoadedRegistryState();
   setLoadStatus("loading", "Loading static registry metadata...");
-  renderEndpointTree();
+  renderAll();
   try {
     const [root, status, packages, intents] = await Promise.all([
       fetchOptional("index.json"),
@@ -172,6 +174,7 @@ async function loadRegistry() {
     state.packages = packages;
     state.intents = intents || emptyIntentIndex();
     state.capabilities = collectCapabilities(state.packages);
+    state.catalogItems = buildCatalogItems();
     state.payload = state.status;
     state.activePath = "status/index.json";
     state.activeKind = "status";
@@ -188,9 +191,34 @@ async function loadRegistry() {
     }
   } catch (error) {
     state.errors.push(error.message);
+    state.payload = {
+      apiVersion: "specpm.registry/viewer",
+      kind: "RemoteRegistryLoadError",
+      status: "invalid",
+      errors: [...state.errors]
+    };
     setLoadStatus("error", error.message);
     renderAll();
   }
+}
+
+function clearLoadedRegistryState() {
+  state.root = null;
+  state.status = null;
+  state.packages = null;
+  state.intents = null;
+  state.capabilities = [];
+  state.catalogItems = [];
+  state.activePath = "status/index.json";
+  state.activeKind = "status";
+  state.activeId = null;
+  state.payload = {
+    apiVersion: "specpm.registry/viewer",
+    kind: "RemoteRegistryLoading",
+    status: "loading",
+    message: "Loading static registry metadata..."
+  };
+  clearRoutePrompt();
 }
 
 async function fetchRequired(path) {
@@ -306,11 +334,12 @@ function renderEndpointTree() {
 }
 
 function renderCatalog() {
-  const results = catalogItems().filter((item) => {
+  const filter = catalogFilter.value.trim().toLowerCase();
+  const results = state.catalogItems.filter((item) => {
     if (state.catalogMode !== "all" && item.type !== state.catalogMode) {
       return false;
     }
-    return matchesFilter(item.id, item.search, catalogFilter.value.trim().toLowerCase());
+    return matchesCatalogFilter(item, filter);
   });
   const visible = results.slice(0, catalogVisibleLimit);
   catalogCount.textContent = String(results.length);
@@ -969,7 +998,7 @@ function routeToHash(route) {
   return `endpoint/${encodeRouteSegment(route.kind || defaultViewerRoute.kind)}`;
 }
 
-function catalogItems() {
+function buildCatalogItems() {
   const packages = packageItems().map((pkg) => ({
     type: "package",
     action: "package",
@@ -1003,12 +1032,17 @@ function catalogItems() {
     meta: `${capability.packages.length} package source(s)`,
     search: capability.packages.join(" ")
   }));
-  return [...packages, ...intents, ...capabilities].sort((left, right) => {
-    if (left.type === right.type) {
-      return left.id.localeCompare(right.id);
-    }
-    return typeRank(left.type) - typeRank(right.type);
-  });
+  return [...packages, ...intents, ...capabilities]
+    .map((item) => ({
+      ...item,
+      searchText: `${item.id || ""} ${item.search || ""}`.toLowerCase()
+    }))
+    .sort((left, right) => {
+      if (left.type === right.type) {
+        return left.id.localeCompare(right.id);
+      }
+      return typeRank(left.type) - typeRank(right.type);
+    });
 }
 
 function typeRank(type) {
@@ -1103,11 +1137,11 @@ function clearRoutePrompt() {
   state.routeError = null;
 }
 
-function matchesFilter(primary, secondary, filter) {
+function matchesCatalogFilter(item, filter) {
   if (!filter) {
     return true;
   }
-  return `${primary || ""} ${secondary || ""}`.toLowerCase().includes(filter);
+  return item.searchText.includes(filter);
 }
 
 function endpointTitle(kind) {

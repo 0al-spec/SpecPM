@@ -607,6 +607,7 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "Registry Tree" in registry_viewer
     assert "Catalog Search" in registry_viewer
     assert "Search packages, intents, capabilities" in registry_viewer
+    assert 'aria-label="Search packages, intents, capabilities"' in registry_viewer
     assert "Instrument Serif" in registry_viewer_design_css
     assert ".brand-mark" in registry_viewer_design_css
     assert ".json-panel" in registry_viewer_css
@@ -617,6 +618,11 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert ".catalog-grid" in registry_viewer_css
     assert "routeTemplates" in registry_viewer_js
     assert "RemoteRouteTemplate" in registry_viewer_js
+    assert "clearLoadedRegistryState" in registry_viewer_js
+    assert "state.catalogItems" in registry_viewer_js
+    assert "buildCatalogItems" in registry_viewer_js
+    assert "searchText" in registry_viewer_js
+    assert "RemoteRegistryLoadError" in registry_viewer_js
     assert 'window.addEventListener("popstate"' in registry_viewer_js
     assert "history.pushState" in registry_viewer_js
     assert "history.replaceState" in registry_viewer_js
