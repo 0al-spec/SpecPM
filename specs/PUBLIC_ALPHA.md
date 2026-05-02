@@ -12,8 +12,8 @@ metadata through the static read-only `/v0` registry contract.
 
 This alpha is meant for early ecosystem integration. SpecGraph, SpecNode,
 ContextBuilder, and manual tools can discover package IDs, versions,
-capabilities, and archive metadata without depending on a mutable registry
-backend.
+capabilities, declared canonical intents, and archive metadata without
+depending on a mutable registry backend.
 
 ## Endpoint
 
@@ -37,6 +37,7 @@ specpm remote packages --registry https://0al-spec.github.io/SpecPM --json
 specpm remote package specnode.core --registry https://0al-spec.github.io/SpecPM --json
 specpm remote version specnode.core@0.1.0 --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search specnode.typed_job_protocol --registry https://0al-spec.github.io/SpecPM --json
+specpm remote search-intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
 specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
 ```
 

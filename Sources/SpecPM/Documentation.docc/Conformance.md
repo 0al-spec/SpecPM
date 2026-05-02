@@ -71,9 +71,9 @@ contract.
 
 `public_registry_static_index` generates a static public `/v0` tree from
 repository fixtures and checks the registry status, package index, package
-metadata, package version, exact capability search, adjacent `index.html`
-static-host payloads, archive digest metadata, and absent missing
-package/capability paths.
+metadata, package version, exact capability search, exact intent search,
+adjacent `index.html` static-host payloads, archive digest metadata, and absent
+missing package/capability/intent paths.
 
 Read-only remote registry client tests reuse those payloads behind HTTP fetch
 stubs. They verify endpoint construction and stable client reports without a
@@ -84,7 +84,7 @@ live registry service.
 The conformance suite does not define `specpm publish`, remote registry service
 runtime, remote archive download/install/cache behavior, package signing,
 namespace governance, semantic search, full dependency solving, SpecGraph graph
-reasoning, or ContextBuilder artifact generation.
+reasoning, semantic intent inference, or ContextBuilder artifact generation.
 
 ## References
 

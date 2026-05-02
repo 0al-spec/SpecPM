@@ -32,7 +32,9 @@ from specpm.core import (
     observe_remote_registry,
     pack_package,
     search_index,
+    search_intent_index,
     search_remote_registry,
+    search_remote_registry_intent,
     unyank_index_package,
     validate_package,
     validate_remote_registry_payload,
@@ -109,6 +111,7 @@ CONFORMANCE_CASE_KINDS = {
 REMOTE_REGISTRY_API_VERSION = "specpm.registry/v0"
 REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteCapabilitySearch",
+    "RemoteIntentSearch",
     "RemotePackage",
     "RemotePackageIndex",
     "RemotePackageVersion",
@@ -250,6 +253,8 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
         assert isinstance(package["package_id"], str)
         assert isinstance(package["name"], str)
         assert isinstance(package["capabilities"], list)
+        if "intents" in package:
+            assert isinstance(package["intents"], list)
         assert isinstance(package["versions"], list)
         for version in package["versions"]:
             assert isinstance(version["version"], str)
@@ -269,6 +274,8 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
             assert isinstance(package["package_id"], str)
             assert isinstance(package["name"], str)
             assert isinstance(package["capabilities"], list)
+            if "intents" in package:
+                assert isinstance(package["intents"], list)
             assert isinstance(package["versions"], list)
         return
 
@@ -279,6 +286,8 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
         assert isinstance(package["version"], str)
         assert isinstance(package["provided_capabilities"], list)
         assert isinstance(package["required_capabilities"], list)
+        if "provided_intents" in package:
+            assert isinstance(package["provided_intents"], list)
         assert isinstance(package["state"]["yanked"], bool)
         assert isinstance(package["state"]["deprecated"], bool)
         assert_remote_registry_source(package["source"])
@@ -299,6 +308,24 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
             assert_remote_registry_source(result["source"])
         return
 
+    if payload["kind"] == "RemoteIntentSearch":
+        assert payload["query"]["match"] == "exact"
+        assert isinstance(payload["query"]["intent_id"], str)
+        assert isinstance(payload["result_count"], int)
+        assert payload["result_count"] == len(payload["results"])
+        for result in payload["results"]:
+            assert isinstance(result["package_id"], str)
+            assert isinstance(result["version"], str)
+            assert isinstance(result["matched_intent"], str)
+            assert isinstance(result["matched_capabilities"], list)
+            assert isinstance(result["provided_intents"], list)
+            assert isinstance(result["provided_capabilities"], list)
+            assert isinstance(result["required_capabilities"], list)
+            assert isinstance(result["yanked"], bool)
+            assert isinstance(result["deprecated"], bool)
+            assert_remote_registry_source(result["source"])
+        return
+
     if payload["kind"] == "RemoteRegistryStatus":
         registry = payload["registry"]
         assert isinstance(registry["profile"], str)
@@ -309,6 +336,8 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
         assert isinstance(registry["package_count"], int)
         assert isinstance(registry["version_count"], int)
         assert isinstance(registry["capability_count"], int)
+        if "intent_count" in registry:
+            assert isinstance(registry["intent_count"], int)
         return
 
     assert payload["kind"] == "RemoteRegistryError"
@@ -1711,6 +1740,8 @@ def test_conformance_remote_registry_payload_cases() -> None:
             assert payload["package"]["state"]["deprecated"] is expected["deprecated"], case["id"]
         if "capability_id" in expected:
             assert payload["query"]["capability_id"] == expected["capability_id"], case["id"]
+        if "intent_id" in expected:
+            assert payload["query"]["intent_id"] == expected["intent_id"], case["id"]
         if "result_count" in expected:
             assert payload["result_count"] == expected["result_count"], case["id"]
 
@@ -1761,6 +1792,8 @@ def test_conformance_public_registry_static_index_cases(tmp_path: Path) -> None:
                 assert payload["package"]["version"] == endpoint["version"], case["id"]
             if "capability_id" in endpoint:
                 assert payload["query"]["capability_id"] == endpoint["capability_id"], case["id"]
+            if "intent_id" in endpoint:
+                assert payload["query"]["intent_id"] == endpoint["intent_id"], case["id"]
             if "result_count" in endpoint:
                 assert payload["result_count"] == endpoint["result_count"], case["id"]
 
@@ -1792,6 +1825,21 @@ def test_remote_registry_payload_validator_rejects_incomplete_source() -> None:
     )
 
 
+def test_remote_registry_payload_validator_rejects_non_string_result_lists() -> None:
+    payload = load_remote_registry_fixture("intent-search.json")
+    payload["results"][0]["matched_capabilities"] = ["document_conversion.email_to_markdown", 123]
+    payload["results"][0]["provided_capabilities"] = [None]
+    payload["results"][0]["required_capabilities"] = [""]
+
+    errors = validate_remote_registry_payload(payload)
+
+    assert {issue.field for issue in errors if issue.code == "remote_registry_field_invalid"} >= {
+        "results.0.matched_capabilities.1",
+        "results.0.provided_capabilities.0",
+        "results.0.required_capabilities.0",
+    }
+
+
 def test_remote_registry_search_fetches_exact_capability(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     captured: dict[str, Any] = {}
     payload = load_remote_registry_fixture("capability-search.json")
@@ -1815,6 +1863,39 @@ def test_remote_registry_search_fetches_exact_capability(monkeypatch) -> None:  
         "url": (
             "https://registry.example.invalid/v0/capabilities/"
             "document_conversion.email_to_markdown/packages"
+        ),
+        "accept": "application/json",
+        "timeout": 2.5,
+    }
+
+
+def test_remote_registry_search_fetches_exact_intent(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    captured: dict[str, Any] = {}
+    payload = load_remote_registry_fixture("intent-search.json")
+
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        captured["url"] = request.full_url
+        captured["accept"] = request.get_header("Accept")
+        captured["timeout"] = timeout
+        return FakeRemoteResponse(payload)
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    report = search_remote_registry_intent(
+        "https://registry.example.invalid",
+        "intent.document_conversion.email_to_markdown",
+        timeout=2.5,
+    )
+
+    assert report["status"] == "ok"
+    assert report["payload"]["kind"] == "RemoteIntentSearch"
+    assert report["payload"]["results"][0]["matched_capabilities"] == [
+        "document_conversion.email_to_markdown"
+    ]
+    assert captured == {
+        "url": (
+            "https://registry.example.invalid/v0/intents/"
+            "intent.document_conversion.email_to_markdown/packages"
         ),
         "accept": "application/json",
         "timeout": 2.5,
@@ -2109,6 +2190,11 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
             output / "v0/capabilities/document_conversion.email_to_markdown/packages/index.json"
         ).read_text(encoding="utf-8")
     )
+    intent_payload = json.loads(
+        (
+            output / "v0/intents/intent.document_conversion.email_to_markdown/packages/index.json"
+        ).read_text(encoding="utf-8")
+    )
     archive = (
         output
         / "v0/packages/document_conversion.email_tools/versions/0.1.0/"
@@ -2122,6 +2208,7 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     assert package_directory_index == package_payload
     assert_remote_registry_payload_shape(version_payload)
     assert_remote_registry_payload_shape(capability_payload)
+    assert_remote_registry_payload_shape(intent_payload)
     assert status_payload["registry"] == {
         "profile": "public_static_index",
         "api_version": "v0",
@@ -2130,12 +2217,19 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
         "package_count": 1,
         "version_count": 1,
         "capability_count": 1,
+        "intent_count": 1,
     }
     assert package_index_payload["packages"][0]["package_id"] == ("document_conversion.email_tools")
     assert package_payload["package"]["latest_version"] == "0.1.0"
     assert capability_payload["results"][0]["matched_capability"] == (
         "document_conversion.email_to_markdown"
     )
+    assert intent_payload["results"][0]["matched_intent"] == (
+        "intent.document_conversion.email_to_markdown"
+    )
+    assert intent_payload["results"][0]["matched_capabilities"] == [
+        "document_conversion.email_to_markdown"
+    ]
     assert version_payload["package"]["source"]["url"] == (
         "https://registry.example.invalid/v0/packages/"
         "document_conversion.email_tools/versions/0.1.0/"
@@ -2596,7 +2690,7 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
     payload = json.loads(captured.out)
     assert exit_code == 0
     assert payload["status"] == "ok"
-    assert payload["written_count"] == 11
+    assert payload["written_count"] == 13
 
 
 def test_cli_public_index_generate_accepts_reviewed_manifest(
@@ -2676,6 +2770,30 @@ def test_cli_remote_search_json(monkeypatch, capsys) -> None:  # type: ignore[no
     assert exit_code == 0
     assert payload["status"] == "ok"
     assert payload["payload"]["kind"] == "RemoteCapabilitySearch"
+
+
+def test_cli_remote_search_intent_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+    def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
+        return FakeRemoteResponse(load_remote_registry_fixture("intent-search.json"))
+
+    monkeypatch.setattr(core_module, "urlopen", fake_urlopen)
+
+    exit_code = main(
+        [
+            "remote",
+            "search-intent",
+            "intent.document_conversion.email_to_markdown",
+            "--registry",
+            "https://registry.example.invalid",
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["status"] == "ok"
+    assert payload["payload"]["kind"] == "RemoteIntentSearch"
 
 
 def test_cli_remote_status_and_packages_json(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
@@ -3136,6 +3254,16 @@ def test_cli_end_to_end_local_package_workflow(tmp_path: Path, capsys) -> None: 
         ],
         capsys,
     )
+    intent_search = run_cli_json(
+        [
+            "search-intent",
+            "intent.document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--json",
+        ],
+        capsys,
+    )
     yanked = run_cli_json(
         [
             "yank",
@@ -3204,6 +3332,7 @@ def test_cli_end_to_end_local_package_workflow(tmp_path: Path, capsys) -> None: 
     assert indexed["status"] == "indexed"
     assert indexed["entry"]["source"]["kind"] == "archive"
     assert search["result_count"] == 1
+    assert intent_search["result_count"] == 1
     assert yanked["status"] == "yanked"
     assert yanked_search["results"][0]["yanked"] is True
     assert unyanked["status"] == "unyanked"
@@ -3241,6 +3370,20 @@ index:
 
     assert report["status"] == "invalid"
     assert any(issue["code"] == "manifest_capability_entry_invalid" for issue in report["errors"])
+
+
+def test_validator_rejects_non_canonical_capability_intent_id(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "email-tools")
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["provides"]["capabilities"][0]["intentIds"] = ["identity.enterprise_sso"]
+    write_yaml_file(spec_path, spec)
+
+    report = validate_package(package)
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"intent_id_invalid"}
+    assert any("'intent.'" in issue["message"] for issue in report["errors"])
 
 
 def test_validator_rejects_missing_manifest(tmp_path: Path) -> None:
@@ -3446,6 +3589,13 @@ def test_index_directory_package_creates_file_backed_index(tmp_path: Path) -> No
     assert index_payload["capabilities"]["document_conversion.email_to_markdown"] == [
         {"package_id": "document_conversion.email_tools", "version": "0.1.0"}
     ]
+    assert index_payload["intents"]["intent.document_conversion.email_to_markdown"] == [
+        {
+            "package_id": "document_conversion.email_tools",
+            "version": "0.1.0",
+            "capability_ids": ["document_conversion.email_to_markdown"],
+        }
+    ]
 
 
 def test_index_directory_package_is_idempotent(tmp_path: Path) -> None:
@@ -3523,6 +3673,19 @@ def test_search_finds_exact_capability_match(tmp_path: Path) -> None:
     assert report["results"][0]["matched_capability"] == "document_conversion.email_to_markdown"
 
 
+def test_search_intent_finds_exact_intent_match(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    report = search_intent_index("intent.document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "ok"
+    assert report["result_count"] == 1
+    assert report["results"][0]["package_id"] == "document_conversion.email_tools"
+    assert report["results"][0]["matched_intent"] == "intent.document_conversion.email_to_markdown"
+    assert report["results"][0]["matched_capabilities"] == ["document_conversion.email_to_markdown"]
+
+
 def test_search_rebuilds_missing_capability_index_from_packages(tmp_path: Path) -> None:
     index_path = tmp_path / "index.json"
     index_package(ROOT / "examples/email_tools", index_path)
@@ -3537,6 +3700,19 @@ def test_search_rebuilds_missing_capability_index_from_packages(tmp_path: Path) 
     assert report["results"][0]["package_id"] == "document_conversion.email_tools"
 
 
+def test_search_intent_rebuilds_missing_intent_index_from_packages(tmp_path: Path) -> None:
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+    index_payload = json.loads(index_path.read_text(encoding="utf-8"))
+    index_payload.pop("intents")
+    index_path.write_text(json.dumps(index_payload), encoding="utf-8")
+
+    report = search_intent_index("intent.document_conversion.email_to_markdown", index_path)
+
+    assert report["status"] == "ok"
+    assert report["result_count"] == 1
+
+
 def test_search_unknown_capability_returns_empty_result(tmp_path: Path) -> None:
     index_path = tmp_path / "index.json"
     index_package(ROOT / "examples/email_tools", index_path)
@@ -3546,6 +3722,13 @@ def test_search_unknown_capability_returns_empty_result(tmp_path: Path) -> None:
     assert report["status"] == "ok"
     assert report["result_count"] == 0
     assert report["results"] == []
+
+
+def test_search_intent_rejects_non_canonical_intent_id(tmp_path: Path) -> None:
+    report = search_intent_index("document_conversion.email_to_markdown", tmp_path / "index.json")
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"intent_id_invalid"}
 
 
 def test_search_reports_invalid_index(tmp_path: Path) -> None:
@@ -3600,6 +3783,26 @@ def test_cli_search_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-unt
         [
             "search",
             "document_conversion.email_to_markdown",
+            "--index",
+            str(index_path),
+            "--json",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["result_count"] == 1
+
+
+def test_cli_search_intent_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    index_path = tmp_path / "index.json"
+    index_package(ROOT / "examples/email_tools", index_path)
+
+    exit_code = main(
+        [
+            "search-intent",
+            "intent.document_conversion.email_to_markdown",
             "--index",
             str(index_path),
             "--json",

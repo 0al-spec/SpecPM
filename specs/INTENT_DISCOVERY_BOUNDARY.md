@@ -13,14 +13,17 @@ Users and downstream tools may start from natural-language intent such as:
 I need a package that converts email messages into Markdown.
 ```
 
-SpecPM does not currently translate that text into a canonical capability ID,
-package ID, or package selection. SpecPM expects exact, already-structured
-inputs such as:
+SpecPM does not currently translate that text into a canonical intent ID,
+capability ID, package ID, or package selection. SpecPM expects exact,
+already-structured inputs such as:
 
 ```text
+intent.document_conversion.email_to_markdown
 document_conversion.email_to_markdown
 document_conversion.email_tools@0.1.0
 ```
+
+The identifier model is documented in `specs/IDENTIFIER_MODEL.md`.
 
 ## What SpecPM Is Not
 
@@ -55,12 +58,15 @@ metadata:
 - structural diff;
 - stable machine-readable reports.
 
-In the current implementation, normative search is exact capability ID lookup.
-For example:
+In the current implementation, normative package-manager search remains exact
+capability ID lookup. SpecPM can also expose exact `intent.*` mappings when a
+BoundarySpec explicitly declares them. For example:
 
 ```bash
 specpm search document_conversion.email_to_markdown --index .specpm/index.json --json
+specpm search-intent intent.document_conversion.email_to_markdown --index .specpm/index.json --json
 specpm remote search document_conversion.email_to_markdown --registry http://localhost:8081 --json
+specpm remote search-intent intent.document_conversion.email_to_markdown --registry http://localhost:8081 --json
 ```
 
 ## Where Plain-Text Discovery Belongs
@@ -83,8 +89,8 @@ A future resolver may use:
 - ontology or graph traversal;
 - human review workflows.
 
-That resolver should output candidate `capability_id` or `package_id` values,
-then call SpecPM for exact metadata verification.
+That resolver should output candidate `intent_id`, `capability_id`, or
+`package_id` values, then call SpecPM for exact metadata verification.
 
 ## Recommended Flow
 
@@ -96,10 +102,10 @@ ContextBuilder / SpecGraph intent resolver
 LLM + embeddings + vector search + rerank
         |
         v
-candidate capability IDs / package IDs
+candidate intent IDs / capability IDs / package IDs
         |
         v
-SpecPM exact search / remote metadata lookup
+SpecPM exact intent or capability lookup / remote metadata lookup
         |
         v
 validated package candidates
@@ -142,7 +148,8 @@ This boundary does not add:
 Future work may define a post-MVP Intent Discovery Profile or downstream
 resolver contract. That work may explore:
 
-- mapping plain text to candidate capability IDs;
+- mapping plain text to candidate `intent.*` IDs;
+- mapping canonical intent IDs to package capabilities;
 - exposing package metadata optimized for external embedding;
 - producing candidate lists with confidence and traceability;
 - requiring exact SpecPM lookup before selection;

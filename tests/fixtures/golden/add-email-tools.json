@@ -28,11 +28,14 @@
       "provided_capabilities": [
         "document_conversion.email_to_markdown"
       ],
+      "provided_intents": [
+        "intent.document_conversion.email_to_markdown"
+      ],
       "required_capabilities": [],
       "source": {
         "digest": {
           "algorithm": "sha256",
-          "value": "358810394998afda59729fef24c8459abc94e6b51fec7740901463fe8ba5b266"
+          "value": "58e9317bbd17ef677ddf5d648af9c7e621804e4807639aa06406568559309df2"
         },
         "kind": "directory",
         "path": "<repo>/examples/email_tools"
@@ -66,11 +69,14 @@
     "provided_capabilities": [
       "document_conversion.email_to_markdown"
     ],
+    "provided_intents": [
+      "intent.document_conversion.email_to_markdown"
+    ],
     "required_capabilities": [],
     "source": {
       "digest": {
         "algorithm": "sha256",
-        "value": "358810394998afda59729fef24c8459abc94e6b51fec7740901463fe8ba5b266"
+        "value": "58e9317bbd17ef677ddf5d648af9c7e621804e4807639aa06406568559309df2"
       },
       "kind": "directory",
       "path": "<repo>/examples/email_tools"

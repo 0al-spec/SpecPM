@@ -462,6 +462,8 @@ def prepare_public_index_package(
             "keywords": package_summary.get("keywords", []),
             "provided_capabilities": sorted(validation.get("capabilities", [])),
             "required_capabilities": package_summary.get("required_capabilities", []),
+            "provided_intents": package_summary.get("intents", []),
+            "intent_mappings": package_summary.get("intent_mappings", []),
             "compatibility": package_summary.get("compatibility", {}),
             "state": {"yanked": False, "deprecated": False},
             "source": {
@@ -492,6 +494,7 @@ def build_public_index_payloads(packages: list[dict[str, Any]]) -> list[dict[str
 
     packages_by_id: dict[str, list[dict[str, Any]]] = {}
     capability_matches: dict[str, list[dict[str, Any]]] = {}
+    intent_matches: dict[str, list[dict[str, Any]]] = {}
     for package in packages:
         packages_by_id.setdefault(package["package_id"], []).append(package)
         payloads.append(
@@ -502,6 +505,8 @@ def build_public_index_payloads(packages: list[dict[str, Any]]) -> list[dict[str
         )
         for capability_id in package["provided_capabilities"]:
             capability_matches.setdefault(capability_id, []).append(package)
+        for intent_id in package.get("provided_intents", []):
+            intent_matches.setdefault(intent_id, []).append(package)
 
     for package_id, versions in sorted(packages_by_id.items()):
         payloads.append(
@@ -519,6 +524,14 @@ def build_public_index_payloads(packages: list[dict[str, Any]]) -> list[dict[str
             }
         )
 
+    for intent_id, matches in sorted(intent_matches.items()):
+        payloads.append(
+            {
+                "path": intent_payload_path(intent_id),
+                "payload": remote_intent_search_payload(intent_id, matches),
+            }
+        )
+
     return sorted(payloads, key=lambda item: item["path"])
 
 
@@ -529,6 +542,12 @@ def remote_registry_status_payload(packages: list[dict[str, Any]]) -> dict[str, 
         for package in packages
         for capability in package.get("provided_capabilities", [])
         if isinstance(capability, str)
+    }
+    intents = {
+        intent
+        for package in packages
+        for intent in package.get("provided_intents", [])
+        if isinstance(intent, str)
     }
     return {
         "apiVersion": REMOTE_REGISTRY_API_VERSION,
@@ -543,6 +562,7 @@ def remote_registry_status_payload(packages: list[dict[str, Any]]) -> dict[str, 
             "package_count": len(package_ids),
             "version_count": len(packages),
             "capability_count": len(capabilities),
+            "intent_count": len(intents),
         },
     }
 
@@ -578,6 +598,14 @@ def remote_package_payload(versions: list[dict[str, Any]]) -> dict[str, Any]:
             if isinstance(capability, str)
         }
     )
+    intents = sorted(
+        {
+            intent
+            for package in versions
+            for intent in package.get("provided_intents", [])
+            if isinstance(intent, str)
+        }
+    )
     return {
         "apiVersion": REMOTE_REGISTRY_API_VERSION,
         "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
@@ -590,6 +618,7 @@ def remote_package_payload(versions: list[dict[str, Any]]) -> dict[str, Any]:
             "license": latest["license"],
             "latest_version": latest["version"],
             "capabilities": capabilities,
+            "intents": intents,
             "keywords": latest.get("keywords", []),
             "versions": [
                 {
@@ -617,6 +646,8 @@ def remote_package_version_payload(package: dict[str, Any]) -> dict[str, Any]:
             "license": package["license"],
             "provided_capabilities": package["provided_capabilities"],
             "required_capabilities": package["required_capabilities"],
+            "provided_intents": package.get("provided_intents", []),
+            "intent_mappings": package.get("intent_mappings", []),
             "compatibility": package["compatibility"],
             "state": package["state"],
             "source": package["source"],
@@ -646,6 +677,7 @@ def remote_capability_search_payload(
                 "name": package["name"],
                 "summary": package["summary"],
                 "matched_capability": capability_id,
+                "provided_intents": package.get("provided_intents", []),
                 "provided_capabilities": package["provided_capabilities"],
                 "required_capabilities": package["required_capabilities"],
                 "license": package["license"],
@@ -656,6 +688,53 @@ def remote_capability_search_payload(
             for package in packages
         ],
     }
+
+
+def remote_intent_search_payload(
+    intent_id: str,
+    packages: list[dict[str, Any]],
+) -> dict[str, Any]:
+    packages = sorted(packages, key=public_index_package_sort_key)
+    return {
+        "apiVersion": REMOTE_REGISTRY_API_VERSION,
+        "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
+        "kind": "RemoteIntentSearch",
+        "status": "ok",
+        "query": {
+            "intent_id": intent_id,
+            "match": "exact",
+        },
+        "result_count": len(packages),
+        "results": [
+            {
+                "package_id": package["package_id"],
+                "version": package["version"],
+                "name": package["name"],
+                "summary": package["summary"],
+                "matched_intent": intent_id,
+                "matched_capabilities": matched_capabilities_for_intent(package, intent_id),
+                "provided_intents": package.get("provided_intents", []),
+                "provided_capabilities": package["provided_capabilities"],
+                "required_capabilities": package["required_capabilities"],
+                "license": package["license"],
+                "yanked": package["state"]["yanked"],
+                "deprecated": package["state"]["deprecated"],
+                "source": package["source"],
+            }
+            for package in packages
+        ],
+    }
+
+
+def matched_capabilities_for_intent(package: dict[str, Any], intent_id: str) -> list[str]:
+    capability_ids = {
+        mapping.get("capability_id")
+        for mapping in package.get("intent_mappings", [])
+        if isinstance(mapping, dict) and mapping.get("intent_id") == intent_id
+    }
+    return sorted(
+        capability_id for capability_id in capability_ids if isinstance(capability_id, str)
+    )
 
 
 def validate_public_index_payloads(payloads: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -740,6 +819,10 @@ def version_payload_path(package: dict[str, Any]) -> str:
 
 def capability_payload_path(capability_id: str) -> str:
     return f"v0/capabilities/{capability_id}/packages/index.json"
+
+
+def intent_payload_path(intent_id: str) -> str:
+    return f"v0/intents/{intent_id}/packages/index.json"
 
 
 def public_index_url(registry_url: str, parts: list[str]) -> str:

@@ -79,6 +79,7 @@ GET /v0/packages
 GET /v0/packages/{package_id}
 GET /v0/packages/{package_id}/versions/{version}
 GET /v0/capabilities/{capability_id}/packages
+GET /v0/intents/{intent_id}/packages
 ```
 
 These endpoints are metadata lookup surfaces. They do not install packages,

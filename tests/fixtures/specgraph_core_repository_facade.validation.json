@@ -8,6 +8,8 @@
   ],
   "error_count": 0,
   "errors": [],
+  "intent_mappings": [],
+  "intents": [],
   "package_identity": {
     "name": "SpecGraph Core Repository Facade",
     "package_id": "specgraph.core_repository_facade",

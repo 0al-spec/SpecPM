@@ -68,6 +68,8 @@ provides:
     - id: example.capability
       role: primary
       summary: What this capability enables.
+      intentIds:
+        - intent.example.capability
 requires:
   capabilities: []
 interfaces:
@@ -119,6 +121,22 @@ specpm.registry.public_static_index
 
 Keep IDs stable, specific, and reviewable. Do not use natural-language
 sentences as IDs.
+
+## Intent IDs
+
+Use `intentIds` only for package-neutral canonical user needs that the
+capability clearly satisfies.
+
+Good:
+
+```text
+intent.document_conversion.email_to_markdown
+intent.identity.enterprise_sso
+intent.authorization.rbac
+```
+
+Do not use package, repository, or publisher names as the `intent.*` authority.
+Those belong in package metadata and capability IDs.
 
 ## Validation Commands
 

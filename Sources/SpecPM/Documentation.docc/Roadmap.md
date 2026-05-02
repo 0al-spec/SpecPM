@@ -12,6 +12,7 @@ SpecPM is usable today for:
 - local `SpecPackage` and `BoundarySpec` validation, inspection, deterministic
   packing, structural diff, and local registry operations;
 - exact capability search and deterministic local add/lock behavior;
+- exact `intent.*` lookup over explicit capability-to-intent mappings;
 - SpecGraph inbox inspection for exported package candidates;
 - read-only remote `/v0` metadata lookup;
 - static public index generation for GitHub Pages;
@@ -68,8 +69,9 @@ and staged promotion.
 
 Keep natural-language intent resolution outside SpecPM core. ContextBuilder,
 SpecGraph, or downstream resolver tooling may use embeddings, vector search,
-RAG, or LLM reranking to propose reviewable candidate `SpecPackage` and
-`BoundarySpec` IDs. SpecPM verifies exact IDs and package shape.
+RAG, or LLM reranking to propose reviewable candidate `intent.*`,
+`SpecPackage`, `BoundarySpec`, and capability IDs. SpecPM verifies exact IDs and
+package shape.
 
 ## Non-Goals For SpecPM Core
 
@@ -88,6 +90,7 @@ Package content can describe desired outputs. Package content cannot command the
 ## References
 
 - <doc:StaticRegistryPipeline>
+- <doc:IdentifierModel>
 - <doc:AddSpecPackage>
 - <doc:PublicAlphaRegistry>
 - <doc:Deployment>

@@ -30,11 +30,13 @@ specpm pack <package-dir> [-o <archive>] [--json]
 ```bash
 specpm index <package-dir-or-archive> [--index <path>] [--json]
 specpm search <capability-id> [--index <path>] [--json]
+specpm search-intent <intent-id> [--index <path>] [--json]
 specpm add <capability-id-or-package-ref> [--index <path>] [--project <dir>] [--json]
 ```
 
 The MVP registry is local and file-backed. Search uses exact capability IDs for
-normative resolution.
+normative resolution. Intent search uses exact `intent.*` IDs declared through
+capability-level `intentIds`; it does not infer intent from package text.
 
 ## Local Lifecycle
 
@@ -74,13 +76,14 @@ specpm remote packages --registry <url> [--json]
 specpm remote package <package-id> --registry <url> [--json]
 specpm remote version <package-id@version> --registry <url> [--json]
 specpm remote search <capability-id> --registry <url> [--json]
+specpm remote search-intent <intent-id> --registry <url> [--json]
 specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--json]
 ```
 
 Remote commands are explicit read-only metadata clients for the post-MVP
 registry contract. `status` and `packages` provide the discovery surface for
 local SpecGraph and ContextBuilder observation before requesting a specific
-package or capability. `observe` combines those same read-only lookups into a
+package, capability, or declared intent. `observe` combines those same read-only lookups into a
 machine-readable registry observation report for downstream evidence. Remote
 commands do not download archives, publish packages, mutate remote state, or
 execute package content.
@@ -94,8 +97,8 @@ specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.y
 The public index generator validates and deterministically packs package
 directories, then writes static `/v0` remote registry metadata for package
 status, package index, package lookup, package version lookup, and exact
-capability search. The output can be hosted by GitHub Pages or another static
-host.
+capability and intent search. The output can be hosted by GitHub Pages or
+another static host.
 
 The command generates metadata and mirrored deterministic archives only. It
 can read the maintainer-reviewed `public-index/accepted-packages.yml` manifest

@@ -12,7 +12,8 @@ outcomes for package validation, local registry lifecycle behavior, static
 remote registry contract payloads, generated public static index endpoints,
 enterprise registry compatibility payloads, and fixture-backed read-only client
 behavior without requiring a remote registry service, package signing, semantic
-search, graph reasoning, artifact generation, or agent runtime behavior.
+search, semantic intent inference, graph reasoning, artifact generation, or
+agent runtime behavior.
 
 The current suite lives at:
 
@@ -93,7 +94,7 @@ checks stable payload shape fields:
 - registry status fields where applicable
 - package index counts where applicable
 - package identity fields where applicable
-- exact capability query fields where applicable
+- exact capability and intent query fields where applicable
 - yanked/deprecated lifecycle state where applicable
 - error payload fields where applicable
 
@@ -137,8 +138,8 @@ The initial conformance suite covers:
   support targets, ambiguous IDs, and weak `unknown` kinds;
 - local registry yank and unyank behavior.
 - remote registry status, package index, package metadata, package version,
-  exact capability search, yanked version, deprecated version, not-found error,
-  and invalid-shape payloads.
+  exact capability search, exact intent search, yanked version, deprecated
+  version, not-found error, and invalid-shape payloads.
 - read-only remote registry client behavior using fixture-backed fetch stubs.
 - generated public static `/v0` endpoint shape, adjacent static-host HTML
   payloads, archive digest metadata, and absent missing package/capability

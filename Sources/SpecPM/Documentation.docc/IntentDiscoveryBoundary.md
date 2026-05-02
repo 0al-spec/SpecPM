@@ -1,7 +1,7 @@
 # Intent Discovery Boundary
 
-SpecPM does not translate plain-text user intent into canonical capability IDs,
-package IDs, or package selections.
+SpecPM does not translate plain-text user intent into canonical `intent.*`
+IDs, capability IDs, package IDs, or package selections.
 
 SpecPM is not:
 
@@ -18,12 +18,15 @@ SpecPM is not:
 SpecPM accepts exact structured identifiers:
 
 ```bash
+specpm search-intent intent.document_conversion.email_to_markdown --index .specpm/index.json --json
 specpm search document_conversion.email_to_markdown --index .specpm/index.json --json
+specpm remote search-intent intent.document_conversion.email_to_markdown --registry http://localhost:8081 --json
 specpm remote search document_conversion.email_to_markdown --registry http://localhost:8081 --json
 ```
 
 The package-manager contract is exact lookup plus validation, inspection, and
-metadata verification.
+metadata verification. `search-intent` only matches explicit capability
+`intentIds`; it does not infer intent from package text.
 
 ## Downstream Resolver
 
@@ -32,8 +35,9 @@ downstream intent resolver.
 
 That resolver may use LLM extraction, embeddings, vector search, lexical
 search, reranking, graph traversal, and human review to produce candidate
-`capability_id` or `package_id` values. Those candidates must then be verified
-through SpecPM exact lookup before they become reviewable package selections.
+`intent_id`, `capability_id`, or `package_id` values. Those candidates must then
+be verified through SpecPM exact lookup before they become reviewable package
+selections.
 
 ## Boundary Statement
 
@@ -46,5 +50,7 @@ SpecGraph and ContextBuilder decide meaning.
 ## References
 
 - `specs/INTENT_DISCOVERY_BOUNDARY.md`
+- `specs/IDENTIFIER_MODEL.md`
+- <doc:IdentifierModel>
 - <doc:BoundariesAndTrust>
 - <doc:SpecGraphIntegration>

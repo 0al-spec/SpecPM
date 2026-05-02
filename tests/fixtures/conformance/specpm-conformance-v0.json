@@ -152,6 +152,17 @@
       }
     },
     {
+      "id": "remote_registry.intent_search",
+      "kind": "remote_registry_payload",
+      "payload": "tests/fixtures/conformance/remote_registry/intent-search.json",
+      "expected": {
+        "kind": "RemoteIntentSearch",
+        "status": "ok",
+        "intent_id": "intent.document_conversion.email_to_markdown",
+        "result_count": 1
+      }
+    },
+    {
       "id": "remote_registry.yanked_version",
       "kind": "remote_registry_payload",
       "payload": "tests/fixtures/conformance/remote_registry/yanked-version.json",
@@ -220,7 +231,8 @@
         "version_endpoint": "v0/packages/document_conversion.email_tools/versions/0.1.0/index.json",
         "absent_paths": [
           "v0/packages/document_conversion.missing/index.json",
-          "v0/capabilities/document_conversion.missing/packages/index.json"
+          "v0/capabilities/document_conversion.missing/packages/index.json",
+          "v0/intents/intent.document_conversion.missing/packages/index.json"
         ],
         "endpoints": [
           {
@@ -255,6 +267,13 @@
             "kind": "RemoteCapabilitySearch",
             "status": "ok",
             "capability_id": "document_conversion.email_to_markdown",
+            "result_count": 1
+          },
+          {
+            "path": "v0/intents/intent.document_conversion.email_to_markdown/packages/index.json",
+            "kind": "RemoteIntentSearch",
+            "status": "ok",
+            "intent_id": "intent.document_conversion.email_to_markdown",
             "result_count": 1
           }
         ]

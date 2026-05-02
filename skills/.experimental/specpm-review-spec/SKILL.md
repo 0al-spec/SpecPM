@@ -28,6 +28,8 @@ traceability, boundary discipline, and validation stability over prose polish.
    - Manifest `index.provides.capabilities` is a subset of capabilities
      declared by referenced BoundarySpecs.
    - Package ID, capability IDs, and SemVer are stable and valid.
+   - Capability `intentIds`, when present, are package-neutral `intent.*` IDs
+     and do not reuse provider or repository namespaces.
    - Authors, license, compatibility, and keywords match repository facts.
 
 4. Check BoundarySpec quality.
