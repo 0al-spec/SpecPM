@@ -46,6 +46,8 @@ docs-build:
 		--output-path ./.docc-build \
 		--transform-for-static-hosting \
 		--hosting-base-path SpecPM
+	mkdir -p ./.docc-build/viewer
+	cp landing_page/viewer.html ./.docc-build/viewer/index.html
 
 public-index-generate:
 	PYTHONPATH=src python3 -m specpm.cli public-index generate \

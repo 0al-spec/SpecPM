@@ -17,6 +17,7 @@ SpecPM is usable today for:
 - SpecGraph inbox inspection for exported package candidates;
 - read-only remote `/v0` metadata lookup;
 - static public index generation for GitHub Pages;
+- static registry viewer at `https://0al-spec.github.io/SpecPM/viewer/`;
 - local Docker registry integration at `http://localhost:8081`;
 - public alpha registry metadata at `https://0al-spec.github.io/SpecPM`;
 - GitHub Issue intake for package submissions, removals, and namespace claims;

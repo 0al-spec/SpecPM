@@ -10,8 +10,8 @@ License: MIT. See `LICENSE`.
 Current status and future tracks are summarized in [`ROADMAP.md`](ROADMAP.md)
 and the DocC [Roadmap](https://0al-spec.github.io/SpecPM/documentation/specpm/roadmap/).
 
-Live public registry status:
-[https://0al-spec.github.io/SpecPM/v0/status/](https://0al-spec.github.io/SpecPM/v0/status/).
+Live public registry viewer:
+[https://0al-spec.github.io/SpecPM/viewer/](https://0al-spec.github.io/SpecPM/viewer/).
 Use `https://0al-spec.github.io/SpecPM` as the `specpm remote --registry`
 root; the remote client reads the `/v0` endpoints under that root. Strict JSON
 consumers can use
@@ -204,8 +204,8 @@ package content.
 SpecGraph, ContextBuilder, and manual integration testing.
 
 The public alpha registry is available at `https://0al-spec.github.io/SpecPM`.
-Its live read-only registry status endpoint is
-[https://0al-spec.github.io/SpecPM/v0/status/](https://0al-spec.github.io/SpecPM/v0/status/).
+Its live read-only registry viewer is
+[https://0al-spec.github.io/SpecPM/viewer/](https://0al-spec.github.io/SpecPM/viewer/).
 The strict JSON status payload is
 [https://0al-spec.github.io/SpecPM/v0/status/index.json](https://0al-spec.github.io/SpecPM/v0/status/index.json).
 The current alpha package set is documented in `specs/PUBLIC_ALPHA.md` and
@@ -275,8 +275,10 @@ The GitHub Pages workflow builds the same DocC catalog from
 `Sources/SpecPM/Documentation.docc`.
 
 The same Pages artifact also includes the generated read-only public index
-metadata under `/v0`, produced from `public-index/accepted-packages.yml` by
-`specpm public-index generate` during the documentation workflow. This is static
-hosting only; remote manifest entries are checked out as untrusted data at a
-pinned commit before validation and packing. This does not add `specpm publish`,
-remote mutation APIs, package install behavior, or package content execution.
+metadata under `/v0` and the static registry viewer at
+`https://0al-spec.github.io/SpecPM/viewer/`, produced from
+`public-index/accepted-packages.yml` by `specpm public-index generate` during
+the documentation workflow. This is static hosting only; remote manifest entries
+are checked out as untrusted data at a pinned commit before validation and
+packing. This does not add `specpm publish`, remote mutation APIs, package
+install behavior, or package content execution.

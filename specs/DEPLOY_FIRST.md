@@ -92,7 +92,8 @@ https://0al-spec.github.io/SpecPM
 The Pages artifact contains both:
 
 - DocC documentation under `/documentation/specpm/`;
-- generated static registry metadata and archives under `/v0`.
+- generated static registry metadata and archives under `/v0`;
+- a static browser viewer under `/viewer/`.
 
 Smoke the deployed registry with:
 

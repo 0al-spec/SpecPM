@@ -148,8 +148,9 @@ running read-only `specpm remote` smoke checks.
 
 The current public deployment is GitHub Pages at
 `https://0al-spec.github.io/SpecPM`. The Pages artifact contains DocC
-documentation and generated static `/v0` registry metadata. Operators can check
-the deployed read-only registry contract with `make pages-smoke`.
+documentation, generated static `/v0` registry metadata, and the static
+browser viewer at `https://0al-spec.github.io/SpecPM/viewer/`. Operators can
+check the deployed read-only registry contract with `make pages-smoke`.
 
 This operating loop is documented in `specs/DEPLOY_FIRST.md`. It does not add a
 remote mutation API, `specpm publish`, authentication, archive download or

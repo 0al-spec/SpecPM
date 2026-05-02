@@ -56,8 +56,9 @@ The current public deployment is GitHub Pages:
 https://0al-spec.github.io/SpecPM
 ```
 
-The Pages artifact contains both DocC documentation and generated static `/v0`
-registry metadata. Smoke the deployed baseline registry with:
+The Pages artifact contains DocC documentation, generated static `/v0`
+registry metadata, and the static registry viewer at `/viewer/`. Smoke the
+deployed baseline registry with:
 
 ```bash
 make pages-smoke

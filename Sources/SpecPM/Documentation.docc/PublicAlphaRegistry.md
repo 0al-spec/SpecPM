@@ -22,10 +22,10 @@ API prefix:
 /v0
 ```
 
-Live browser entrypoint:
+Live browser viewer:
 
 ```text
-https://0al-spec.github.io/SpecPM/v0/status/
+https://0al-spec.github.io/SpecPM/viewer/
 ```
 
 Strict JSON status payload:
@@ -33,6 +33,11 @@ Strict JSON status payload:
 ```text
 https://0al-spec.github.io/SpecPM/v0/status/index.json
 ```
+
+The hosted viewer is served from the same GitHub Pages artifact as `/v0`, so
+ordinary browsing does not depend on cross-origin requests. Local or enterprise
+registries can still be inspected by passing a `registry` query parameter to the
+viewer.
 
 Try the registry with:
 
