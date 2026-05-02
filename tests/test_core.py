@@ -617,7 +617,7 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert ".catalog-grid" in registry_viewer_css
     assert "routeTemplates" in registry_viewer_js
     assert "RemoteRouteTemplate" in registry_viewer_js
-    assert "window.addEventListener(\"popstate\"" in registry_viewer_js
+    assert 'window.addEventListener("popstate"' in registry_viewer_js
     assert "history.pushState" in registry_viewer_js
     assert "history.replaceState" in registry_viewer_js
     assert "specpmViewerRoute" in registry_viewer_js
