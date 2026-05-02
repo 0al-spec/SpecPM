@@ -116,6 +116,7 @@ REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemotePackage",
     "RemotePackageIndex",
     "RemotePackageVersion",
+    "RemoteRegistryRoot",
     "RemoteRegistryStatus",
     "RemoteRegistryError",
 }
@@ -2023,6 +2024,8 @@ def validate_remote_registry_payload(payload: Any) -> list[Issue]:
         validate_remote_capability_search_payload(payload, errors)
     elif kind == "RemoteIntentSearch":
         validate_remote_intent_search_payload(payload, errors)
+    elif kind == "RemoteRegistryRoot":
+        validate_remote_registry_root_payload(payload, errors)
     elif kind == "RemoteRegistryStatus":
         validate_remote_registry_status_payload(payload, errors)
     elif kind == "RemoteRegistryError":
@@ -2383,18 +2386,41 @@ def validate_remote_registry_status_payload(
     registry = require_remote_mapping(payload, "registry", errors, "registry")
     if registry is None:
         return
-    require_remote_string(registry, "profile", errors, "registry.profile")
-    require_remote_string(registry, "api_version", errors, "registry.api_version")
-    require_remote_bool(registry, "read_only", errors, "registry.read_only")
-    require_remote_string(registry, "authority", errors, "registry.authority")
+    validate_remote_registry_summary(registry, errors, "registry")
+
+
+def validate_remote_registry_root_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    registry = require_remote_mapping(payload, "registry", errors, "registry")
+    if registry is not None:
+        validate_remote_registry_summary(registry, errors, "registry")
+
+    endpoints = require_remote_mapping(payload, "endpoints", errors, "endpoints")
+    if endpoints is None:
+        return
+    for key in ("status", "packages", "intents"):
+        require_remote_string(endpoints, key, errors, f"endpoints.{key}")
+
+
+def validate_remote_registry_summary(
+    registry: dict[str, Any],
+    errors: list[Issue],
+    field: str,
+) -> None:
+    require_remote_string(registry, "profile", errors, f"{field}.profile")
+    require_remote_string(registry, "api_version", errors, f"{field}.api_version")
+    require_remote_bool(registry, "read_only", errors, f"{field}.read_only")
+    require_remote_string(registry, "authority", errors, f"{field}.authority")
     for key in ("package_count", "version_count", "capability_count"):
-        value = require_remote_int(registry, key, errors, f"registry.{key}")
+        value = require_remote_int(registry, key, errors, f"{field}.{key}")
         if value is not None and value < 0:
-            errors.append(remote_field_invalid(f"registry.{key}", "must not be negative"))
+            errors.append(remote_field_invalid(f"{field}.{key}", "must not be negative"))
     if "intent_count" in registry:
-        value = require_remote_int(registry, "intent_count", errors, "registry.intent_count")
+        value = require_remote_int(registry, "intent_count", errors, f"{field}.intent_count")
         if value is not None and value < 0:
-            errors.append(remote_field_invalid("registry.intent_count", "must not be negative"))
+            errors.append(remote_field_invalid(f"{field}.intent_count", "must not be negative"))
 
 
 def validate_remote_registry_error_payload(payload: dict[str, Any], errors: list[Issue]) -> None:

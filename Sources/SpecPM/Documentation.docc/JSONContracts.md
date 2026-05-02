@@ -12,7 +12,9 @@ The MVP treats these output shapes as stable contracts:
 - intent search results;
 - add results;
 - registry lifecycle results;
-- remote registry client results, including status and package index discovery;
+- remote registry client results, including status, package index, and intent
+  catalog discovery;
+- static registry root payloads for the public `/v0` entrypoint;
 - observed intent catalog payloads from accepted packages;
 - public index generator results;
 - inbox list and inbox inspect payloads;

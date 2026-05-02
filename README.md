@@ -10,6 +10,13 @@ License: MIT. See `LICENSE`.
 Current status and future tracks are summarized in [`ROADMAP.md`](ROADMAP.md)
 and the DocC [Roadmap](https://0al-spec.github.io/SpecPM/documentation/specpm/roadmap/).
 
+Live public registry status:
+[https://0al-spec.github.io/SpecPM/v0/status/](https://0al-spec.github.io/SpecPM/v0/status/).
+Use `https://0al-spec.github.io/SpecPM` as the `specpm remote --registry`
+root; the remote client reads the `/v0` endpoints under that root. Strict JSON
+consumers can use
+[https://0al-spec.github.io/SpecPM/v0/status/index.json](https://0al-spec.github.io/SpecPM/v0/status/index.json).
+
 ## MVP baseline
 
 Install locally:
@@ -196,10 +203,14 @@ package content.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 
-The public alpha registry is available at `https://0al-spec.github.io/SpecPM`
-with the API served under `/v0`. The current alpha package set is documented in
-`specs/PUBLIC_ALPHA.md` and includes `specpm.core` plus a pinned
-`specnode.core` source for early SpecGraph and SpecNode integration.
+The public alpha registry is available at `https://0al-spec.github.io/SpecPM`.
+Its live read-only registry status endpoint is
+[https://0al-spec.github.io/SpecPM/v0/status/](https://0al-spec.github.io/SpecPM/v0/status/).
+The strict JSON status payload is
+[https://0al-spec.github.io/SpecPM/v0/status/index.json](https://0al-spec.github.io/SpecPM/v0/status/index.json).
+The current alpha package set is documented in `specs/PUBLIC_ALPHA.md` and
+includes `specpm.core` plus a pinned `specnode.core` source for early SpecGraph
+and SpecNode integration.
 The DocC guide
 [Static Registry Pipeline](https://0al-spec.github.io/SpecPM/documentation/specpm/staticregistrypipeline/)
 explains how the public `/v0` API is generated at build time and served by

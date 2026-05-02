@@ -371,6 +371,32 @@ RemoteRegistryClientReport = {
 }
 ```
 
+The generated static registry root endpoint uses `RemoteRegistryRoot`. It is a
+browser/discovery entrypoint for `/v0`, not a remote client operation in the
+current CLI.
+
+```text
+RemoteRegistryRoot = {
+  kind: "RemoteRegistryRoot",
+  status: "ok",
+  registry: {
+    profile: "public_static_index",
+    api_version: "v0",
+    read_only: true,
+    authority: "metadata_only",
+    package_count: number,
+    version_count: number,
+    capability_count: number,
+    intent_count: number
+  },
+  endpoints: {
+    status: "v0/status/index.json",
+    packages: "v0/packages/index.json",
+    intents: "v0/intents/index.json"
+  }
+}
+```
+
 `RemoteIntentIndex` and `RemoteIntent` expose an observed intent catalog from
 accepted package metadata. They are authoring/discovery metadata, not a
 canonical intent dictionary.
