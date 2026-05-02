@@ -443,6 +443,10 @@ h3 {
   gap: 8px;
 }
 
+.route-builder .btn.small {
+  min-height: 40px;
+}
+
 .route-literal,
 .route-field {
   display: inline-flex;
