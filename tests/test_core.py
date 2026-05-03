@@ -633,6 +633,10 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "history.replaceState" in registry_viewer_js
     assert "specpmViewerRoute" in registry_viewer_js
     assert "routeFromLocation" in registry_viewer_js
+    assert "isRegistryTreeAction" in registry_viewer_js
+    assert "scrollContentIntoView" in registry_viewer_js
+    assert 'window.matchMedia("(max-width: 1120px)")' in registry_viewer_js
+    assert 'document.querySelector(".content")?.scrollIntoView' in registry_viewer_js
     assert '<span class="pill warn">Issue</span>' in registry_viewer_js
     assert 'data-action="route-template"' in registry_viewer_js
     assert 'data-route-template="${escapeAttr(state.routePrompt.kind)}"' in registry_viewer_js

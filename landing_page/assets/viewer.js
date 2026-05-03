@@ -705,10 +705,11 @@ function bindActions() {
     }
     const action = target.dataset.action;
     try {
+      const scrollToContent = isRegistryTreeAction(target);
       if (action === "endpoint") {
-        await showEndpoint(target.dataset.kind, target.dataset.path);
+        await showEndpoint(target.dataset.kind, target.dataset.path, { scrollToContent });
       } else if (action === "route-template") {
-        showRoutePrompt(target.dataset.kind);
+        showRoutePrompt(target.dataset.kind, { scrollToContent });
       } else if (action === "catalog-mode") {
         state.catalogMode = target.dataset.mode || "all";
         renderCatalog();
@@ -762,6 +763,7 @@ function showRoutePrompt(kind, options = {}) {
   state.payload = routeTemplatePayload(kind);
   renderAll();
   commitViewerRoute({ type: "route-template", kind }, options);
+  scrollContentIntoView(options);
   const input = detailPanel.querySelector("input");
   if (input) {
     input.focus();
@@ -815,6 +817,7 @@ async function showEndpoint(kind, path, options = {}) {
   }
   renderAll();
   commitViewerRoute({ type: "endpoint", kind }, options);
+  scrollContentIntoView(options);
 }
 
 async function showPackage(packageId, options = {}) {
@@ -1103,6 +1106,20 @@ function decodeRouteSegment(value) {
   } catch (_error) {
     return "";
   }
+}
+
+function isRegistryTreeAction(target) {
+  return Boolean(target.closest("#endpoint-tree"));
+}
+
+function scrollContentIntoView(options = {}) {
+  if (!options.scrollToContent || !window.matchMedia("(max-width: 1120px)").matches) {
+    return;
+  }
+  const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  window.requestAnimationFrame(() => {
+    document.querySelector(".content")?.scrollIntoView({ block: "start", behavior });
+  });
 }
 
 function routePlaceholder(param) {
