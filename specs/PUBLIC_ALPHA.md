@@ -29,6 +29,15 @@ API path prefix:
 /v0
 ```
 
+Browser viewer:
+
+```text
+https://0al-spec.github.io/SpecPM/viewer/
+```
+
+The viewer is static and read-only. When hosted on GitHub Pages it reads the
+same-origin `/v0` API, so normal browsing does not require cross-origin access.
+
 Client examples:
 
 ```bash

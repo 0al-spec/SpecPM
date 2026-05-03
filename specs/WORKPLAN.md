@@ -1093,6 +1093,38 @@ Acceptance:
 - The change does not add LLM extraction, embeddings, vector search, RAG,
   semantic ranking, package selection authority, or package content execution.
 
+## Phase 44. Static Public Registry Viewer
+
+- [x] Add a static HTML/CSS/JS viewer bundle for the generated `/v0`
+  registry API.
+- [x] Let the viewer load registry root, status, package index, package
+  metadata, package versions, capability reverse lookups, observed intents, and
+  intent package matches.
+- [x] Serve the viewer from the GitHub Pages artifact at `/viewer/` alongside
+  DocC documentation and generated `/v0` metadata.
+- [x] Share the landing page design stylesheet with the registry viewer instead
+  of duplicating the header, logo, button, and typography primitives inline.
+- [x] Organize the viewer as an API tree plus a bounded catalog search instead
+  of rendering separate unbounded package, intent, and capability side lists.
+- [x] Link the landing page and README to the viewer instead of sending users
+  directly to raw JSON.
+- [x] Keep the viewer static and read-only, with no mutable backend, package
+  execution, auth, publishing API, or semantic resolver behavior.
+
+Acceptance:
+
+- `https://0al-spec.github.io/SpecPM/viewer/` is the human entry point for
+  browsing the public registry.
+- The viewer uses same-origin `/v0` requests when served from GitHub Pages, so
+  normal browsing does not depend on cross-origin access.
+- The viewer can also inspect local or enterprise registries through an
+  explicit `registry` query parameter.
+- Clicking aggregate endpoints such as `GET /v0/packages` and
+  `GET /v0/intents` renders browsable catalog cards as well as raw JSON.
+- The deployment workflow copies the viewer into the Pages artifact.
+- Raw `/v0` JSON endpoints remain stable machine-readable contracts for CLI,
+  SpecGraph, SpecNode, ContextBuilder, and other downstream tools.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

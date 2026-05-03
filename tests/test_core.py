@@ -88,6 +88,10 @@ DOCC_ROADMAP_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Roadmap.md"
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
 LANDING_PAGE = ROOT / "landing_page/index.html"
+REGISTRY_VIEWER_PAGE = ROOT / "landing_page/viewer.html"
+REGISTRY_VIEWER_DESIGN_CSS = ROOT / "landing_page/assets/specpm-design.css"
+REGISTRY_VIEWER_CSS = ROOT / "landing_page/assets/viewer.css"
+REGISTRY_VIEWER_JS = ROOT / "landing_page/assets/viewer.js"
 SPECNODE_MAIN_REVISION = "9b6046777723435d94d66d4149fe5e9a6c52f604"
 ADD_SPECPACKAGES_ISSUE_URL = (
     "https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml"
@@ -564,6 +568,10 @@ def test_add_specpackages_issue_template_matches_public_index_contract() -> None
 
 def test_public_index_submission_entrypoints_are_user_visible() -> None:
     landing = LANDING_PAGE.read_text(encoding="utf-8")
+    registry_viewer = REGISTRY_VIEWER_PAGE.read_text(encoding="utf-8")
+    registry_viewer_design_css = REGISTRY_VIEWER_DESIGN_CSS.read_text(encoding="utf-8")
+    registry_viewer_css = REGISTRY_VIEWER_CSS.read_text(encoding="utf-8")
+    registry_viewer_js = REGISTRY_VIEWER_JS.read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     public_alpha = PUBLIC_ALPHA_DOC.read_text(encoding="utf-8")
     index_flow = (ROOT / "specs/INDEX_SUBMISSION_FLOW.md").read_text(encoding="utf-8")
@@ -587,6 +595,59 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "passing <code>specpm validate</code>" in landing
     assert "GitHub Actions validates each package" in landing
     assert "GitHub Pages republishes static registry metadata" in landing
+    assert "https://0al-spec.github.io/SpecPM/viewer/" in landing
+    assert "Live public registry viewer" in readme
+    assert "https://0al-spec.github.io/SpecPM/viewer/" in readme
+    assert '<link rel="stylesheet" href="./assets/specpm-design.css" />' in landing
+    assert '<link rel="stylesheet" href="./assets/specpm-design.css" />' in registry_viewer
+    assert '<link rel="stylesheet" href="./assets/viewer.css" />' in registry_viewer
+    assert '<script src="./assets/viewer.js" defer></script>' in registry_viewer
+    assert "Static Registry Viewer" in registry_viewer
+    assert "SpecPM Registry Viewer" in registry_viewer
+    assert "Registry Tree" in registry_viewer
+    assert "Catalog Search" in registry_viewer
+    assert "Search packages, intents, capabilities" in registry_viewer
+    assert 'aria-label="Search packages, intents, capabilities"' in registry_viewer
+    assert "Instrument Serif" in registry_viewer_design_css
+    assert ".brand-mark" in registry_viewer_design_css
+    assert ".json-panel" in registry_viewer_css
+    assert ".route-template-form" in registry_viewer_css
+    assert ".route-builder" in registry_viewer_css
+    assert ".route-error" in registry_viewer_css
+    assert ".tree-group" in registry_viewer_css
+    assert ".catalog-grid" in registry_viewer_css
+    assert (
+        ".nav-inner {\n    display: flex;\n    padding: 16px 0;\n    flex-direction: column;"
+        in (registry_viewer_css)
+    )
+    assert "routeTemplates" in registry_viewer_js
+    assert "RemoteRouteTemplate" in registry_viewer_js
+    assert "clearLoadedRegistryState" in registry_viewer_js
+    assert "state.catalogItems" in registry_viewer_js
+    assert "buildCatalogItems" in registry_viewer_js
+    assert "searchText" in registry_viewer_js
+    assert "RemoteRegistryLoadError" in registry_viewer_js
+    assert 'url.protocol !== "http:" && url.protocol !== "https:"' in registry_viewer_js
+    assert 'window.addEventListener("popstate"' in registry_viewer_js
+    assert "history.pushState" in registry_viewer_js
+    assert "history.replaceState" in registry_viewer_js
+    assert "specpmViewerRoute" in registry_viewer_js
+    assert "routeFromLocation" in registry_viewer_js
+    assert "isRegistryTreeAction" in registry_viewer_js
+    assert "scrollContentIntoView" in registry_viewer_js
+    assert 'window.matchMedia("(max-width: 1120px)")' in registry_viewer_js
+    assert 'document.querySelector(".content")?.scrollIntoView' in registry_viewer_js
+    assert '<span class="pill warn">Issue</span>' in registry_viewer_js
+    assert 'data-action="route-template"' in registry_viewer_js
+    assert 'data-route-template="${escapeAttr(state.routePrompt.kind)}"' in registry_viewer_js
+    assert "GET /v0/packages/{package_id}/versions/{version}" in registry_viewer_js
+    assert "GET /v0/capabilities/{capability_id}/packages" in registry_viewer_js
+    assert "GET /v0/intents/{intent_id}/packages" in registry_viewer_js
+    assert "Browse observed intents" in registry_viewer_js
+    assert "catalogVisibleLimit" in registry_viewer_js
+    assert "Narrow the search to see more" in registry_viewer_js
+    assert 'new URL("../v0/", window.location.href)' in registry_viewer_js
+    assert "https://0al-spec.github.io/SpecPM/v0/" in registry_viewer_js
 
     assert "<doc:AddSpecPackage>" in docc_overview
     assert "<doc:StaticRegistryPipeline>" in docc_overview
@@ -885,6 +946,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "src/specpm/**",
         "examples/**",
         "public-index/**",
+        "landing_page/**",
         "pyproject.toml",
         ".github/workflows/docs.yml",
     } <= paths
@@ -896,6 +958,9 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "Generate public index metadata"
     )
     assert step_names.index("Generate public index metadata") < step_names.index(
+        "Copy registry viewer"
+    )
+    assert step_names.index("Copy registry viewer") < step_names.index(
         "Add .nojekyll and index.html redirect"
     )
 
@@ -911,6 +976,23 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert "--manifest public-index/accepted-packages.yml" in generate["run"]
     assert "--output ./.docc-build" in generate["run"]
     assert '--registry "$SPECPM_PUBLIC_INDEX_REGISTRY_URL"' in generate["run"]
+
+    copy_viewer = steps_by_name["Copy registry viewer"]
+    assert "mkdir -p ./.docc-build/viewer" in copy_viewer["run"]
+    assert "cp landing_page/viewer.html ./.docc-build/viewer/index.html" in (copy_viewer["run"])
+    assert "mkdir -p ./.docc-build/viewer/assets" in copy_viewer["run"]
+    assert (
+        "cp landing_page/assets/specpm-design.css ./.docc-build/viewer/assets/specpm-design.css"
+        in copy_viewer["run"]
+    )
+    assert (
+        "cp landing_page/assets/viewer.css ./.docc-build/viewer/assets/viewer.css"
+        in (copy_viewer["run"])
+    )
+    assert (
+        "cp landing_page/assets/viewer.js ./.docc-build/viewer/assets/viewer.js"
+        in (copy_viewer["run"])
+    )
 
     upload = steps_by_name["Upload artifact"]
     assert upload["with"]["path"] == "./.docc-build"

@@ -167,6 +167,11 @@ kind: string
 `apiVersion` identifies the registry API family. `schemaVersion` identifies the
 JSON payload shape within this draft family.
 
+The public GitHub Pages deployment also publishes a static browser viewer for
+these endpoints at `https://0al-spec.github.io/SpecPM/viewer/`. The viewer is
+read-only and fetches the same generated JSON files; it is not a backend,
+resolver, or publishing API.
+
 ## Endpoints
 
 ### Registry Root

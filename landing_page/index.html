@@ -14,6 +14,7 @@
     href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet"
   />
+  <link rel="stylesheet" href="./assets/specpm-design.css" />
   <style>
     :root {
       --ink: #0b0c0d;
@@ -1527,7 +1528,7 @@
         <a href="#status">Current Status</a>
         <a href="#how">How it Works</a>
         <a href="#agents">For Agents</a>
-        <a href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener">Live /v0 Status</a>
+        <a href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener">Registry Viewer</a>
         <a href="https://0al-spec.github.io/SpecPM" target="_blank" rel="noopener">Docs</a>
         <a href="https://github.com/0al-spec/SpecPM/blob/main/RFC/SpecGraph-RFC-0001.md" target="_blank" rel="noopener">GitHub</a>
       </nav>
@@ -1572,7 +1573,7 @@
               </svg>
             </a>
             <a class="btn" href="https://0al-spec.github.io/SpecPM" target="_blank" rel="noopener">Read Docs</a>
-            <a class="btn" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener">View Live /v0 Status</a>
+            <a class="btn" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener">Open Registry Viewer</a>
           </div>
           <p class="positioning">Available now: validation, inspect, deterministic pack, local/public index, exact capability and intent lookup, observed intent catalog, <span class="serif-name">SpecGraph</span> inbox, and read-only registry metadata.</p>
         </div>
@@ -1635,7 +1636,7 @@
                     <path d="M12 3 5 6v6c0 4.5 3 7.3 7 9 4-1.7 7-4.5 7-9V6l-7-3Z" />
                     <path d="M9.5 12.5 11 14l3.5-4" />
                   </svg>
-                  Static <a class="inline-link" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener">/v0</a> + observed intents
+                  Static <a class="inline-link" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener">/v0</a> + observed intents
                 </li>
                 <li>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -1702,7 +1703,7 @@
                 <li><b>02</b><span>Inspect <span class="serif-name">BoundarySpec</span> intent.</span></li>
                 <li><b>03</b><span>Pack deterministic archives.</span></li>
                 <li><b>04</b><span>Index exact capabilities and intents.</span></li>
-                <li><b>05</b><span>Expose static <a class="inline-link" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener">/v0</a> metadata.</span></li>
+                <li><b>05</b><span>Expose static <a class="inline-link" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener">/v0</a> metadata.</span></li>
                 <li><b>06</b><span>Let <span class="serif-name">SpecGraph</span> observe package visibility.</span></li>
               </ol>
               <div class="stop-list">
@@ -1744,7 +1745,7 @@
               <li>index, search, add, lock, yank, and unyank locally</li>
               <li>expose first-class <code>index.provides.intents</code></li>
               <li>publish observed intent catalog endpoints</li>
-              <li>generate static public <a class="inline-link" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener"><code>/v0</code></a> registry files</li>
+              <li>generate static public <a class="inline-link" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener"><code>/v0</code></a> registry files</li>
               <li>serve the public index locally through Docker</li>
             </ul>
           </article>
@@ -1808,7 +1809,7 @@
               <path d="m12 25 12 6 12-6M12 33l12 6 12-6" stroke-width="1.5" />
             </svg>
             <h3>Index and <span class="step-title-break">expose</span></h3>
-            <p>Packages become searchable by exact capability ID and backed <code>intent.*</code> ID through local indexes, generated public <a class="inline-link" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener"><code>/v0</code></a> metadata, and read-only remote registry client commands.</p>
+            <p>Packages become searchable by exact capability ID and backed <code>intent.*</code> ID through local indexes, generated public <a class="inline-link" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener"><code>/v0</code></a> metadata, and read-only remote registry client commands.</p>
           </article>
 
           <article class="step">
@@ -1838,7 +1839,7 @@
             <span class="serif-name">SpecPM</span> already publishes static read-only registry metadata that <span class="serif-name">SpecGraph</span>, ContextBuilder, and other consumers can observe.
           </p>
           <div class="registry-actions">
-            <a class="btn dark" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener">Open Live /v0 Status</a>
+            <a class="btn dark" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener">Open Registry Viewer</a>
             <a class="btn dark" href="https://0al-spec.github.io/SpecPM/v0/status/index.json" target="_blank" rel="noopener">Strict JSON Status</a>
           </div>
           <div class="formula" aria-label="Need to specification to implementation">
@@ -1888,8 +1889,8 @@
                 <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
                 <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
               </svg>
-              <h3><a class="inline-link" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener">Public /v0 Index</a></h3>
-              <p>Live static registry status, package index, version metadata, capability search, intent search, and deterministic archives are served under <a class="inline-link" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener"><code>0al-spec.github.io/SpecPM/v0</code></a>.</p>
+              <h3><a class="inline-link" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener">Public /v0 Index</a></h3>
+              <p>Live static registry status, package index, version metadata, capability search, intent search, and deterministic archives can be explored in the <a class="inline-link" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener">registry viewer</a>.</p>
             </article>
 
             <article class="category-card">
@@ -1920,7 +1921,7 @@
           <p class="eyebrow"><span class="dot"></span>Public Index Intake</p>
           <h2 id="add-package-title">Add a SpecPackage to the public registry.</h2>
           <p class="lede">
-            Anyone can propose a public SpecPackage repository. <span class="serif-name">SpecPM</span> validates the submitted package as untrusted data, comments with a pass/fail report, and leaves acceptance to maintainer review before the static <a class="inline-link" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener"><code>/v0</code></a> registry is regenerated.
+            Anyone can propose a public SpecPackage repository. <span class="serif-name">SpecPM</span> validates the submitted package as untrusted data, comments with a pass/fail report, and leaves acceptance to maintainer review before the static <a class="inline-link" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener"><code>/v0</code></a> registry is regenerated.
           </p>
           <div class="submission-actions">
             <a class="btn primary" href="https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml" target="_blank" rel="noopener">
@@ -1950,7 +1951,7 @@
 
           <article class="submission-block">
             <span class="status-pill live">Review Flow</span>
-            <h3>How it reaches <a class="inline-link" href="https://0al-spec.github.io/SpecPM/v0/status/" target="_blank" rel="noopener">/v0</a></h3>
+            <h3>How it reaches <a class="inline-link" href="https://0al-spec.github.io/SpecPM/viewer/" target="_blank" rel="noopener">/v0</a></h3>
             <ol>
               <li>Open the <code>Add SpecPackage(s)</code> issue form.</li>
               <li>List one or more public repository URLs.</li>

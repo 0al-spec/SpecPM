@@ -44,6 +44,7 @@ scope:
     - Seed the public alpha registry with SpecPM and SpecNode packages for early ecosystem integration.
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
+    - Publish a static browser viewer for the public `/v0` registry API.
     - Capture read-only public registry observation reports for local Docker and GitHub Pages endpoints.
     - Document the static registry pipeline that turns reviewed accepted package sources into build-time `/v0` API files served by GitHub Pages.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
@@ -149,6 +150,9 @@ provides:
     - id: specpm.registry.public_static_index
       role: secondary
       summary: Generate static /v0 public index metadata, root entrypoint, and deterministic archives for read-only hosting.
+    - id: specpm.registry.public_api_viewer
+      role: secondary
+      summary: Publish a static browser viewer for navigating the `/v0` registry API without a mutable backend.
     - id: specpm.registry.public_index_accepted_manifest
       role: secondary
       summary: Track reviewed package sources that feed generated public index deployment.
@@ -512,12 +516,41 @@ evidence:
     path: landing_page/index.html
     supports:
       - specpm.registry.index_submission_flow
+      - specpm.registry.public_api_viewer
+  - id: public_registry_viewer
+    kind: documentation
+    path: landing_page/viewer.html
+    supports:
+      - specpm.registry.public_api_viewer
+      - specpm.registry.public_static_index
+      - specpm.registry.remote_api_contract
+      - specpm.registry.observed_intent_catalog
+  - id: public_registry_viewer_assets
+    kind: source
+    path: landing_page/assets/viewer.js
+    supports:
+      - specpm.registry.public_api_viewer
+      - specpm.registry.public_static_index
+      - specpm.registry.remote_api_contract
+      - specpm.registry.observed_intent_catalog
+  - id: public_registry_viewer_styles
+    kind: source
+    path: landing_page/assets/viewer.css
+    supports:
+      - specpm.registry.public_api_viewer
+  - id: landing_page_design_system
+    kind: source
+    path: landing_page/assets/specpm-design.css
+    supports:
+      - specpm.registry.index_submission_flow
+      - specpm.registry.public_api_viewer
   - id: docc_add_specpackage
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/AddSpecPackage.md
     supports:
       - specpm.registry.index_submission_flow
       - specpm.documentation.docc_site
+      - specpm.registry.public_api_viewer
   - id: remove_specpackages_issue_template
     kind: documentation
     path: .github/ISSUE_TEMPLATE/remove-specpackages.yml
@@ -730,6 +763,7 @@ evidence:
       - specpm.registry.index_submission_flow
       - specpm.registry.remote_api_contract
       - specpm.registry.intent_search
+      - specpm.registry.public_api_viewer
   - id: docc_roadmap
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/Roadmap.md
@@ -747,6 +781,7 @@ evidence:
       - specpm.deployment.registry_operations_runbook
       - specpm.registry.public_alpha_smoke
       - specpm.registry.public_observation_report
+      - specpm.registry.public_api_viewer
   - id: docc_registry_operations
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/RegistryOperations.md
@@ -761,6 +796,7 @@ evidence:
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke
       - specpm.registry.public_observation_report
+      - specpm.registry.public_api_viewer
   - id: agent_skills_readme
     kind: documentation
     path: skills/README.md
@@ -791,6 +827,7 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.registry.public_pages_deployment
       - specpm.registry.public_index_accepted_manifest
+      - specpm.registry.public_api_viewer
 implementationBindings:
   - id: cli
     path: src/specpm/cli.py

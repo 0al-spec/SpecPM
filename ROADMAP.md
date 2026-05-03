@@ -24,6 +24,7 @@ Implemented surfaces:
 - SpecGraph inbox inspection for exported package candidates;
 - read-only remote `/v0` metadata client commands;
 - static public index generation for GitHub Pages;
+- static registry viewer at `https://0al-spec.github.io/SpecPM/viewer/`;
 - Docker-backed local public registry at `http://localhost:8081`;
 - GitHub Pages public alpha registry at `https://0al-spec.github.io/SpecPM`;
 - GitHub Issue intake for public package submissions, removals, and namespace

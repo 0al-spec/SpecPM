@@ -24,6 +24,7 @@ The local MVP supports:
 - structural diff;
 - SpecGraph inbox inspection for `.specgraph_exports/` bundles;
 - read-only remote registry metadata lookup;
+- static public registry viewer for browsing the generated `/v0` API;
 - viewer-facing JSON contracts and portable conformance artifacts;
 - experimental Agent Skills for authoring and reviewing SpecPM package specs.
 

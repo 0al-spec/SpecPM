@@ -118,6 +118,12 @@ https://0al-spec.github.io/SpecPM/v0/index.json
 https://0al-spec.github.io/SpecPM/v0/status/index.json
 ```
 
+Human readers can inspect the same static API through:
+
+```text
+https://0al-spec.github.io/SpecPM/viewer/
+```
+
 SpecPM's own `specpm remote` client handles the published registry surface and
 validates payload shape before returning success.
 

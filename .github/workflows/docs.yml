@@ -13,6 +13,7 @@ on:
       - "src/specpm/**"
       - "examples/**"
       - "public-index/**"
+      - "landing_page/**"
       - "Sources/SpecPM/**"
       - "Sources/SpecPM-docs/**"
       - "README.md"
@@ -31,6 +32,7 @@ on:
       - "src/specpm/**"
       - "examples/**"
       - "public-index/**"
+      - "landing_page/**"
       - "Sources/SpecPM/**"
       - "Sources/SpecPM-docs/**"
       - "README.md"
@@ -85,6 +87,15 @@ jobs:
             --output ./.docc-build \
             --registry "$SPECPM_PUBLIC_INDEX_REGISTRY_URL" \
             --json
+
+      - name: Copy registry viewer
+        run: |
+          mkdir -p ./.docc-build/viewer
+          cp landing_page/viewer.html ./.docc-build/viewer/index.html
+          mkdir -p ./.docc-build/viewer/assets
+          cp landing_page/assets/specpm-design.css ./.docc-build/viewer/assets/specpm-design.css
+          cp landing_page/assets/viewer.css ./.docc-build/viewer/assets/viewer.css
+          cp landing_page/assets/viewer.js ./.docc-build/viewer/assets/viewer.js
 
       - name: Add .nojekyll and index.html redirect
         run: |

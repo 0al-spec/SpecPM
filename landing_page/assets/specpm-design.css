@@ -1,0 +1,197 @@
+:root {
+  --ink: #0b0c0d;
+  --ink-2: #151719;
+  --paper: #f4f2ed;
+  --paper-2: #e8e4dc;
+  --paper-3: #dad5ca;
+  --panel: #fbfaf7;
+  --muted: #625f58;
+  --muted-2: #858078;
+  --rule: #191a1c;
+  --rule-soft: rgba(25, 26, 28, 0.14);
+  --rule-mid: rgba(25, 26, 28, 0.24);
+  --accent: #2c74ad;
+  --accent-soft: rgba(44, 116, 173, 0.12);
+  --ok: #1f7a4c;
+  --warn: #a06016;
+  --dark-rule: rgba(244, 242, 237, 0.16);
+  --serif: "Instrument Serif", Georgia, serif;
+  --sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+code,
+pre,
+input {
+  font-family: var(--mono);
+}
+
+.serif-name {
+  font-family: var(--serif);
+  font-size: 1.12em;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: inherit;
+  text-transform: none;
+  vertical-align: baseline;
+}
+
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid var(--rule-soft);
+  background: color-mix(in oklab, var(--paper) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--serif);
+  font-size: 23px;
+  line-height: 1;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  color: var(--ink);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.nav-links a {
+  opacity: 0.72;
+  transition: opacity 160ms ease;
+}
+
+.nav-links a:hover {
+  opacity: 1;
+}
+
+.inline-link:hover {
+  color: var(--accent);
+}
+
+.btn {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 19px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.btn[hidden] {
+  display: none;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn.primary {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn.primary:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.btn.ghost {
+  border-color: var(--rule-soft);
+}
+
+.btn.dark {
+  border-color: var(--dark-rule);
+  color: var(--paper);
+}
+
+.btn.dark:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.btn.small {
+  min-height: 32px;
+  padding: 0 11px;
+  font-size: 11px;
+}
+
+.btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+
+.pill {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 8px;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.pill.live {
+  border-color: color-mix(in oklab, var(--ok) 50%, white);
+  background: color-mix(in oklab, var(--ok) 12%, white);
+  color: var(--ok);
+}
+
+.pill.warn {
+  border-color: color-mix(in oklab, var(--warn) 50%, white);
+  background: color-mix(in oklab, var(--warn) 12%, white);
+  color: var(--warn);
+}

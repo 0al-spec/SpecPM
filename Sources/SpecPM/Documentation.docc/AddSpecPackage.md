@@ -112,6 +112,12 @@ served under:
 https://0al-spec.github.io/SpecPM/v0
 ```
 
+The same Pages artifact also publishes a static browser viewer for that API:
+
+```text
+https://0al-spec.github.io/SpecPM/viewer/
+```
+
 ## Boundaries
 
 The public index submission flow does not add:
