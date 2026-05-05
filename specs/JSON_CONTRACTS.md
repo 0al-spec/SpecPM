@@ -17,6 +17,12 @@ should treat these contracts as stable for the MVP:
 - paths are data only and must not be executed or fetched automatically;
 - validation warnings and inspection `contract_warnings` are separate surfaces.
 
+These viewer-facing contracts are distinct from package document
+`apiVersion: specpm.dev/v0.1`, registry payload `apiVersion:
+specpm.registry/v0`, the `/v0` public endpoint family, and archive format
+`specpm-tar-gzip-v0`. API versioning policy is recorded in
+`specs/0003_SpecPM_API_Versioning_Decision.md`.
+
 Golden fixtures live under `tests/fixtures/golden/` and cover representative
 payloads for these contracts. Golden tests assert the documented field subset
 and allow additive object fields in runtime payloads.

@@ -167,6 +167,17 @@ kind: string
 `apiVersion` identifies the registry API family. `schemaVersion` identifies the
 JSON payload shape within this draft family.
 
+The registry API version is separate from the package document schema version.
+For example, a package document may use `apiVersion: specpm.dev/v0.1` while the
+public static registry exposes that package through `/v0` payloads using
+`apiVersion: specpm.registry/v0`.
+
+The `/v0` endpoint family should remain backward-compatible during public
+alpha. Breaking endpoint, status vocabulary, or payload meaning changes require
+a new endpoint family such as `/v1`. Additive payload shape changes must update
+this document, the JSON contract fixtures, and `schemaVersion` when consumers
+need a machine-readable way to distinguish the new shape.
+
 The public GitHub Pages deployment also publishes a static browser viewer for
 these endpoints at `https://0al-spec.github.io/SpecPM/viewer/`. The viewer is
 read-only and fetches the same generated JSON files; it is not a backend,

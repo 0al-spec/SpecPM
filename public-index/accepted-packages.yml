@@ -5,6 +5,7 @@
 schemaVersion: 1
 packages:
   - path: examples/email_tools
+  - path: packages/intent.package.public_repository_metadata
   - path: .
   - repository: https://github.com/0al-spec/SpecNode.git
     ref: main

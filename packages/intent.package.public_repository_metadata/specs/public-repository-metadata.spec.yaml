@@ -1,0 +1,85 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: intent.package.public_repository_metadata.contract
+  title: Public Repository Metadata Abstract Contract
+  version: 0.1.0
+  status: draft
+  authors:
+    - name: 0AL Spec
+    - name: Egor Merkushev
+intent:
+  summary: Define an abstract conformance target for packages that expose static public repository metadata as reusable specification intent.
+scope:
+  boundedContext: public_repository_metadata_contract
+  includes:
+    - Define a reusable boundary for static public repository metadata.
+    - Describe repository identity, package manifests, README/LICENSE provenance, static public API surfaces, and reviewable metadata summaries when present.
+    - Provide seed metadata for exact capability lookup, exact intent lookup, authoring assistance, duplicate detection, and downstream graph relationships.
+    - Allow concrete packages to claim conformance by supplying reviewed evidence for observed public repository metadata.
+  excludes:
+    - Claiming upstream maintainer endorsement.
+    - Describing runtime behavior that is not evidenced by static repository metadata.
+    - Installing dependencies, running package scripts, building packages, running tests, or probing networks.
+    - Treating observed intent IDs as canonical semantic authority.
+    - Deciding SpecGraph relationships, graph meaning, refinement, or proposal lanes.
+provides:
+  capabilities:
+    - id: intent.package.public_repository_metadata.contract
+      role: primary
+      summary: Abstract conformance target for static public repository metadata packages.
+      intentIds:
+        - intent.package.public_repository_metadata
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: repository_metadata_evidence
+      kind: schema
+      summary: Reviewable static repository metadata evidence supplied by concrete packages.
+      inputs:
+        - name: repository_metadata
+          mediaTypes:
+            - application/json
+            - text/markdown
+            - application/yaml
+      outputs:
+        - name: conformance_claim
+          mediaTypes:
+            - application/yaml
+  outbound: []
+effects:
+  sideEffects: []
+constraints:
+  - id: no_implementation_claim
+    level: MUST
+    statement: This abstract contract must not be treated as evidence that an implementation exists.
+  - id: concrete_conformance_requires_evidence
+    level: MUST
+    statement: A concrete package claiming this contract must supply repository evidence for every implementation claim it makes.
+  - id: no_package_execution
+    level: MUST
+    statement: Conformance to this contract must not require executing package scripts, prompts, tests, builds, installs, or network probes.
+  - id: specgraph_decides_relationships
+    level: SHOULD
+    statement: SpecGraph or downstream governance should decide graph relationships such as implements, conforms_to, refines, and supersedes.
+evidence:
+  - id: abstract_contract_rationale
+    kind: documentation
+    path: evidence/README.md
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities.intent.package.public_repository_metadata.contract
+      - constraints
+      - provenance
+provenance:
+  sourceConfidence:
+    intent: medium
+    boundary: medium
+    behavior: unknown
+implementationBindings: []
+keywords:
+  - abstract
+  - conformance-target
+  - public-repository-metadata

@@ -45,6 +45,8 @@ The canonical source files remain in the repository:
 - `specs/CONFORMANCE.md`
 - `specs/REMOTE_REGISTRY_API.md`
 - `specs/IDENTIFIER_MODEL.md`
+- `specs/0002_Abstract_SpecPackage_Conformance_Target_Decision.md`
+- `specs/0003_SpecPM_API_Versioning_Decision.md`
 - `specs/INDEX_SUBMISSION_FLOW.md`
 - `specs/PUBLIC_ALPHA.md`
 - `specs/DEPLOY_FIRST.md`

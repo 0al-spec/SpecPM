@@ -51,6 +51,8 @@ scope:
     - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
     - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
     - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
+    - Document abstract SpecPackage conformance targets and seed the registry with an abstract public repository metadata contract.
+    - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
     - Validate first-class manifest intent summaries through `index.provides.intents` backed by BoundarySpec capability `intentIds`.
     - Expose observed intent catalog metadata without treating observations as canonical dictionary entries.
     - Document the boundary between SpecPM exact lookup and downstream plain-text intent discovery.
@@ -191,6 +193,12 @@ provides:
       summary: Document package IDs, capability IDs, canonical intent IDs, and exact capability-to-intent mappings.
       intentIds:
         - intent.specification.identifier_model
+    - id: specpm.specs.abstract_conformance_targets
+      role: secondary
+      summary: Document abstract SpecPackage conformance targets and publish the first abstract public repository metadata contract.
+    - id: specpm.api.versioning_policy
+      role: secondary
+      summary: Document distinct API versioning surfaces for package schemas, registry payloads, endpoint families, archives, CLI JSON reports, and conformance suites.
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
@@ -442,6 +450,7 @@ evidence:
       - provides.capabilities
       - specpm.roadmap.current_status
       - specpm.intent.identifier_model
+      - specpm.specs.abstract_conformance_targets
   - id: roadmap
     kind: documentation
     path: ROADMAP.md
@@ -498,6 +507,26 @@ evidence:
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
+      - specpm.api.versioning_policy
+  - id: abstract_specpackage_decision
+    kind: adr
+    path: specs/0002_Abstract_SpecPackage_Conformance_Target_Decision.md
+    supports:
+      - specpm.specs.abstract_conformance_targets
+      - scope.includes
+      - scope.excludes
+  - id: api_versioning_decision
+    kind: adr
+    path: specs/0003_SpecPM_API_Versioning_Decision.md
+    supports:
+      - specpm.api.versioning_policy
+      - interfaces.inbound
+      - interfaces.outbound
+  - id: abstract_public_repository_metadata_package
+    kind: schema
+    path: packages/intent.package.public_repository_metadata/specpm.yaml
+    supports:
+      - specpm.specs.abstract_conformance_targets
   - id: index_submission_flow
     kind: documentation
     path: specs/INDEX_SUBMISSION_FLOW.md
@@ -618,12 +647,14 @@ evidence:
       - specpm.registry.public_index_accepted_manifest
       - specpm.registry.public_index_remote_sources
       - specpm.registry.public_alpha_index
+      - specpm.specs.abstract_conformance_targets
       - specpm.registry.public_pages_deployment
   - id: public_alpha_docs
     kind: documentation
     path: specs/PUBLIC_ALPHA.md
     supports:
       - specpm.registry.public_alpha_index
+      - specpm.specs.abstract_conformance_targets
       - specpm.registry.public_alpha_smoke
       - specpm.registry.public_observation_report
       - specpm.registry.public_pages_deployment

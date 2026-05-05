@@ -61,6 +61,27 @@ Capability entries may optionally include `intentIds`, a list of canonical
 `intent.*` IDs that the package-owned capability satisfies. These mappings are
 exact metadata, not inferred meaning.
 
+## Abstract Packages
+
+SpecPM may also store abstract `SpecPackage` contracts. An abstract package
+defines a desired capability boundary or conformance target even when no
+concrete implementation exists yet.
+
+Abstract packages are still ordinary package data: they use `specpm.yaml`,
+`specs/*.spec.yaml`, evidence, provenance, constraints, and exact declared
+capabilities. They should make their non-implementation status explicit in
+scope, constraints, provenance, and keywords.
+
+Concrete packages may later claim implementation or conformance through
+reviewed evidence and downstream graph relationships. SpecPM stores the
+versioned contract; SpecGraph decides graph meaning and relationships.
+
+The first abstract package is:
+
+```text
+packages/intent.package.public_repository_metadata
+```
+
 ## BoundarySpec
 
 A `BoundarySpec` describes a bounded package contract. Required fields include:
@@ -100,6 +121,7 @@ instructions and do not grant authority over host behavior.
 
 - `specs/PRD.md`
 - `specs/IDENTIFIER_MODEL.md`
+- `specs/0002_Abstract_SpecPackage_Conformance_Target_Decision.md`
 - `RFC/SpecGraph-RFC-0001.md`
 - <doc:IdentifierModel>
 - <doc:BoundariesAndTrust>

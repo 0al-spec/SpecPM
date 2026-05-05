@@ -1125,6 +1125,31 @@ Acceptance:
 - Raw `/v0` JSON endpoints remain stable machine-readable contracts for CLI,
   SpecGraph, SpecNode, ContextBuilder, and other downstream tools.
 
+## Phase 45. Abstract SpecPackage Conformance Target
+
+- [x] Add a decision note defining abstract `SpecPackage` contracts and
+  conformance targets.
+- [x] Add the first repository-local abstract package:
+  `intent.package.public_repository_metadata`.
+- [x] Publish the abstract package through the maintainer-reviewed accepted
+  package manifest.
+- [x] Keep the change schema-compatible with existing `SpecPackage` and
+  `BoundarySpec` validation.
+- [x] Document API versioning surfaces before adding runtime multi-version
+  behavior.
+
+Acceptance:
+
+- Abstract packages are stored as ordinary validated package data.
+- The first abstract package has no implementation bindings and does not claim
+  that an implementation exists.
+- SpecPM stores the versioned contract; SpecGraph decides graph meaning and
+  conformance relationships.
+- API versioning distinguishes package document schema, registry API family,
+  endpoint prefix, archive format, CLI JSON contracts, and conformance suites.
+- The change does not add runtime schema fields, semantic conformance
+  evaluation, package execution, or graph relationship storage to SpecPM core.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
