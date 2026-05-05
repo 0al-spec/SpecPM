@@ -17,6 +17,10 @@ root; the remote client reads the `/v0` endpoints under that root. Strict JSON
 consumers can use
 [https://0al-spec.github.io/SpecPM/v0/status/index.json](https://0al-spec.github.io/SpecPM/v0/status/index.json).
 
+## Documentation
+
+- [https://0al-spec.github.io/SpecPM](https://0al-spec.github.io/SpecPM/documentation/specpm/)
+
 ## MVP baseline
 
 Install locally:
