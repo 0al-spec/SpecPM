@@ -213,8 +213,9 @@ Its live read-only registry viewer is
 The strict JSON status payload is
 [https://0al-spec.github.io/SpecPM/v0/status/index.json](https://0al-spec.github.io/SpecPM/v0/status/index.json).
 The current alpha package set is documented in `specs/PUBLIC_ALPHA.md` and
-includes `specpm.core` plus a pinned `specnode.core` source for early SpecGraph
-and SpecNode integration.
+includes `specpm.core`, an abstract public repository metadata conformance
+target, and a pinned `specnode.core` source for early SpecGraph and SpecNode
+integration.
 The DocC guide
 [Static Registry Pipeline](https://0al-spec.github.io/SpecPM/documentation/specpm/staticregistrypipeline/)
 explains how the public `/v0` API is generated at build time and served by

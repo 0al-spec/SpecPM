@@ -1,0 +1,31 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: intent.package.public_repository_metadata
+  name: Public Repository Metadata Intent Contract
+  version: 0.1.0
+  summary: Abstract conformance target for static public repository metadata packages.
+  license: MIT
+  authors:
+    - name: 0AL Spec
+    - name: Egor Merkushev
+specs:
+  - path: specs/public-repository-metadata.spec.yaml
+index:
+  provides:
+    capabilities:
+      - intent.package.public_repository_metadata.contract
+    intents:
+      - intent.package.public_repository_metadata
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - any
+  languages: []
+keywords:
+  - abstract
+  - conformance-target
+  - intent-contract
+  - public-repository-metadata
+foreignArtifacts: []

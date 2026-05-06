@@ -31,6 +31,7 @@ Implemented surfaces:
   claims;
 - public alpha package set with `specpm.core`, `specnode.core`, and the example
   email tools package;
+- first abstract conformance-target package for public repository metadata;
 - DocC documentation, landing page, Agent Skills, conformance fixtures, and
   self-spec coverage.
 
@@ -69,6 +70,10 @@ Tasks:
 - keep DocC, README, and landing page consistent about the static registry
   pipeline and public alpha state;
 - keep the self-spec aligned with public repository surfaces;
+- keep abstract conformance-target packages clearly separate from concrete
+  implementation packages;
+- keep API versioning surfaces explicit before introducing multi-version
+  runtime behavior;
 - run local Docker and Pages smoke checks for registry-facing changes.
 
 Success criteria:

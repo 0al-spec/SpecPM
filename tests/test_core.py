@@ -2573,6 +2573,7 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
     )
     assert report["package_dirs"] == [
         str((ROOT / "examples/email_tools").resolve()),
+        str((ROOT / "packages/intent.package.public_repository_metadata").resolve()),
         str(ROOT.resolve()),
         str(checkout),
     ]
@@ -2581,6 +2582,13 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
             "kind": "local",
             "path": "examples/email_tools",
             "package_dir": str((ROOT / "examples/email_tools").resolve()),
+        },
+        {
+            "kind": "local",
+            "path": "packages/intent.package.public_repository_metadata",
+            "package_dir": str(
+                (ROOT / "packages/intent.package.public_repository_metadata").resolve()
+            ),
         },
         {
             "kind": "local",

@@ -32,6 +32,22 @@ Consumers can rely on these rules:
 - paths are data only and must not be executed or fetched automatically;
 - validation warnings and inspection `contract_warnings` are separate surfaces.
 
+## API Versioning
+
+SpecPM has several versioned surfaces:
+
+- package document schema: `specpm.dev/v0.1`;
+- registry payload API: `specpm.registry/v0`;
+- public endpoint family: `/v0`;
+- archive format: `specpm-tar-gzip-v0`;
+- local lock/index schema versions;
+- CLI and Python JSON reports;
+- conformance suite names such as `specpm-conformance-v0`.
+
+These surfaces are related but not interchangeable. A package can use
+`apiVersion: specpm.dev/v0.1` while being served through `/v0` registry
+payloads using `apiVersion: specpm.registry/v0`.
+
 ## Status Vocabularies
 
 Current status vocabularies include:
@@ -62,6 +78,7 @@ fields in runtime payloads.
 ## References
 
 - `specs/JSON_CONTRACTS.md`
+- `specs/0003_SpecPM_API_Versioning_Decision.md`
 - <doc:IdentifierModel>
 - `tests/fixtures/golden/`
 - <doc:Conformance>
