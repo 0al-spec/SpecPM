@@ -4,7 +4,7 @@ metadata:
   id: intent.package.public_repository_metadata
   name: Public Repository Metadata Intent Contract
   version: 0.1.0
-  summary: Abstract conformance target for static public repository metadata packages.
+  summary: Intent-level interface contract for static public repository metadata packages.
   license: MIT
   authors:
     - name: 0AL Spec
@@ -26,6 +26,8 @@ compatibility:
 keywords:
   - abstract
   - conformance-target
+  - dependency-inversion
+  - intent-interface
   - intent-contract
   - public-repository-metadata
 foreignArtifacts: []
