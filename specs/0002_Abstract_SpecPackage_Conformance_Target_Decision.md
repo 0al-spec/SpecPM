@@ -34,13 +34,17 @@ registry substrate.
 This enables dependency inversion at the specification layer:
 
 ```text
-architecture node
+SpecGraph architecture node
         |
+        | depends on
         v
-abstract intent contract
+Abstract SpecPackage
+        ^
+        | satisfies / conforms_to
         |
-        v
-concrete provider packages
+Concrete SpecPackage: github.repository_hosting
+Concrete SpecPackage: gitlab.repository_hosting
+Concrete SpecPackage: gitea.repository_hosting
 ```
 
 For example, an architecture node can depend on an abstract code version
