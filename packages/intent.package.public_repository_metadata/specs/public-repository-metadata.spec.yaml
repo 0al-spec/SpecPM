@@ -22,7 +22,7 @@ scope:
     - Describing runtime behavior that is not evidenced by static repository metadata.
     - Installing dependencies, running package scripts, building packages, running tests, or probing networks.
     - Treating observed intent IDs as canonical semantic authority.
-    - Deciding SpecGraph relationships, graph meaning, refinement, or proposal lanes.
+    - Deciding downstream graph relationships, semantic meaning, refinement, or proposal lanes.
 provides:
   capabilities:
     - id: intent.package.public_repository_metadata.contract
@@ -60,9 +60,9 @@ constraints:
   - id: no_package_execution
     level: MUST
     statement: Conformance to this contract must not require executing package scripts, prompts, tests, builds, installs, or network probes.
-  - id: specgraph_decides_relationships
+  - id: downstream_governance_decides_relationships
     level: SHOULD
-    statement: SpecGraph or downstream governance should decide graph relationships such as implements, conforms_to, refines, and supersedes.
+    statement: Downstream graph governance should decide relationships such as implements, conforms_to, refines, and supersedes.
 evidence:
   - id: abstract_contract_rationale
     kind: documentation

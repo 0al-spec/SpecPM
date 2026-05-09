@@ -10,6 +10,6 @@ Concrete packages should provide their own evidence, such as repository URLs,
 pinned revisions, package manifests, README/LICENSE files, static public API
 surfaces, generated harvest snapshots, or maintainer-reviewed documentation.
 
-SpecPM stores this contract as versioned package data. SpecGraph or downstream
+SpecPM stores this contract as versioned package data. Downstream graph
 governance decides semantic relationships between this abstract contract and
 concrete implementation packages.
