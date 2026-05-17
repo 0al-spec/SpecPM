@@ -997,6 +997,10 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert step_names.index("Generate public index metadata") < step_names.index(
         "Render landing and viewer"
     )
+    assert step_names.index("Render landing and viewer") < step_names.index(
+        "Upload static host artifact"
+    )
+    assert step_names.index("Upload static host artifact") < step_names.index("Upload artifact")
 
     steps_by_name = {step["name"]: step for step in steps if "name" in step}
     assert steps_by_name["Set up Python"]["uses"] == "actions/setup-python@v5"
