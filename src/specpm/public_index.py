@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
 
+from specpm import __version__
 from specpm.core import (
     REMOTE_REGISTRY_API_VERSION,
     REMOTE_REGISTRY_SCHEMA_VERSION,
@@ -39,6 +40,7 @@ def generate_public_index_from_inputs(
     *,
     manifest_path: Path | None = None,
     root: Path | None = None,
+    build_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     resolved_package_dirs = [Path(package_dir) for package_dir in package_dirs]
     if manifest_path is not None:
@@ -57,8 +59,18 @@ def generate_public_index_from_inputs(
                     manifest["errors"],
                 )
             resolved_package_dirs.extend(Path(path) for path in manifest["package_dirs"])
-            return generate_public_index(resolved_package_dirs, output_dir, registry_url)
-    return generate_public_index(resolved_package_dirs, output_dir, registry_url)
+            return generate_public_index(
+                resolved_package_dirs,
+                output_dir,
+                registry_url,
+                build_metadata=build_metadata,
+            )
+    return generate_public_index(
+        resolved_package_dirs,
+        output_dir,
+        registry_url,
+        build_metadata=build_metadata,
+    )
 
 
 def load_public_index_manifest(
@@ -334,6 +346,8 @@ def generate_public_index(
     package_dirs: list[Path],
     output_dir: Path,
     registry_url: str,
+    *,
+    build_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     resolved_output = output_dir.resolve()
     errors: list[dict[str, Any]] = []
@@ -391,7 +405,10 @@ def generate_public_index(
         if errors:
             return public_index_report("invalid", resolved_output, registry_url, [], errors)
 
-        payloads = build_public_index_payloads(packages)
+        payloads = build_public_index_payloads(
+            packages,
+            build_metadata=build_metadata,
+        )
         payload_errors = validate_public_index_payloads(payloads)
         if payload_errors:
             return public_index_report("invalid", resolved_output, registry_url, [], payload_errors)
@@ -479,17 +496,22 @@ def prepare_public_index_package(
     }
 
 
-def build_public_index_payloads(packages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_public_index_payloads(
+    packages: list[dict[str, Any]],
+    *,
+    build_metadata: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     packages = sorted(packages, key=public_index_package_sort_key)
+    implementation = public_index_implementation_metadata(build_metadata)
     intent_matches = observed_intent_matches(packages)
     payloads: list[dict[str, Any]] = [
         {
             "path": registry_root_payload_path(),
-            "payload": remote_registry_root_payload(packages),
+            "payload": remote_registry_root_payload(packages, implementation),
         },
         {
             "path": registry_status_payload_path(),
-            "payload": remote_registry_status_payload(packages),
+            "payload": remote_registry_status_payload(packages, implementation),
         },
         {
             "path": package_index_payload_path(),
@@ -556,23 +578,29 @@ def observed_intent_matches(packages: list[dict[str, Any]]) -> dict[str, list[di
     return matches
 
 
-def remote_registry_status_payload(packages: list[dict[str, Any]]) -> dict[str, Any]:
+def remote_registry_status_payload(
+    packages: list[dict[str, Any]],
+    implementation: dict[str, Any],
+) -> dict[str, Any]:
     return {
         "apiVersion": REMOTE_REGISTRY_API_VERSION,
         "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
         "kind": "RemoteRegistryStatus",
         "status": "ok",
-        "registry": remote_registry_summary(packages),
+        "registry": remote_registry_summary(packages, implementation),
     }
 
 
-def remote_registry_root_payload(packages: list[dict[str, Any]]) -> dict[str, Any]:
+def remote_registry_root_payload(
+    packages: list[dict[str, Any]],
+    implementation: dict[str, Any],
+) -> dict[str, Any]:
     return {
         "apiVersion": REMOTE_REGISTRY_API_VERSION,
         "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
         "kind": "RemoteRegistryRoot",
         "status": "ok",
-        "registry": remote_registry_summary(packages),
+        "registry": remote_registry_summary(packages, implementation),
         "endpoints": {
             "status": registry_status_payload_path(),
             "packages": package_index_payload_path(),
@@ -581,7 +609,10 @@ def remote_registry_root_payload(packages: list[dict[str, Any]]) -> dict[str, An
     }
 
 
-def remote_registry_summary(packages: list[dict[str, Any]]) -> dict[str, Any]:
+def remote_registry_summary(
+    packages: list[dict[str, Any]],
+    implementation: dict[str, Any],
+) -> dict[str, Any]:
     package_ids = {package["package_id"] for package in packages}
     capabilities = {
         capability
@@ -604,7 +635,33 @@ def remote_registry_summary(packages: list[dict[str, Any]]) -> dict[str, Any]:
         "version_count": len(packages),
         "capability_count": len(capabilities),
         "intent_count": len(intents),
+        "implementation": implementation,
     }
+
+
+def public_index_implementation_metadata(
+    build_metadata: dict[str, Any] | None,
+) -> dict[str, Any]:
+    metadata = build_metadata or {}
+    version = str(metadata.get("version") or __version__).strip() or __version__
+    implementation: dict[str, Any] = {
+        "name": "SpecPM",
+        "version": version,
+    }
+
+    build: dict[str, str] = {}
+    build_number = str(metadata.get("build_number") or "").strip()
+    if build_number:
+        build["number"] = build_number
+
+    revision = str(metadata.get("revision") or "").strip()
+    if revision:
+        build["revision"] = revision
+        build["revision_short"] = revision[:12]
+
+    if build:
+        implementation["build"] = build
+    return implementation
 
 
 def remote_package_index_payload(packages: list[dict[str, Any]]) -> dict[str, Any]:

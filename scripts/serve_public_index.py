@@ -24,12 +24,18 @@ def main() -> int:
         for package_dir in os.environ.get("SPECPM_PUBLIC_INDEX_PACKAGE", "").split(os.pathsep)
         if package_dir
     ]
+    build_metadata = {
+        "version": os.environ.get("SPECPM_VERSION"),
+        "build_number": os.environ.get("SPECPM_PUBLIC_INDEX_BUILD_NUMBER"),
+        "revision": os.environ.get("SPECPM_PUBLIC_INDEX_BUILD_REVISION"),
+    }
 
     report = generate_public_index_from_inputs(
         package_dirs,
         output_dir,
         registry_url,
         manifest_path=manifest_path,
+        build_metadata=build_metadata,
     )
     print(json.dumps(report, indent=2, sort_keys=True), flush=True)
     if report["status"] != "ok":

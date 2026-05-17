@@ -92,6 +92,8 @@ const detailPanel = document.querySelector("#detail-panel");
 const jsonOutput = document.querySelector("#json-output");
 const jsonTitle = document.querySelector("#json-title");
 const rawLink = document.querySelector("#raw-link");
+const viewerBuildBadge = document.querySelector("#viewer-build-badge");
+const viewerBuildLine = document.querySelector("#viewer-build-line");
 
 document.addEventListener("DOMContentLoaded", () => {
   baseInput.value = state.base;
@@ -274,6 +276,7 @@ function collectCapabilities(packageIndex) {
 }
 
 function renderAll() {
+  renderBuildMetadata();
   renderSummary();
   renderEndpointTree();
   renderCatalog();
@@ -289,7 +292,10 @@ function setLoadStatus(kind, message) {
 
 function renderSummary() {
   const registry = state.status?.registry || {};
+  const implementation = registryImplementation();
   const cards = [
+    ["SpecPM", implementationVersionLabel(implementation)],
+    ["Build", buildNumberLabel(implementation)],
     ["Packages", registry.package_count ?? packageItems().length],
     ["Versions", registry.version_count ?? 0],
     ["Capabilities", registry.capability_count ?? state.capabilities.length],
@@ -301,6 +307,35 @@ function renderSummary() {
       <div class="value">${escapeHtml(String(value))}</div>
     </article>
   `).join("");
+}
+
+function registryImplementation() {
+  return state.status?.registry?.implementation || state.root?.registry?.implementation || {};
+}
+
+function implementationVersionLabel(implementation = registryImplementation()) {
+  return implementation.version ? `v${implementation.version}` : "unknown";
+}
+
+function buildNumberLabel(implementation = registryImplementation()) {
+  return implementation.build?.number || "local";
+}
+
+function revisionLabel(implementation = registryImplementation()) {
+  return implementation.build?.revision_short || implementation.build?.revision || "unknown";
+}
+
+function renderBuildMetadata() {
+  const implementation = registryImplementation();
+  const version = implementationVersionLabel(implementation);
+  const build = buildNumberLabel(implementation);
+  const revision = revisionLabel(implementation);
+  if (viewerBuildBadge) {
+    viewerBuildBadge.textContent = `SpecPM ${version} / build ${build}`;
+  }
+  if (viewerBuildLine) {
+    viewerBuildLine.textContent = `${version} / build ${build} / ${revision}`;
+  }
 }
 
 function renderEndpointTree() {
@@ -470,6 +505,9 @@ function renderEndpointDetail() {
       </div>
     </div>
     <div class="facts">
+      <div class="fact"><span>SpecPM</span><strong>${escapeHtml(implementationVersionLabel())}</strong></div>
+      <div class="fact"><span>Build</span><strong>${escapeHtml(buildNumberLabel())}</strong></div>
+      <div class="fact"><span>Revision</span><strong>${escapeHtml(revisionLabel())}</strong></div>
       <div class="fact"><span>Profile</span><strong>${escapeHtml(registry.profile || "unknown")}</strong></div>
       <div class="fact"><span>Authority</span><strong>${escapeHtml(registry.authority || "metadata_only")}</strong></div>
       <div class="fact"><span>API Version</span><strong>${escapeHtml(registry.api_version || "v0")}</strong></div>

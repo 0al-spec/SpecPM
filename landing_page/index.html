@@ -1559,6 +1559,9 @@
             <span class="serif-name">SpecPM</span> is building the need resolution engine for reusable specification intent. The package and registry layer is live now with exact <code>intent.*</code> metadata; the upcoming resolver will turn plain-text needs into reviewable <span class="term" title="SpecPackage: a versioned package that groups specs, metadata, capabilities, evidence, and registry data." aria-label="SpecPackage: a versioned package that groups specs, metadata, capabilities, evidence, and registry data.">SpecPackage</span> and <span class="term" title="BoundarySpec: one concrete specification for a product, module, subsystem, or integration boundary." aria-label="BoundarySpec: one concrete specification for a product, module, subsystem, or integration boundary.">BoundarySpec</span> candidates.
           </p>
           <div class="hero-badges" aria-label="SpecPM availability">
+            <span class="status-pill live" data-specpm-version>SpecPM v__SPECPM_VERSION__</span>
+            <span class="status-pill live" data-specpm-build>Build __SPECPM_BUILD_NUMBER__</span>
+            <span class="status-pill live" data-specpm-revision>Revision __SPECPM_BUILD_REVISION_SHORT__</span>
             <span class="status-pill live">Package Layer Live</span>
             <span class="status-pill live">Intent Index Live</span>
             <span class="status-pill live">Docker Local Service Live</span>
@@ -2118,8 +2121,9 @@ $ specpm public-index generate --manifest public-index/accepted-packages.yml --j
     </div>
     <div class="wrap footer-main">
       <span>Package, validate, index, and expose specs today. Resolve intent soon.</span>
-      <span>&copy; 2026 <span class="serif-name">SpecPM</span></span>
+      <span>&copy; 2026 <span class="serif-name">SpecPM</span> <span data-specpm-build-line>SpecPM v__SPECPM_VERSION__ / build __SPECPM_BUILD_NUMBER__ / __SPECPM_BUILD_REVISION_SHORT__</span></span>
     </div>
   </footer>
+  <script src="./assets/site-version.js" defer></script>
 </body>
 </html>

@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 import yaml
 
+from specpm import __version__
 from specpm import core as core_module
 from specpm import index_submission as index_submission_module
 from specpm import public_index as public_index_module
@@ -71,6 +72,7 @@ NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-summary.yml"
 )
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
+DEPLOY_CONNECTION_CHECK_WORKFLOW = ROOT / ".github/workflows/deploy-connection-check.yml"
 DOCKERFILE = ROOT / "Dockerfile"
 MAKEFILE = ROOT / "Makefile"
 AGENTS_FILE = ROOT / "AGENTS.md"
@@ -392,6 +394,22 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
         assert isinstance(registry["capability_count"], int)
         if "intent_count" in registry:
             assert isinstance(registry["intent_count"], int)
+        if "implementation" in registry:
+            implementation = registry["implementation"]
+            assert implementation["name"] == "SpecPM"
+            assert isinstance(implementation["version"], str)
+            assert implementation["version"]
+            if "build" in implementation:
+                build = implementation["build"]
+                if "number" in build:
+                    assert isinstance(build["number"], str)
+                    assert build["number"]
+                if "revision" in build:
+                    assert isinstance(build["revision"], str)
+                    assert build["revision"]
+                if "revision_short" in build:
+                    assert isinstance(build["revision_short"], str)
+                    assert build["revision_short"]
         if payload["kind"] == "RemoteRegistryRoot":
             assert isinstance(payload["endpoints"], dict)
             assert isinstance(payload["endpoints"]["status"], str)
@@ -574,6 +592,7 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     registry_viewer_design_css = REGISTRY_VIEWER_DESIGN_CSS.read_text(encoding="utf-8")
     registry_viewer_css = REGISTRY_VIEWER_CSS.read_text(encoding="utf-8")
     registry_viewer_js = REGISTRY_VIEWER_JS.read_text(encoding="utf-8")
+    landing_version_js = (ROOT / "landing_page/assets/site-version.js").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     public_alpha = PUBLIC_ALPHA_DOC.read_text(encoding="utf-8")
     index_flow = (ROOT / "specs/INDEX_SUBMISSION_FLOW.md").read_text(encoding="utf-8")
@@ -601,9 +620,21 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "Live public registry viewer" in readme
     assert "https://0al-spec.github.io/SpecPM/viewer/" in readme
     assert '<link rel="stylesheet" href="./assets/specpm-design.css" />' in landing
+    assert '<script src="./assets/site-version.js" defer></script>' in landing
+    assert "data-specpm-version" in landing
+    assert "data-specpm-build" in landing
+    assert "data-specpm-revision" in landing
+    assert "data-specpm-build-line" in landing
+    assert "SpecPM v__SPECPM_VERSION__" in landing
+    assert "Build __SPECPM_BUILD_NUMBER__" in landing
+    assert "Revision __SPECPM_BUILD_REVISION_SHORT__" in landing
+    assert "./v0/status/index.json" in landing_version_js
+    assert "payload?.registry?.implementation" in landing_version_js
     assert '<link rel="stylesheet" href="./assets/specpm-design.css" />' in registry_viewer
     assert '<link rel="stylesheet" href="./assets/viewer.css" />' in registry_viewer
     assert '<script src="./assets/viewer.js" defer></script>' in registry_viewer
+    assert "viewer-build-badge" in registry_viewer
+    assert "viewer-build-line" in registry_viewer
     assert "Static Registry Viewer" in registry_viewer
     assert "SpecPM Registry Viewer" in registry_viewer
     assert "Registry Tree" in registry_viewer
@@ -637,6 +668,9 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "routeFromLocation" in registry_viewer_js
     assert "isRegistryTreeAction" in registry_viewer_js
     assert "scrollContentIntoView" in registry_viewer_js
+    assert "registryImplementation" in registry_viewer_js
+    assert "implementationVersionLabel" in registry_viewer_js
+    assert "renderBuildMetadata" in registry_viewer_js
     assert 'window.matchMedia("(max-width: 1120px)")' in registry_viewer_js
     assert 'document.querySelector(".content")?.scrollIntoView' in registry_viewer_js
     assert '<span class="pill warn">Issue</span>' in registry_viewer_js
@@ -949,6 +983,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "examples/**",
         "public-index/**",
         "landing_page/**",
+        "scripts/render_pages.py",
         "pyproject.toml",
         ".github/workflows/docs.yml",
     } <= paths
@@ -960,10 +995,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "Generate public index metadata"
     )
     assert step_names.index("Generate public index metadata") < step_names.index(
-        "Copy registry viewer"
-    )
-    assert step_names.index("Copy registry viewer") < step_names.index(
-        "Add .nojekyll and index.html redirect"
+        "Render landing and viewer"
     )
 
     steps_by_name = {step["name"]: step for step in steps if "name" in step}
@@ -978,26 +1010,98 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert "--manifest public-index/accepted-packages.yml" in generate["run"]
     assert "--output ./.docc-build" in generate["run"]
     assert '--registry "$SPECPM_PUBLIC_INDEX_REGISTRY_URL"' in generate["run"]
+    assert 'SPECPM_VERSION="$(python -c' in generate["run"]
+    assert '--specpm-version "$SPECPM_VERSION"' in generate["run"]
+    assert '--build-number "${{ github.run_number }}"' in generate["run"]
+    assert '--build-revision "${{ github.sha }}"' in generate["run"]
 
-    copy_viewer = steps_by_name["Copy registry viewer"]
-    assert "mkdir -p ./.docc-build/viewer" in copy_viewer["run"]
-    assert "cp landing_page/viewer.html ./.docc-build/viewer/index.html" in (copy_viewer["run"])
-    assert "mkdir -p ./.docc-build/viewer/assets" in copy_viewer["run"]
-    assert (
-        "cp landing_page/assets/specpm-design.css ./.docc-build/viewer/assets/specpm-design.css"
-        in copy_viewer["run"]
-    )
-    assert (
-        "cp landing_page/assets/viewer.css ./.docc-build/viewer/assets/viewer.css"
-        in (copy_viewer["run"])
-    )
-    assert (
-        "cp landing_page/assets/viewer.js ./.docc-build/viewer/assets/viewer.js"
-        in (copy_viewer["run"])
-    )
+    render = steps_by_name["Render landing and viewer"]
+    assert "python scripts/render_pages.py" in render["run"]
+    assert "--output ./.docc-build" in render["run"]
+    assert '--specpm-version "$SPECPM_VERSION"' in render["run"]
+    assert '--build-number "${{ github.run_number }}"' in render["run"]
+    assert '--build-revision "${{ github.sha }}"' in render["run"]
 
     upload = steps_by_name["Upload artifact"]
     assert upload["with"]["path"] == "./.docc-build"
+
+    static_upload = steps_by_name["Upload static host artifact"]
+    assert static_upload["uses"] == "actions/upload-artifact@v4"
+    assert static_upload["with"]["name"] == "specpm-static-site"
+    assert static_upload["with"]["path"] == "./.docc-build"
+    assert static_upload["with"]["if-no-files-found"] == "error"
+
+    static_host = loaded["jobs"]["deploy-static-host"]
+    assert "github.ref == 'refs/heads/main'" in static_host["if"]
+    assert (
+        "github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
+        in (static_host["if"])
+    )
+    assert static_host["needs"] == "build"
+    assert static_host["environment"]["name"] == "FTP"
+    assert static_host["environment"]["url"] == "https://SpecPM.dev"
+    assert static_host["env"]["FTP_HOST"] == "${{ secrets.FTP_HOST }}"
+    assert static_host["env"]["FTP_PORT"] == "${{ secrets.FTP_PORT }}"
+    assert static_host["env"]["FTP_USER"] == "${{ secrets.FTP_USER }}"
+    assert static_host["env"]["FTP_PASS"] == "${{ secrets.FTP_PASS }}"
+    assert static_host["env"]["FTP_REMOTE_ROOT"] == "${{ secrets.FTP_REMOTE_ROOT }}"
+    static_steps = {step["name"]: step for step in static_host["steps"] if "name" in step}
+    assert static_steps["Download static host artifact"]["uses"] == "actions/download-artifact@v4"
+    assert static_steps["Download static host artifact"]["with"]["name"] == "specpm-static-site"
+    assert (
+        "test -f specpm-static-site/index.html"
+        in (static_steps["Validate static host artifact"]["run"])
+    )
+    assert (
+        "apt-get install -y lftp openssh-client" in (static_steps["Install transfer client"]["run"])
+    )
+    upload_run = static_steps["Upload to SpecPM.dev over SFTP"]["run"]
+    assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in upload_run
+    assert 'if [ "$FTP_REMOTE_ROOT" = "/" ]; then' in upload_run
+    assert 'ssh-keyscan -p "$DEPLOY_PORT" "$FTP_HOST"' in upload_run
+    assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in upload_run
+    assert 'mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
+
+
+def test_deploy_connection_check_uses_trusted_sftp_dry_run() -> None:
+    loaded = load_yaml_file(DEPLOY_CONNECTION_CHECK_WORKFLOW)
+
+    trigger = loaded.get("on") or loaded.get(True)
+    paths = set(trigger["pull_request_target"]["paths"])
+    assert {
+        ".github/workflows/deploy-connection-check.yml",
+        ".github/workflows/docs.yml",
+    } <= paths
+
+    job = loaded["jobs"]["deploy-connection-check"]
+    assert job["if"] == "github.event.pull_request.head.repo.full_name == github.repository"
+    assert job["environment"]["name"] == "FTP"
+    assert job["env"] == {
+        "FTP_HOST": "${{ secrets.FTP_HOST }}",
+        "FTP_PORT": "${{ secrets.FTP_PORT }}",
+        "FTP_USER": "${{ secrets.FTP_USER }}",
+        "FTP_PASS": "${{ secrets.FTP_PASS }}",
+        "FTP_REMOTE_ROOT": "${{ secrets.FTP_REMOTE_ROOT }}",
+    }
+
+    steps = {step["name"]: step for step in job["steps"] if "name" in step}
+    assert steps["Checkout trusted workflow"]["uses"] == "actions/checkout@v4"
+    assert steps["Checkout trusted workflow"]["with"]["ref"] == (
+        "${{ github.event.pull_request.base.sha }}"
+    )
+    validate_run = steps["Validate deploy settings"]["run"]
+    assert 'test -n "$FTP_HOST"' in validate_run
+    assert 'test -n "$FTP_USER"' in validate_run
+    assert 'test -n "$FTP_PASS"' in validate_run
+    assert 'test -n "$FTP_REMOTE_ROOT"' in validate_run
+    assert 'if [ "$FTP_REMOTE_ROOT" = "/" ]; then' in validate_run
+    assert "apt-get install -y lftp openssh-client" in (steps["Install transfer client"]["run"])
+    check_run = steps["Check SFTP connection without upload"]["run"]
+    assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in check_run
+    assert 'ssh-keyscan -p "$DEPLOY_PORT" "$FTP_HOST"' in check_run
+    assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in check_run
+    assert 'cls -1 "$FTP_REMOTE_ROOT"' in check_run
+    assert "mirror -R" not in check_run
 
 
 def test_public_index_compose_service_exposes_local_registry() -> None:
@@ -1012,6 +1116,13 @@ def test_public_index_compose_service_exposes_local_registry() -> None:
     )
     assert service["environment"]["SPECPM_PUBLIC_INDEX_MANIFEST"] == (
         "${SPECPM_PUBLIC_INDEX_MANIFEST:-public-index/accepted-packages.yml}"
+    )
+    assert service["environment"]["SPECPM_VERSION"] == "${SPECPM_VERSION:-}"
+    assert service["environment"]["SPECPM_PUBLIC_INDEX_BUILD_NUMBER"] == (
+        "${SPECPM_PUBLIC_INDEX_BUILD_NUMBER:-}"
+    )
+    assert service["environment"]["SPECPM_PUBLIC_INDEX_BUILD_REVISION"] == (
+        "${SPECPM_PUBLIC_INDEX_BUILD_REVISION:-}"
     )
 
 
@@ -1048,6 +1159,13 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol" in makefile
     assert "PUBLIC_ALPHA_REPORT_OUTPUT ?= .specpm/public-alpha-observation.json" in makefile
     assert "PAGES_ALPHA_REPORT_OUTPUT ?= .specpm/pages-alpha-observation.json" in makefile
+    assert "SPECPM_VERSION ?=" in makefile
+    assert "PAGES_BUILD_NUMBER ?= local" in makefile
+    assert "PAGES_BUILD_REVISION ?=" in makefile
+    assert "scripts/render_pages.py" in makefile
+    assert "--specpm-version $(SPECPM_VERSION)" in makefile
+    assert "--build-number $(PAGES_BUILD_NUMBER)" in makefile
+    assert "--build-revision $(PAGES_BUILD_REVISION)" in makefile
     assert "--package specpm.core" in makefile
     assert "--version specpm.core@0.1.0" in makefile
     assert "--capability specpm.registry.public_alpha_index" in makefile
@@ -1066,6 +1184,9 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
         public_index_up_recipe
     )
     assert "SPECPM_PUBLIC_INDEX_MANIFEST=$(PUBLIC_INDEX_MANIFEST)" in public_index_up_recipe
+    assert "SPECPM_VERSION=$(SPECPM_VERSION)" in public_index_up_recipe
+    assert "SPECPM_PUBLIC_INDEX_BUILD_NUMBER=$(PAGES_BUILD_NUMBER)" in public_index_up_recipe
+    assert "SPECPM_PUBLIC_INDEX_BUILD_REVISION=$(PAGES_BUILD_REVISION)" in public_index_up_recipe
     assert "docker compose up" in public_index_up_recipe
     assert "--build" in public_index_up_recipe
     assert "$(PUBLIC_INDEX_COMPOSE_ARGS)" in public_index_up_recipe
@@ -2517,6 +2638,10 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
         "version_count": 1,
         "capability_count": 1,
         "intent_count": 1,
+        "implementation": {
+            "name": "SpecPM",
+            "version": __version__,
+        },
     }
     assert intent_index_payload["catalog"] == {
         "authority": "observed_metadata_only",
@@ -2577,6 +2702,35 @@ def test_public_index_generate_rejects_duplicate_version_conflict(tmp_path: Path
     assert report["status"] == "invalid"
     assert issue_codes(report["errors"]) == {"public_index_duplicate_package_conflict"}
     assert not output.exists()
+
+
+def test_public_index_generate_embeds_specpm_build_metadata(tmp_path: Path) -> None:
+    output = tmp_path / "site"
+    revision = "a" * 40
+
+    report = generate_public_index(
+        [ROOT / "examples/email_tools"],
+        output,
+        "https://registry.example.invalid",
+        build_metadata={
+            "version": "9.8.7",
+            "build_number": "1234",
+            "revision": revision,
+        },
+    )
+
+    assert report["status"] == "ok"
+    status_payload = json.loads((output / "v0/status/index.json").read_text(encoding="utf-8"))
+    assert status_payload["registry"]["implementation"] == {
+        "name": "SpecPM",
+        "version": "9.8.7",
+        "build": {
+            "number": "1234",
+            "revision": revision,
+            "revision_short": revision[:12],
+        },
+    }
+    assert validate_remote_registry_payload(status_payload) == []
 
 
 def test_public_index_generate_replaces_stale_v0_output(tmp_path: Path) -> None:
