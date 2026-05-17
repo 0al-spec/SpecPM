@@ -94,7 +94,7 @@ The alpha registry currently exposes:
 - `specnode.core@0.1.0`.
 
 `intent.package.public_repository_metadata` is a repository-local abstract
-conformance target. `specpm.core` comes from the SpecPM repository root.
+intent contract. `specpm.core` comes from the SpecPM repository root.
 `specnode.core` comes from the pinned public Git source recorded in
 `public-index/accepted-packages.yml`.
 

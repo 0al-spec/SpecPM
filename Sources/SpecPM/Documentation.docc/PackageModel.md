@@ -103,6 +103,16 @@ The first abstract package is:
 packages/intent.package.public_repository_metadata
 ```
 
+A smaller authoring-only reference example is:
+
+```text
+examples/abstract_email_to_markdown_contract
+```
+
+It pairs with `examples/email_tools` to show how an abstract intent contract can
+sit between consumers and a concrete provider package without requiring
+implicit inheritance.
+
 ## BoundarySpec
 
 A `BoundarySpec` describes a bounded package contract. Required fields include:

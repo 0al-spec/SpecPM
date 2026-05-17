@@ -1744,6 +1744,28 @@ def test_rfc_example_validates() -> None:
     assert report["capabilities"] == ["document_conversion.email_to_markdown"]
 
 
+def test_reference_abstract_email_contract_validates() -> None:
+    package_root = ROOT / "examples/abstract_email_to_markdown_contract"
+    report = validate_package(package_root)
+
+    assert report["status"] == "valid"
+    assert report["error_count"] == 0
+    assert report["capabilities"] == ["intent.document_conversion.email_to_markdown.contract"]
+
+    manifest = yaml.safe_load((package_root / "specpm.yaml").read_text(encoding="utf-8"))
+    spec = yaml.safe_load(
+        (package_root / "specs/email-to-markdown-intent.spec.yaml").read_text(encoding="utf-8")
+    )
+
+    assert manifest["index"]["provides"]["intents"] == [
+        "intent.document_conversion.email_to_markdown"
+    ]
+    assert "intent-contract" in manifest["keywords"]
+    assert spec["implementationBindings"] == []
+    assert "intent-contract" in spec["keywords"]
+    assert any("compose" in item.lower() for item in spec["scope"]["includes"])
+
+
 def test_specgraph_export_is_visible_as_warning_only_draft() -> None:
     report = validate_package(SPECGRAPH_FIXTURE_ROOT / "specgraph.core_repository_facade")
     fixture = json.loads(

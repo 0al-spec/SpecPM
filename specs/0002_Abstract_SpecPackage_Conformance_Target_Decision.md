@@ -106,6 +106,17 @@ for SpecHarvester, generated candidate packages, and future downstream
 relationships between abstract intent contracts and concrete observed package
 metadata.
 
+The repository also includes an authoring-only reference example:
+
+```text
+examples/abstract_email_to_markdown_contract
+```
+
+That example pairs an abstract `intent.document_conversion.email_to_markdown`
+contract with the concrete `examples/email_tools` provider-style package. It is
+not published in the public alpha registry; it exists to make the contract
+shape easy to copy and review.
+
 ## Rejected for This Increment
 
 This decision does not add:

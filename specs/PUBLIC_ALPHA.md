@@ -96,8 +96,8 @@ Current accepted packages:
 
 - `document_conversion.email_tools@0.1.0`: example package for the original
   RFC fixture and registry smoke tests.
-- `intent.package.public_repository_metadata@0.1.0`: abstract conformance
-  target for packages that expose static public repository metadata.
+- `intent.package.public_repository_metadata@0.1.0`: abstract intent contract
+  for packages that expose static public repository metadata.
 - `specpm.core@0.1.0`: the SpecPM self-spec from this repository root.
 - `specnode.core@0.1.0`: the SpecNode package from the pinned public Git source
   `https://github.com/0al-spec/SpecNode.git` at tag `v0.1.0` and revision
