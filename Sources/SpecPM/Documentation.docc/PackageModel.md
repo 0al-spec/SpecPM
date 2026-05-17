@@ -86,10 +86,11 @@ versioned contract; downstream graph governance decides meaning, relationships,
 selection, and substitution.
 
 Other specifications may refine an abstract contract by adding capabilities,
-constraints, or provider-specific metadata. Refinements should use explicit
-`refines` or `satisfies` relationships instead of redefining the base intent
-boundary. This lets architecture modules depend on the shared intermediate
-contract while more specific packages carry provider and evidence details.
+constraints, or provider-specific metadata. They may also compose several
+abstract contracts into an aggregate package. This is not object-oriented
+inheritance: downstream packages should keep relationships explicit while
+architecture modules depend on shared intermediate contracts and more specific
+packages carry provider and evidence details.
 
 This increment does not add a first-class `type`, `classification`, or
 `conformance` schema field. Abstract package status is expressed through the

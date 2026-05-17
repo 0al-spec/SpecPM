@@ -15,15 +15,15 @@ scope:
   includes:
     - Define a reusable intent boundary for static public repository metadata without selecting a concrete provider.
     - Provide a dependency-inversion target that architecture nodes can reference before choosing a repository metadata provider.
-    - State minimal evidence expectations for packages that claim to satisfy or refine this contract.
-    - Allow downstream specifications to specialize the contract by adding capabilities, constraints, or provider-specific metadata.
+    - State minimal evidence expectations for packages that claim to satisfy, refine, or compose with this contract.
+    - Allow downstream specifications to specialize the contract or compose it with adjacent contracts into aggregate packages.
   excludes:
     - Claiming upstream maintainer endorsement.
     - Describing runtime behavior that is not evidenced by static repository metadata.
     - Selecting a concrete provider package or asserting conformance without reviewed evidence.
     - Installing dependencies, running package scripts, building packages, running tests, or probing networks.
     - Treating observed intent IDs as canonical semantic authority.
-    - Deciding downstream graph relationships, semantic meaning, refinement, or proposal lanes.
+    - Deciding downstream graph relationships, semantic meaning, refinement, composition, or proposal lanes.
 provides:
   capabilities:
     - id: intent.package.public_repository_metadata.contract
@@ -66,10 +66,10 @@ constraints:
     statement: Selecting GitHub, GitLab, SourceForge, Gitea, or another concrete provider is downstream governance work, not a decision made by this package.
   - id: downstream_governance_decides_relationships
     level: SHOULD
-    statement: Downstream graph governance should decide relationships such as implements, conforms_to, satisfies, refines, and supersedes.
-  - id: refinements_use_explicit_relationships
+    statement: Downstream graph governance should decide relationships such as implements, conforms_to, satisfies, refines, depends_on, composition links, and supersedes.
+  - id: relationships_are_explicit
     level: SHOULD
-    statement: Specifications that specialize this contract should use explicit refines or satisfies relationships instead of redefining the base intent boundary.
+    statement: Specifications that specialize or compose this contract should declare explicit downstream relationships instead of relying on implicit inheritance.
 evidence:
   - id: abstract_contract_rationale
     kind: documentation

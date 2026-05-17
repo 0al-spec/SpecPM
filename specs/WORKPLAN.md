@@ -1143,8 +1143,9 @@ Acceptance:
 - Abstract packages are stored as ordinary validated package data.
 - Abstract packages can serve as dependency-inversion targets for architecture
   nodes before concrete provider selection.
-- Abstract packages can be refined by downstream specifications that add
-  capabilities, constraints, or provider-specific metadata.
+- Abstract packages can be refined or composed by downstream specifications
+  that add capabilities, constraints, provider-specific metadata, or aggregate
+  package boundaries.
 - The first abstract package has no implementation bindings and does not claim
   that an implementation exists.
 - SpecPM stores the versioned contract; downstream graph governance decides

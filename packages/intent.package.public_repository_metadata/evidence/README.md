@@ -12,8 +12,9 @@ governance selects a concrete provider package.
 
 Refining specifications may specialize this contract by adding provider
 capabilities, stricter constraints, or more specific metadata requirements.
-They should use explicit `refines` or `satisfies` relationships instead of
-redefining the base intent boundary.
+Other specifications may compose this contract with adjacent contracts into an
+aggregate package. Both forms should declare explicit downstream relationships
+instead of relying on implicit inheritance.
 
 Concrete packages should provide their own evidence, such as repository URLs,
 pinned revisions, package manifests, README/LICENSE files, static public API

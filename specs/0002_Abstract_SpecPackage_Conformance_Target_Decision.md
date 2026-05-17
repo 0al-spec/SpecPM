@@ -15,7 +15,8 @@ not an implementation claim, not a provider selection, and must not invent
 repository evidence.
 
 Other specifications may later refine the abstract contract by adding
-capabilities, stricter constraints, or provider-specific requirements. Concrete
+capabilities, stricter constraints, or provider-specific requirements. They may
+also compose several abstract contracts into aggregate packages. Concrete
 implementation packages may claim conformance through explicit package
 metadata, downstream graph relationships, or governance decisions. SpecPM
 stores, validates, indexes, and exposes the versioned contract. Downstream
@@ -52,6 +53,10 @@ For example, an architecture node can depend on an abstract code version
 control service contract before choosing GitHub, GitLab, SourceForge, Gitea, or
 another concrete provider package.
 
+This is not object-oriented inheritance. A downstream package may specialize one
+contract, satisfy one contract, or compose multiple contracts into a larger
+aggregate package, as long as the relationships and evidence remain explicit.
+
 ## Accepted Principles
 
 1. `SpecPackage` and `BoundarySpec` remain the primary terms.
@@ -62,9 +67,9 @@ another concrete provider package.
    selection.
 4. Concrete packages act as provider or adapter packages when they claim to
    satisfy an abstract contract.
-5. Refining packages may specialize an abstract contract by adding
-   capabilities or constraints, but should use explicit `refines` or
-   `satisfies` relationships instead of redefining the base intent boundary.
+5. Downstream packages may specialize one abstract contract or compose several
+   contracts into an aggregate package, but should keep relationships explicit
+   instead of relying on implicit inheritance.
 6. Abstract packages must make their non-implementation status explicit in
    scope, constraints, provenance, and keywords.
 7. Abstract packages should have documentation, ADR, standards, policy, or
@@ -124,5 +129,5 @@ and substitution.
 Concrete package evidence can support implementation claims. Abstract package
 evidence supports contract rationale.
 
-Refining package evidence supports the additional capabilities or constraints
-introduced by that refinement.
+Refining or aggregate package evidence supports the additional capabilities,
+constraints, or composition choices introduced by that package.
