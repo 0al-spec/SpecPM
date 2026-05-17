@@ -92,7 +92,8 @@ REGISTRY_VIEWER_PAGE = ROOT / "landing_page/viewer.html"
 REGISTRY_VIEWER_DESIGN_CSS = ROOT / "landing_page/assets/specpm-design.css"
 REGISTRY_VIEWER_CSS = ROOT / "landing_page/assets/viewer.css"
 REGISTRY_VIEWER_JS = ROOT / "landing_page/assets/viewer.js"
-SPECNODE_MAIN_REVISION = "9b6046777723435d94d66d4149fe5e9a6c52f604"
+SPECNODE_RELEASE_REF = "v0.1.0"
+SPECNODE_RELEASE_REVISION = "2ad889ed413370f79710f235a08b43aaaaecf81e"
 ADD_SPECPACKAGES_ISSUE_URL = (
     "https://github.com/0al-spec/SpecPM/issues/new?template=add-specpackages.yml"
 )
@@ -1326,8 +1327,8 @@ def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:
     assert {"path": "."} in package_entries
     assert {
         "repository": "https://github.com/0al-spec/SpecNode.git",
-        "ref": "main",
-        "revision": SPECNODE_MAIN_REVISION,
+        "ref": SPECNODE_RELEASE_REF,
+        "revision": SPECNODE_RELEASE_REVISION,
         "path": ".",
     } in package_entries
 
@@ -1344,7 +1345,8 @@ def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:
     assert "make pages-alpha-report" in public_alpha_doc
     assert "make pages-alpha-smoke" in docc_public_alpha
     assert "make pages-alpha-report" in docc_public_alpha
-    assert SPECNODE_MAIN_REVISION in public_alpha_doc
+    assert SPECNODE_RELEASE_REF in public_alpha_doc
+    assert SPECNODE_RELEASE_REVISION in public_alpha_doc
     assert "<doc:PublicAlphaRegistry>" in docc_overview
 
     boundary_capabilities = {
@@ -2553,9 +2555,9 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
 
     def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
         assert repository_url == "https://github.com/0al-spec/SpecNode.git"
-        assert ref == "main"
+        assert ref == SPECNODE_RELEASE_REF
         write_fake_specnode_checkout(checkout)
-        return {"status": "ok", "revision": SPECNODE_MAIN_REVISION, "errors": []}
+        return {"status": "ok", "revision": SPECNODE_RELEASE_REVISION, "errors": []}
 
     monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
 
@@ -2568,8 +2570,8 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
     assert report["status"] == "ok"
     checkout = remote_root / public_index_module.public_index_checkout_dir_name(
         "https://github.com/0al-spec/SpecNode.git",
-        "main",
-        SPECNODE_MAIN_REVISION,
+        SPECNODE_RELEASE_REF,
+        SPECNODE_RELEASE_REVISION,
     )
     assert report["package_dirs"] == [
         str((ROOT / "examples/email_tools").resolve()),
@@ -2598,8 +2600,8 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
         {
             "kind": "git",
             "repository": "https://github.com/0al-spec/SpecNode.git",
-            "ref": "main",
-            "revision": SPECNODE_MAIN_REVISION,
+            "ref": SPECNODE_RELEASE_REF,
+            "revision": SPECNODE_RELEASE_REVISION,
             "path": ".",
             "package_dir": str(checkout),
         },
@@ -2920,9 +2922,9 @@ def test_cli_public_index_generate_accepts_reviewed_manifest(
 ) -> None:  # type: ignore[no-untyped-def]
     def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
         assert repository_url == "https://github.com/0al-spec/SpecNode.git"
-        assert ref == "main"
+        assert ref == SPECNODE_RELEASE_REF
         write_fake_specnode_checkout(checkout)
-        return {"status": "ok", "revision": SPECNODE_MAIN_REVISION, "errors": []}
+        return {"status": "ok", "revision": SPECNODE_RELEASE_REVISION, "errors": []}
 
     monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
 

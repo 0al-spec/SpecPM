@@ -100,8 +100,8 @@ Current accepted packages:
   target for packages that expose static public repository metadata.
 - `specpm.core@0.1.0`: the SpecPM self-spec from this repository root.
 - `specnode.core@0.1.0`: the SpecNode package from the pinned public Git source
-  `https://github.com/0al-spec/SpecNode.git` at revision
-  `9b6046777723435d94d66d4149fe5e9a6c52f604`.
+  `https://github.com/0al-spec/SpecNode.git` at tag `v0.1.0` and revision
+  `2ad889ed413370f79710f235a08b43aaaaecf81e`.
 
 ## Intended Consumers
 

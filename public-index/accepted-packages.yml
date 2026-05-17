@@ -8,6 +8,6 @@ packages:
   - path: packages/intent.package.public_repository_metadata
   - path: .
   - repository: https://github.com/0al-spec/SpecNode.git
-    ref: main
-    revision: 9b6046777723435d94d66d4149fe5e9a6c52f604
+    ref: v0.1.0
+    revision: 2ad889ed413370f79710f235a08b43aaaaecf81e
     path: .

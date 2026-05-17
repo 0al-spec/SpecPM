@@ -833,8 +833,8 @@ Acceptance:
   `public-index/accepted-packages.yml`.
 - [x] Add the SpecNode package `specnode.core@0.1.0` as a pinned public Git
   source in `public-index/accepted-packages.yml`.
-- [x] Pin SpecNode to exact revision
-  `9b6046777723435d94d66d4149fe5e9a6c52f604`.
+- [x] Pin SpecNode to release tag `v0.1.0` and exact revision
+  `2ad889ed413370f79710f235a08b43aaaaecf81e`.
 - [x] Document the public alpha registry endpoint, `/v0` prefix, seed package
   set, intended consumers, promotion path, and boundaries in
   `specs/PUBLIC_ALPHA.md`.
