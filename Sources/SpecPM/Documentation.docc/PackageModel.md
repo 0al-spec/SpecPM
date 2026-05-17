@@ -64,10 +64,10 @@ exact metadata, not inferred meaning.
 ## Abstract Packages
 
 SpecPM may also store abstract `SpecPackage` contracts. An abstract package
-defines a desired capability boundary or conformance target even when no
-concrete implementation exists yet. In architecture terms, it acts as an
-intent-level interface contract or port. Concrete packages act as providers or
-adapters that may later claim to satisfy the contract.
+defines a desired capability boundary even when no concrete implementation
+exists yet. In architecture terms, it acts as an intent-level interface
+contract or port. Concrete packages act as providers or adapters that may later
+claim to satisfy the contract.
 
 Abstract packages are still ordinary package data: they use `specpm.yaml`,
 `specs/*.spec.yaml`, evidence, provenance, constraints, and exact declared
@@ -84,6 +84,12 @@ Concrete packages may later claim implementation or conformance through
 reviewed evidence and downstream graph relationships. SpecPM stores the
 versioned contract; downstream graph governance decides meaning, relationships,
 selection, and substitution.
+
+Other specifications may refine an abstract contract by adding capabilities,
+constraints, or provider-specific metadata. Refinements should use explicit
+`refines` or `satisfies` relationships instead of redefining the base intent
+boundary. This lets architecture modules depend on the shared intermediate
+contract while more specific packages carry provider and evidence details.
 
 This increment does not add a first-class `type`, `classification`, or
 `conformance` schema field. Abstract package status is expressed through the

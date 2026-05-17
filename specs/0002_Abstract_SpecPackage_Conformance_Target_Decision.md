@@ -1,4 +1,4 @@
-# 0002 Abstract SpecPackage Contract and Conformance Target Decision
+# 0002 Abstract SpecPackage Intent Contract Decision
 
 Status: Accepted for documentation. Initial package added.
 
@@ -14,11 +14,12 @@ An abstract package is a versioned, reviewable specification contract. It is
 not an implementation claim, not a provider selection, and must not invent
 repository evidence.
 
-Concrete implementation packages may later claim conformance to an abstract
-contract through explicit package metadata, downstream graph relationships, or
-governance decisions. SpecPM stores, validates, indexes, and exposes the
-contract. Downstream graph governance decides meaning, relationships,
-selection, and substitution.
+Other specifications may later refine the abstract contract by adding
+capabilities, stricter constraints, or provider-specific requirements. Concrete
+implementation packages may claim conformance through explicit package
+metadata, downstream graph relationships, or governance decisions. SpecPM
+stores, validates, indexes, and exposes the versioned contract. Downstream
+graph governance decides meaning, relationships, selection, and substitution.
 
 ## Context
 
@@ -56,23 +57,26 @@ another concrete provider package.
 1. `SpecPackage` and `BoundarySpec` remain the primary terms.
 2. Abstract packages define desired boundaries, substitution points, and
    evidence expectations, not observed implementation behavior.
-3. Abstract packages may provide `intent.*` IDs and conformance-target
-   capability IDs that architecture nodes can reference before provider
+3. Abstract packages may provide `intent.*` IDs and intent-contract capability
+   IDs that architecture nodes can reference before provider
    selection.
 4. Concrete packages act as provider or adapter packages when they claim to
    satisfy an abstract contract.
-5. Abstract packages must make their non-implementation status explicit in
+5. Refining packages may specialize an abstract contract by adding
+   capabilities or constraints, but should use explicit `refines` or
+   `satisfies` relationships instead of redefining the base intent boundary.
+6. Abstract packages must make their non-implementation status explicit in
    scope, constraints, provenance, and keywords.
-6. Abstract packages should have documentation, ADR, standards, policy, or
+7. Abstract packages should have documentation, ADR, standards, policy, or
    rationale evidence rather than fake implementation evidence.
-7. Abstract packages should not contain `implementationBindings` unless they
+8. Abstract packages should not contain `implementationBindings` unless they
    intentionally reference non-executable reference material.
-8. Downstream graph governance owns semantic relationships such as
+9. Downstream graph governance owns semantic relationships such as
    `implements`, `conforms_to`, `satisfies`, `refines`, `depends_on`, and
    `supersedes`.
-9. SpecPM stores versioned package contracts and exposes exact metadata.
-10. Package content remains untrusted data.
-11. A first-class schema marker for package classification is deferred until
+10. SpecPM stores versioned package contracts and exposes exact metadata.
+11. Package content remains untrusted data.
+12. A first-class schema marker for package classification is deferred until
     the package model needs validator-enforced semantics.
 
 ## Initial Package
@@ -119,3 +123,6 @@ and substitution.
 
 Concrete package evidence can support implementation claims. Abstract package
 evidence supports contract rationale.
+
+Refining package evidence supports the additional capabilities or constraints
+introduced by that refinement.

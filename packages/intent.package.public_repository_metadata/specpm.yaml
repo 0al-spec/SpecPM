@@ -25,8 +25,8 @@ compatibility:
   languages: []
 keywords:
   - abstract
-  - conformance-target
   - dependency-inversion
+  - intermediate-specification
   - intent-interface
   - intent-contract
   - public-repository-metadata

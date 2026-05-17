@@ -111,7 +111,7 @@ The public alpha registry is useful for:
   publicly visible.
 - SpecNode discovering SpecPM package-generation and typed job protocol
   capabilities.
-- SpecGraph linking abstract conformance targets to concrete observed packages.
+- SpecGraph linking abstract intent contracts to concrete observed packages.
 - ContextBuilder rendering registry availability and package metadata.
 - Human operators checking the end-to-end static registry contract.
 

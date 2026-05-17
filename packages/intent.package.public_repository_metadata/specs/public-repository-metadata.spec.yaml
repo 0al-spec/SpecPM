@@ -2,7 +2,7 @@ apiVersion: specpm.dev/v0.1
 kind: BoundarySpec
 metadata:
   id: intent.package.public_repository_metadata.contract
-  title: Public Repository Metadata Abstract Contract
+  title: Public Repository Metadata Intent Contract
   version: 0.1.0
   status: draft
   authors:
@@ -13,11 +13,10 @@ intent:
 scope:
   boundedContext: public_repository_metadata_contract
   includes:
-    - Define a reusable boundary for static public repository metadata.
-    - Describe repository identity, package manifests, README/LICENSE provenance, static public API surfaces, and reviewable metadata summaries when present.
-    - Provide a dependency-inversion target that architecture nodes can reference before choosing a concrete repository metadata provider.
-    - Provide seed metadata for exact capability lookup, exact intent lookup, authoring assistance, duplicate detection, and downstream graph relationships.
-    - Allow concrete packages to claim conformance by supplying reviewed evidence for observed public repository metadata.
+    - Define a reusable intent boundary for static public repository metadata without selecting a concrete provider.
+    - Provide a dependency-inversion target that architecture nodes can reference before choosing a repository metadata provider.
+    - State minimal evidence expectations for packages that claim to satisfy or refine this contract.
+    - Allow downstream specifications to specialize the contract by adding capabilities, constraints, or provider-specific metadata.
   excludes:
     - Claiming upstream maintainer endorsement.
     - Describing runtime behavior that is not evidenced by static repository metadata.
@@ -68,6 +67,9 @@ constraints:
   - id: downstream_governance_decides_relationships
     level: SHOULD
     statement: Downstream graph governance should decide relationships such as implements, conforms_to, satisfies, refines, and supersedes.
+  - id: refinements_use_explicit_relationships
+    level: SHOULD
+    statement: Specifications that specialize this contract should use explicit refines or satisfies relationships instead of redefining the base intent boundary.
 evidence:
   - id: abstract_contract_rationale
     kind: documentation
@@ -86,7 +88,8 @@ provenance:
 implementationBindings: []
 keywords:
   - abstract
-  - conformance-target
   - dependency-inversion
+  - intermediate-specification
   - intent-interface
+  - intent-contract
   - public-repository-metadata
