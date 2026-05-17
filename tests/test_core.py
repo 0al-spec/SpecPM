@@ -617,6 +617,11 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "GitHub Actions validates each package" in landing
     assert "GitHub Pages republishes static registry metadata" in landing
     assert "https://0al-spec.github.io/SpecPM/viewer/" in landing
+    assert "Provider-neutral contracts" in landing
+    assert 'Define an abstract <span class="serif-name">SpecPackage</span>' in landing
+    assert "explicit evidence and governance" in landing
+    assert "abstract package type" not in landing.lower()
+    assert "automatic conformance" not in landing.lower()
     assert "Live public registry viewer" in readme
     assert "https://0al-spec.github.io/SpecPM/viewer/" in readme
     assert '<link rel="stylesheet" href="./assets/specpm-design.css" />' in landing
