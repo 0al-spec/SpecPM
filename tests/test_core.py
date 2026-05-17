@@ -72,6 +72,7 @@ NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-summary.yml"
 )
 DOCS_WORKFLOW = ROOT / ".github/workflows/docs.yml"
+DEPLOY_CONNECTION_CHECK_WORKFLOW = ROOT / ".github/workflows/deploy-connection-check.yml"
 DOCKERFILE = ROOT / "Dockerfile"
 MAKEFILE = ROOT / "Makefile"
 AGENTS_FILE = ROOT / "AGENTS.md"
@@ -1060,6 +1061,47 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert 'ssh-keyscan -p "$DEPLOY_PORT" "$FTP_HOST"' in upload_run
     assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in upload_run
     assert 'mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
+
+
+def test_deploy_connection_check_uses_trusted_sftp_dry_run() -> None:
+    loaded = load_yaml_file(DEPLOY_CONNECTION_CHECK_WORKFLOW)
+
+    trigger = loaded.get("on") or loaded.get(True)
+    paths = set(trigger["pull_request_target"]["paths"])
+    assert {
+        ".github/workflows/deploy-connection-check.yml",
+        ".github/workflows/docs.yml",
+    } <= paths
+
+    job = loaded["jobs"]["deploy-connection-check"]
+    assert job["if"] == "github.event.pull_request.head.repo.full_name == github.repository"
+    assert job["environment"]["name"] == "FTP"
+    assert job["env"] == {
+        "FTP_HOST": "${{ secrets.FTP_HOST }}",
+        "FTP_PORT": "${{ secrets.FTP_PORT }}",
+        "FTP_USER": "${{ secrets.FTP_USER }}",
+        "FTP_PASS": "${{ secrets.FTP_PASS }}",
+        "FTP_REMOTE_ROOT": "${{ secrets.FTP_REMOTE_ROOT }}",
+    }
+
+    steps = {step["name"]: step for step in job["steps"] if "name" in step}
+    assert steps["Checkout trusted workflow"]["uses"] == "actions/checkout@v4"
+    assert steps["Checkout trusted workflow"]["with"]["ref"] == (
+        "${{ github.event.pull_request.base.sha }}"
+    )
+    validate_run = steps["Validate deploy settings"]["run"]
+    assert 'test -n "$FTP_HOST"' in validate_run
+    assert 'test -n "$FTP_USER"' in validate_run
+    assert 'test -n "$FTP_PASS"' in validate_run
+    assert 'test -n "$FTP_REMOTE_ROOT"' in validate_run
+    assert 'if [ "$FTP_REMOTE_ROOT" = "/" ]; then' in validate_run
+    assert "apt-get install -y lftp openssh-client" in (steps["Install transfer client"]["run"])
+    check_run = steps["Check SFTP connection without upload"]["run"]
+    assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in check_run
+    assert 'ssh-keyscan -p "$DEPLOY_PORT" "$FTP_HOST"' in check_run
+    assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in check_run
+    assert 'cls -1 "$FTP_REMOTE_ROOT"' in check_run
+    assert "mirror -R" not in check_run
 
 
 def test_public_index_compose_service_exposes_local_registry() -> None:
