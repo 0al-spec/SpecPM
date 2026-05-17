@@ -2,32 +2,33 @@ apiVersion: specpm.dev/v0.1
 kind: BoundarySpec
 metadata:
   id: intent.package.public_repository_metadata.contract
-  title: Public Repository Metadata Abstract Contract
+  title: Public Repository Metadata Contract
   version: 0.1.0
   status: draft
   authors:
     - name: 0AL Spec
     - name: Egor Merkushev
 intent:
-  summary: Define an abstract conformance target for packages that expose static public repository metadata as reusable specification intent.
+  summary: Define a provider-neutral contract for packages that expose static public repository metadata.
 scope:
   boundedContext: public_repository_metadata_contract
   includes:
-    - Define a reusable boundary for static public repository metadata.
-    - Describe repository identity, package manifests, README/LICENSE provenance, static public API surfaces, and reviewable metadata summaries when present.
-    - Provide seed metadata for exact capability lookup, exact intent lookup, authoring assistance, duplicate detection, and downstream graph relationships.
-    - Allow concrete packages to claim conformance by supplying reviewed evidence for observed public repository metadata.
+    - Define a reusable intent boundary for static public repository metadata without selecting a concrete provider.
+    - Provide a stable contract that architecture nodes can reference before choosing a repository metadata provider.
+    - State minimal evidence expectations for packages that claim to satisfy, refine, or compose with this contract.
+    - Allow downstream specifications to specialize the contract or compose it with adjacent contracts into aggregate packages.
   excludes:
     - Claiming upstream maintainer endorsement.
     - Describing runtime behavior that is not evidenced by static repository metadata.
+    - Selecting a concrete provider package or asserting conformance without reviewed evidence.
     - Installing dependencies, running package scripts, building packages, running tests, or probing networks.
     - Treating observed intent IDs as canonical semantic authority.
-    - Deciding SpecGraph relationships, graph meaning, refinement, or proposal lanes.
+    - Deciding downstream graph relationships, semantic meaning, refinement, composition, or proposal lanes.
 provides:
   capabilities:
     - id: intent.package.public_repository_metadata.contract
       role: primary
-      summary: Abstract conformance target for static public repository metadata packages.
+      summary: Contract for static public repository metadata packages without selecting a concrete provider.
       intentIds:
         - intent.package.public_repository_metadata
 requires:
@@ -56,13 +57,19 @@ constraints:
     statement: This abstract contract must not be treated as evidence that an implementation exists.
   - id: concrete_conformance_requires_evidence
     level: MUST
-    statement: A concrete package claiming this contract must supply repository evidence for every implementation claim it makes.
+    statement: A concrete provider package claiming this contract must supply repository evidence for every implementation or conformance claim it makes.
   - id: no_package_execution
     level: MUST
     statement: Conformance to this contract must not require executing package scripts, prompts, tests, builds, installs, or network probes.
-  - id: specgraph_decides_relationships
+  - id: provider_selection_is_downstream
+    level: MUST
+    statement: Selecting GitHub, GitLab, SourceForge, Gitea, or another concrete provider is downstream governance work, not a decision made by this package.
+  - id: downstream_governance_decides_relationships
     level: SHOULD
-    statement: SpecGraph or downstream governance should decide graph relationships such as implements, conforms_to, refines, and supersedes.
+    statement: Downstream graph governance should decide relationships such as implements, conforms_to, satisfies, refines, depends_on, composition links, and supersedes.
+  - id: relationships_are_explicit
+    level: SHOULD
+    statement: Specifications that specialize or compose this contract should declare explicit downstream relationships instead of relying on implicit inheritance.
 evidence:
   - id: abstract_contract_rationale
     kind: documentation
@@ -80,6 +87,7 @@ provenance:
     behavior: unknown
 implementationBindings: []
 keywords:
-  - abstract
-  - conformance-target
-  - public-repository-metadata
+  - abstract contract
+  - provider neutral
+  - public repository metadata
+  - static metadata

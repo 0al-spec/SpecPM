@@ -64,23 +64,55 @@ exact metadata, not inferred meaning.
 ## Abstract Packages
 
 SpecPM may also store abstract `SpecPackage` contracts. An abstract package
-defines a desired capability boundary or conformance target even when no
-concrete implementation exists yet.
+defines a desired capability boundary even when no concrete implementation
+exists yet. In architecture terms, it acts as an abstract contract or port.
+The `intent.*` IDs provide the machine-readable intent marker, so human-facing
+fields can stay focused on the domain contract. Concrete packages act as
+providers or adapters that may later claim to satisfy the contract.
 
 Abstract packages are still ordinary package data: they use `specpm.yaml`,
 `specs/*.spec.yaml`, evidence, provenance, constraints, and exact declared
 capabilities. They should make their non-implementation status explicit in
 scope, constraints, provenance, and keywords.
 
+This supports dependency inversion at the specification layer: architecture
+nodes can depend on abstract contracts before a concrete provider is
+selected. For example, a node can depend on a code version control service
+contract before a downstream resolver or reviewer chooses GitHub, GitLab,
+SourceForge, Gitea, or another provider package.
+
 Concrete packages may later claim implementation or conformance through
 reviewed evidence and downstream graph relationships. SpecPM stores the
-versioned contract; SpecGraph decides graph meaning and relationships.
+versioned contract; downstream graph governance decides meaning, relationships,
+selection, and substitution.
+
+Other specifications may refine an abstract contract by adding capabilities,
+constraints, or provider-specific metadata. They may also compose several
+abstract contracts into an aggregate package. This is not object-oriented
+inheritance: downstream packages should keep relationships explicit while
+architecture modules depend on shared intermediate contracts and more specific
+packages carry provider and evidence details.
+
+This increment does not add a first-class `type`, `classification`, or
+`conformance` schema field. Abstract package status is expressed through the
+current package model: `intent.*` IDs, capability IDs, constraints, provenance,
+keywords, and evidence.
 
 The first abstract package is:
 
 ```text
 packages/intent.package.public_repository_metadata
 ```
+
+A smaller authoring-only reference example is:
+
+```text
+examples/abstract_email_to_markdown_contract
+```
+
+It pairs with `examples/email_tools` to show how an abstract contract can
+sit between consumers and a concrete provider package without requiring
+implicit inheritance.
 
 ## BoundarySpec
 

@@ -52,6 +52,12 @@ PYTHONPATH=src python3 -m specpm.cli inbox inspect specgraph.core_repository_fac
 PYTHONPATH=src python3 -m specpm.cli public-index generate --manifest public-index/accepted-packages.yml --output /tmp/specpm-public-index --registry https://registry.example.invalid --json
 ```
 
+For an authoring-only abstract package example, see
+`examples/abstract_email_to_markdown_contract`. It pairs with the concrete
+`examples/email_tools` package to show the difference between a provider-neutral
+abstract contract and a provider package. The abstract example is not listed in
+`public-index/accepted-packages.yml`.
+
 Run through Docker:
 
 ```bash
@@ -223,8 +229,8 @@ landing page and registry viewer.
 On `main`, the documentation workflow also uploads the generated static artifact
 to `https://SpecPM.dev` over SFTP using the GitHub Environment named `FTP`.
 The current alpha package set is documented in `specs/PUBLIC_ALPHA.md` and
-includes `specpm.core`, an abstract public repository metadata conformance
-target, and a pinned `specnode.core` source for early SpecGraph and SpecNode
+includes `specpm.core`, an abstract public repository metadata contract,
+and a pinned `specnode.core` source for early SpecGraph and SpecNode
 integration.
 The DocC guide
 [Static Registry Pipeline](https://0al-spec.github.io/SpecPM/documentation/specpm/staticregistrypipeline/)

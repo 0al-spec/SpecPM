@@ -51,7 +51,7 @@ scope:
     - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
     - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
     - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
-    - Document abstract SpecPackage conformance targets and seed the registry with an abstract public repository metadata contract.
+    - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
     - Validate first-class manifest intent summaries through `index.provides.intents` backed by BoundarySpec capability `intentIds`.
     - Expose observed intent catalog metadata without treating observations as canonical dictionary entries.
@@ -195,7 +195,7 @@ provides:
         - intent.specification.identifier_model
     - id: specpm.specs.abstract_conformance_targets
       role: secondary
-      summary: Document abstract SpecPackage conformance targets and publish the first abstract public repository metadata contract.
+      summary: Document abstract SpecPackage contracts and publish the first abstract public repository metadata contract.
     - id: specpm.api.versioning_policy
       role: secondary
       summary: Document distinct API versioning surfaces for package schemas, registry payloads, endpoint families, archives, CLI JSON reports, and conformance suites.

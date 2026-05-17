@@ -1,0 +1,89 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: intent.document_conversion.email_to_markdown.contract
+  title: Email to Markdown Contract
+  version: 0.1.0
+  status: draft
+  authors:
+    - name: SpecPM Example Author
+intent:
+  summary: Define a provider-neutral contract for packages that convert email message content into Markdown.
+scope:
+  boundedContext: email_to_markdown_intent_contract
+  includes:
+    - Define the desired boundary for converting email-like message content into Markdown without choosing a parser, library, command, or provider package.
+    - State minimal evidence expectations for concrete packages that claim to satisfy this intent.
+    - Allow concrete packages such as document_conversion.email_tools to satisfy the contract with reviewed evidence.
+    - Allow downstream aggregate packages to compose this contract with adjacent contracts such as archive extraction, attachment handling, metadata enrichment, or storage policy.
+  excludes:
+    - Selecting a concrete converter implementation, runtime, command-line interface, or service provider.
+    - Requiring mailbox authentication, inbox synchronization, message sending, or network access.
+    - Claiming that a concrete implementation exists without package evidence.
+    - Executing package code, prompts, tests, builds, installs, or network probes as part of this contract.
+    - Deciding downstream graph relationships, refinement, composition, substitution, or provider selection.
+provides:
+  capabilities:
+    - id: intent.document_conversion.email_to_markdown.contract
+      role: primary
+      summary: Contract for email-to-Markdown conversion providers without selecting a concrete provider.
+      intentIds:
+        - intent.document_conversion.email_to_markdown
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: email_to_markdown_claim_evidence
+      kind: schema
+      summary: Reviewable package evidence for a claimed email-to-Markdown provider.
+      inputs:
+        - name: conversion_boundary_evidence
+          mediaTypes:
+            - application/json
+            - application/yaml
+            - text/markdown
+      outputs:
+        - name: provider_claim
+          mediaTypes:
+            - application/yaml
+  outbound: []
+effects:
+  sideEffects: []
+constraints:
+  - id: no_implementation_claim
+    level: MUST
+    statement: This abstract contract must not be treated as evidence that an email-to-Markdown implementation exists.
+  - id: concrete_provider_requires_evidence
+    level: MUST
+    statement: A concrete provider package claiming this contract must supply evidence for its conversion behavior, supported inputs, supported outputs, and side effects.
+  - id: provider_selection_is_downstream
+    level: MUST
+    statement: Selecting a concrete package, runtime, tool, service, or library is downstream governance work, not a decision made by this package.
+  - id: no_network_requirement
+    level: SHOULD
+    statement: Satisfying this contract should not require network access unless a downstream refinement explicitly declares that provider-specific behavior.
+  - id: relationships_are_explicit
+    level: SHOULD
+    statement: Packages that satisfy, refine, or compose this contract should declare explicit downstream relationships instead of relying on implicit inheritance.
+evidence:
+  - id: abstract_contract_rationale
+    kind: documentation
+    path: evidence/README.md
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities.intent.document_conversion.email_to_markdown.contract
+      - constraints
+      - provenance
+provenance:
+  sourceConfidence:
+    intent: medium
+    boundary: medium
+    behavior: unknown
+implementationBindings: []
+keywords:
+  - abstract contract
+  - document conversion
+  - email to markdown
+  - example
+  - provider neutral
