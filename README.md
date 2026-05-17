@@ -220,6 +220,8 @@ The strict JSON status payload is
 Pages builds embed the SpecPM implementation version, CI build number, and
 source revision in that status payload and render the same metadata on the
 landing page and registry viewer.
+On `main`, the documentation workflow also uploads the generated static artifact
+to `https://SpecPM.dev` over SFTP using the GitHub Environment named `FTP`.
 The current alpha package set is documented in `specs/PUBLIC_ALPHA.md` and
 includes `specpm.core`, an abstract public repository metadata conformance
 target, and a pinned `specnode.core` source for early SpecGraph and SpecNode

@@ -109,6 +109,14 @@ jobs:
         with:
           path: "./.docc-build"
 
+      - name: Upload static host artifact
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: specpm-static-site
+          path: "./.docc-build"
+          if-no-files-found: error
+
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
@@ -126,3 +134,62 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  deploy-static-host:
+    name: Deploy SpecPM.dev static host
+    if: |
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: FTP
+      url: https://SpecPM.dev
+    env:
+      FTP_HOST: server209.hosting.reg.ru
+      FTP_PORT: "22"
+      FTP_USER: u1660092
+      FTP_PASS: ${{ secrets.FTP_PASS }}
+      FTP_REMOTE_ROOT: /var/www/u1660092/data/www/specpm.dev
+
+    steps:
+      - name: Download static host artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: specpm-static-site
+          path: specpm-static-site
+
+      - name: Validate static host artifact
+        run: |
+          test -f specpm-static-site/index.html
+          test -f specpm-static-site/viewer/index.html
+          test -f specpm-static-site/v0/status/index.json
+
+      - name: Install transfer client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp openssh-client
+
+      - name: Upload to SpecPM.dev over SFTP
+        run: |
+          test -n "$FTP_HOST"
+          test -n "$FTP_PORT"
+          test -n "$FTP_USER"
+          test -n "$FTP_PASS"
+          test -n "$FTP_REMOTE_ROOT"
+          if [ "$FTP_REMOTE_ROOT" = "/" ]; then
+            echo "FTP_REMOTE_ROOT must not be /" >&2
+            exit 2
+          fi
+
+          mkdir -p "$HOME/.ssh"
+          ssh-keyscan -p "$FTP_PORT" "$FTP_HOST" > "$HOME/.ssh/known_hosts"
+
+          lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$FTP_PORT" <<EOF
+          set sftp:connect-program "ssh -a -x -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
+          set net:max-retries 2
+          set net:timeout 30
+          lcd specpm-static-site
+          mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"
+          bye
+          EOF
