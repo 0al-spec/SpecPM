@@ -52,6 +52,7 @@ index:
       - specpm.specs.abstract_conformance_targets
       - specpm.api.versioning_policy
       - specpm.conformance.remote_registry_payloads
+      - specpm.conformance.fixture_manifest
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.documentation.docc_site
       - specpm.agent_skills.spec_authoring

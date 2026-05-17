@@ -1,0 +1,123 @@
+{
+  "apiVersion": "specpm.fixture-manifest/v0",
+  "schemaVersion": 1,
+  "suite": "specpm-conformance-v0",
+  "specpmVersion": "0.1.0",
+  "registryApiVersion": "specpm.registry/v0",
+  "consumerPinning": {
+    "required": true,
+    "rootOfTrust": "consumer_pinned_specpm_commit",
+    "statement": "Downstream consumers must pin the SpecPM repository revision externally; this manifest describes fixture metadata and is not a lock file."
+  },
+  "fixtureSets": [
+    {
+      "id": "remote_registry_static_smoke",
+      "usage": "http_static_smoke",
+      "description": "Positive public static registry payload fixtures that can be copied into a downstream static /v0 smoke tree.",
+      "fixtures": [
+        {
+          "path": "tests/fixtures/conformance/remote_registry/registry-status.json",
+          "kind": "RemoteRegistryStatus",
+          "staticPath": "v0/status/index.json",
+          "valid": true
+        },
+        {
+          "path": "tests/fixtures/conformance/remote_registry/package-index.json",
+          "kind": "RemotePackageIndex",
+          "staticPath": "v0/packages/index.json",
+          "valid": true
+        },
+        {
+          "path": "tests/fixtures/conformance/remote_registry/package-metadata.json",
+          "kind": "RemotePackage",
+          "staticPath": "v0/packages/document_conversion.email_tools/index.json",
+          "valid": true
+        },
+        {
+          "path": "tests/fixtures/conformance/remote_registry/package-version.json",
+          "kind": "RemotePackageVersion",
+          "staticPath": "v0/packages/document_conversion.email_tools/versions/0.1.0/index.json",
+          "valid": true
+        },
+        {
+          "path": "tests/fixtures/conformance/remote_registry/capability-search.json",
+          "kind": "RemoteCapabilitySearch",
+          "staticPath": "v0/capabilities/document_conversion.email_to_markdown/packages/index.json",
+          "valid": true
+        },
+        {
+          "path": "tests/fixtures/conformance/remote_registry/intent-index.json",
+          "kind": "RemoteIntentIndex",
+          "staticPath": "v0/intents/index.json",
+          "valid": true
+        },
+        {
+          "path": "tests/fixtures/conformance/remote_registry/intent-metadata.json",
+          "kind": "RemoteIntent",
+          "staticPath": "v0/intents/intent.document_conversion.email_to_markdown/index.json",
+          "valid": true
+        },
+        {
+          "path": "tests/fixtures/conformance/remote_registry/intent-search.json",
+          "kind": "RemoteIntentSearch",
+          "staticPath": "v0/intents/intent.document_conversion.email_to_markdown/packages/index.json",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "id": "remote_registry_lifecycle_examples",
+      "usage": "payload_validation",
+      "description": "Valid lifecycle-state payload examples that should not be blindly published as static smoke endpoints.",
+      "fixtures": [
+        {
+          "path": "tests/fixtures/conformance/remote_registry/yanked-version.json",
+          "kind": "RemotePackageVersion",
+          "valid": true
+        },
+        {
+          "path": "tests/fixtures/conformance/remote_registry/deprecated-version.json",
+          "kind": "RemotePackageVersion",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "id": "remote_registry_error_examples",
+      "usage": "payload_validation",
+      "description": "Valid error payload examples for clients that explicitly test error handling.",
+      "fixtures": [
+        {
+          "path": "tests/fixtures/conformance/remote_registry/error-not-found.json",
+          "kind": "RemoteRegistryError",
+          "valid": true
+        }
+      ]
+    },
+    {
+      "id": "remote_registry_negative",
+      "usage": "negative_validation",
+      "description": "Intentionally invalid payload fixtures for validators; these must not be used as static smoke endpoints.",
+      "fixtures": [
+        {
+          "path": "tests/fixtures/conformance/remote_registry/invalid-package-index-count.json",
+          "kind": "RemotePackageIndex",
+          "valid": false
+        }
+      ]
+    },
+    {
+      "id": "enterprise_registry_static_smoke",
+      "usage": "http_static_smoke",
+      "description": "Positive enterprise registry compatibility payload fixtures for the shared read-only metadata contract.",
+      "fixtures": [
+        {
+          "path": "tests/fixtures/conformance/enterprise_registry/registry-status.json",
+          "kind": "RemoteRegistryStatus",
+          "staticPath": "v0/status/index.json",
+          "valid": true
+        }
+      ]
+    }
+  ]
+}
