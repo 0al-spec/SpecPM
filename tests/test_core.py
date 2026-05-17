@@ -1034,6 +1034,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert static_upload["with"]["name"] == "specpm-static-site"
     assert static_upload["with"]["path"] == "./.docc-build"
     assert static_upload["with"]["if-no-files-found"] == "error"
+    assert static_upload["with"]["include-hidden-files"] is True
 
     static_host = loaded["jobs"]["deploy-static-host"]
     assert "github.ref == 'refs/heads/main'" in static_host["if"]

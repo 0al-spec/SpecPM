@@ -110,6 +110,7 @@ jobs:
           name: specpm-static-site
           path: "./.docc-build"
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload artifact
         if: github.event_name == 'push'
