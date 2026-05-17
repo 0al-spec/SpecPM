@@ -1760,9 +1760,11 @@ def test_reference_abstract_email_contract_validates() -> None:
     assert manifest["index"]["provides"]["intents"] == [
         "intent.document_conversion.email_to_markdown"
     ]
-    assert "intent-contract" in manifest["keywords"]
+    assert "abstract contract" in manifest["keywords"]
+    assert "provider neutral" in manifest["keywords"]
     assert spec["implementationBindings"] == []
-    assert "intent-contract" in spec["keywords"]
+    assert "abstract contract" in spec["keywords"]
+    assert "provider neutral" in spec["keywords"]
     assert any("compose" in item.lower() for item in spec["scope"]["includes"])
 
 

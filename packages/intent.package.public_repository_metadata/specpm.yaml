@@ -2,9 +2,9 @@ apiVersion: specpm.dev/v0.1
 kind: SpecPackage
 metadata:
   id: intent.package.public_repository_metadata
-  name: Public Repository Metadata Intent Contract
+  name: Public Repository Metadata Contract
   version: 0.1.0
-  summary: Intent-level interface contract for static public repository metadata packages.
+  summary: Contract for static public repository metadata packages without selecting a concrete provider.
   license: MIT
   authors:
     - name: 0AL Spec
@@ -24,10 +24,8 @@ compatibility:
     - any
   languages: []
 keywords:
-  - abstract
-  - dependency-inversion
-  - intermediate-specification
-  - intent-interface
-  - intent-contract
-  - public-repository-metadata
+  - abstract contract
+  - provider neutral
+  - public repository metadata
+  - static metadata
 foreignArtifacts: []

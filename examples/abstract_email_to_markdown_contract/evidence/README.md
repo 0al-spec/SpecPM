@@ -1,9 +1,9 @@
-# Email to Markdown Intent Contract Evidence
+# Email to Markdown Contract Evidence
 
 This package is an authoring-only reference example for abstract SpecPM
-contracts. It defines an intent-level interface contract for
-`intent.document_conversion.email_to_markdown` without selecting a concrete
-converter, parser, command, runtime, or service provider.
+contracts. It defines `intent.document_conversion.email_to_markdown` as a
+provider-neutral contract without selecting a concrete converter, parser,
+command, runtime, or service provider.
 
 The concrete `examples/email_tools` package can be read as one possible
 provider for the same user intent. A downstream graph, reviewer, or governance

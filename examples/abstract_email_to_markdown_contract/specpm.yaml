@@ -2,9 +2,9 @@ apiVersion: specpm.dev/v0.1
 kind: SpecPackage
 metadata:
   id: intent.document_conversion.email_to_markdown
-  name: Email to Markdown Intent Contract
+  name: Email to Markdown Contract
   version: 0.1.0
-  summary: Intent-level interface contract for email-to-Markdown conversion providers.
+  summary: Contract for email-to-Markdown conversion providers without selecting a concrete provider.
   license: MIT
   authors:
     - name: SpecPM Example Author
@@ -23,11 +23,9 @@ compatibility:
     - any
   languages: []
 keywords:
-  - abstract
-  - dependency-inversion
-  - intermediate-specification
-  - intent-interface
-  - intent-contract
-  - document-conversion
-  - email-to-markdown
+  - abstract contract
+  - document conversion
+  - email to markdown
+  - example
+  - provider neutral
 foreignArtifacts: []

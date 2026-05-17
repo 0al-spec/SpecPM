@@ -1,4 +1,4 @@
-# 0002 Abstract SpecPackage Intent Contract Decision
+# 0002 Abstract SpecPackage Contract Decision
 
 Status: Accepted for documentation. Initial package added.
 
@@ -6,9 +6,11 @@ Status: Accepted for documentation. Initial package added.
 
 SpecPM may store abstract `SpecPackage` contracts that define desired
 capability boundaries even when no concrete implementation exists yet. In this
-model, an abstract package acts like an intent-level interface contract or
-architecture port. Concrete packages act like providers or adapters that may
-later satisfy that contract.
+model, an abstract package acts like an abstract contract or architecture port.
+The `intent.*` IDs provide the machine-readable intent marker, so package names,
+titles, summaries, and keywords can stay focused on the domain contract.
+Concrete packages act like providers or adapters that may later satisfy that
+contract.
 
 An abstract package is a versioned, reviewable specification contract. It is
 not an implementation claim, not a provider selection, and must not invent
@@ -62,9 +64,8 @@ aggregate package, as long as the relationships and evidence remain explicit.
 1. `SpecPackage` and `BoundarySpec` remain the primary terms.
 2. Abstract packages define desired boundaries, substitution points, and
    evidence expectations, not observed implementation behavior.
-3. Abstract packages may provide `intent.*` IDs and intent-contract capability
-   IDs that architecture nodes can reference before provider
-   selection.
+3. Abstract packages may provide `intent.*` IDs and `.contract` capability IDs
+   that architecture nodes can reference before provider selection.
 4. Concrete packages act as provider or adapter packages when they claim to
    satisfy an abstract contract.
 5. Downstream packages may specialize one abstract contract or compose several
@@ -100,11 +101,10 @@ capability: intent.package.public_repository_metadata.contract
 intent: intent.package.public_repository_metadata
 ```
 
-This package provides an intent-level interface contract for tools that expose
-static public repository metadata as reusable specification intent. It is useful
-for SpecHarvester, generated candidate packages, and future downstream
-relationships between abstract intent contracts and concrete observed package
-metadata.
+This package provides a provider-neutral contract for tools that expose static
+public repository metadata. It is useful for SpecHarvester, generated candidate
+packages, and future downstream relationships between abstract contracts and
+concrete observed package metadata.
 
 The repository also includes an authoring-only reference example:
 

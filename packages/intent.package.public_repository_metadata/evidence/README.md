@@ -1,6 +1,6 @@
 # Public Repository Metadata Contract Evidence
 
-This package is an abstract intent-level interface contract.
+This package is an abstract contract.
 
 It does not claim that a concrete implementation exists. It defines the
 reviewable boundary that concrete packages can later claim when they expose

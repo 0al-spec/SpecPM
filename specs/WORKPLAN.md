@@ -1125,10 +1125,10 @@ Acceptance:
 - Raw `/v0` JSON endpoints remain stable machine-readable contracts for CLI,
   SpecGraph, SpecNode, ContextBuilder, and other downstream tools.
 
-## Phase 45. Abstract SpecPackage Intent Contracts
+## Phase 45. Abstract SpecPackage Contracts
 
 - [x] Add a decision note defining abstract `SpecPackage` contracts and
-  intermediate intent-level interface contracts.
+  intermediate provider-neutral contracts.
 - [x] Add the first repository-local abstract package:
   `intent.package.public_repository_metadata`.
 - [x] Publish the abstract package through the maintainer-reviewed accepted
@@ -1141,7 +1141,7 @@ Acceptance:
 Acceptance:
 
 - Abstract packages are stored as ordinary validated package data.
-- Abstract packages can serve as dependency-inversion targets for architecture
+- Abstract packages can serve as stable contract targets for architecture
   nodes before concrete provider selection.
 - Abstract packages can be refined or composed by downstream specifications
   that add capabilities, constraints, provider-specific metadata, or aggregate
