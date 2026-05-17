@@ -13,6 +13,10 @@ PUBLIC_ALPHA_SMOKE_VERSION ?= specnode.core@0.1.0
 PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol
 PUBLIC_ALPHA_REPORT_OUTPUT ?= .specpm/public-alpha-observation.json
 PAGES_ALPHA_REPORT_OUTPUT ?= .specpm/pages-alpha-observation.json
+SPECPM_VERSION ?= $(shell PYTHONPATH=src $(PYTHON) -c 'from specpm import __version__; print(__version__)')
+PAGES_BUILD_NUMBER ?= local
+PAGES_BUILD_REVISION ?= $(shell git rev-parse HEAD 2>/dev/null || printf 'unknown')
+PAGES_CUSTOM_DOMAIN ?=
 PUBLIC_ALPHA_OBSERVE_ARGS ?= \
 	--package specpm.core \
 	--package $(PUBLIC_ALPHA_SMOKE_PACKAGE) \
@@ -48,24 +52,30 @@ docs-build:
 		--output-path ./.docc-build \
 		--transform-for-static-hosting \
 		--hosting-base-path SpecPM
-	mkdir -p ./.docc-build/viewer
-	cp landing_page/viewer.html ./.docc-build/viewer/index.html
-	mkdir -p ./.docc-build/viewer/assets
-	cp landing_page/assets/specpm-design.css ./.docc-build/viewer/assets/specpm-design.css
-	cp landing_page/assets/viewer.css ./.docc-build/viewer/assets/viewer.css
-	cp landing_page/assets/viewer.js ./.docc-build/viewer/assets/viewer.js
+	PYTHONPATH=src $(PYTHON) scripts/render_pages.py \
+		--output ./.docc-build \
+		--specpm-version $(SPECPM_VERSION) \
+		--build-number $(PAGES_BUILD_NUMBER) \
+		--build-revision $(PAGES_BUILD_REVISION) \
+		$(if $(PAGES_CUSTOM_DOMAIN),--custom-domain $(PAGES_CUSTOM_DOMAIN),)
 
 public-index-generate:
 	PYTHONPATH=src $(PYTHON) -m specpm.cli public-index generate \
 		--manifest $(PUBLIC_INDEX_MANIFEST) \
 		--output $(PUBLIC_INDEX_OUTPUT) \
 		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--specpm-version $(SPECPM_VERSION) \
+		--build-number $(PAGES_BUILD_NUMBER) \
+		--build-revision $(PAGES_BUILD_REVISION) \
 		--json
 
 public-index-up:
 	SPECPM_PUBLIC_INDEX_PORT=$(SPECPM_PUBLIC_INDEX_PORT) \
 	SPECPM_PUBLIC_INDEX_REGISTRY_URL=$(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
 	SPECPM_PUBLIC_INDEX_MANIFEST=$(PUBLIC_INDEX_MANIFEST) \
+	SPECPM_VERSION=$(SPECPM_VERSION) \
+	SPECPM_PUBLIC_INDEX_BUILD_NUMBER=$(PAGES_BUILD_NUMBER) \
+	SPECPM_PUBLIC_INDEX_BUILD_REVISION=$(PAGES_BUILD_REVISION) \
 	docker compose up -d --build $(PUBLIC_INDEX_COMPOSE_ARGS) public-index
 
 public-index-reload:

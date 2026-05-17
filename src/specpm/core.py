@@ -2421,6 +2421,37 @@ def validate_remote_registry_summary(
         value = require_remote_int(registry, "intent_count", errors, f"{field}.intent_count")
         if value is not None and value < 0:
             errors.append(remote_field_invalid(f"{field}.intent_count", "must not be negative"))
+    if "implementation" in registry:
+        implementation = require_remote_mapping(
+            registry,
+            "implementation",
+            errors,
+            f"{field}.implementation",
+        )
+        if implementation is not None:
+            validate_remote_registry_implementation(
+                implementation,
+                errors,
+                f"{field}.implementation",
+            )
+
+
+def validate_remote_registry_implementation(
+    implementation: dict[str, Any],
+    errors: list[Issue],
+    field: str,
+) -> None:
+    require_remote_string(implementation, "name", errors, f"{field}.name")
+    require_remote_string(implementation, "version", errors, f"{field}.version")
+    if "build" not in implementation:
+        return
+
+    build = require_remote_mapping(implementation, "build", errors, f"{field}.build")
+    if build is None:
+        return
+    for key in ("number", "revision", "revision_short"):
+        if key in build:
+            require_remote_string(build, key, errors, f"{field}.build.{key}")
 
 
 def validate_remote_registry_error_payload(payload: dict[str, Any], errors: list[Issue]) -> None:

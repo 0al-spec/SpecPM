@@ -242,6 +242,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     public_index_generate.add_argument("--output", required=True)
     public_index_generate.add_argument("--registry", required=True)
+    public_index_generate.add_argument(
+        "--specpm-version",
+        default=__version__,
+        help="SpecPM implementation version to embed in registry status metadata.",
+    )
+    public_index_generate.add_argument(
+        "--build-number",
+        help="CI build or run number to embed in registry status metadata.",
+    )
+    public_index_generate.add_argument(
+        "--build-revision",
+        help="Source revision to embed in registry status metadata.",
+    )
     public_index_generate.add_argument("--json", action="store_true", help="Emit stable JSON.")
     public_index_generate.set_defaults(handler=handle_public_index_generate)
 
@@ -517,6 +530,11 @@ def handle_public_index_generate(args: argparse.Namespace) -> int:
         Path(args.output),
         args.registry,
         manifest_path=Path(args.manifest) if args.manifest else None,
+        build_metadata={
+            "version": args.specpm_version,
+            "build_number": args.build_number,
+            "revision": args.build_revision,
+        },
     )
     if args.json:
         print_json(report)

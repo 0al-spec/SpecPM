@@ -14,6 +14,7 @@ on:
       - "examples/**"
       - "public-index/**"
       - "landing_page/**"
+      - "scripts/render_pages.py"
       - "Sources/SpecPM/**"
       - "Sources/SpecPM-docs/**"
       - "README.md"
@@ -33,6 +34,7 @@ on:
       - "examples/**"
       - "public-index/**"
       - "landing_page/**"
+      - "scripts/render_pages.py"
       - "Sources/SpecPM/**"
       - "Sources/SpecPM-docs/**"
       - "README.md"
@@ -82,41 +84,24 @@ jobs:
         env:
           SPECPM_PUBLIC_INDEX_REGISTRY_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
         run: |
+          SPECPM_VERSION="$(python -c 'from specpm import __version__; print(__version__)')"
           python -m specpm.cli public-index generate \
             --manifest public-index/accepted-packages.yml \
             --output ./.docc-build \
             --registry "$SPECPM_PUBLIC_INDEX_REGISTRY_URL" \
+            --specpm-version "$SPECPM_VERSION" \
+            --build-number "${{ github.run_number }}" \
+            --build-revision "${{ github.sha }}" \
             --json
 
-      - name: Copy registry viewer
+      - name: Render landing and viewer
         run: |
-          mkdir -p ./.docc-build/viewer
-          cp landing_page/viewer.html ./.docc-build/viewer/index.html
-          mkdir -p ./.docc-build/viewer/assets
-          cp landing_page/assets/specpm-design.css ./.docc-build/viewer/assets/specpm-design.css
-          cp landing_page/assets/viewer.css ./.docc-build/viewer/assets/viewer.css
-          cp landing_page/assets/viewer.js ./.docc-build/viewer/assets/viewer.js
-
-      - name: Add .nojekyll and index.html redirect
-        run: |
-          touch .docc-build/.nojekyll
-          cat > .docc-build/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Redirecting to SpecPM Documentation</title>
-            <meta http-equiv="refresh" content="0; url=./documentation/specpm/">
-            <link rel="canonical" href="./documentation/specpm/">
-          </head>
-          <body>
-            <p>Redirecting to <a href="./documentation/specpm/">SpecPM Documentation</a>...</p>
-            <script>
-              window.location.href = "./documentation/specpm/";
-            </script>
-          </body>
-          </html>
-          EOF
+          SPECPM_VERSION="$(python -c 'from specpm import __version__; print(__version__)')"
+          python scripts/render_pages.py \
+            --output ./.docc-build \
+            --specpm-version "$SPECPM_VERSION" \
+            --build-number "${{ github.run_number }}" \
+            --build-revision "${{ github.sha }}"
 
       - name: Upload artifact
         if: github.event_name == 'push'
