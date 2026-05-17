@@ -26,9 +26,14 @@ consumers can use
 Install locally:
 
 ```bash
-python3 -m pip install -e ".[dev]"
-specpm --help
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -e ".[dev]"
+.venv/bin/specpm --help
 ```
+
+The `Makefile` prefers `.venv/bin/python` when the virtual environment exists.
+This avoids accidentally using macOS/Xcode `/usr/bin/python3`, which may be
+older than SpecPM's declared `Python >= 3.10` runtime.
 
 Run without installing by using the source tree:
 
