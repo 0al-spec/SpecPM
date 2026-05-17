@@ -1039,11 +1039,11 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert static_host["needs"] == "build"
     assert static_host["environment"]["name"] == "FTP"
     assert static_host["environment"]["url"] == "https://SpecPM.dev"
-    assert static_host["env"]["FTP_HOST"] == "server209.hosting.reg.ru"
-    assert static_host["env"]["FTP_PORT"] == "22"
-    assert static_host["env"]["FTP_USER"] == "u1660092"
+    assert static_host["env"]["FTP_HOST"] == "${{ secrets.FTP_HOST }}"
+    assert static_host["env"]["FTP_PORT"] == "${{ secrets.FTP_PORT }}"
+    assert static_host["env"]["FTP_USER"] == "${{ secrets.FTP_USER }}"
     assert static_host["env"]["FTP_PASS"] == "${{ secrets.FTP_PASS }}"
-    assert static_host["env"]["FTP_REMOTE_ROOT"] == "/var/www/u1660092/data/www/specpm.dev"
+    assert static_host["env"]["FTP_REMOTE_ROOT"] == "${{ secrets.FTP_REMOTE_ROOT }}"
     static_steps = {step["name"]: step for step in static_host["steps"] if "name" in step}
     assert static_steps["Download static host artifact"]["uses"] == "actions/download-artifact@v4"
     assert static_steps["Download static host artifact"]["with"]["name"] == "specpm-static-site"
@@ -1055,9 +1055,10 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "apt-get install -y lftp openssh-client" in (static_steps["Install transfer client"]["run"])
     )
     upload_run = static_steps["Upload to SpecPM.dev over SFTP"]["run"]
+    assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in upload_run
     assert 'if [ "$FTP_REMOTE_ROOT" = "/" ]; then' in upload_run
-    assert 'ssh-keyscan -p "$FTP_PORT" "$FTP_HOST"' in upload_run
-    assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$FTP_PORT"' in upload_run
+    assert 'ssh-keyscan -p "$DEPLOY_PORT" "$FTP_HOST"' in upload_run
+    assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in upload_run
     assert 'mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
 
 
