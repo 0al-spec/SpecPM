@@ -9,6 +9,12 @@ The current suite lives at:
 tests/fixtures/conformance/specpm-conformance-v0.json
 ```
 
+The downstream fixture manifest lives at:
+
+```text
+tests/fixtures/conformance/fixture-manifest.json
+```
+
 Fixture packages live under:
 
 ```text
@@ -46,6 +52,24 @@ Each case has:
 
 Paths are repository-relative. Package content is test data only and must not be
 executed.
+
+## Fixture Manifest
+
+`fixture-manifest.json` declares versioned conformance fixture metadata for
+downstream consumers. It lists named fixture sets, repository-relative fixture
+paths, expected payload `kind` values, `valid` markers, optional `staticPath`
+values, and the registry API version used by the payloads.
+
+Positive static smoke sets declare source fixture paths and destination
+`staticPath` values for downstream `/v0` trees. Lifecycle examples, error
+examples, and negative validation fixtures are separate sets, so consumers do
+not accidentally publish invalid or error payloads as normal static endpoints.
+
+The manifest is not a lock file. Consumers such as SpecSpace own their fixture
+lock by pinning the SpecPM checkout to an exact commit SHA outside the manifest,
+then reading the manifest only as contract metadata. A tag can be used as a
+human-readable label, but CI trust should come from the externally pinned
+commit revision.
 
 ## Current Case Kinds
 

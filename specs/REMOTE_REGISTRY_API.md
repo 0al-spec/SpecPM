@@ -527,17 +527,26 @@ Initial error codes:
 Static conformance fixtures live under:
 
 ```text
+tests/fixtures/conformance/fixture-manifest.json
 tests/fixtures/conformance/remote_registry/
 tests/fixtures/conformance/enterprise_registry/
 ```
 
-The suite manifest references those fixtures with `remote_registry_payload`
-cases. These cases validate JSON shape only, including positive fixtures,
-negative invalid-shape fixtures, and enterprise registry compatibility payloads
-that reuse the same read-only metadata contract. They do not start a server,
-perform HTTP requests, download package archives, or mutate registry state.
-Client tests may use fixture-backed HTTP fetch stubs so the repository test
-suite does not require a live registry service.
+The fixture manifest declares named fixture sets for downstream consumers,
+including positive static smoke sets with `staticPath` values and separate
+payload-validation sets for lifecycle examples, error examples, and negative
+fixtures. The conformance suite also references those fixtures with
+`remote_registry_payload` cases. These cases validate JSON shape only,
+including positive fixtures, negative invalid-shape fixtures, and enterprise
+registry compatibility payloads that reuse the same read-only metadata
+contract. They do not start a server, perform HTTP requests, download package
+archives, or mutate registry state. Client tests may use fixture-backed HTTP
+fetch stubs so the repository test suite does not require a live registry
+service.
+
+The fixture manifest is contract metadata, not a lock file. Downstream
+consumers must pin the SpecPM repository revision externally before consuming
+the declared fixture paths.
 
 The initial fixture set covers registry status, package index, package
 metadata, package version metadata, exact capability search, observed intent

@@ -202,6 +202,9 @@ provides:
     - id: specpm.conformance.remote_registry_payloads
       role: secondary
       summary: Provide static remote registry API payload fixtures for shape validation without HTTP execution.
+    - id: specpm.conformance.fixture_manifest
+      role: secondary
+      summary: Provide versioned conformance fixture metadata for downstream consumers that pin SpecPM by commit.
     - id: specpm.conformance.public_enterprise_registry_suite
       role: secondary
       summary: Provide conformance cases for generated public static index endpoints and enterprise registry compatibility payloads.
@@ -487,6 +490,7 @@ evidence:
     supports:
       - specpm.conformance.local_suite
       - specpm.conformance.remote_registry_payloads
+      - specpm.conformance.fixture_manifest
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
@@ -496,6 +500,7 @@ evidence:
     supports:
       - specpm.conformance.local_suite
       - specpm.conformance.remote_registry_payloads
+      - specpm.conformance.fixture_manifest
       - specpm.conformance.public_enterprise_registry_suite
   - id: remote_registry_api
     kind: documentation
@@ -504,6 +509,7 @@ evidence:
       - specpm.registry.remote_api_contract
       - specpm.registry.remote_readonly_client
       - specpm.conformance.remote_registry_payloads
+      - specpm.conformance.fixture_manifest
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog

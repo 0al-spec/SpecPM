@@ -57,6 +57,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SPECGRAPH_FIXTURE_ROOT = ROOT / "tests/fixtures/specgraph_exports"
 GOLDEN_FIXTURE_ROOT = ROOT / "tests/fixtures/golden"
 CONFORMANCE_SUITE = ROOT / "tests/fixtures/conformance/specpm-conformance-v0.json"
+CONFORMANCE_FIXTURE_MANIFEST = ROOT / "tests/fixtures/conformance/fixture-manifest.json"
 ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackages.yml"
 REMOVE_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/remove-specpackages.yml"
 CLAIM_NAMESPACE_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/claim-namespace.yml"
@@ -1890,6 +1891,111 @@ def test_conformance_remote_registry_payload_cases() -> None:
             assert payload["query"]["intent_id"] == expected["intent_id"], case["id"]
         if "result_count" in expected:
             assert payload["result_count"] == expected["result_count"], case["id"]
+
+
+def test_conformance_fixture_manifest_declares_versioned_payload_sets() -> None:
+    suite = load_conformance_suite()
+    manifest = json.loads(CONFORMANCE_FIXTURE_MANIFEST.read_text(encoding="utf-8"))
+
+    assert manifest["apiVersion"] == "specpm.fixture-manifest/v0"
+    assert manifest["schemaVersion"] == 1
+    assert manifest["suite"] == suite["suite"]
+    assert manifest["registryApiVersion"] == "specpm.registry/v0"
+    assert manifest["consumerPinning"] == {
+        "required": True,
+        "rootOfTrust": "consumer_pinned_specpm_commit",
+        "statement": (
+            "Downstream consumers must pin the SpecPM repository revision externally; "
+            "this manifest describes fixture metadata and is not a lock file."
+        ),
+    }
+
+    fixture_sets = {fixture_set["id"]: fixture_set for fixture_set in manifest["fixtureSets"]}
+    fixture_set_ids = list(fixture_sets)
+    assert fixture_set_ids == [
+        "remote_registry_static_smoke",
+        "remote_registry_lifecycle_examples",
+        "remote_registry_error_examples",
+        "remote_registry_negative",
+        "enterprise_registry_static_smoke",
+    ]
+    assert len(fixture_set_ids) == len(set(fixture_set_ids))
+
+    declared_paths: set[str] = set()
+    fixture_root = (ROOT / "tests/fixtures/conformance").resolve()
+    for fixture_set in fixture_sets.values():
+        assert fixture_set["description"]
+        assert fixture_set["usage"] in {
+            "http_static_smoke",
+            "payload_validation",
+            "negative_validation",
+        }
+        for fixture in fixture_set["fixtures"]:
+            path = fixture["path"]
+            assert path not in declared_paths
+            declared_paths.add(path)
+            assert isinstance(fixture["valid"], bool)
+
+            payload_path = (ROOT / path).resolve()
+            assert payload_path.is_relative_to(fixture_root), path
+            assert payload_path.is_file(), path
+
+            payload = json.loads(payload_path.read_text(encoding="utf-8"))
+            assert payload["apiVersion"] == manifest["registryApiVersion"], path
+            assert payload["schemaVersion"] == 1, path
+            assert payload["kind"] == fixture["kind"], path
+
+    static_smoke = fixture_sets["remote_registry_static_smoke"]["fixtures"]
+    assert [fixture["path"] for fixture in static_smoke] == [
+        "tests/fixtures/conformance/remote_registry/registry-status.json",
+        "tests/fixtures/conformance/remote_registry/package-index.json",
+        "tests/fixtures/conformance/remote_registry/package-metadata.json",
+        "tests/fixtures/conformance/remote_registry/package-version.json",
+        "tests/fixtures/conformance/remote_registry/capability-search.json",
+        "tests/fixtures/conformance/remote_registry/intent-index.json",
+        "tests/fixtures/conformance/remote_registry/intent-metadata.json",
+        "tests/fixtures/conformance/remote_registry/intent-search.json",
+    ]
+    assert all(fixture["valid"] is True for fixture in static_smoke)
+    assert [fixture["staticPath"] for fixture in static_smoke] == [
+        "v0/status/index.json",
+        "v0/packages/index.json",
+        "v0/packages/document_conversion.email_tools/index.json",
+        "v0/packages/document_conversion.email_tools/versions/0.1.0/index.json",
+        "v0/capabilities/document_conversion.email_to_markdown/packages/index.json",
+        "v0/intents/index.json",
+        "v0/intents/intent.document_conversion.email_to_markdown/index.json",
+        "v0/intents/intent.document_conversion.email_to_markdown/packages/index.json",
+    ]
+
+    for fixture_set_id in (
+        "remote_registry_lifecycle_examples",
+        "remote_registry_error_examples",
+        "remote_registry_negative",
+    ):
+        for fixture in fixture_sets[fixture_set_id]["fixtures"]:
+            assert "staticPath" not in fixture
+
+    negative_fixtures = fixture_sets["remote_registry_negative"]["fixtures"]
+    assert [fixture["path"] for fixture in negative_fixtures] == [
+        "tests/fixtures/conformance/remote_registry/invalid-package-index-count.json"
+    ]
+    assert all(fixture["valid"] is False for fixture in negative_fixtures)
+
+    enterprise_smoke = fixture_sets["enterprise_registry_static_smoke"]["fixtures"]
+    assert enterprise_smoke == [
+        {
+            "path": "tests/fixtures/conformance/enterprise_registry/registry-status.json",
+            "kind": "RemoteRegistryStatus",
+            "staticPath": "v0/status/index.json",
+            "valid": True,
+        }
+    ]
+
+    suite_payload_paths = {
+        case["payload"] for case in suite["cases"] if case["kind"] == "remote_registry_payload"
+    }
+    assert declared_paths == suite_payload_paths
 
 
 def test_conformance_public_registry_static_index_cases(tmp_path: Path) -> None:

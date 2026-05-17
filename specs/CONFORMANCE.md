@@ -21,6 +21,12 @@ The current suite lives at:
 tests/fixtures/conformance/specpm-conformance-v0.json
 ```
 
+The fixture manifest for downstream consumers lives at:
+
+```text
+tests/fixtures/conformance/fixture-manifest.json
+```
+
 Fixture packages live under:
 
 ```text
@@ -58,6 +64,41 @@ Each case has:
 
 Paths in the suite are repository-relative. Package content is test data only
 and must not be executed.
+
+## Fixture Manifest
+
+`fixture-manifest.json` is metadata for downstream consumers that need a stable
+subset of conformance payloads, such as fixture-backed HTTP/static registry
+smoke tests. It declares the fixture suite, SpecPM package version, registry API
+version, named fixture sets, and the repository-relative fixture paths with
+their expected payload `kind`, `valid` marker, usage, and optional
+`staticPath`.
+
+Fixture sets are grouped by intended use. `remote_registry_static_smoke` and
+`enterprise_registry_static_smoke` contain positive payloads that can be copied
+into a downstream static `/v0` tree at their declared `staticPath` values.
+Lifecycle, error, and negative validation fixtures are kept in separate sets so
+downstream HTTP/static smoke tests do not accidentally publish invalid or error
+payloads as live endpoints.
+
+The manifest is not a lock file and is not a root of trust. Downstream
+consumers must pin the SpecPM repository revision outside the manifest, ideally
+by checking out an exact 40-character commit SHA. A human-readable tag may be
+logged or checked for consistency, but the trusted input is the externally
+pinned commit.
+
+Recommended downstream flow:
+
+1. check out SpecPM at the consumer-owned pinned commit revision;
+2. assert `git rev-parse HEAD` equals that expected revision;
+3. read `tests/fixtures/conformance/fixture-manifest.json`;
+4. copy only fixtures from a positive static smoke set to their declared
+   `staticPath` values;
+5. run fixture-backed client or HTTP/static smoke checks.
+
+This keeps downstream contract tests independent from mutable public index
+sources, remote package source freshness, and full `public-index` supply-chain
+validation.
 
 ## Case Kinds
 
