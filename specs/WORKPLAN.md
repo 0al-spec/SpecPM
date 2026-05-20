@@ -1193,7 +1193,7 @@ Acceptance:
   public package submission.
 - [x] Add package-submission label triage that prepares review labels without
   deciding acceptance automatically.
-- [ ] Add a helper that turns a validated submission report into a reviewed
+- [x] Add a helper that turns a validated submission report into a reviewed
   `public-index/accepted-packages.yml` candidate snippet.
 - [ ] Add downstream consumer examples for read-only `/v0` registry
   observation by SpecGraph, ContextBuilder, and SpecNode.

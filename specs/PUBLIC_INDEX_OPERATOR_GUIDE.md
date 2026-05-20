@@ -71,6 +71,17 @@ The `revision` is the root of trust for that source record. A mutable `ref` is
 allowed only as a human-readable source label; the generator must verify that
 the checkout resolves to the pinned revision.
 
+Maintainers can ask the validation helper to render a candidate snippet:
+
+```bash
+python scripts/validate_index_submission.py \
+  --issue-body-file submission-issue.md \
+  --manifest-candidate-output accepted-manifest-candidate.yml
+```
+
+The helper output is review input. It is not committed automatically and does
+not edit `public-index/accepted-packages.yml`.
+
 ## Boundaries
 
 This operator flow does not add `specpm publish`, upload endpoints, remote
