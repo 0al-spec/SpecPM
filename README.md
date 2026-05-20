@@ -121,7 +121,8 @@ public-alpha-smoke` includes the baseline local public-index smoke checks and
 then verifies the alpha seed package and capability surface. `make pages-smoke`
 verifies the GitHub Pages registry baseline at
 `https://0al-spec.github.io/SpecPM`; `make pages-alpha-smoke` includes that
-baseline and then checks `specnode.core@0.1.0` and
+baseline and then checks retained `specpm.core@0.1.0`, current
+`specpm.core@0.2.0`, `specnode.core@0.1.0`, and
 `specnode.typed_job_protocol`. `make public-alpha-report` and
 `make pages-alpha-report` write machine-readable observation reports under
 `.specpm/` for downstream tools such as SpecGraph, SpecNode, and ContextBuilder.

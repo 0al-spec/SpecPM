@@ -62,6 +62,10 @@ Operators can run the same alpha visibility checks with:
 make pages-alpha-smoke
 ```
 
+That smoke target checks the baseline registry surface, retained
+`specpm.core@0.1.0`, current `specpm.core@0.2.0`, `specnode.core@0.1.0`, and
+`specnode.typed_job_protocol`.
+
 Generate a machine-readable downstream observation report with:
 
 ```bash

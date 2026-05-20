@@ -876,7 +876,8 @@ Acceptance:
 
 Acceptance:
 
-- `make pages-alpha-smoke` checks `specnode.core`, `specnode.core@0.1.0`, and
+- `make pages-alpha-smoke` checks retained `specpm.core@0.1.0`, current
+  `specpm.core@0.2.0`, `specnode.core`, `specnode.core@0.1.0`, and
   `specnode.typed_job_protocol` against the deployed GitHub Pages `/v0`
   registry.
 - `make public-alpha-smoke` checks the same alpha surface against the local
