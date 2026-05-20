@@ -65,6 +65,9 @@ CLAIM_NAMESPACE_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/claim-namespace.
 NAMESPACE_CLAIM_POLICY = ROOT / "specs/NAMESPACE_CLAIM_POLICY.md"
 PUBLIC_INDEX_OPERATOR_GUIDE = ROOT / "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
+PACKAGE_SUBMISSION_TRIAGE_WORKFLOW = (
+    ROOT / ".github/workflows/package-submission-triage.yml"
+)
 NAMESPACE_CLAIM_TRIAGE_WORKFLOW = ROOT / ".github/workflows/namespace-claim-triage.yml"
 NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-report.yml"
@@ -830,6 +833,7 @@ def test_public_index_operator_guide_documents_package_review_boundary() -> None
     assert "reviewed pull request" in guide_lower
     assert "must not decide acceptance" in guide_lower
     assert "public-index/accepted-packages.yml" in guide_text
+    assert ".github/workflows/package-submission-triage.yml" in guide_text
     assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in readme
     assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in index_flow
 
@@ -874,6 +878,40 @@ def test_package_submission_workflow_runs_only_for_submission_label() -> None:
     assert "listComments" in comment_script
     assert "updateComment" in comment_script
     assert "createComment" in comment_script
+
+
+def test_package_submission_triage_workflow_applies_review_labels_only() -> None:
+    loaded = load_yaml_file(PACKAGE_SUBMISSION_TRIAGE_WORKFLOW)
+
+    assert loaded["name"] == "Package Submission Triage"
+    assert loaded["permissions"] == {"contents": "read", "issues": "write"}
+    assert loaded["on"]["issues"]["types"] == ["opened", "edited", "reopened", "labeled"]
+
+    job = loaded["jobs"]["triage-submission"]
+    assert "package-submission" in job["if"]
+    steps = {step["name"]: step for step in job["steps"] if "name" in step}
+    script = steps["Prepare package submission review labels"]["with"]["script"]
+
+    for status_label in (
+        "package:needs-fix",
+        "package:under-review",
+        "package:validated",
+        "package:accepted",
+        "package:rejected",
+        "package:blocked",
+        "package:duplicate",
+    ):
+        assert status_label in script
+
+    assert "issues.createLabel" in script
+    assert "issues.addLabels" in script
+    assert "package:under-review" in script
+    assert "Public Index Operator Guide" in script
+    assert "package-submission-triage" in script
+    assert "does not decide acceptance" in script
+    assert "public-index/accepted-packages.yml" in script
+    for forbidden in ("public-index generate", "validate_index_submission.py", "specpm publish"):
+        assert forbidden not in script
 
 
 def test_namespace_claim_triage_workflow_applies_review_labels_only() -> None:

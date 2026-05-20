@@ -30,6 +30,10 @@ may use these status labels during review:
 Only maintainers apply terminal labels such as `package:accepted`,
 `package:rejected`, `package:blocked`, or `package:duplicate`.
 
+The optional `.github/workflows/package-submission-triage.yml` workflow prepares
+these labels and applies `package:under-review` when no package review status is
+present. It does not apply terminal labels.
+
 ## Acceptance Checklist
 
 Before adding an entry to `public-index/accepted-packages.yml`, maintainers

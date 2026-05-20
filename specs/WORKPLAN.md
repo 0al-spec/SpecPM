@@ -1191,7 +1191,7 @@ Acceptance:
 
 - [x] Document maintainer labels and the review checklist for accepting a valid
   public package submission.
-- [ ] Add package-submission label triage that prepares review labels without
+- [x] Add package-submission label triage that prepares review labels without
   deciding acceptance automatically.
 - [ ] Add a helper that turns a validated submission report into a reviewed
   `public-index/accepted-packages.yml` candidate snippet.
