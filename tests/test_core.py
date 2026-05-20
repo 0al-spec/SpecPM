@@ -1177,7 +1177,7 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "--build-number $(PAGES_BUILD_NUMBER)" in makefile
     assert "--build-revision $(PAGES_BUILD_REVISION)" in makefile
     assert "--package specpm.core" in makefile
-    assert "--version specpm.core@0.1.0" in makefile
+    assert "--version specpm.core@$(SPECPM_VERSION)" in makefile
     assert "--capability specpm.registry.public_alpha_index" in makefile
     assert set(make_target_prerequisites(makefile, "dev-reload")) == {
         "public-index-reload",
@@ -1797,7 +1797,7 @@ def test_repository_root_is_self_describing_specpackage() -> None:
     assert report["package_identity"] == {
         "package_id": "specpm.core",
         "name": "SpecPM",
-        "version": "0.1.0",
+        "version": "0.2.0",
     }
     assert report["errors"] == []
     assert report["warnings"] == []
@@ -4167,6 +4167,30 @@ def test_validator_warns_on_spec_authoring_quality_gaps(tmp_path: Path) -> None:
         and issue["message"].endswith("provides.capabilities.document_conversion.email_to_markdown")
         for issue in report["warnings"]
     )
+
+
+def test_validator_accepts_public_interface_index_evidence_kind(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "public-interface-index-evidence")
+    spec_path = package / "specs/email-to-markdown.spec.yaml"
+    public_interface_index = package / "public-interface-index.json"
+    public_interface_index.write_text(
+        '{"kind":"PublicInterfaceIndex","schemaVersion":1}\n',
+        encoding="utf-8",
+    )
+    spec = load_yaml_file(spec_path)
+    spec["evidence"][0] = {
+        "id": "public_interface_index",
+        "kind": "public_interface_index",
+        "path": "public-interface-index.json",
+        "supports": ["provides.capabilities.document_conversion.email_to_markdown"],
+    }
+    write_yaml_file(spec_path, spec)
+
+    report = validate_package(package)
+
+    assert report["status"] == "valid"
+    warning_codes = issue_codes(report["warnings"])
+    assert "unknown_evidence_kind" not in warning_codes
 
 
 def test_pack_is_deterministic(tmp_path: Path) -> None:

@@ -3,7 +3,7 @@ kind: SpecPackage
 metadata:
   id: specpm.core
   name: SpecPM
-  version: 0.1.0
+  version: 0.2.0
   summary: Local package manager for SpecPackage and BoundarySpec bundles.
   license: MIT
   authors:
@@ -50,6 +50,7 @@ index:
       - specpm.roadmap.current_status
       - specpm.intent.identifier_model
       - specpm.specs.abstract_conformance_targets
+      - specpm.specs.public_interface_index_evidence
       - specpm.api.versioning_policy
       - specpm.conformance.remote_registry_payloads
       - specpm.conformance.fixture_manifest

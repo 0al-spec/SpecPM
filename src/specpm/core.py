@@ -69,6 +69,7 @@ KNOWN_EVIDENCE_KINDS = {
     "adr",
     "commit",
     "manual_assertion",
+    "public_interface_index",
     "unknown",
 }
 KNOWN_FOREIGN_ARTIFACT_ROLES = {

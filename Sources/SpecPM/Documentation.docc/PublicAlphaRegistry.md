@@ -50,7 +50,7 @@ specpm remote search specnode.typed_job_protocol --registry https://0al-spec.git
 specpm remote intents --registry https://0al-spec.github.io/SpecPM --json
 specpm remote intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search-intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
-specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
+specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.2.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
 ```
 
 The intent catalog is observed metadata from accepted packages. It helps
@@ -90,7 +90,7 @@ The alpha registry currently exposes:
 
 - `document_conversion.email_tools@0.1.0`;
 - `intent.package.public_repository_metadata@0.1.0`;
-- `specpm.core@0.1.0`;
+- `specpm.core@0.2.0`;
 - `specnode.core@0.1.0`.
 
 `intent.package.public_repository_metadata` is a repository-local abstract

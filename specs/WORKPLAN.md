@@ -829,7 +829,7 @@ Acceptance:
 
 ## Phase 34. Public Alpha Registry Seed
 
-- [x] Add the SpecPM self-spec package `specpm.core@0.1.0` to
+- [x] Add the SpecPM self-spec package `specpm.core@0.2.0` to
   `public-index/accepted-packages.yml`.
 - [x] Add the SpecNode package `specnode.core@0.1.0` as a pinned public Git
   source in `public-index/accepted-packages.yml`.
@@ -893,7 +893,7 @@ Acceptance:
 - [x] Add local `public-alpha-report` and deployed `pages-alpha-report` Make
   targets that write JSON artifacts under `.specpm/`.
 - [x] Use the current alpha seed expectations: `specpm.core`, `specnode.core`,
-  `specpm.core@0.1.0`, `specnode.core@0.1.0`,
+  `specpm.core@0.2.0`, `specnode.core@0.1.0`,
   `specpm.registry.public_alpha_index`, and `specnode.typed_job_protocol`.
 - [x] Update README, JSON contracts, Public Alpha docs, DocC, and self-spec
   coverage.

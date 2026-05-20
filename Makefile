@@ -20,7 +20,7 @@ PAGES_CUSTOM_DOMAIN ?=
 PUBLIC_ALPHA_OBSERVE_ARGS ?= \
 	--package specpm.core \
 	--package $(PUBLIC_ALPHA_SMOKE_PACKAGE) \
-	--version specpm.core@0.1.0 \
+	--version specpm.core@$(SPECPM_VERSION) \
 	--version $(PUBLIC_ALPHA_SMOKE_VERSION) \
 	--capability specpm.registry.public_alpha_index \
 	--capability $(PUBLIC_ALPHA_SMOKE_CAPABILITY)

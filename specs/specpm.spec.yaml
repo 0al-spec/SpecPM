@@ -3,7 +3,7 @@ kind: BoundarySpec
 metadata:
   id: specpm.core
   title: SpecPM Core Package Manager
-  version: 0.1.0
+  version: 0.2.0
   status: draft
   authors:
     - name: 0AL Spec
@@ -52,6 +52,7 @@ scope:
     - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
     - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
+    - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
     - Validate first-class manifest intent summaries through `index.provides.intents` backed by BoundarySpec capability `intentIds`.
     - Expose observed intent catalog metadata without treating observations as canonical dictionary entries.
@@ -196,6 +197,9 @@ provides:
     - id: specpm.specs.abstract_conformance_targets
       role: secondary
       summary: Document abstract SpecPackage contracts and publish the first abstract public repository metadata contract.
+    - id: specpm.specs.public_interface_index_evidence
+      role: secondary
+      summary: Recognize public interface index artifacts as a known evidence kind without executing or parsing the artifact.
     - id: specpm.api.versioning_policy
       role: secondary
       summary: Document distinct API versioning surfaces for package schemas, registry payloads, endpoint families, archives, CLI JSON reports, and conformance suites.
@@ -742,6 +746,12 @@ evidence:
     supports:
       - derived_artifacts_downstream
       - no_package_execution
+  - id: public_interface_index_evidence_proposal
+    kind: adr
+    path: specs/0004_Public_Interface_Index_Evidence_Kind_Proposal.md
+    supports:
+      - specpm.specs.public_interface_index_evidence
+      - no_package_execution
   - id: cli_source
     kind: source
     path: src/specpm/cli.py
@@ -762,12 +772,14 @@ evidence:
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
       - manifest_intents_backed_by_capabilities
+      - specpm.specs.public_interface_index_evidence
   - id: core_tests
     kind: test
     path: tests/test_core.py
     supports:
       - provides.capabilities
       - constraints
+      - specpm.specs.public_interface_index_evidence
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.public_observation_report
       - specpm.registry.intent_search

@@ -49,7 +49,7 @@ specpm remote search specnode.typed_job_protocol --registry https://0al-spec.git
 specpm remote intents --registry https://0al-spec.github.io/SpecPM --json
 specpm remote intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search-intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
-specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
+specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.2.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
 ```
 
 The `remote intents` and `remote intent` commands expose an observed intent
@@ -98,7 +98,7 @@ Current accepted packages:
   RFC fixture and registry smoke tests.
 - `intent.package.public_repository_metadata@0.1.0`: abstract contract
   for packages that expose static public repository metadata.
-- `specpm.core@0.1.0`: the SpecPM self-spec from this repository root.
+- `specpm.core@0.2.0`: the SpecPM self-spec from this repository root.
 - `specnode.core@0.1.0`: the SpecNode package from the pinned public Git source
   `https://github.com/0al-spec/SpecNode.git` at tag `v0.1.0` and revision
   `2ad889ed413370f79710f235a08b43aaaaecf81e`.
