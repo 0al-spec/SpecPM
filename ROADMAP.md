@@ -1,7 +1,7 @@
 # SpecPM Roadmap
 
 Status: Public alpha roadmap
-Updated: 2026-05-02
+Updated: 2026-05-21
 
 SpecPM is the package substrate for SpecGraph. It packages, validates, indexes,
 inspects, preserves, and exposes reusable specification intent. It does not own
@@ -225,6 +225,11 @@ SpecPM core does not own:
 Package content can describe desired outputs. Package content cannot command the host.
 
 ## Near-Term PR Candidates
+
+Active stack:
+
+- Public Index Operator UX: maintainer checklist, package-submission labels,
+  accepted manifest helper, and downstream consumer guide.
 
 1. `docs: normalize roadmap and workplan status`
    - keep this roadmap, DocC Roadmap, and Workplan aligned.
