@@ -1166,7 +1166,7 @@ Acceptance:
   before publishing `specpm.core@0.2.0` as latest.
 - [x] Represent multiple versions of the same package as multiple immutable
   accepted source records in `public-index/accepted-packages.yml`.
-- [ ] Add public index generation tests that reject duplicate
+- [x] Add public index generation tests that reject duplicate
   `package_id@version` entries with different content.
 - [x] Add public index generation tests that allow multiple versions of one
   package and expose them through `/v0/packages/{package_id}` and exact version
