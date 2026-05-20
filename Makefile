@@ -8,6 +8,7 @@ PUBLIC_INDEX_OUTPUT ?= .specpm/public-index
 PUBLIC_INDEX_MANIFEST ?= public-index/accepted-packages.yml
 PUBLIC_INDEX_SMOKE_CAPABILITY ?= document_conversion.email_to_markdown
 PUBLIC_INDEX_SMOKE_INTENT ?= intent.document_conversion.email_to_markdown
+PUBLIC_ALPHA_RETAINED_SPECPM_VERSION ?= specpm.core@0.1.0
 PUBLIC_ALPHA_SMOKE_PACKAGE ?= specnode.core
 PUBLIC_ALPHA_SMOKE_VERSION ?= specnode.core@0.1.0
 PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol
@@ -20,6 +21,7 @@ PAGES_CUSTOM_DOMAIN ?=
 PUBLIC_ALPHA_OBSERVE_ARGS ?= \
 	--package specpm.core \
 	--package $(PUBLIC_ALPHA_SMOKE_PACKAGE) \
+	--version $(PUBLIC_ALPHA_RETAINED_SPECPM_VERSION) \
 	--version specpm.core@$(SPECPM_VERSION) \
 	--version $(PUBLIC_ALPHA_SMOKE_VERSION) \
 	--capability specpm.registry.public_alpha_index \
@@ -116,6 +118,9 @@ public-index-smoke: public-index-wait
 		--json
 
 public-alpha-smoke: public-index-smoke
+	PYTHONPATH=src $(PYTHON) -m specpm.cli remote version $(PUBLIC_ALPHA_RETAINED_SPECPM_VERSION) \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json
 	PYTHONPATH=src $(PYTHON) -m specpm.cli remote package $(PUBLIC_ALPHA_SMOKE_PACKAGE) \
 		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
 		--json
@@ -162,6 +167,9 @@ pages-smoke:
 		--json
 
 pages-alpha-smoke: pages-smoke
+	PYTHONPATH=src $(PYTHON) -m specpm.cli remote version $(PUBLIC_ALPHA_RETAINED_SPECPM_VERSION) \
+		--registry $(PAGES_REGISTRY_URL) \
+		--json
 	PYTHONPATH=src $(PYTHON) -m specpm.cli remote package $(PUBLIC_ALPHA_SMOKE_PACKAGE) \
 		--registry $(PAGES_REGISTRY_URL) \
 		--json

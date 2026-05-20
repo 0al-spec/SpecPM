@@ -50,7 +50,7 @@ specpm remote search specnode.typed_job_protocol --registry https://0al-spec.git
 specpm remote intents --registry https://0al-spec.github.io/SpecPM --json
 specpm remote intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search-intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
-specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.2.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
+specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specpm.core@0.2.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
 ```
 
 The intent catalog is observed metadata from accepted packages. It helps
@@ -61,6 +61,10 @@ Operators can run the same alpha visibility checks with:
 ```bash
 make pages-alpha-smoke
 ```
+
+That smoke target checks the baseline registry surface, retained
+`specpm.core@0.1.0`, current `specpm.core@0.2.0`, `specnode.core@0.1.0`, and
+`specnode.typed_job_protocol`.
 
 Generate a machine-readable downstream observation report with:
 
@@ -90,12 +94,14 @@ The alpha registry currently exposes:
 
 - `document_conversion.email_tools@0.1.0`;
 - `intent.package.public_repository_metadata@0.1.0`;
+- `specpm.core@0.1.0`;
 - `specpm.core@0.2.0`;
 - `specnode.core@0.1.0`.
 
 `intent.package.public_repository_metadata` is a repository-local abstract
-contract. `specpm.core` comes from the SpecPM repository root.
-`specnode.core` comes from the pinned public Git source recorded in
+contract. `specpm.core@0.1.0` comes from a pinned SpecPM release source, while
+the current `specpm.core` comes from the SpecPM repository root. `specnode.core`
+comes from the pinned public Git source recorded in
 `public-index/accepted-packages.yml`.
 
 ## Boundary
