@@ -2735,6 +2735,38 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     assert sorted(report["written_files"]) == report["written_files"]
 
 
+def test_public_index_generate_treats_identical_duplicate_version_as_noop(
+    tmp_path: Path,
+) -> None:
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    output = tmp_path / "site"
+    shutil.copytree(ROOT / "examples/email_tools", first)
+    shutil.copytree(ROOT / "examples/email_tools", second)
+
+    report = generate_public_index(
+        [first, second],
+        output,
+        "https://0al-spec.github.io/SpecPM",
+    )
+
+    package_payload = json.loads(
+        (output / "v0/packages/document_conversion.email_tools/index.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    status_payload = json.loads((output / "v0/status/index.json").read_text(encoding="utf-8"))
+
+    assert report["status"] == "ok"
+    assert status_payload["registry"]["package_count"] == 1
+    assert status_payload["registry"]["version_count"] == 1
+    assert package_payload["package"]["latest_version"] == "0.1.0"
+    assert [item["version"] for item in package_payload["package"]["versions"]] == ["0.1.0"]
+    assert (
+        output / "v0/packages/document_conversion.email_tools/versions/0.1.0/index.json"
+    ).is_file()
+
+
 def test_public_index_generate_rejects_duplicate_version_conflict(tmp_path: Path) -> None:
     first = tmp_path / "first"
     second = tmp_path / "second"
