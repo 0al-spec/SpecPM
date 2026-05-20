@@ -24,10 +24,11 @@ evidence:
       - interfaces.inbound.package.flask
 ```
 
-The referenced artifact is ordinary package data. SpecPM validates that the
-path stays inside the package root and exists. SpecPM does not execute the
-artifact, import package code, install dependencies, run build tools, or
-interpret package-provided instructions.
+The referenced artifact is ordinary package data. SpecPM rejects paths that
+escape the package root and reports missing evidence paths as validator
+warnings, consistent with the existing evidence path behavior. SpecPM does not
+execute the artifact, import package code, install dependencies, run build
+tools, or interpret package-provided instructions.
 
 ## Context
 
