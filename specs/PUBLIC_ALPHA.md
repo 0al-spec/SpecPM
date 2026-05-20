@@ -103,6 +103,24 @@ Current accepted packages:
   `https://github.com/0al-spec/SpecNode.git` at tag `v0.1.0` and revision
   `2ad889ed413370f79710f235a08b43aaaaecf81e`.
 
+## Version Retention Model
+
+The public alpha registry should retain exact package versions in an npm-like
+model. Publishing `specpm.core@0.2.0` must not make an already accepted
+`specpm.core@0.1.0` unreachable once version retention is implemented.
+
+The registry stores package versions, not only mutable package names. Exact
+package references such as `package_id@version` should remain addressable,
+while `latest_version` identifies the newest accepted version for default
+discovery. GitHub Issues are review intake; accepted package versions are
+recorded as immutable pinned sources in `public-index/accepted-packages.yml`.
+
+During the alpha, first-party local paths such as `path: .` are still used for
+current repository packages. Before treating the public index as a stable
+consumer dependency, SpecPM should retain historical self-package versions using
+pinned release sources or archive snapshots, so exact pins continue to resolve
+after new SpecPM releases.
+
 ## Intended Consumers
 
 The public alpha registry is useful for:

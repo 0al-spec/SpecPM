@@ -1155,6 +1155,37 @@ Acceptance:
 - The change does not add runtime schema fields, semantic conformance
   evaluation, package execution, or graph relationship storage to SpecPM core.
 
+## Phase 46. Public Index Version Retention
+
+- [x] Document the npm-like public index policy: exact package versions are
+  immutable records, `latest_version` is a view, and package manager version is
+  separate from package document `apiVersion`.
+- [x] Document that GitHub Issues are intake requests, not package storage.
+- [ ] Preserve `specpm.core@0.1.0` as an addressable historical package version
+  before publishing `specpm.core@0.2.0` as latest.
+- [ ] Represent multiple versions of the same package as multiple immutable
+  accepted source records in `public-index/accepted-packages.yml`.
+- [ ] Add public index generation tests that reject duplicate
+  `package_id@version` entries with different content.
+- [ ] Add public index generation tests that allow multiple versions of one
+  package and expose them through `/v0/packages/{package_id}` and exact version
+  endpoints.
+- [ ] Update public alpha smoke to prove exact pins and latest package metadata
+  continue to work after a SpecPM self-package version bump.
+
+Acceptance:
+
+- Accepted package versions behave like npm package versions: exact references
+  remain addressable after newer versions are accepted.
+- The public index accepts packages by supported document `apiVersion` and
+  validation result, not by the latest `specpm.core` package version.
+- Re-publishing an existing `package_id@version` with different content is
+  rejected as a version immutability violation.
+- Historical backfill of an older package version is possible through
+  maintainer review when it does not overwrite an existing accepted version.
+- Third-party accepted package versions are represented by pinned sources or
+  future archive snapshots, not copied wholesale into the SpecPM repository.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
