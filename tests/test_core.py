@@ -65,9 +65,7 @@ CLAIM_NAMESPACE_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/claim-namespace.
 NAMESPACE_CLAIM_POLICY = ROOT / "specs/NAMESPACE_CLAIM_POLICY.md"
 PUBLIC_INDEX_OPERATOR_GUIDE = ROOT / "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
-PACKAGE_SUBMISSION_TRIAGE_WORKFLOW = (
-    ROOT / ".github/workflows/package-submission-triage.yml"
-)
+PACKAGE_SUBMISSION_TRIAGE_WORKFLOW = ROOT / ".github/workflows/package-submission-triage.yml"
 NAMESPACE_CLAIM_TRIAGE_WORKFLOW = ROOT / ".github/workflows/namespace-claim-triage.yml"
 NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-report.yml"
