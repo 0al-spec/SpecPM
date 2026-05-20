@@ -49,7 +49,7 @@ specpm remote search specnode.typed_job_protocol --registry https://0al-spec.git
 specpm remote intents --registry https://0al-spec.github.io/SpecPM --json
 specpm remote intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search-intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
-specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.2.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
+specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specpm.core@0.2.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
 ```
 
 The `remote intents` and `remote intent` commands expose an observed intent
@@ -98,6 +98,9 @@ Current accepted packages:
   RFC fixture and registry smoke tests.
 - `intent.package.public_repository_metadata@0.1.0`: abstract contract
   for packages that expose static public repository metadata.
+- `specpm.core@0.1.0`: retained historical SpecPM self-spec from the pinned
+  `https://github.com/0al-spec/SpecPM.git` tag `v0.1.0` and revision
+  `0109b471bfea6dc765f4b97f2ce70b39ef08fb6f`.
 - `specpm.core@0.2.0`: the SpecPM self-spec from this repository root.
 - `specnode.core@0.1.0`: the SpecNode package from the pinned public Git source
   `https://github.com/0al-spec/SpecNode.git` at tag `v0.1.0` and revision
@@ -105,9 +108,9 @@ Current accepted packages:
 
 ## Version Retention Model
 
-The public alpha registry should retain exact package versions in an npm-like
-model. Publishing `specpm.core@0.2.0` must not make an already accepted
-`specpm.core@0.1.0` unreachable once version retention is implemented.
+The public alpha registry retains exact package versions in an npm-like model.
+Publishing `specpm.core@0.2.0` must not make an already accepted
+`specpm.core@0.1.0` unreachable.
 
 The registry stores package versions, not only mutable package names. Exact
 package references such as `package_id@version` should remain addressable,
@@ -116,10 +119,9 @@ discovery. GitHub Issues are review intake; accepted package versions are
 recorded as immutable pinned sources in `public-index/accepted-packages.yml`.
 
 During the alpha, first-party local paths such as `path: .` are still used for
-current repository packages. Before treating the public index as a stable
-consumer dependency, SpecPM should retain historical self-package versions using
-pinned release sources or archive snapshots, so exact pins continue to resolve
-after new SpecPM releases.
+current repository packages. Historical self-package versions are retained
+using pinned release sources or future archive snapshots, so exact pins continue
+to resolve after new SpecPM releases.
 
 ## Intended Consumers
 

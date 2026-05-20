@@ -95,6 +95,8 @@ REGISTRY_VIEWER_PAGE = ROOT / "landing_page/viewer.html"
 REGISTRY_VIEWER_DESIGN_CSS = ROOT / "landing_page/assets/specpm-design.css"
 REGISTRY_VIEWER_CSS = ROOT / "landing_page/assets/viewer.css"
 REGISTRY_VIEWER_JS = ROOT / "landing_page/assets/viewer.js"
+SPECPM_RELEASE_REF = "v0.1.0"
+SPECPM_RELEASE_REVISION = "0109b471bfea6dc765f4b97f2ce70b39ef08fb6f"
 SPECNODE_RELEASE_REF = "v0.1.0"
 SPECNODE_RELEASE_REVISION = "2ad889ed413370f79710f235a08b43aaaaecf81e"
 ADD_SPECPACKAGES_ISSUE_URL = (
@@ -475,6 +477,18 @@ def write_fake_specnode_checkout(checkout: Path) -> None:
         package_id="specnode.core",
         package_name="SpecNode",
         capability_id="specnode.typed_job_protocol",
+    )
+
+
+def write_fake_specpm_release_checkout(checkout: Path) -> None:
+    checkout.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(ROOT / "examples/email_tools", checkout)
+    update_email_package(
+        checkout,
+        package_id="specpm.core",
+        package_name="SpecPM",
+        version="0.1.0",
+        capability_id="specpm.registry.public_alpha_index",
     )
 
 
@@ -1164,6 +1178,7 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
 
     assert "apt-get install -y --no-install-recommends ca-certificates git" in dockerfile
     assert "PAGES_REGISTRY_URL ?= https://0al-spec.github.io/SpecPM" in makefile
+    assert "PUBLIC_ALPHA_RETAINED_SPECPM_VERSION ?= specpm.core@0.1.0" in makefile
     assert "PUBLIC_ALPHA_SMOKE_PACKAGE ?= specnode.core" in makefile
     assert "PUBLIC_ALPHA_SMOKE_VERSION ?= specnode.core@0.1.0" in makefile
     assert "PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol" in makefile
@@ -1177,6 +1192,7 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "--build-number $(PAGES_BUILD_NUMBER)" in makefile
     assert "--build-revision $(PAGES_BUILD_REVISION)" in makefile
     assert "--package specpm.core" in makefile
+    assert "--version $(PUBLIC_ALPHA_RETAINED_SPECPM_VERSION)" in makefile
     assert "--version specpm.core@$(SPECPM_VERSION)" in makefile
     assert "--capability specpm.registry.public_alpha_index" in makefile
     assert set(make_target_prerequisites(makefile, "dev-reload")) == {
@@ -2848,10 +2864,15 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
     remote_root = tmp_path / "remote-sources"
 
     def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
-        assert repository_url == "https://github.com/0al-spec/SpecNode.git"
-        assert ref == SPECNODE_RELEASE_REF
-        write_fake_specnode_checkout(checkout)
-        return {"status": "ok", "revision": SPECNODE_RELEASE_REVISION, "errors": []}
+        if repository_url == "https://github.com/0al-spec/SpecPM.git":
+            assert ref == SPECPM_RELEASE_REF
+            write_fake_specpm_release_checkout(checkout)
+            return {"status": "ok", "revision": SPECPM_RELEASE_REVISION, "errors": []}
+        if repository_url == "https://github.com/0al-spec/SpecNode.git":
+            assert ref == SPECNODE_RELEASE_REF
+            write_fake_specnode_checkout(checkout)
+            return {"status": "ok", "revision": SPECNODE_RELEASE_REVISION, "errors": []}
+        raise AssertionError(f"Unexpected public index repository: {repository_url}")
 
     monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
 
@@ -2863,6 +2884,11 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
 
     assert report["status"] == "ok"
     checkout = remote_root / public_index_module.public_index_checkout_dir_name(
+        "https://github.com/0al-spec/SpecPM.git",
+        SPECPM_RELEASE_REF,
+        SPECPM_RELEASE_REVISION,
+    )
+    specnode_checkout = remote_root / public_index_module.public_index_checkout_dir_name(
         "https://github.com/0al-spec/SpecNode.git",
         SPECNODE_RELEASE_REF,
         SPECNODE_RELEASE_REVISION,
@@ -2870,8 +2896,9 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
     assert report["package_dirs"] == [
         str((ROOT / "examples/email_tools").resolve()),
         str((ROOT / "packages/intent.package.public_repository_metadata").resolve()),
-        str(ROOT.resolve()),
         str(checkout),
+        str(ROOT.resolve()),
+        str(specnode_checkout),
     ]
     assert report["sources"] == [
         {
@@ -2887,6 +2914,14 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
             ),
         },
         {
+            "kind": "git",
+            "repository": "https://github.com/0al-spec/SpecPM.git",
+            "ref": SPECPM_RELEASE_REF,
+            "revision": SPECPM_RELEASE_REVISION,
+            "path": ".",
+            "package_dir": str(checkout),
+        },
+        {
             "kind": "local",
             "path": ".",
             "package_dir": str(ROOT.resolve()),
@@ -2897,10 +2932,28 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
             "ref": SPECNODE_RELEASE_REF,
             "revision": SPECNODE_RELEASE_REVISION,
             "path": ".",
-            "package_dir": str(checkout),
+            "package_dir": str(specnode_checkout),
         },
     ]
     assert report["errors"] == []
+
+    output = tmp_path / "site"
+    generation = generate_public_index(
+        [Path(path) for path in report["package_dirs"]],
+        output,
+        "https://registry.example.invalid",
+    )
+    specpm_payload = json.loads(
+        (output / "v0/packages/specpm.core/index.json").read_text(encoding="utf-8")
+    )
+    assert generation["status"] == "ok"
+    assert specpm_payload["package"]["latest_version"] == "0.2.0"
+    assert [item["version"] for item in specpm_payload["package"]["versions"]] == [
+        "0.1.0",
+        "0.2.0",
+    ]
+    assert (output / "v0/packages/specpm.core/versions/0.1.0/index.json").is_file()
+    assert (output / "v0/packages/specpm.core/versions/0.2.0/index.json").is_file()
 
 
 def test_public_index_accepted_manifest_resolves_pinned_remote_sources(
@@ -3215,10 +3268,15 @@ def test_cli_public_index_generate_accepts_reviewed_manifest(
     monkeypatch,
 ) -> None:  # type: ignore[no-untyped-def]
     def fake_checkout(repository_url: str, ref: str, checkout: Path) -> dict[str, Any]:
-        assert repository_url == "https://github.com/0al-spec/SpecNode.git"
-        assert ref == SPECNODE_RELEASE_REF
-        write_fake_specnode_checkout(checkout)
-        return {"status": "ok", "revision": SPECNODE_RELEASE_REVISION, "errors": []}
+        if repository_url == "https://github.com/0al-spec/SpecPM.git":
+            assert ref == SPECPM_RELEASE_REF
+            write_fake_specpm_release_checkout(checkout)
+            return {"status": "ok", "revision": SPECPM_RELEASE_REVISION, "errors": []}
+        if repository_url == "https://github.com/0al-spec/SpecNode.git":
+            assert ref == SPECNODE_RELEASE_REF
+            write_fake_specnode_checkout(checkout)
+            return {"status": "ok", "revision": SPECNODE_RELEASE_REVISION, "errors": []}
+        raise AssertionError(f"Unexpected public index repository: {repository_url}")
 
     monkeypatch.setattr(public_index_module, "checkout_public_index_repository", fake_checkout)
 
@@ -3242,6 +3300,8 @@ def test_cli_public_index_generate_accepts_reviewed_manifest(
     assert payload["status"] == "ok"
     assert (tmp_path / "site/v0/packages/document_conversion.email_tools/index.json").is_file()
     assert (tmp_path / "site/v0/packages/specpm.core/index.json").is_file()
+    assert (tmp_path / "site/v0/packages/specpm.core/versions/0.1.0/index.json").is_file()
+    assert (tmp_path / "site/v0/packages/specpm.core/versions/0.2.0/index.json").is_file()
     assert (tmp_path / "site/v0/packages/specnode.core/index.json").is_file()
 
 

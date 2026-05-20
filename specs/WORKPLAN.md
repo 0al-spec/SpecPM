@@ -1161,16 +1161,16 @@ Acceptance:
   immutable records, `latest_version` is a view, and package manager version is
   separate from package document `apiVersion`.
 - [x] Document that GitHub Issues are intake requests, not package storage.
-- [ ] Preserve `specpm.core@0.1.0` as an addressable historical package version
+- [x] Preserve `specpm.core@0.1.0` as an addressable historical package version
   before publishing `specpm.core@0.2.0` as latest.
-- [ ] Represent multiple versions of the same package as multiple immutable
+- [x] Represent multiple versions of the same package as multiple immutable
   accepted source records in `public-index/accepted-packages.yml`.
 - [ ] Add public index generation tests that reject duplicate
   `package_id@version` entries with different content.
-- [ ] Add public index generation tests that allow multiple versions of one
+- [x] Add public index generation tests that allow multiple versions of one
   package and expose them through `/v0/packages/{package_id}` and exact version
   endpoints.
-- [ ] Update public alpha smoke to prove exact pins and latest package metadata
+- [x] Update public alpha smoke to prove exact pins and latest package metadata
   continue to work after a SpecPM self-package version bump.
 
 Acceptance:

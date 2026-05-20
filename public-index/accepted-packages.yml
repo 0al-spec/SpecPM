@@ -6,6 +6,10 @@ schemaVersion: 1
 packages:
   - path: examples/email_tools
   - path: packages/intent.package.public_repository_metadata
+  - repository: https://github.com/0al-spec/SpecPM.git
+    ref: v0.1.0
+    revision: 0109b471bfea6dc765f4b97f2ce70b39ef08fb6f
+    path: .
   - path: .
   - repository: https://github.com/0al-spec/SpecNode.git
     ref: v0.1.0
