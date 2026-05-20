@@ -287,6 +287,55 @@ publish` replacement. The Pages workflow reads this manifest, validates and
 packs the listed packages as untrusted data, and writes generated static `/v0`
 metadata.
 
+## Package Version Retention Policy
+
+The public index should follow an npm-like version model:
+
+- package manager version, package document `apiVersion`, registry API version,
+  and package `metadata.version` are separate version surfaces;
+- public index admission is based on a supported package document `apiVersion`
+  and successful validation, not on the latest `specpm.core` package version;
+- an accepted `package_id@version` is immutable once published;
+- multiple versions of the same `package_id` may coexist in the generated
+  registry;
+- `latest_version` is a registry view over accepted versions, not the only
+  retained version;
+- exact package references remain addressable after newer versions are
+  accepted;
+- re-submitting an existing `package_id@version` with identical content may be
+  treated as a no-op duplicate;
+- re-submitting an existing `package_id@version` with different content must be
+  rejected;
+- submitting a version older than the current latest may be accepted as a
+  maintainer-reviewed historical backfill when it does not overwrite an
+  existing version.
+
+GitHub Issues are intake requests, not package storage. After review,
+maintainers should record immutable accepted version sources in
+`public-index/accepted-packages.yml`. For third-party packages, the preferred
+record is a pinned public Git source or future archive source for one exact
+package version, not a copied package directory inside the SpecPM repository.
+
+For example, two versions of one package should be represented as two accepted
+source records:
+
+```yaml
+schemaVersion: 1
+packages:
+  - repository: https://github.com/example/email-tools.git
+    ref: v1.0.0
+    revision: 1111111111111111111111111111111111111111
+    path: packages/email_tools
+  - repository: https://github.com/example/email-tools.git
+    ref: v1.1.0
+    revision: 2222222222222222222222222222222222222222
+    path: packages/email_tools
+```
+
+The generator should validate each accepted source independently and produce a
+multi-version package entry when several accepted sources declare the same
+`metadata.id` with different `metadata.version` values.
+
 The index can generate a static registry from explicit local package directories
 or from the accepted package manifest:
 

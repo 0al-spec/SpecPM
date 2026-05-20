@@ -829,7 +829,7 @@ Acceptance:
 
 ## Phase 34. Public Alpha Registry Seed
 
-- [x] Add the SpecPM self-spec package `specpm.core@0.1.0` to
+- [x] Add the SpecPM self-spec package `specpm.core@0.2.0` to
   `public-index/accepted-packages.yml`.
 - [x] Add the SpecNode package `specnode.core@0.1.0` as a pinned public Git
   source in `public-index/accepted-packages.yml`.
@@ -893,7 +893,7 @@ Acceptance:
 - [x] Add local `public-alpha-report` and deployed `pages-alpha-report` Make
   targets that write JSON artifacts under `.specpm/`.
 - [x] Use the current alpha seed expectations: `specpm.core`, `specnode.core`,
-  `specpm.core@0.1.0`, `specnode.core@0.1.0`,
+  `specpm.core@0.2.0`, `specnode.core@0.1.0`,
   `specpm.registry.public_alpha_index`, and `specnode.typed_job_protocol`.
 - [x] Update README, JSON contracts, Public Alpha docs, DocC, and self-spec
   coverage.
@@ -1154,6 +1154,37 @@ Acceptance:
   endpoint prefix, archive format, CLI JSON contracts, and conformance suites.
 - The change does not add runtime schema fields, semantic conformance
   evaluation, package execution, or graph relationship storage to SpecPM core.
+
+## Phase 46. Public Index Version Retention
+
+- [x] Document the npm-like public index policy: exact package versions are
+  immutable records, `latest_version` is a view, and package manager version is
+  separate from package document `apiVersion`.
+- [x] Document that GitHub Issues are intake requests, not package storage.
+- [ ] Preserve `specpm.core@0.1.0` as an addressable historical package version
+  before publishing `specpm.core@0.2.0` as latest.
+- [ ] Represent multiple versions of the same package as multiple immutable
+  accepted source records in `public-index/accepted-packages.yml`.
+- [ ] Add public index generation tests that reject duplicate
+  `package_id@version` entries with different content.
+- [ ] Add public index generation tests that allow multiple versions of one
+  package and expose them through `/v0/packages/{package_id}` and exact version
+  endpoints.
+- [ ] Update public alpha smoke to prove exact pins and latest package metadata
+  continue to work after a SpecPM self-package version bump.
+
+Acceptance:
+
+- Accepted package versions behave like npm package versions: exact references
+  remain addressable after newer versions are accepted.
+- The public index accepts packages by supported document `apiVersion` and
+  validation result, not by the latest `specpm.core` package version.
+- Re-publishing an existing `package_id@version` with different content is
+  rejected as a version immutability violation.
+- Historical backfill of an older package version is possible through
+  maintainer review when it does not overwrite an existing accepted version.
+- Third-party accepted package versions are represented by pinned sources or
+  future archive snapshots, not copied wholesale into the SpecPM repository.
 
 ## Post-MVP Tracks
 
