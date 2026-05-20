@@ -63,6 +63,7 @@ ADD_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/add-specpackage
 REMOVE_SPECPACKAGES_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/remove-specpackages.yml"
 CLAIM_NAMESPACE_ISSUE_TEMPLATE = ROOT / ".github/ISSUE_TEMPLATE/claim-namespace.yml"
 NAMESPACE_CLAIM_POLICY = ROOT / "specs/NAMESPACE_CLAIM_POLICY.md"
+PUBLIC_INDEX_OPERATOR_GUIDE = ROOT / "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 NAMESPACE_CLAIM_TRIAGE_WORKFLOW = ROOT / ".github/workflows/namespace-claim-triage.yml"
 NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW = (
@@ -805,6 +806,32 @@ def test_namespace_claim_policy_documents_review_boundary() -> None:
     assert "authentication" in policy_text
     assert "enterprise namespace governance" in policy_text
     assert "package content execution" in policy_text
+
+
+def test_public_index_operator_guide_documents_package_review_boundary() -> None:
+    guide_text = PUBLIC_INDEX_OPERATOR_GUIDE.read_text(encoding="utf-8")
+    guide_lower = guide_text.lower()
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    index_flow = (ROOT / "specs/INDEX_SUBMISSION_FLOW.md").read_text(encoding="utf-8")
+
+    for label in (
+        "package:under-review",
+        "package:needs-fix",
+        "package:validated",
+        "package:accepted",
+        "package:rejected",
+        "package:blocked",
+        "package:duplicate",
+    ):
+        assert label in guide_text
+
+    assert "Acceptance Checklist" in guide_text
+    assert "validation report status is `valid`" in guide_text
+    assert "reviewed pull request" in guide_lower
+    assert "must not decide acceptance" in guide_lower
+    assert "public-index/accepted-packages.yml" in guide_text
+    assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in readme
+    assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in index_flow
 
 
 def test_pull_request_template_requires_motivation_and_goals() -> None:

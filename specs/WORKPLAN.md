@@ -1189,7 +1189,7 @@ Acceptance:
 
 ## Phase 47. Public Index Operator UX Baseline
 
-- [ ] Document maintainer labels and the review checklist for accepting a valid
+- [x] Document maintainer labels and the review checklist for accepting a valid
   public package submission.
 - [ ] Add package-submission label triage that prepares review labels without
   deciding acceptance automatically.
