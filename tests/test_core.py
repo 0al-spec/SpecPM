@@ -902,10 +902,17 @@ def test_package_submission_triage_workflow_applies_review_labels_only() -> None
         assert status_label in script
 
     assert "issues.createLabel" in script
+    assert "createError.status !== 422" in script
     assert "issues.addLabels" in script
     assert "package:under-review" in script
     assert "Public Index Operator Guide" in script
+    assert "github.rest.repos.get" in script
+    assert "repository.default_branch" in script
+    assert "context.serverUrl" in script
     assert "package-submission-triage" in script
+    assert 'comment.user?.login === "github-actions[bot]"' in script
+    assert "let page = 1" in script
+    assert "comments.length < 100" in script
     assert "does not decide acceptance" in script
     assert "public-index/accepted-packages.yml" in script
     for forbidden in ("public-index generate", "validate_index_submission.py", "specpm publish"):

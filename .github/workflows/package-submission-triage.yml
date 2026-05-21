@@ -79,6 +79,10 @@ jobs:
                   name,
                   color: definition.color,
                   description: definition.description
+                }).catch((createError) => {
+                  if (createError.status !== 422) {
+                    throw createError;
+                  }
                 });
               }
             }
@@ -102,7 +106,12 @@ jobs:
             }
 
             const marker = "<!-- package-submission-triage -->";
-            const guideUrl = "https://github.com/0al-spec/SpecPM/blob/main/specs/PUBLIC_INDEX_OPERATOR_GUIDE.md";
+            const guidePath = "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md";
+            const { data: repository } = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const guideUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${repository.default_branch}/${guidePath}`;
             const body = [
               marker,
               "## Package Submission Review",
@@ -112,16 +121,30 @@ jobs:
               "This automation only prepares review labels and keeps this note current. It does not decide acceptance, edit `public-index/accepted-packages.yml`, generate registry metadata, publish packages, install packages, or execute package content."
             ].join("\n");
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              per_page: 100
-            });
+            let existingComment;
+            let page = 1;
 
-            const existingComment = comments.find((comment) =>
-              typeof comment.body === "string" && comment.body.includes(marker)
-            );
+            while (!existingComment) {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+                page
+              });
+
+              existingComment = comments.find((comment) =>
+                comment.user?.login === "github-actions[bot]" &&
+                typeof comment.body === "string" &&
+                comment.body.includes(marker)
+              );
+
+              if (existingComment || comments.length < 100) {
+                break;
+              }
+
+              page += 1;
+            }
 
             if (existingComment) {
               await github.rest.issues.updateComment({
