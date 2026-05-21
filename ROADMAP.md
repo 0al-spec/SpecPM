@@ -224,22 +224,31 @@ SpecPM core does not own:
 
 Package content can describe desired outputs. Package content cannot command the host.
 
-## Near-Term PR Candidates
+## Recent Progress
 
-Active stack:
+The Public Index Operator UX baseline is complete. SpecPM now has maintainer
+review labels, a package-submission triage workflow, an accepted-manifest
+candidate snippet helper, and downstream read-only registry consumer examples.
 
-- Public Index Operator UX: maintainer checklist, package-submission labels,
-  accepted manifest helper, and downstream consumer guide.
+This baseline still preserves the public static index boundary: automation may
+prepare labels, comments, and candidate snippets, but accepted package changes
+remain maintainer-reviewed pull requests against
+`public-index/accepted-packages.yml`.
+
+## Next Planned Sequence
 
 1. `docs: normalize roadmap and workplan status`
-   - keep this roadmap, DocC Roadmap, and Workplan aligned.
-2. `operator: document accepted package maintainer checklist`
-   - define labels, review steps, and manifest PR expectations.
-3. `operator: prototype accepted manifest PR helper`
-   - prepare a reviewed manifest update from a validated issue without
-     publishing automatically.
-4. `docs: add downstream consumer registry guide`
-   - show SpecGraph, ContextBuilder, and SpecNode read-only consumption flows.
+   - remove stale active-stack language and keep `ROADMAP.md`, DocC Roadmap,
+     and Workplan aligned.
+2. `operator: implement accepted manifest PR helper`
+   - turn a validated package-submission report into a prepared branch or draft
+     pull request without deciding acceptance automatically.
+3. `design: SpecGraph public registry observation contract`
+   - define the JSON evidence SpecGraph should capture from the public `/v0`
+     registry before it claims package visibility or drift.
+4. `tooling: reusable registry observation reports`
+   - make local Docker and GitHub Pages observation reports easy to store,
+     compare, and attach to downstream reviews.
 5. `design: remote package acquisition boundary`
    - decide fetch/cache/add semantics before adding remote package acquisition.
 6. `design: intent taxonomy governance`
