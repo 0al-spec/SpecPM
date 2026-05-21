@@ -36,11 +36,13 @@ For full alpha package visibility, run:
 ```bash
 make public-alpha-smoke
 make public-alpha-report
+make public-index-observation-report
 ```
 
 `public-alpha-smoke` includes the baseline local public-index smoke checks.
 `public-alpha-report` writes `.specpm/public-alpha-observation.json` for
-downstream tooling.
+downstream tooling. `public-index-observation-report` writes the reusable review
+artifact `.specpm/registry-observations/local-public-index-observation.json`.
 
 Stop the local service:
 
@@ -69,13 +71,18 @@ For full public alpha visibility, run:
 ```bash
 make pages-alpha-smoke
 make pages-alpha-report
+make pages-observation-report
 ```
 
 `pages-alpha-smoke` includes the baseline Pages smoke checks.
 `pages-alpha-report` writes `.specpm/pages-alpha-observation.json`.
+`pages-observation-report` writes the reusable review artifact
+`.specpm/registry-observations/pages-public-index-observation.json`.
 
 See <doc:StaticRegistryPipeline> for the build-time pipeline that turns reviewed
 package sources into the public static registry API.
+See <doc:RegistryObservationReports> for report naming, retention, and local vs
+Pages comparison guidance.
 
 ## Boundaries
 

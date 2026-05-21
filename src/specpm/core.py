@@ -1105,11 +1105,13 @@ def observe_remote_registry(
     package_ids: list[str] | None = None,
     package_refs: list[str] | None = None,
     capability_ids: list[str] | None = None,
+    intent_ids: list[str] | None = None,
     timeout: float = 10.0,
 ) -> dict[str, Any]:
     expected_package_ids = unique_ordered(package_ids or [])
     expected_package_refs = unique_ordered(package_refs or [])
     expected_capability_ids = unique_ordered(capability_ids or [])
+    expected_intent_ids = unique_ordered(intent_ids or [])
 
     status_report = get_remote_registry_status(registry_url, timeout)
     package_index_report = get_remote_package_index(registry_url, timeout)
@@ -1124,6 +1126,10 @@ def observe_remote_registry(
     capability_reports = {
         capability_id: search_remote_registry(registry_url, capability_id, timeout)
         for capability_id in expected_capability_ids
+    }
+    intent_reports = {
+        intent_id: search_remote_registry_intent(registry_url, intent_id, timeout)
+        for intent_id in expected_intent_ids
     }
 
     checks: list[dict[str, Any]] = []
@@ -1212,6 +1218,29 @@ def observe_remote_registry(
                 target={"capability_id": capability_id},
             )
 
+    for intent_id, report in intent_reports.items():
+        append_observation_report_check(
+            checks,
+            errors,
+            check_id=f"intent_search_available:{intent_id}",
+            report=report,
+            failure_code="remote_observation_intent_search_unavailable",
+            failure_message=(
+                f"Expected intent search could not be verified in the remote registry: {intent_id}"
+            ),
+        )
+        result_count = remote_intent_result_count(report)
+        if result_count is not None:
+            append_observation_presence_check(
+                checks,
+                errors,
+                check_id=f"intent_visible:{intent_id}",
+                ok=result_count > 0,
+                failure_code="remote_observation_intent_not_visible",
+                failure_message=f"Expected intent has no visible package matches: {intent_id}",
+                target={"intent_id": intent_id},
+            )
+
     status = "ok" if not errors else "invalid"
     return {
         "schemaVersion": 1,
@@ -1222,6 +1251,7 @@ def observe_remote_registry(
             "package_ids": expected_package_ids,
             "package_refs": expected_package_refs,
             "capability_ids": expected_capability_ids,
+            "intent_ids": expected_intent_ids,
         },
         "summary": remote_observation_summary(
             status_report,
@@ -1235,6 +1265,7 @@ def observe_remote_registry(
             "packages": package_reports,
             "versions": version_reports,
             "capabilities": capability_reports,
+            "intents": intent_reports,
         },
         "errors": errors,
     }
@@ -1345,6 +1376,16 @@ def remote_capability_result_count(report: dict[str, Any]) -> int | None:
     return result_count if isinstance(result_count, int) else None
 
 
+def remote_intent_result_count(report: dict[str, Any]) -> int | None:
+    if report.get("status") != "ok":
+        return None
+    payload = report.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    result_count = payload.get("result_count")
+    return result_count if isinstance(result_count, int) else None
+
+
 def remote_observation_summary(
     status_report: dict[str, Any],
     package_index_report: dict[str, Any],
@@ -1365,6 +1406,7 @@ def remote_observation_summary(
         "capability_count": get_int(registry, "capability_count")
         if isinstance(registry, dict)
         else None,
+        "intent_count": get_int(registry, "intent_count") if isinstance(registry, dict) else None,
         "check_count": len(checks),
         "failed_check_count": sum(1 for check in checks if check.get("status") != "ok"),
     }

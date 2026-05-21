@@ -40,6 +40,7 @@ ContextBuilder automation can treat command outcomes consistently.
 | `specpm remote version` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
 | `specpm remote search` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
 | `specpm remote search-intent` | remote client status is `ok` | remote client status is `invalid` or `not_found` |
+| `specpm remote observe` | observation report status is `ok` | observation report status is `invalid` |
 | `specpm public-index generate` | generator status is `ok` | generator status is `invalid` |
 
 ## Automation Guidance

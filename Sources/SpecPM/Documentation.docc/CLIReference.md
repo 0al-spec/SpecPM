@@ -79,7 +79,7 @@ specpm remote search <capability-id> --registry <url> [--json]
 specpm remote intents --registry <url> [--json]
 specpm remote intent <intent-id> --registry <url> [--json]
 specpm remote search-intent <intent-id> --registry <url> [--json]
-specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--json]
+specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--intent <intent-id>] [--json]
 ```
 
 Remote commands are explicit read-only metadata clients for the post-MVP
@@ -88,9 +88,10 @@ local SpecGraph and ContextBuilder observation before requesting a specific
 package, capability, or declared intent. `intents` and `intent` expose an
 observed intent catalog from accepted packages; they are not a canonical
 dictionary. `observe` combines those same read-only lookups into a
-machine-readable registry observation report for downstream evidence. Remote
-commands do not download archives, publish packages, mutate remote state, or
-execute package content.
+machine-readable registry observation report for downstream evidence, including
+exact package, version, capability, and observed intent checks. Remote commands
+do not download archives, publish packages, mutate remote state, or execute
+package content.
 
 ## Public Static Index
 

@@ -113,6 +113,7 @@ specpm remote search <capability-id> --registry <url> [--json]
 specpm remote intents --registry <url> [--json]
 specpm remote intent <intent-id> --registry <url> [--json]
 specpm remote search-intent <intent-id> --registry <url> [--json]
+specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--intent <intent-id>] [--json]
 ```
 
 These commands fetch metadata only. They do not download package archives,
@@ -120,8 +121,8 @@ install packages, mutate local project state, publish packages, authenticate,
 sign packages, execute package content, or perform remote yanking workflows.
 
 Remote client commands MUST validate package IDs, package refs, capability IDs,
-registry URLs, timeouts, and response payload shape before returning a
-successful machine-readable report.
+intent IDs, registry URLs, timeouts, and response payload shape before
+returning a successful machine-readable report.
 
 Remote client commands MUST also validate response target consistency before
 returning success:

@@ -69,6 +69,11 @@ Useful checks:
 - Registry drift findings cite both expected and observed values, plus the
   exact `/v0` payloads used as evidence.
 
+For reusable review artifacts, run `make public-index-observation-report` for
+the local Docker registry or `make pages-observation-report` for GitHub Pages.
+The report workflow and comparison guidance are documented in
+`specs/REGISTRY_OBSERVATION_REPORTS.md`.
+
 ## ContextBuilder
 
 ContextBuilder can use `/v0/status`, `/v0/packages`, and exact package/version

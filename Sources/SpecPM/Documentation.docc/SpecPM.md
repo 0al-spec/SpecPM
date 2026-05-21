@@ -45,6 +45,7 @@ The canonical source files remain in the repository:
 - `specs/CONFORMANCE.md`
 - `specs/REMOTE_REGISTRY_API.md`
 - `specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md`
+- `specs/REGISTRY_OBSERVATION_REPORTS.md`
 - `specs/IDENTIFIER_MODEL.md`
 - `specs/0002_Abstract_SpecPackage_Conformance_Target_Decision.md`
 - `specs/0003_SpecPM_API_Versioning_Decision.md`
@@ -81,6 +82,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:Conformance>
 - <doc:SpecGraphIntegration>
 - <doc:SpecGraphRegistryObservation>
+- <doc:RegistryObservationReports>
 - <doc:AgentSkills>
 - <doc:PublicAlphaRegistry>
 

@@ -108,8 +108,10 @@ make dev-smoke
 make dev-reload
 make public-alpha-smoke
 make public-alpha-report
+make public-index-observation-report
 make pages-alpha-smoke
 make pages-alpha-report
+make pages-observation-report
 make dev-down
 ```
 
@@ -126,6 +128,12 @@ baseline and then checks retained `specpm.core@0.1.0`, current
 `specnode.typed_job_protocol`. `make public-alpha-report` and
 `make pages-alpha-report` write machine-readable observation reports under
 `.specpm/` for downstream tools such as SpecGraph, SpecNode, and ContextBuilder.
+For reusable review artifacts, `make public-index-observation-report` writes
+`.specpm/registry-observations/local-public-index-observation.json` and
+`make pages-observation-report` writes
+`.specpm/registry-observations/pages-public-index-observation.json`; see
+`specs/REGISTRY_OBSERVATION_REPORTS.md` for naming, retention, and comparison
+guidance.
 
 Run the post-MVP read-only remote metadata client against a compatible registry:
 
@@ -134,7 +142,7 @@ PYTHONPATH=src python3 -m specpm.cli remote status --registry https://registry.e
 PYTHONPATH=src python3 -m specpm.cli remote packages --registry https://registry.example.invalid --json
 PYTHONPATH=src python3 -m specpm.cli remote intents --registry https://registry.example.invalid --json
 PYTHONPATH=src python3 -m specpm.cli remote search document_conversion.email_to_markdown --registry https://registry.example.invalid --json
-PYTHONPATH=src python3 -m specpm.cli remote observe --registry https://registry.example.invalid --package document_conversion.email_tools --version document_conversion.email_tools@0.1.0 --capability document_conversion.email_to_markdown --json
+PYTHONPATH=src python3 -m specpm.cli remote observe --registry https://registry.example.invalid --package document_conversion.email_tools --version document_conversion.email_tools@0.1.0 --capability document_conversion.email_to_markdown --intent intent.document_conversion.email_to_markdown --json
 docker compose run --rm specpm remote status --registry https://registry.example.invalid --json
 docker compose run --rm specpm remote packages --registry https://registry.example.invalid --json
 docker compose run --rm specpm remote intents --registry https://registry.example.invalid --json
