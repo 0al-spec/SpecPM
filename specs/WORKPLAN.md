@@ -1187,6 +1187,29 @@ Acceptance:
 - Third-party accepted package versions are represented by pinned sources or
   future archive snapshots, not copied wholesale into the SpecPM repository.
 
+## Phase 47. Public Index Operator UX Baseline
+
+- [ ] Document maintainer labels and the review checklist for accepting a valid
+  public package submission.
+- [ ] Add package-submission label triage that prepares review labels without
+  deciding acceptance automatically.
+- [ ] Add a helper that turns a validated submission report into a reviewed
+  `public-index/accepted-packages.yml` candidate snippet.
+- [ ] Add downstream consumer examples for read-only `/v0` registry
+  observation by SpecGraph, ContextBuilder, and SpecNode.
+
+Acceptance:
+
+- A valid external submission can become a reviewed accepted-manifest pull
+  request with less manual copying.
+- Package acceptance remains maintainer-reviewed, PR-based, auditable, and
+  separate from `specpm publish`.
+- Automation may prepare labels, comments, and candidate snippets, but it must
+  not decide acceptance, mutate the accepted manifest, publish packages, install
+  packages, execute package content, or grant namespace ownership.
+- Downstream tools can consume the public registry as read-only metadata
+  without treating SpecPM as a graph reasoner or semantic resolver.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
