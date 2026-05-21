@@ -1,6 +1,8 @@
 # Public Index Operator Guide
 
 Status: Public alpha operator guide.
+Updated: 2026-05-21
+Scope: public index package submission maintainer review
 
 This guide defines the maintainer workflow for accepting public
 `SpecPackage` submissions into the generated SpecPM public index. It complements
@@ -41,7 +43,8 @@ should verify:
 - The validation report status is `valid`.
 - Any validation warnings are understood and acceptable for public alpha.
 - The candidate package identity is the expected `package_id@version`.
-- The exact submitted revision is pinned in the accepted manifest entry.
+- The validated revision from the CI report is pinned in the accepted manifest
+  entry.
 - Re-publishing the same `package_id@version` does not overwrite different
   content.
 - Namespace or ownership questions have explicit maintainer review evidence
