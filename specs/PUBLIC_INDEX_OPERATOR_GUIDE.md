@@ -76,11 +76,36 @@ Maintainers can ask the validation helper to render a candidate snippet:
 ```bash
 python scripts/validate_index_submission.py \
   --issue-body-file submission-issue.md \
+  --json-output submission-report.json \
   --manifest-candidate-output accepted-manifest-candidate.yml
 ```
 
 The helper output is review input. It is not committed automatically and does
 not edit `public-index/accepted-packages.yml`.
+
+After maintainer review, a second helper can prepare the accepted-manifest
+change on a review branch:
+
+```bash
+git switch -c accept-package-issue-123
+python scripts/prepare_accepted_manifest_pr.py \
+  --submission-report submission-report.json \
+  --manifest public-index/accepted-packages.yml \
+  --issue-url https://github.com/0al-spec/SpecPM/issues/123 \
+  --apply \
+  --json-output accepted-manifest-pr-report.json \
+  --pr-body-output accepted-manifest-pr.md
+```
+
+This appends only new exact source records to
+`public-index/accepted-packages.yml`, skips exact duplicate sources, and writes a
+draft pull request body with the submission issue, package identities, source
+refs, and exact pinned revisions. Omitting `--apply` performs a dry-run report
+without editing the manifest.
+
+The generated pull request body is a draft. Maintainers must still run the
+public-index generation checks, keep the PR reviewable, and replace pending
+validation notes with the exact commands they ran before merge.
 
 ## Boundaries
 
@@ -90,7 +115,8 @@ execution, automatic namespace ownership, package signing, or enterprise access
 control.
 
 Automation may validate a submission, prepare labels, comment with review
-evidence, and render a candidate manifest snippet.
+evidence, render a candidate manifest snippet, and prepare an accepted-manifest
+pull request draft.
 
 Automation must not decide acceptance. It must not edit
 `public-index/accepted-packages.yml` without a reviewed pull request.

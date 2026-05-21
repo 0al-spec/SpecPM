@@ -46,7 +46,9 @@ from specpm.core import (
 from specpm.index_submission import (
     accepted_manifest_candidates,
     parse_submission_issue_body,
+    prepare_accepted_manifest_pr,
     render_accepted_manifest_candidate_yaml,
+    render_accepted_manifest_pr_body,
     render_submission_report_markdown,
     validate_submission_body,
 )
@@ -817,6 +819,8 @@ def test_public_index_operator_guide_documents_package_review_boundary() -> None
     guide_lower = guide_text.lower()
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     index_flow = (ROOT / "specs/INDEX_SUBMISSION_FLOW.md").read_text(encoding="utf-8")
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
 
     for label in (
         "package:under-review",
@@ -835,8 +839,29 @@ def test_public_index_operator_guide_documents_package_review_boundary() -> None
     assert "must not decide acceptance" in guide_lower
     assert "public-index/accepted-packages.yml" in guide_text
     assert ".github/workflows/package-submission-triage.yml" in guide_text
+    assert "scripts/prepare_accepted_manifest_pr.py" in guide_text
+    assert "--submission-report submission-report.json" in guide_text
+    assert "--pr-body-output accepted-manifest-pr.md" in guide_text
+    assert "Omitting `--apply` performs a dry-run report" in guide_text
     assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in readme
     assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in index_flow
+    assert "`submission-report.json`" in index_flow
+    assert "draft pull request body" in index_flow.replace("\n", " ")
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    owned_binding_paths = {
+        path
+        for binding in boundary["implementationBindings"]
+        for path in binding["files"].get("owned", [])
+    }
+    assert "specpm.registry.accepted_manifest_pr_helper" in manifest_capabilities
+    assert "specpm.registry.accepted_manifest_pr_helper" in boundary_capabilities
+    assert "scripts/prepare_accepted_manifest_pr.py" in evidence_paths
+    assert "scripts/prepare_accepted_manifest_pr.py" in owned_binding_paths
 
 
 def test_downstream_registry_consumer_guide_documents_read_only_consumption() -> None:
@@ -1519,7 +1544,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Recent Progress",
         "Next Planned Sequence",
         "Public Index Operator UX baseline is complete",
-        "accepted manifest PR helper",
+        "accepted-manifest pull request helper",
         "SpecGraph public registry observation contract",
         "reusable registry observation reports",
         "remote package acquisition boundary",
@@ -1538,7 +1563,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Enterprise Registry Track",
         "Intent Resolver Track",
         "Next Planned Sequence",
-        "accepted manifest PR helper",
+        "accepted-manifest pull request drafts",
         "SpecGraph public registry observation contract",
         "registry observation reports reusable as",
         "remote package acquisition boundary",
@@ -1658,6 +1683,45 @@ Optional maintainer context.
 - [x] The package content is data and does not require execution during validation.
 - [x] The package content complies with the index policy and code of conduct.
 """.strip()
+
+
+def sample_valid_submission_report(
+    *,
+    repository: str = "https://github.com/example/email-tools.git",
+    ref: str = "main",
+    revision: str = "a" * 40,
+    path: str = ".",
+    package_id: str = "document_conversion.email_tools",
+    version: str = "0.1.0",
+) -> dict[str, Any]:
+    return {
+        "schemaVersion": 1,
+        "status": "valid",
+        "package_path": path,
+        "repository_count": 1,
+        "repositories": [
+            {
+                "url": repository,
+                "status": "valid",
+                "stage": "validate",
+                "package_identity": {
+                    "package_id": package_id,
+                    "version": version,
+                },
+                "source": {
+                    "repository": repository,
+                    "ref": ref,
+                    "revision": revision,
+                    "path": path,
+                },
+                "error_count": 0,
+                "warning_count": 0,
+                "errors": [],
+                "warnings": [],
+            }
+        ],
+        "errors": [],
+    }
 
 
 def test_submission_issue_body_parser_extracts_urls_and_package_path() -> None:
@@ -2000,6 +2064,213 @@ def test_submission_cli_writes_manifest_candidate_output(
     payload = yaml.safe_load(candidate_output.read_text(encoding="utf-8"))
     assert exit_code == 0
     assert payload["packages"][0]["revision"] == "a" * 40
+
+
+def test_prepare_accepted_manifest_pr_applies_candidate_and_writes_pr_body(
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "\n".join(
+            [
+                "schemaVersion: 1",
+                "packages:",
+                "  - path: examples/email_tools",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    report = sample_valid_submission_report()
+
+    update = prepare_accepted_manifest_pr(
+        report,
+        manifest,
+        issue_url="https://github.com/0al-spec/SpecPM/issues/123",
+        apply_update=True,
+    )
+    pr_body = render_accepted_manifest_pr_body(update)
+    manifest_payload = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+
+    assert update["status"] == "applied"
+    assert update["applied"] is True
+    assert update["added_count"] == 1
+    assert update["skipped_count"] == 0
+    assert manifest_payload["packages"] == [
+        {"path": "examples/email_tools"},
+        {
+            "repository": "https://github.com/example/email-tools.git",
+            "ref": "main",
+            "revision": "a" * 40,
+            "path": ".",
+        },
+    ]
+    assert "https://github.com/0al-spec/SpecPM/issues/123" in pr_body
+    assert "`document_conversion.email_tools@0.1.0`" in pr_body
+    assert "ref `main` at `" in pr_body
+    assert "Pending maintainer/CI validation" in pr_body
+    assert "Does not decide package acceptance automatically" in pr_body
+
+
+def test_prepare_accepted_manifest_pr_rewrites_flow_style_manifest_structurally(
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text("schemaVersion: 1\npackages: []\n", encoding="utf-8")
+
+    update = prepare_accepted_manifest_pr(
+        sample_valid_submission_report(),
+        manifest,
+        apply_update=True,
+    )
+    manifest_payload = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+
+    assert update["status"] == "applied"
+    assert manifest_payload == {
+        "schemaVersion": 1,
+        "packages": [
+            {
+                "repository": "https://github.com/example/email-tools.git",
+                "ref": "main",
+                "revision": "a" * 40,
+                "path": ".",
+            }
+        ],
+    }
+
+
+def test_prepare_accepted_manifest_pr_skips_exact_duplicate_source(tmp_path: Path) -> None:
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "\n".join(
+            [
+                "schemaVersion: 1",
+                "packages:",
+                "  - repository: https://github.com/example/email-tools.git",
+                "    ref: main",
+                f"    revision: {'a' * 40}",
+                "    path: .",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    original_manifest = manifest.read_text(encoding="utf-8")
+
+    update = prepare_accepted_manifest_pr(
+        sample_valid_submission_report(),
+        manifest,
+        apply_update=True,
+    )
+
+    assert update["status"] == "unchanged"
+    assert update["applied"] is False
+    assert update["added_count"] == 0
+    assert update["skipped_count"] == 1
+    assert update["skipped"][0]["reason"] == "exact_source_already_present"
+    assert manifest.read_text(encoding="utf-8") == original_manifest
+
+
+def test_prepare_accepted_manifest_pr_handles_multiple_valid_sources(tmp_path: Path) -> None:
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "schemaVersion: 1\npackages:\n  - path: examples/email_tools\n", encoding="utf-8"
+    )
+    report = sample_valid_submission_report()
+    second = sample_valid_submission_report(
+        repository="https://github.com/example/pdf-tools.git",
+        revision="b" * 40,
+        package_id="document_conversion.pdf_tools",
+        version="0.2.0",
+    )["repositories"][0]
+    report["repositories"].append(second)
+    report["repository_count"] = 2
+
+    update = prepare_accepted_manifest_pr(report, manifest, apply_update=False)
+
+    assert update["status"] == "prepared"
+    assert update["applied"] is False
+    assert update["candidate_count"] == 2
+    assert update["added_count"] == 2
+    assert [item["package_ref"] for item in update["added"]] == [
+        "document_conversion.email_tools@0.1.0",
+        "document_conversion.pdf_tools@0.2.0",
+    ]
+    assert yaml.safe_load(manifest.read_text(encoding="utf-8"))["packages"] == [
+        {"path": "examples/email_tools"}
+    ]
+
+
+def test_prepare_accepted_manifest_pr_rejects_invalid_submission_report(tmp_path: Path) -> None:
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        "schemaVersion: 1\npackages:\n  - path: examples/email_tools\n", encoding="utf-8"
+    )
+
+    update = prepare_accepted_manifest_pr(
+        {
+            "schemaVersion": 1,
+            "status": "invalid",
+            "repositories": [],
+            "errors": [
+                {
+                    "severity": "error",
+                    "code": "package_urls_missing",
+                    "message": "At least one package URL is required.",
+                }
+            ],
+        },
+        manifest,
+        apply_update=True,
+    )
+
+    assert update["status"] == "invalid"
+    assert update["applied"] is False
+    assert issue_codes(update["errors"]) == {
+        "submission_report_invalid",
+        "accepted_manifest_candidates_missing",
+    }
+
+
+def test_prepare_accepted_manifest_pr_cli_writes_report_and_body(tmp_path: Path) -> None:
+    submission_report = tmp_path / "submission-report.json"
+    manifest = tmp_path / "accepted-packages.yml"
+    helper_report = tmp_path / "accepted-manifest-pr-report.json"
+    pr_body = tmp_path / "accepted-manifest-pr.md"
+    submission_report.write_text(
+        json.dumps(sample_valid_submission_report()),
+        encoding="utf-8",
+    )
+    manifest.write_text(
+        "schemaVersion: 1\npackages:\n  - path: examples/email_tools\n", encoding="utf-8"
+    )
+
+    exit_code = index_submission_module.prepare_accepted_manifest_pr_main(
+        [
+            "--submission-report",
+            str(submission_report),
+            "--manifest",
+            str(manifest),
+            "--issue-url",
+            "https://github.com/0al-spec/SpecPM/issues/123",
+            "--apply",
+            "--json-output",
+            str(helper_report),
+            "--pr-body-output",
+            str(pr_body),
+        ]
+    )
+
+    payload = json.loads(helper_report.read_text(encoding="utf-8"))
+    manifest_payload = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert payload["status"] == "applied"
+    assert payload["added"][0]["source"]["revision"] == "a" * 40
+    assert (
+        manifest_payload["packages"][1]["repository"]
+        == "https://github.com/example/email-tools.git"
+    )
+    assert "document_conversion.email_tools@0.1.0" in pr_body.read_text(encoding="utf-8")
 
 
 def test_rfc_example_validates() -> None:

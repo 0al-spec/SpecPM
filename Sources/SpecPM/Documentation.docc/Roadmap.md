@@ -77,17 +77,16 @@ package shape.
 
 ## Next Planned Sequence
 
-The Public Index Operator UX baseline is complete. The next planned work is:
+The Public Index Operator UX baseline is complete. Maintainer tooling can now
+prepare accepted-manifest pull request drafts from valid submission reports. The
+next planned work is:
 
-1. Normalize roadmap and Workplan status across repository and DocC docs.
-2. Implement an accepted manifest PR helper that prepares reviewed
-   `public-index/accepted-packages.yml` changes without deciding acceptance.
-3. Define the SpecGraph public registry observation contract.
-4. Make local Docker and GitHub Pages registry observation reports reusable as
+1. Define the SpecGraph public registry observation contract.
+2. Make local Docker and GitHub Pages registry observation reports reusable as
    review artifacts.
-5. Design the remote package acquisition boundary before archive fetch/cache/add
+3. Design the remote package acquisition boundary before archive fetch/cache/add
    behavior is implemented.
-6. Define intent taxonomy governance for canonical `intent.*` IDs.
+4. Define intent taxonomy governance for canonical `intent.*` IDs.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
