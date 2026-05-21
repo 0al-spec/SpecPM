@@ -17,8 +17,14 @@ Downstream consumers should start with these `/v0` endpoints:
 - `GET /v0/packages/{package_id}/versions/{version}` for exact version
   metadata, digest, lifecycle state, and archive URL.
 - `GET /v0/intents` for observed intent catalog metadata.
+- `GET /v0/intents/{intent_id}` for observed intent metadata, matching
+  capabilities, and the package versions that declare those mappings.
 - `GET /v0/intents/{intent_id}/packages` for exact observed intent lookup.
 - `GET /v0/capabilities/{capability_id}/packages` for exact capability lookup.
+
+Use `GET /v0/intents/{intent_id}` when a consumer needs both the observed intent
+summary and package metadata. Use `GET /v0/intents/{intent_id}/packages` when it
+only needs search-style package results for that exact intent ID.
 
 The registry API family is `specpm.registry/v0`. That is separate from package
 document `apiVersion` values such as `specpm.dev/v0.1` and from the SpecPM

@@ -850,6 +850,7 @@ def test_downstream_registry_consumer_guide_documents_read_only_consumption() ->
         "GET /v0/packages/{package_id}",
         "GET /v0/packages/{package_id}/versions/{version}",
         "GET /v0/intents",
+        "GET /v0/intents/{intent_id}",
         "GET /v0/intents/{intent_id}/packages",
         "GET /v0/capabilities/{capability_id}/packages",
     ):
