@@ -22,7 +22,7 @@
       "id": "registry_status",
       "endpoint": "GET /v0/status",
       "status": "ok",
-      "observed": {
+      "extracted": {
         "package_count": 4,
         "version_count": 5,
         "capability_count": 63,
@@ -30,10 +30,21 @@
       }
     },
     {
+      "id": "package_index",
+      "endpoint": "GET /v0/packages",
+      "status": "ok",
+      "extracted": {
+        "package_ids": [
+          "specpm.core"
+        ],
+        "version_count": 5
+      }
+    },
+    {
       "id": "package_metadata",
       "endpoint": "GET /v0/packages/{package_id}",
       "status": "ok",
-      "observed": {
+      "extracted": {
         "package_id": "specpm.core",
         "latest_version": "0.2.0"
       }
@@ -42,7 +53,7 @@
       "id": "version_metadata",
       "endpoint": "GET /v0/packages/{package_id}/versions/{version}",
       "status": "ok",
-      "observed": {
+      "extracted": {
         "package_id": "specpm.core",
         "version": "0.2.0",
         "yanked": false,
@@ -53,7 +64,7 @@
       "id": "capability_search",
       "endpoint": "GET /v0/capabilities/{capability_id}/packages",
       "status": "ok",
-      "observed": {
+      "extracted": {
         "capability_id": "specpm.registry.public_static_index",
         "result_count": 1
       }
@@ -62,9 +73,21 @@
       "id": "intent_metadata",
       "endpoint": "GET /v0/intents/{intent_id}",
       "status": "ok",
-      "observed": {
+      "extracted": {
         "intent_id": "intent.registry.intent_lookup",
         "status": "observed"
+      }
+    },
+    {
+      "id": "intent_search",
+      "endpoint": "GET /v0/intents/{intent_id}/packages",
+      "status": "ok",
+      "extracted": {
+        "intent_id": "intent.registry.intent_lookup",
+        "result_count": 1,
+        "package_ids": [
+          "specpm.core"
+        ]
       }
     }
   ],
@@ -73,6 +96,7 @@
       "subject": "package:specpm.core@0.2.0",
       "status": "visible",
       "evidence": [
+        "package_index",
         "package_metadata",
         "version_metadata"
       ]
@@ -88,7 +112,8 @@
       "subject": "intent:intent.registry.intent_lookup",
       "status": "visible",
       "evidence": [
-        "intent_metadata"
+        "intent_metadata",
+        "intent_search"
       ]
     }
   ]

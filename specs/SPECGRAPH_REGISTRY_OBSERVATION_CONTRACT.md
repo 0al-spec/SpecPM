@@ -29,7 +29,8 @@ semantic resolver, or graph authority to SpecPM core.
 
 ## Evidence Endpoints
 
-SpecGraph should capture the exact endpoint payloads that support each claim:
+SpecGraph should cite evidence derived from the exact endpoint payloads that
+support each claim:
 
 | Claim | Required evidence |
 | --- | --- |
@@ -69,7 +70,13 @@ SpecGraph may store observation evidence in review artifacts using this shape:
     {
       "id": "registry_status",
       "endpoint": "GET /v0/status",
-      "status": "ok"
+      "status": "ok",
+      "payloadDigest": "sha256:6f8f...",
+      "extracted": {
+        "profile": "public_static_index",
+        "read_only": true,
+        "buildRevision": "0de4fca1d8c32bbe443eb9bae7a3fa4bf8f0cb6b"
+      }
     }
   ],
   "findings": [
@@ -82,8 +89,11 @@ SpecGraph may store observation evidence in review artifacts using this shape:
 }
 ```
 
-The document is a downstream evidence wrapper. It may embed full payloads, store
-payload digests, or point to separately attached JSON files. The important
+The document is a downstream evidence wrapper. Evidence items may embed the
+canonical `/v0` response under `payload`, store a `payloadDigest`, point to a
+separately attached payload file, and include an `extracted` projection for
+review readability. An `extracted` value is not a replacement registry schema;
+it is only a named projection from the cited endpoint payload. The important
 contract is that each finding cites concrete `/v0` evidence by ID.
 
 ## Finding Status

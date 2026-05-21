@@ -23,8 +23,8 @@
       "id": "registry_status",
       "endpoint": "GET /v0/status",
       "status": "ok",
-      "observed": {
-        "build_revision": "0de4fca1d8c32bbe443eb9bae7a3fa4bf8f0cb6b",
+      "extracted": {
+        "buildRevision": "0de4fca1d8c32bbe443eb9bae7a3fa4bf8f0cb6b",
         "package_count": 4,
         "version_count": 5
       }
@@ -33,7 +33,7 @@
       "id": "package_metadata",
       "endpoint": "GET /v0/packages/{package_id}",
       "status": "ok",
-      "observed": {
+      "extracted": {
         "package_id": "specpm.core",
         "latest_version": "0.2.0"
       }
@@ -42,7 +42,7 @@
       "id": "version_metadata",
       "endpoint": "GET /v0/packages/{package_id}/versions/{version}",
       "status": "not_found",
-      "observed": {
+      "extracted": {
         "package_id": "specpm.core",
         "version": "0.3.0"
       }
@@ -51,7 +51,7 @@
       "id": "capability_search",
       "endpoint": "GET /v0/capabilities/{capability_id}/packages",
       "status": "ok",
-      "observed": {
+      "extracted": {
         "capability_id": "specpm.registry.future_capability",
         "result_count": 0
       }
@@ -60,7 +60,7 @@
       "id": "intent_search",
       "endpoint": "GET /v0/intents/{intent_id}/packages",
       "status": "ok",
-      "observed": {
+      "extracted": {
         "intent_id": "intent.registry.future_lookup",
         "result_count": 0
       }

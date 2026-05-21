@@ -913,7 +913,7 @@ def test_specgraph_registry_observation_contract_documents_evidence_boundary() -
     boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
     contract_flat = contract.replace("\n", " ")
 
-    for endpoint in (
+    expected_endpoints = {
         "GET /v0/status",
         "GET /v0/packages",
         "GET /v0/packages/{package_id}",
@@ -921,9 +921,12 @@ def test_specgraph_registry_observation_contract_documents_evidence_boundary() -
         "GET /v0/capabilities/{capability_id}/packages",
         "GET /v0/intents/{intent_id}",
         "GET /v0/intents/{intent_id}/packages",
-    ):
-        assert endpoint in contract
-        assert endpoint in docc_page
+    }
+    endpoint_pattern = re.compile(r"`(GET /v0/[A-Za-z0-9_{}./-]+)`")
+    contract_endpoints = set(endpoint_pattern.findall(contract))
+    docc_endpoints = set(endpoint_pattern.findall(docc_page))
+    assert expected_endpoints.issubset(contract_endpoints)
+    assert expected_endpoints.issubset(docc_endpoints)
 
     for status in (
         "visible",
@@ -969,7 +972,10 @@ def test_specgraph_registry_observation_contract_documents_evidence_boundary() -
         assert payload["kind"] == "SpecGraphRegistryObservation"
         assert payload["registry"]["apiVersion"] == "specpm.registry/v0"
         evidence_ids = {item["id"] for item in payload["evidence"]}
+        evidence_endpoints = {item["endpoint"] for item in payload["evidence"]}
         assert evidence_ids
+        if fixture_name == "package-visible.json":
+            assert expected_endpoints.issubset(evidence_endpoints)
         for finding in payload["findings"]:
             fixture_statuses.add(finding["status"])
             assert finding["status"] in allowed_statuses
