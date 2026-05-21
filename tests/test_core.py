@@ -1400,18 +1400,14 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert upload_step["timeout-minutes"] == 25
     upload_run = static_steps["Upload to SpecPM.dev over SFTP"]["run"]
     assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in upload_run
-    assert "SFTP dry run" in upload_run
     assert "SFTP upload" in upload_run
     assert "set cmd:fail-exit yes" in upload_run
     assert "set net:max-retries 1" in upload_run
     assert "set net:timeout 20" in upload_run
     assert "set net:reconnect-interval-base 5" in upload_run
-    assert "timeout --kill-after=30s 4m lftp" in upload_run
     assert "timeout --kill-after=30s 18m lftp" in upload_run
     assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in upload_run
-    assert (
-        'mirror -R --dry-run --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
-    )
+    assert "mirror -R --dry-run" not in upload_run
     assert 'mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
 
 
