@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-05-02
+Updated: 2026-05-21
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -1209,6 +1209,125 @@ Acceptance:
   packages, execute package content, or grant namespace ownership.
 - Downstream tools can consume the public registry as read-only metadata
   without treating SpecPM as a graph reasoner or semantic resolver.
+
+## Phase 48. Roadmap and Next Stack Documentation
+
+- [x] Remove stale active-stack wording from `ROADMAP.md` after the Public
+  Index Operator UX baseline merged.
+- [x] Record the next planned sequence across `ROADMAP.md`,
+  `specs/WORKPLAN.md`, and the DocC Roadmap.
+- [x] Keep the next stack framed as planned work, not implemented behavior.
+- [x] Add regression coverage that keeps the root roadmap, public DocC roadmap,
+  and Workplan aligned.
+
+Acceptance:
+
+- Maintainers can see that Phase 47 is the completed operator baseline rather
+  than the currently active stack.
+- The next planned sequence names the accepted manifest PR helper, SpecGraph
+  registry observation contract, reusable observation reports, remote package
+  acquisition boundary, and intent taxonomy governance.
+- Documentation does not imply that remote acquisition, registry mutation,
+  semantic resolution, graph authority, or package execution has been added.
+
+## Phase 49. Accepted Manifest PR Helper
+
+- [ ] Design the helper input contract around validated package-submission
+  reports and generated candidate snippets.
+- [ ] Prepare a branch or draft pull request that updates
+  `public-index/accepted-packages.yml` from maintainer-reviewed inputs.
+- [ ] Keep the expected pinned Git revision explicit in the generated manifest
+  update.
+- [ ] Preserve a maintainer approval step before acceptance.
+- [ ] Add tests for no-op, duplicate, invalid, and multi-package submission
+  cases.
+
+Acceptance:
+
+- A maintainer can turn a validated issue into an auditable accepted-manifest
+  pull request with minimal manual copying.
+- The helper does not decide acceptance, publish packages, call a mutation API,
+  install packages, execute package content, or grant namespace ownership.
+- The generated pull request body links back to issue validation evidence and
+  states the exact package revisions being proposed.
+
+## Phase 50. SpecGraph Registry Observation Contract
+
+- [ ] Define the JSON report fields SpecGraph should capture before claiming a
+  public package is visible, missing, yanked, deprecated, or drifting.
+- [ ] Specify which `/v0` endpoints provide status, package metadata, exact
+  version metadata, capability lookup, and exact intent lookup evidence.
+- [ ] Document the difference between SpecPM registry observation and SpecGraph
+  graph reasoning.
+- [ ] Add fixture examples that downstream tools can use without live network
+  access.
+
+Acceptance:
+
+- SpecGraph can cite concrete SpecPM registry evidence when discussing package
+  visibility or drift.
+- The contract remains read-only metadata observation and does not give SpecPM
+  authority over graph refinement, semantic intent selection, or canonical
+  SpecGraph mutation.
+
+## Phase 51. Reusable Registry Observation Reports
+
+- [ ] Make local Docker and GitHub Pages observation reports easy to save as
+  stable review artifacts.
+- [ ] Document report file locations, naming, retention expectations, and
+  comparison workflow.
+- [ ] Add report examples for `specpm.core`, `specnode.core`, exact capability
+  lookup, and exact intent lookup.
+- [ ] Keep report generation independent of package acquisition or execution.
+
+Acceptance:
+
+- Maintainers and downstream developers can attach observation reports to
+  issues or pull requests when validating public registry behavior.
+- Local Docker and deployed GitHub Pages reports can be compared without
+  scraping CLI prose.
+- Report tooling remains read-only and metadata-only.
+
+## Phase 52. Remote Package Acquisition Boundary
+
+- [ ] Write a design note before implementing any archive fetch, cache, or
+  remote add behavior.
+- [ ] Separate registry metadata lookup from archive acquisition.
+- [ ] Define digest verification, cache layout, lockfile changes, retry
+  behavior, and failure modes.
+- [ ] Decide whether acquisition belongs in SpecPM core or downstream tooling.
+- [ ] Preserve the rule that package content is never executed during
+  acquisition.
+
+Acceptance:
+
+- Future remote acquisition work has an explicit trust and storage model before
+  runtime implementation starts.
+- Existing `specpm remote` commands remain read-only metadata clients until the
+  acquisition design is accepted.
+- Archive download, cache writes, and lockfile mutation do not imply package
+  execution or host authority.
+
+## Phase 53. Intent Taxonomy Governance
+
+- [ ] Define how canonical `intent.*` domains are proposed, reviewed, renamed,
+  deprecated, or rejected.
+- [ ] Document how package-owned capabilities map to package-neutral intent
+  IDs.
+- [ ] Specify extension rules for experimental or private intent namespaces.
+- [ ] Define conflict handling when different packages claim similar intent
+  meanings.
+- [ ] Keep semantic interpretation and candidate ranking outside SpecPM core.
+
+Acceptance:
+
+- Maintainers have a reviewable process for adding or changing canonical
+  `intent.*` vocabulary.
+- Packages can declare exact intent mappings without making SpecPM a semantic
+  resolver.
+- ContextBuilder, SpecGraph, or downstream resolver tools remain responsible
+  for natural-language interpretation, embeddings, vector search, RAG, and LLM
+  reranking.
 
 ## Post-MVP Tracks
 

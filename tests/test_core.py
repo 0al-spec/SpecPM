@@ -1516,7 +1516,14 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Milestone 6: Enterprise Registry Track",
         "Milestone 7: Intent Resolver Track",
         "Explicit Non-Goals For SpecPM Core",
-        "Near-Term PR Candidates",
+        "Recent Progress",
+        "Next Planned Sequence",
+        "Public Index Operator UX baseline is complete",
+        "accepted manifest PR helper",
+        "SpecGraph public registry observation contract",
+        "reusable registry observation reports",
+        "remote package acquisition boundary",
+        "intent taxonomy governance",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in roadmap
@@ -1530,15 +1537,31 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Trust, Provenance, and Governance",
         "Enterprise Registry Track",
         "Intent Resolver Track",
+        "Next Planned Sequence",
+        "accepted manifest PR helper",
+        "SpecGraph public registry observation contract",
+        "registry observation reports reusable as",
+        "remote package acquisition boundary",
+        "intent taxonomy governance",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in docc_roadmap
 
+    assert "Active stack:" not in roadmap
     assert "[`ROADMAP.md`](ROADMAP.md)" in readme
     assert "https://0al-spec.github.io/SpecPM/documentation/specpm/roadmap/" in readme
     assert "<doc:Roadmap>" in docc_overview
     assert "Phase 38. Static Registry Pipeline Documentation" in workplan
     assert "Phase 39. Current Roadmap" in workplan
+    for phase_heading in (
+        "Phase 48. Roadmap and Next Stack Documentation",
+        "Phase 49. Accepted Manifest PR Helper",
+        "Phase 50. SpecGraph Registry Observation Contract",
+        "Phase 51. Reusable Registry Observation Reports",
+        "Phase 52. Remote Package Acquisition Boundary",
+        "Phase 53. Intent Taxonomy Governance",
+    ):
+        assert phase_heading in workplan
 
     phase_numbers = [
         int(match.group(1)) for match in re.finditer(r"^## Phase (\d+)\.", workplan, re.MULTILINE)
