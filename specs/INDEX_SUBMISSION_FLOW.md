@@ -17,6 +17,9 @@ read-only metadata.
 This is not a replacement for the remote registry contract. It is one possible
 deployment model for that contract.
 
+Maintainer-facing labels, review steps, and accepted-manifest pull request
+expectations are defined in `specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`.
+
 ## Two Registry Models
 
 SpecPM should keep two registry models separate:

@@ -247,6 +247,8 @@ report; maintainers review valid submissions before adding pinned sources to
 `public-index/accepted-packages.yml`. The public guide is published in the DocC
 site as
 [Add a SpecPackage](https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/).
+Maintainer review labels and acceptance checklists are tracked in
+`specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`.
 
 SpecPM does not translate plain-text user intent into canonical `intent.*`
 IDs, capability IDs, or package selections. Natural-language discovery,
