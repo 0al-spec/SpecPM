@@ -44,7 +44,9 @@ from specpm.core import (
     yank_index_package,
 )
 from specpm.index_submission import (
+    accepted_manifest_candidates,
     parse_submission_issue_body,
+    render_accepted_manifest_candidate_yaml,
     render_submission_report_markdown,
     validate_submission_body,
 )
@@ -1825,6 +1827,125 @@ def test_submission_report_markdown_includes_accepted_manifest_candidate() -> No
     assert "Accepted manifest candidate" in markdown
     assert "repository: https://github.com/example/email-tools.git" in markdown
     assert f"revision: {'a' * 40}" in markdown
+
+
+def test_submission_manifest_candidate_yaml_contains_valid_sources_only() -> None:
+    report = {
+        "status": "valid",
+        "repositories": [
+            {
+                "status": "valid",
+                "source": {
+                    "repository": "https://github.com/example/email-tools.git",
+                    "ref": "main",
+                    "revision": "a" * 40,
+                    "path": ".",
+                },
+            },
+            {
+                "status": "invalid",
+                "source": {
+                    "repository": "https://github.com/example/broken.git",
+                    "ref": "main",
+                    "revision": "b" * 40,
+                    "path": ".",
+                },
+            },
+        ],
+    }
+
+    payload = yaml.safe_load(render_accepted_manifest_candidate_yaml(report))
+
+    assert accepted_manifest_candidates(report) == [
+        {
+            "repository": "https://github.com/example/email-tools.git",
+            "ref": "main",
+            "revision": "a" * 40,
+            "path": ".",
+        }
+    ]
+    assert payload == {
+        "schemaVersion": 1,
+        "packages": [
+            {
+                "repository": "https://github.com/example/email-tools.git",
+                "ref": "main",
+                "revision": "a" * 40,
+                "path": ".",
+            }
+        ],
+    }
+
+
+def test_submission_manifest_candidate_yaml_is_empty_when_report_invalid() -> None:
+    payload = yaml.safe_load(
+        render_accepted_manifest_candidate_yaml(
+            {
+                "status": "invalid",
+                "repositories": [
+                    {
+                        "status": "valid",
+                        "source": {
+                            "repository": "https://github.com/example/email-tools.git",
+                            "ref": "main",
+                            "revision": "a" * 40,
+                            "path": ".",
+                        },
+                    }
+                ],
+            }
+        )
+    )
+
+    assert payload == {"schemaVersion": 1, "packages": []}
+
+
+def test_submission_cli_writes_manifest_candidate_output(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    issue_body = tmp_path / "issue.md"
+    candidate_output = tmp_path / "candidate.yml"
+    issue_body.write_text(sample_submission_issue_body(), encoding="utf-8")
+
+    def fake_validate_submission_body(body: str, *, clone_root: Path | None) -> dict[str, Any]:
+        return {
+            "schemaVersion": 1,
+            "status": "valid",
+            "package_path": ".",
+            "repository_count": 1,
+            "repositories": [
+                {
+                    "status": "valid",
+                    "source": {
+                        "repository": "https://github.com/example/email-tools.git",
+                        "ref": "main",
+                        "revision": "a" * 40,
+                        "path": ".",
+                    },
+                }
+            ],
+            "errors": [],
+        }
+
+    monkeypatch.setattr(
+        index_submission_module,
+        "validate_submission_body",
+        fake_validate_submission_body,
+    )
+
+    exit_code = index_submission_module.main(
+        [
+            "--issue-body-file",
+            str(issue_body),
+            "--manifest-candidate-output",
+            str(candidate_output),
+        ]
+    )
+
+    payload = yaml.safe_load(candidate_output.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert payload["packages"][0]["revision"] == "a" * 40
 
 
 def test_rfc_example_validates() -> None:

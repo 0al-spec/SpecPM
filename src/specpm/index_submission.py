@@ -14,9 +14,12 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlparse
 
+import yaml
+
 from specpm.core import validate_package
 
 SUBMISSION_SCHEMA_VERSION = 1
+ACCEPTED_MANIFEST_CANDIDATE_SCHEMA_VERSION = 1
 MAX_SUBMITTED_REPOSITORIES = 10
 ISSUE_FORM_EMPTY_VALUES = {"", "_No response_"}
 
@@ -41,7 +44,12 @@ def main(argv: list[str] | None = None) -> int:
         write_text_file(Path(args.json_output), json.dumps(report, indent=2, sort_keys=True))
     if args.markdown_output:
         write_text_file(Path(args.markdown_output), render_submission_report_markdown(report))
-    if not args.json_output and not args.markdown_output:
+    if args.manifest_candidate_output:
+        write_text_file(
+            Path(args.manifest_candidate_output),
+            render_accepted_manifest_candidate_yaml(report),
+        )
+    if not args.json_output and not args.markdown_output and not args.manifest_candidate_output:
         print(json.dumps(report, indent=2, sort_keys=True))
 
     return 0 if report["status"] == "valid" else 1
@@ -58,6 +66,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--clone-root", default="", help="Optional directory for temporary clones.")
     parser.add_argument("--json-output", help="Write machine-readable validation report.")
     parser.add_argument("--markdown-output", help="Write GitHub issue comment markdown report.")
+    parser.add_argument(
+        "--manifest-candidate-output",
+        help="Write accepted-packages.yml candidate entries for valid repositories.",
+    )
     return parser
 
 
@@ -409,6 +421,35 @@ def render_submission_report_markdown(report: dict[str, Any]) -> str:
         "during validation."
     )
     return "\n".join(lines).rstrip() + "\n"
+
+
+def accepted_manifest_candidates(report: dict[str, Any]) -> list[dict[str, str]]:
+    candidates: list[dict[str, str]] = []
+    if report.get("status") != "valid":
+        return candidates
+    for item in report.get("repositories", []):
+        if not isinstance(item, dict) or item.get("status") != "valid":
+            continue
+        source = item.get("source")
+        if not isinstance(source, dict):
+            continue
+        candidate = {
+            "repository": source.get("repository"),
+            "ref": source.get("ref"),
+            "revision": source.get("revision"),
+            "path": source.get("path"),
+        }
+        if all(isinstance(value, str) and value for value in candidate.values()):
+            candidates.append(candidate)
+    return candidates
+
+
+def render_accepted_manifest_candidate_yaml(report: dict[str, Any]) -> str:
+    document = {
+        "schemaVersion": ACCEPTED_MANIFEST_CANDIDATE_SCHEMA_VERSION,
+        "packages": accepted_manifest_candidates(report),
+    }
+    return yaml.safe_dump(document, sort_keys=False)
 
 
 def submission_error(code: str, message: str, *, field: str | None = None) -> dict[str, str]:
