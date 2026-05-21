@@ -1,7 +1,7 @@
 # SpecPM Index Submission Flow
 
 Status: Draft
-Updated: 2026-04-28
+Updated: 2026-05-21
 Scope: post-MVP public index submission and enterprise registry deployment
 
 ## Purpose
@@ -19,6 +19,9 @@ deployment model for that contract.
 
 Maintainer-facing labels, review steps, and accepted-manifest pull request
 expectations are defined in `specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`.
+That guide also documents the maintainer helper that turns a valid
+`submission-report.json` into an accepted-manifest branch diff and draft pull
+request body.
 
 ## Two Registry Models
 

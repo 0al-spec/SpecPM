@@ -1232,14 +1232,14 @@ Acceptance:
 
 ## Phase 49. Accepted Manifest PR Helper
 
-- [ ] Design the helper input contract around validated package-submission
+- [x] Design the helper input contract around validated package-submission
   reports and generated candidate snippets.
-- [ ] Prepare a branch or draft pull request that updates
+- [x] Prepare a branch or draft pull request that updates
   `public-index/accepted-packages.yml` from maintainer-reviewed inputs.
-- [ ] Keep the expected pinned Git revision explicit in the generated manifest
+- [x] Keep the expected pinned Git revision explicit in the generated manifest
   update.
-- [ ] Preserve a maintainer approval step before acceptance.
-- [ ] Add tests for no-op, duplicate, invalid, and multi-package submission
+- [x] Preserve a maintainer approval step before acceptance.
+- [x] Add tests for no-op, duplicate, invalid, and multi-package submission
   cases.
 
 Acceptance:

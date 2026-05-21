@@ -228,7 +228,8 @@ Package content can describe desired outputs. Package content cannot command the
 
 The Public Index Operator UX baseline is complete. SpecPM now has maintainer
 review labels, a package-submission triage workflow, an accepted-manifest
-candidate snippet helper, and downstream read-only registry consumer examples.
+candidate snippet helper, an accepted-manifest pull request helper, and
+downstream read-only registry consumer examples.
 
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
@@ -237,20 +238,14 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `docs: normalize roadmap and workplan status`
-   - remove stale active-stack language and keep `ROADMAP.md`, DocC Roadmap,
-     and Workplan aligned.
-2. `operator: implement accepted manifest PR helper`
-   - turn a validated package-submission report into a prepared branch or draft
-     pull request without deciding acceptance automatically.
-3. `design: SpecGraph public registry observation contract`
+1. `design: SpecGraph public registry observation contract`
    - define the JSON evidence SpecGraph should capture from the public `/v0`
      registry before it claims package visibility or drift.
-4. `tooling: reusable registry observation reports`
+2. `tooling: reusable registry observation reports`
    - make local Docker and GitHub Pages observation reports easy to store,
      compare, and attach to downstream reviews.
-5. `design: remote package acquisition boundary`
+3. `design: remote package acquisition boundary`
    - decide fetch/cache/add semantics before adding remote package acquisition.
-6. `design: intent taxonomy governance`
+4. `design: intent taxonomy governance`
    - define how canonical `intent.*` domains are proposed, reviewed, and mapped
      to package capabilities.

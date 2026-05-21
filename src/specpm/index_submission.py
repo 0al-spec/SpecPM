@@ -20,8 +20,10 @@ from specpm.core import validate_package
 
 SUBMISSION_SCHEMA_VERSION = 1
 ACCEPTED_MANIFEST_CANDIDATE_SCHEMA_VERSION = 1
+ACCEPTED_MANIFEST_PR_SCHEMA_VERSION = 1
 MAX_SUBMITTED_REPOSITORIES = 10
 ISSUE_FORM_EMPTY_VALUES = {"", "_No response_"}
+ACCEPTED_MANIFEST_SOURCE_FIELDS = ("repository", "ref", "revision", "path")
 
 
 @dataclass(frozen=True)
@@ -450,6 +452,318 @@ def render_accepted_manifest_candidate_yaml(report: dict[str, Any]) -> str:
         "packages": accepted_manifest_candidates(report),
     }
     return yaml.safe_dump(document, sort_keys=False)
+
+
+def prepare_accepted_manifest_pr_main(argv: list[str] | None = None) -> int:
+    parser = build_accepted_manifest_pr_parser()
+    args = parser.parse_args(argv)
+    submission_report = json.loads(Path(args.submission_report).read_text(encoding="utf-8"))
+    report = prepare_accepted_manifest_pr(
+        submission_report,
+        Path(args.manifest),
+        issue_url=args.issue_url,
+        apply_update=args.apply,
+    )
+
+    if args.json_output:
+        write_text_file(Path(args.json_output), json.dumps(report, indent=2, sort_keys=True))
+    if args.pr_body_output:
+        write_text_file(Path(args.pr_body_output), render_accepted_manifest_pr_body(report))
+    if not args.json_output and not args.pr_body_output:
+        print(json.dumps(report, indent=2, sort_keys=True))
+
+    return 0 if report["status"] in {"prepared", "applied", "unchanged"} else 1
+
+
+def build_accepted_manifest_pr_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="prepare-accepted-manifest-pr",
+        description="Prepare a reviewed accepted-packages.yml change from a validation report.",
+    )
+    parser.add_argument(
+        "--submission-report",
+        required=True,
+        help="Path to a valid submission-report.json produced by validate_index_submission.py.",
+    )
+    parser.add_argument(
+        "--manifest",
+        default="public-index/accepted-packages.yml",
+        help="Accepted public index manifest to update or inspect.",
+    )
+    parser.add_argument(
+        "--issue-url",
+        default="",
+        help="Optional package-submission issue URL to include in generated PR context.",
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Append new candidate entries to the accepted manifest.",
+    )
+    parser.add_argument("--json-output", help="Write machine-readable helper report.")
+    parser.add_argument("--pr-body-output", help="Write draft pull request body markdown.")
+    return parser
+
+
+def prepare_accepted_manifest_pr(
+    submission_report: dict[str, Any],
+    manifest_path: Path,
+    *,
+    issue_url: str = "",
+    apply_update: bool = False,
+) -> dict[str, Any]:
+    candidates = accepted_manifest_candidate_packages(submission_report)
+    manifest = read_accepted_manifest_for_update(manifest_path)
+    errors = list(manifest["errors"])
+
+    if submission_report.get("status") != "valid":
+        errors.append(
+            submission_error(
+                "submission_report_invalid",
+                "Accepted manifest PR helper requires a valid submission report.",
+            )
+        )
+    if not candidates:
+        errors.append(
+            submission_error(
+                "accepted_manifest_candidates_missing",
+                "Submission report does not contain accepted manifest candidates.",
+            )
+        )
+
+    if errors:
+        return accepted_manifest_pr_report(
+            "invalid",
+            manifest_path,
+            issue_url,
+            candidates,
+            [],
+            [],
+            errors,
+            applied=False,
+        )
+
+    known_sources = list(manifest["sources"])
+    added: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+    for candidate in candidates:
+        source = candidate["source"]
+        if any(same_accepted_manifest_source(source, existing) for existing in known_sources):
+            skipped.append(
+                {
+                    "reason": "exact_source_already_present",
+                    "package": candidate,
+                }
+            )
+            continue
+        added.append(candidate)
+        known_sources.append(source)
+
+    applied = False
+    if apply_update and added:
+        append_accepted_manifest_sources(manifest_path, [item["source"] for item in added])
+        applied = True
+
+    status = "applied" if applied else "prepared"
+    if not added:
+        status = "unchanged"
+
+    return accepted_manifest_pr_report(
+        status,
+        manifest_path,
+        issue_url,
+        candidates,
+        added,
+        skipped,
+        [],
+        applied=applied,
+    )
+
+
+def accepted_manifest_candidate_packages(report: dict[str, Any]) -> list[dict[str, Any]]:
+    packages: list[dict[str, Any]] = []
+    if report.get("status") != "valid":
+        return packages
+    for item in report.get("repositories", []):
+        if not isinstance(item, dict) or item.get("status") != "valid":
+            continue
+        source = normalized_accepted_manifest_source(item.get("source"))
+        if source is None:
+            continue
+        identity = (
+            item.get("package_identity") if isinstance(item.get("package_identity"), dict) else {}
+        )
+        package_id = (
+            identity.get("package_id") if isinstance(identity.get("package_id"), str) else ""
+        )
+        version = identity.get("version") if isinstance(identity.get("version"), str) else ""
+        packages.append(
+            {
+                "package_id": package_id,
+                "version": version,
+                "package_ref": f"{package_id}@{version}" if package_id and version else "unknown",
+                "source": source,
+            }
+        )
+    return packages
+
+
+def read_accepted_manifest_for_update(manifest_path: Path) -> dict[str, Any]:
+    errors: list[dict[str, str]] = []
+    if not manifest_path.is_file():
+        return {
+            "sources": [],
+            "errors": [
+                submission_error("accepted_manifest_missing", "Accepted manifest file is missing.")
+            ],
+        }
+    try:
+        loaded = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        return {
+            "sources": [],
+            "errors": [
+                submission_error(
+                    "accepted_manifest_yaml_invalid",
+                    f"Accepted manifest YAML could not be parsed: {exc}",
+                )
+            ],
+        }
+    if not isinstance(loaded, dict):
+        errors.append(
+            submission_error(
+                "accepted_manifest_invalid",
+                "Accepted manifest must be a mapping.",
+            )
+        )
+        return {"sources": [], "errors": errors}
+    if loaded.get("schemaVersion") != 1:
+        errors.append(
+            submission_error(
+                "accepted_manifest_schema_version_invalid",
+                "Accepted manifest schemaVersion must be 1.",
+                field="schemaVersion",
+            )
+        )
+    packages = loaded.get("packages")
+    if not isinstance(packages, list):
+        errors.append(
+            submission_error(
+                "accepted_manifest_packages_invalid",
+                "Accepted manifest packages must be a list.",
+                field="packages",
+            )
+        )
+        return {"sources": [], "errors": errors}
+    sources = [
+        source
+        for item in packages
+        if (source := normalized_accepted_manifest_source(item)) is not None
+    ]
+    return {"sources": sources, "errors": errors}
+
+
+def normalized_accepted_manifest_source(value: Any) -> dict[str, str] | None:
+    if not isinstance(value, dict):
+        return None
+    source = {field: value.get(field) for field in ACCEPTED_MANIFEST_SOURCE_FIELDS}
+    if all(isinstance(item, str) and item for item in source.values()):
+        return {field: str(source[field]) for field in ACCEPTED_MANIFEST_SOURCE_FIELDS}
+    return None
+
+
+def same_accepted_manifest_source(left: dict[str, str], right: dict[str, str]) -> bool:
+    return all(left[field] == right[field] for field in ACCEPTED_MANIFEST_SOURCE_FIELDS)
+
+
+def append_accepted_manifest_sources(manifest_path: Path, sources: list[dict[str, str]]) -> None:
+    if not sources:
+        return
+    loaded = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict) or not isinstance(loaded.get("packages"), list):
+        raise ValueError("accepted manifest must be a mapping with a packages list")
+    loaded["packages"].extend(sources)
+    manifest_path.write_text(yaml.safe_dump(loaded, sort_keys=False), encoding="utf-8")
+
+
+def accepted_manifest_pr_report(
+    status: str,
+    manifest_path: Path,
+    issue_url: str,
+    candidates: list[dict[str, Any]],
+    added: list[dict[str, Any]],
+    skipped: list[dict[str, Any]],
+    errors: list[dict[str, str]],
+    *,
+    applied: bool,
+) -> dict[str, Any]:
+    return {
+        "schemaVersion": ACCEPTED_MANIFEST_PR_SCHEMA_VERSION,
+        "status": status,
+        "applied": applied,
+        "manifest": str(manifest_path),
+        "issue_url": issue_url,
+        "candidate_count": len(candidates),
+        "added_count": len(added),
+        "skipped_count": len(skipped),
+        "candidates": candidates,
+        "added": added,
+        "skipped": skipped,
+        "errors": errors,
+    }
+
+
+def render_accepted_manifest_pr_body(report: dict[str, Any]) -> str:
+    issue_url = report.get("issue_url") or "not provided"
+    package_lines = []
+    for item in report.get("added", []):
+        source = item["source"]
+        package_lines.append(
+            "- "
+            f"`{item.get('package_ref', 'unknown')}` from `{source['repository']}` "
+            f"ref `{source['ref']}` at `{source['revision']}` path `{source['path']}`"
+        )
+    if not package_lines:
+        package_lines.append("- No new accepted manifest entries were added.")
+
+    lines = [
+        "## Motivation",
+        "",
+        "Accept a validated public SpecPackage submission into the generated public index.",
+        "",
+        f"Submission issue: {issue_url}",
+        f"Helper report status: `{report['status']}`",
+        "",
+        "## Goals",
+        "",
+        "- Add reviewed, pinned package source records to `public-index/accepted-packages.yml`.",
+        "- Keep public index acceptance auditable through issues, pull requests, and CI.",
+        "- Preserve the static read-only registry boundary.",
+        "",
+        "## Changes",
+        "",
+        *package_lines,
+        "",
+        "## Validation",
+        "",
+        "- Pending maintainer/CI validation: "
+        "rerun package-submission validation for the issue body.",
+        "- Pending maintainer/CI validation: "
+        "run public index generation against the updated manifest.",
+        "- Pending maintainer/CI validation: run local Docker smoke if registry output changes.",
+        "",
+        "## Boundaries and Non-Goals",
+        "",
+        "- Does not decide package acceptance automatically.",
+        "- Does not add `specpm publish`, upload endpoints, remote mutation APIs, "
+        "package install, archive acquisition, package execution, or namespace ownership grants.",
+        "",
+        "## Notes",
+        "",
+        "- Generated by `scripts/prepare_accepted_manifest_pr.py`; maintainers should edit "
+        "this draft with the exact validation commands they ran before merge.",
+    ]
+    return "\n".join(lines) + "\n"
 
 
 def submission_error(code: str, message: str, *, field: str | None = None) -> dict[str, str]:
