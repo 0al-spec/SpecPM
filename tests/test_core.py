@@ -83,6 +83,7 @@ AGENTS_FILE = ROOT / "AGENTS.md"
 ROADMAP_DOC = ROOT / "ROADMAP.md"
 DEPLOY_FIRST_DOC = ROOT / "specs/DEPLOY_FIRST.md"
 PUBLIC_ALPHA_DOC = ROOT / "specs/PUBLIC_ALPHA.md"
+DOWNSTREAM_REGISTRY_CONSUMER_GUIDE = ROOT / "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
@@ -836,6 +837,36 @@ def test_public_index_operator_guide_documents_package_review_boundary() -> None
     assert ".github/workflows/package-submission-triage.yml" in guide_text
     assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in readme
     assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in index_flow
+
+
+def test_downstream_registry_consumer_guide_documents_read_only_consumption() -> None:
+    guide_text = DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.read_text(encoding="utf-8")
+    guide_lower = guide_text.lower()
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    for endpoint in (
+        "GET /v0/status",
+        "GET /v0/packages",
+        "GET /v0/packages/{package_id}",
+        "GET /v0/packages/{package_id}/versions/{version}",
+        "GET /v0/intents",
+        "GET /v0/intents/{intent_id}",
+        "GET /v0/intents/{intent_id}/packages",
+        "GET /v0/capabilities/{capability_id}/packages",
+    ):
+        assert endpoint in guide_text
+
+    for consumer in ("SpecGraph", "ContextBuilder", "SpecNode"):
+        assert consumer in guide_text
+
+    assert "specpm.registry/v0" in guide_text
+    assert "specpm.dev/v0.1" in guide_text
+    assert "remote observe" in guide_text
+    assert "specnode.typed_job_protocol" in guide_text
+    assert "read-only" in guide_lower
+    assert "should not execute package content" in guide_lower
+    assert "semantic search" in guide_lower
+    assert "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md" in readme
 
 
 def test_pull_request_template_requires_motivation_and_goals() -> None:

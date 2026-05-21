@@ -1195,7 +1195,7 @@ Acceptance:
   deciding acceptance automatically.
 - [x] Add a helper that turns a validated submission report into a reviewed
   `public-index/accepted-packages.yml` candidate snippet.
-- [ ] Add downstream consumer examples for read-only `/v0` registry
+- [x] Add downstream consumer examples for read-only `/v0` registry
   observation by SpecGraph, ContextBuilder, and SpecNode.
 
 Acceptance:

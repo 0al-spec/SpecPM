@@ -260,6 +260,8 @@ metadata. Packages may declare explicit capability-to-intent mappings through
 `search-intent` commands. This boundary is documented in
 `specs/INTENT_DISCOVERY_BOUNDARY.md`; the identifier model is documented in
 `specs/IDENTIFIER_MODEL.md`.
+Read-only registry consumption examples for SpecGraph, ContextBuilder, and
+SpecNode are tracked in `specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md`.
 
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.
