@@ -17,6 +17,7 @@ jobs:
   deploy-connection-check:
     name: Check SpecPM.dev SFTP connection
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event.pull_request.head.repo.full_name == github.repository
     environment:
       name: FTP
@@ -49,16 +50,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y lftp openssh-client
 
-      - name: Check SFTP connection without upload
+      - name: Prepare SFTP known hosts
         run: |
           DEPLOY_PORT="${FTP_PORT:-22}"
           mkdir -p "$HOME/.ssh"
-          ssh-keyscan -p "$DEPLOY_PORT" "$FTP_HOST" > "$HOME/.ssh/known_hosts"
+          ssh-keyscan -T 20 -p "$DEPLOY_PORT" "$FTP_HOST" > "$HOME/.ssh/known_hosts"
 
-          lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT" <<EOF
-          set sftp:connect-program "ssh -a -x -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
-          set net:max-retries 2
-          set net:timeout 30
+      - name: Check SFTP connection without upload
+        timeout-minutes: 3
+        run: |
+          DEPLOY_PORT="${FTP_PORT:-22}"
+          timeout --kill-after=30s 2m lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT" <<EOF
+          set cmd:fail-exit yes
+          set sftp:connect-program "ssh -a -x -o ServerAliveInterval=15 -o ServerAliveCountMax=2 -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
+          set net:max-retries 1
+          set net:timeout 20
+          set net:reconnect-interval-base 5
           cls -1 "$FTP_REMOTE_ROOT"
           bye
           EOF
