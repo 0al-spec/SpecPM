@@ -1357,6 +1357,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         in (static_host["if"])
     )
     assert static_host["needs"] == "build"
+    assert static_host["timeout-minutes"] == 30
     assert static_host["environment"]["name"] == "FTP"
     assert static_host["environment"]["url"] == "https://SpecPM.dev"
     assert static_host["env"]["FTP_HOST"] == "${{ secrets.FTP_HOST }}"
@@ -1371,14 +1372,46 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "test -f specpm-static-site/index.html"
         in (static_steps["Validate static host artifact"]["run"])
     )
+    summarize_run = static_steps["Summarize static host artifact"]["run"]
+    assert "find specpm-static-site -type f | wc -l" in summarize_run
+    assert "du -sh specpm-static-site" in summarize_run
+    validate_deploy_run = static_steps["Validate deploy settings"]["run"]
+    assert 'test -n "$FTP_HOST"' in validate_deploy_run
+    assert 'test -n "$FTP_USER"' in validate_deploy_run
+    assert 'test -n "$FTP_PASS"' in validate_deploy_run
+    assert 'test -n "$FTP_REMOTE_ROOT"' in validate_deploy_run
+    assert 'if [ "$FTP_REMOTE_ROOT" = "/" ]; then' in validate_deploy_run
     assert (
         "apt-get install -y lftp openssh-client" in (static_steps["Install transfer client"]["run"])
     )
+    known_hosts_run = static_steps["Prepare SFTP known hosts"]["run"]
+    assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in known_hosts_run
+    assert 'ssh-keyscan -T 20 -p "$DEPLOY_PORT" "$FTP_HOST"' in known_hosts_run
+    check_target = static_steps["Check SpecPM.dev SFTP target"]
+    assert check_target["timeout-minutes"] == 3
+    check_target_run = check_target["run"]
+    assert "timeout --kill-after=30s 2m lftp" in check_target_run
+    assert "set cmd:fail-exit yes" in check_target_run
+    assert "set net:max-retries 1" in check_target_run
+    assert "set net:timeout 20" in check_target_run
+    assert "set net:reconnect-interval-base 5" in check_target_run
+    assert 'cls -1 "$FTP_REMOTE_ROOT"' in check_target_run
+    upload_step = static_steps["Upload to SpecPM.dev over SFTP"]
+    assert upload_step["timeout-minutes"] == 25
     upload_run = static_steps["Upload to SpecPM.dev over SFTP"]["run"]
     assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in upload_run
-    assert 'if [ "$FTP_REMOTE_ROOT" = "/" ]; then' in upload_run
-    assert 'ssh-keyscan -p "$DEPLOY_PORT" "$FTP_HOST"' in upload_run
+    assert "SFTP dry run" in upload_run
+    assert "SFTP upload" in upload_run
+    assert "set cmd:fail-exit yes" in upload_run
+    assert "set net:max-retries 1" in upload_run
+    assert "set net:timeout 20" in upload_run
+    assert "set net:reconnect-interval-base 5" in upload_run
+    assert "timeout --kill-after=30s 4m lftp" in upload_run
+    assert "timeout --kill-after=30s 18m lftp" in upload_run
     assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in upload_run
+    assert (
+        'mirror -R --dry-run --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
+    )
     assert 'mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
 
 
@@ -1394,6 +1427,7 @@ def test_deploy_connection_check_uses_trusted_sftp_dry_run() -> None:
 
     job = loaded["jobs"]["deploy-connection-check"]
     assert job["if"] == "github.event.pull_request.head.repo.full_name == github.repository"
+    assert job["timeout-minutes"] == 10
     assert job["environment"]["name"] == "FTP"
     assert job["env"] == {
         "FTP_HOST": "${{ secrets.FTP_HOST }}",
@@ -1415,10 +1449,18 @@ def test_deploy_connection_check_uses_trusted_sftp_dry_run() -> None:
     assert 'test -n "$FTP_REMOTE_ROOT"' in validate_run
     assert 'if [ "$FTP_REMOTE_ROOT" = "/" ]; then' in validate_run
     assert "apt-get install -y lftp openssh-client" in (steps["Install transfer client"]["run"])
+    known_hosts_run = steps["Prepare SFTP known hosts"]["run"]
+    assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in known_hosts_run
+    assert 'ssh-keyscan -T 20 -p "$DEPLOY_PORT" "$FTP_HOST"' in known_hosts_run
+    assert steps["Check SFTP connection without upload"]["timeout-minutes"] == 3
     check_run = steps["Check SFTP connection without upload"]["run"]
     assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in check_run
-    assert 'ssh-keyscan -p "$DEPLOY_PORT" "$FTP_HOST"' in check_run
+    assert "timeout --kill-after=30s 2m lftp" in check_run
     assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in check_run
+    assert "set cmd:fail-exit yes" in check_run
+    assert "set net:max-retries 1" in check_run
+    assert "set net:timeout 20" in check_run
+    assert "set net:reconnect-interval-base 5" in check_run
     assert 'cls -1 "$FTP_REMOTE_ROOT"' in check_run
     assert "mirror -R" not in check_run
 
