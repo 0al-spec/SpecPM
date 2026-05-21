@@ -213,19 +213,6 @@ jobs:
         timeout-minutes: 25
         run: |
           DEPLOY_PORT="${FTP_PORT:-22}"
-          echo "::group::SFTP dry run"
-          timeout --kill-after=30s 4m lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT" <<EOF
-          set cmd:fail-exit yes
-          set sftp:connect-program "ssh -a -x -o ServerAliveInterval=15 -o ServerAliveCountMax=2 -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
-          set net:max-retries 1
-          set net:timeout 20
-          set net:reconnect-interval-base 5
-          lcd specpm-static-site
-          mirror -R --dry-run --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"
-          bye
-          EOF
-          echo "::endgroup::"
-
           echo "::group::SFTP upload"
           timeout --kill-after=30s 18m lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT" <<EOF
           set cmd:fail-exit yes
