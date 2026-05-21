@@ -86,6 +86,8 @@ ROADMAP_DOC = ROOT / "ROADMAP.md"
 DEPLOY_FIRST_DOC = ROOT / "specs/DEPLOY_FIRST.md"
 PUBLIC_ALPHA_DOC = ROOT / "specs/PUBLIC_ALPHA.md"
 DOWNSTREAM_REGISTRY_CONSUMER_GUIDE = ROOT / "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md"
+SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT = ROOT / "specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md"
+SPECGRAPH_REGISTRY_OBSERVATION_FIXTURES = ROOT / "tests/fixtures/specgraph_registry_observation"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
@@ -95,6 +97,10 @@ DOCC_STATIC_REGISTRY_PIPELINE_PAGE = (
 )
 DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
 DOCC_ROADMAP_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Roadmap.md"
+DOCC_SPECGRAPH_INTEGRATION_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md"
+DOCC_SPECGRAPH_REGISTRY_OBSERVATION_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md"
+)
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
 LANDING_PAGE = ROOT / "landing_page/index.html"
@@ -892,6 +898,101 @@ def test_downstream_registry_consumer_guide_documents_read_only_consumption() ->
     assert "should not execute package content" in guide_lower
     assert "semantic search" in guide_lower
     assert "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md" in readme
+
+
+def test_specgraph_registry_observation_contract_documents_evidence_boundary() -> None:
+    contract = SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.read_text(encoding="utf-8")
+    consumer_guide = DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.read_text(encoding="utf-8")
+    docc_page = DOCC_SPECGRAPH_REGISTRY_OBSERVATION_PAGE.read_text(encoding="utf-8")
+    docc_integration = DOCC_SPECGRAPH_INTEGRATION_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+    contract_flat = contract.replace("\n", " ")
+
+    for endpoint in (
+        "GET /v0/status",
+        "GET /v0/packages",
+        "GET /v0/packages/{package_id}",
+        "GET /v0/packages/{package_id}/versions/{version}",
+        "GET /v0/capabilities/{capability_id}/packages",
+        "GET /v0/intents/{intent_id}",
+        "GET /v0/intents/{intent_id}/packages",
+    ):
+        assert endpoint in contract
+        assert endpoint in docc_page
+
+    for status in (
+        "visible",
+        "missing",
+        "yanked",
+        "deprecated",
+        "drift",
+        "unavailable",
+        "inconclusive",
+    ):
+        assert f"`{status}`" in contract
+        assert f"`{status}`" in docc_page
+
+    for boundary_text in (
+        "SpecPM remains the metadata substrate",
+        "SpecGraph remains responsible for graph reasoning",
+        "does not add a new registry endpoint",
+        "`specpm publish`",
+        "Observed intent IDs are metadata observations",
+    ):
+        assert boundary_text in contract_flat
+
+    assert "specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md" in consumer_guide
+    assert "specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md" in readme
+    assert "<doc:SpecGraphRegistryObservation>" in docc_integration
+    assert "<doc:SpecGraphRegistryObservation>" in docc_overview
+
+    allowed_statuses = {
+        "visible",
+        "missing",
+        "yanked",
+        "deprecated",
+        "drift",
+        "unavailable",
+        "inconclusive",
+    }
+    fixture_statuses: set[str] = set()
+    for fixture_name in ("package-visible.json", "package-drift.json"):
+        payload = json.loads(
+            (SPECGRAPH_REGISTRY_OBSERVATION_FIXTURES / fixture_name).read_text(encoding="utf-8")
+        )
+        assert payload["schemaVersion"] == 1
+        assert payload["kind"] == "SpecGraphRegistryObservation"
+        assert payload["registry"]["apiVersion"] == "specpm.registry/v0"
+        evidence_ids = {item["id"] for item in payload["evidence"]}
+        assert evidence_ids
+        for finding in payload["findings"]:
+            fixture_statuses.add(finding["status"])
+            assert finding["status"] in allowed_statuses
+            assert set(finding["evidence"]).issubset(evidence_ids)
+    assert {"visible", "missing", "drift"}.issubset(fixture_statuses)
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    owned_binding_paths = {
+        path
+        for binding in boundary["implementationBindings"]
+        for path in binding["files"].get("owned", [])
+    }
+    assert "specpm.registry.specgraph_observation_contract" in manifest_capabilities
+    assert "specpm.registry.specgraph_observation_contract" in boundary_capabilities
+    assert "specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md" in evidence_paths
+    assert "tests/fixtures/specgraph_registry_observation" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md" in evidence_paths
+    assert "specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md" in owned_binding_paths
+    assert "tests/fixtures/specgraph_registry_observation" in owned_binding_paths
 
 
 def test_pull_request_template_requires_motivation_and_goals() -> None:

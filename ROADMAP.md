@@ -231,6 +231,11 @@ review labels, a package-submission triage workflow, an accepted-manifest
 candidate snippet helper, an accepted-manifest pull request helper, and
 downstream read-only registry consumer examples.
 
+The SpecGraph public registry observation contract is also documented. It
+defines which `/v0` payloads SpecGraph can cite for package visibility,
+missing versions, lifecycle state, observed intents, and drift without giving
+SpecPM graph authority.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -238,14 +243,11 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `design: SpecGraph public registry observation contract`
-   - define the JSON evidence SpecGraph should capture from the public `/v0`
-     registry before it claims package visibility or drift.
-2. `tooling: reusable registry observation reports`
+1. `tooling: reusable registry observation reports`
    - make local Docker and GitHub Pages observation reports easy to store,
      compare, and attach to downstream reviews.
-3. `design: remote package acquisition boundary`
+2. `design: remote package acquisition boundary`
    - decide fetch/cache/add semantics before adding remote package acquisition.
-4. `design: intent taxonomy governance`
+3. `design: intent taxonomy governance`
    - define how canonical `intent.*` domains are proposed, reviewed, and mapped
      to package capabilities.

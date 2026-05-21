@@ -262,6 +262,8 @@ metadata. Packages may declare explicit capability-to-intent mappings through
 `specs/IDENTIFIER_MODEL.md`.
 Read-only registry consumption examples for SpecGraph, ContextBuilder, and
 SpecNode are tracked in `specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md`.
+SpecGraph-specific registry evidence rules are tracked in
+`specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md`.
 
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.

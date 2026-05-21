@@ -1253,13 +1253,13 @@ Acceptance:
 
 ## Phase 50. SpecGraph Registry Observation Contract
 
-- [ ] Define the JSON report fields SpecGraph should capture before claiming a
+- [x] Define the JSON report fields SpecGraph should capture before claiming a
   public package is visible, missing, yanked, deprecated, or drifting.
-- [ ] Specify which `/v0` endpoints provide status, package metadata, exact
+- [x] Specify which `/v0` endpoints provide status, package metadata, exact
   version metadata, capability lookup, and exact intent lookup evidence.
-- [ ] Document the difference between SpecPM registry observation and SpecGraph
+- [x] Document the difference between SpecPM registry observation and SpecGraph
   graph reasoning.
-- [ ] Add fixture examples that downstream tools can use without live network
+- [x] Add fixture examples that downstream tools can use without live network
   access.
 
 Acceptance:
