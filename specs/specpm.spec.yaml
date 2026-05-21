@@ -45,7 +45,7 @@ scope:
     - Serve generated public index metadata locally through Docker Compose for ecosystem integration testing.
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Publish a static browser viewer for the public `/v0` registry API.
-    - Capture read-only public registry observation reports for local Docker and GitHub Pages endpoints.
+    - Capture reusable read-only public registry observation reports for local Docker and GitHub Pages endpoints.
     - Document the SpecGraph public registry observation evidence contract for package visibility, lifecycle, capability, intent, and drift findings.
     - Document the static registry pipeline that turns reviewed accepted package sources into build-time `/v0` API files served by GitHub Pages.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
@@ -174,7 +174,7 @@ provides:
       summary: Verify local and deployed public alpha registry visibility for seed packages and capabilities through read-only smoke targets.
     - id: specpm.registry.public_observation_report
       role: secondary
-      summary: Generate read-only public registry observation reports for downstream evidence consumers.
+      summary: Generate reusable read-only public registry observation reports for downstream evidence consumers.
     - id: specpm.registry.specgraph_observation_contract
       role: secondary
       summary: Document the read-only `/v0` evidence SpecGraph can cite for package visibility, lifecycle state, capability, intent, and drift observations.
@@ -527,6 +527,7 @@ evidence:
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
+      - specpm.registry.public_observation_report
       - specpm.api.versioning_policy
   - id: abstract_specpackage_decision
     kind: adr
@@ -692,6 +693,15 @@ evidence:
       - specpm.registry.public_alpha_smoke
       - specpm.registry.public_observation_report
       - specpm.registry.public_pages_deployment
+      - scope.includes
+      - scope.excludes
+  - id: registry_observation_reports_docs
+    kind: documentation
+    path: specs/REGISTRY_OBSERVATION_REPORTS.md
+    supports:
+      - specpm.registry.public_observation_report
+      - specpm.registry.specgraph_observation_contract
+      - specpm.deployment.deploy_first_workflow
       - scope.includes
       - scope.excludes
   - id: compose
@@ -880,6 +890,14 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.registry.specgraph_observation_contract
       - specpm.registry.public_observation_report
+  - id: docc_registry_observation_reports
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/RegistryObservationReports.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.public_observation_report
+      - specpm.registry.specgraph_observation_contract
+      - specpm.deployment.deploy_first_workflow
   - id: docc_deployment
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/Deployment.md
@@ -1010,9 +1028,11 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/RegistryOperations.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
         - Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md
+        - Sources/SpecPM/Documentation.docc/RegistryObservationReports.md
         - Sources/SpecPM/Documentation.docc/AgentSkills.md
         - ROADMAP.md
         - specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md
+        - specs/REGISTRY_OBSERVATION_REPORTS.md
         - tests/fixtures/specgraph_registry_observation
   - id: agent_skills
     path: skills/README.md

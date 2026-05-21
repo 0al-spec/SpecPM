@@ -1,4 +1,4 @@
-.PHONY: install test lint format-check docker-build docker-test docs-build public-index-generate public-index-up public-index-reload public-index-down public-index-wait public-index-smoke public-alpha-smoke public-alpha-report dev-up dev-reload dev-smoke dev-down pages-smoke pages-alpha-smoke pages-alpha-report
+.PHONY: install test lint format-check docker-build docker-test docs-build public-index-generate public-index-up public-index-reload public-index-down public-index-wait public-index-smoke public-alpha-smoke public-alpha-report public-index-observation-report pages-observation-report registry-observation-reports dev-up dev-reload dev-smoke dev-down pages-smoke pages-alpha-smoke pages-alpha-report
 
 PYTHON ?= $(shell if [ -x .venv/bin/python ]; then printf '%s' .venv/bin/python; else command -v python3; fi)
 SPECPM_PUBLIC_INDEX_PORT ?= 8081
@@ -14,6 +14,9 @@ PUBLIC_ALPHA_SMOKE_VERSION ?= specnode.core@0.1.0
 PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol
 PUBLIC_ALPHA_REPORT_OUTPUT ?= .specpm/public-alpha-observation.json
 PAGES_ALPHA_REPORT_OUTPUT ?= .specpm/pages-alpha-observation.json
+REGISTRY_OBSERVATION_REPORT_DIR ?= .specpm/registry-observations
+PUBLIC_INDEX_OBSERVATION_REPORT_OUTPUT ?= $(REGISTRY_OBSERVATION_REPORT_DIR)/local-public-index-observation.json
+PAGES_OBSERVATION_REPORT_OUTPUT ?= $(REGISTRY_OBSERVATION_REPORT_DIR)/pages-public-index-observation.json
 SPECPM_VERSION ?= $(shell PYTHONPATH=src $(PYTHON) -c 'from specpm import __version__; print(__version__)')
 PAGES_BUILD_NUMBER ?= local
 PAGES_BUILD_REVISION ?= $(shell git rev-parse HEAD 2>/dev/null || printf 'unknown')
@@ -25,7 +28,9 @@ PUBLIC_ALPHA_OBSERVE_ARGS ?= \
 	--version specpm.core@$(SPECPM_VERSION) \
 	--version $(PUBLIC_ALPHA_SMOKE_VERSION) \
 	--capability specpm.registry.public_alpha_index \
-	--capability $(PUBLIC_ALPHA_SMOKE_CAPABILITY)
+	--capability $(PUBLIC_ALPHA_SMOKE_CAPABILITY) \
+	--intent intent.registry.intent_lookup \
+	--intent $(PUBLIC_INDEX_SMOKE_INTENT)
 PUBLIC_INDEX_COMPOSE_ARGS ?=
 
 install:
@@ -138,6 +143,13 @@ public-alpha-report: public-index-wait
 		--json > $(PUBLIC_ALPHA_REPORT_OUTPUT)
 	cat $(PUBLIC_ALPHA_REPORT_OUTPUT)
 
+public-index-observation-report: public-index-wait
+	mkdir -p $(dir $(PUBLIC_INDEX_OBSERVATION_REPORT_OUTPUT))
+	PYTHONPATH=src $(PYTHON) -m specpm.cli remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS) \
+		--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL) \
+		--json > $(PUBLIC_INDEX_OBSERVATION_REPORT_OUTPUT)
+	cat $(PUBLIC_INDEX_OBSERVATION_REPORT_OUTPUT)
+
 dev-up: public-index-up public-index-smoke
 
 dev-reload: public-index-reload public-index-smoke
@@ -186,3 +198,12 @@ pages-alpha-report:
 		--registry $(PAGES_REGISTRY_URL) \
 		--json > $(PAGES_ALPHA_REPORT_OUTPUT)
 	cat $(PAGES_ALPHA_REPORT_OUTPUT)
+
+pages-observation-report:
+	mkdir -p $(dir $(PAGES_OBSERVATION_REPORT_OUTPUT))
+	PYTHONPATH=src $(PYTHON) -m specpm.cli remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS) \
+		--registry $(PAGES_REGISTRY_URL) \
+		--json > $(PAGES_OBSERVATION_REPORT_OUTPUT)
+	cat $(PAGES_OBSERVATION_REPORT_OUTPUT)
+
+registry-observation-reports: public-index-observation-report pages-observation-report

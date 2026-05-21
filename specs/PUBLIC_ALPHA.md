@@ -49,7 +49,7 @@ specpm remote search specnode.typed_job_protocol --registry https://0al-spec.git
 specpm remote intents --registry https://0al-spec.github.io/SpecPM --json
 specpm remote intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
 specpm remote search-intent intent.document_conversion.email_to_markdown --registry https://0al-spec.github.io/SpecPM --json
-specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specpm.core@0.2.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --json
+specpm remote observe --registry https://0al-spec.github.io/SpecPM --package specpm.core --package specnode.core --version specpm.core@0.1.0 --version specpm.core@0.2.0 --version specnode.core@0.1.0 --capability specpm.registry.public_alpha_index --capability specnode.typed_job_protocol --intent intent.registry.intent_lookup --intent intent.document_conversion.email_to_markdown --json
 ```
 
 The `remote intents` and `remote intent` commands expose an observed intent
@@ -60,9 +60,12 @@ For a reusable downstream evidence artifact:
 
 ```bash
 make pages-alpha-report
+make pages-observation-report
 ```
 
 The report is written to `.specpm/pages-alpha-observation.json`.
+The reusable review artifact is written to
+`.specpm/registry-observations/pages-public-index-observation.json`.
 
 ## Add a SpecPackage
 

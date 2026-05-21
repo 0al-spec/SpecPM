@@ -236,6 +236,11 @@ defines which `/v0` payloads SpecGraph can cite for package visibility,
 missing versions, lifecycle state, observed intents, and drift without giving
 SpecPM graph authority.
 
+Reusable registry observation reports are now documented and exposed through
+Make targets for local Docker and GitHub Pages. They write review-oriented JSON
+artifacts under `.specpm/registry-observations/` and include package, version,
+capability, and exact observed intent checks.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -243,11 +248,8 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `tooling: reusable registry observation reports`
-   - make local Docker and GitHub Pages observation reports easy to store,
-     compare, and attach to downstream reviews.
-2. `design: remote package acquisition boundary`
+1. `design: remote package acquisition boundary`
    - decide fetch/cache/add semantics before adding remote package acquisition.
-3. `design: intent taxonomy governance`
+2. `design: intent taxonomy governance`
    - define how canonical `intent.*` domains are proposed, reviewed, and mapped
      to package capabilities.

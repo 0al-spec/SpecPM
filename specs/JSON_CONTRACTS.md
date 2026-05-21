@@ -467,7 +467,7 @@ Golden fixture: `tests/fixtures/golden/remote-search-email-tools.json`.
 Command:
 
 ```bash
-specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] --json
+specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--intent <intent-id>] --json
 ```
 
 Contract:
@@ -481,7 +481,8 @@ RemoteRegistryObservationReport = {
   target: {
     package_ids: string[],
     package_refs: string[],
-    capability_ids: string[]
+    capability_ids: string[],
+    intent_ids: string[]
   },
   summary: {
     registry_status: string,
@@ -489,6 +490,7 @@ RemoteRegistryObservationReport = {
     package_count: number | null,
     version_count: number | null,
     capability_count: number | null,
+    intent_count: number | null,
     check_count: number,
     failed_check_count: number
   },
@@ -498,7 +500,8 @@ RemoteRegistryObservationReport = {
     package_index: RemoteRegistryClientReport,
     packages: object,
     versions: object,
-    capabilities: object
+    capabilities: object,
+    intents: object
   },
   errors: Issue[]
 }
@@ -506,9 +509,9 @@ RemoteRegistryObservationReport = {
 
 The observation report is a read-only downstream evidence artifact. It combines
 existing `specpm remote` metadata reads and verifies that expected package IDs,
-package versions, and capability IDs are visible. It does not download package
-archives, mutate local state, publish packages, authenticate, sign packages, or
-execute package content.
+package versions, capability IDs, and exact observed intent IDs are visible. It
+does not download package archives, mutate local state, publish packages,
+authenticate, sign packages, or execute package content.
 
 ## Public Index Generator Result
 

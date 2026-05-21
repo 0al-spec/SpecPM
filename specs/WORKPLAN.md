@@ -1272,13 +1272,13 @@ Acceptance:
 
 ## Phase 51. Reusable Registry Observation Reports
 
-- [ ] Make local Docker and GitHub Pages observation reports easy to save as
+- [x] Make local Docker and GitHub Pages observation reports easy to save as
   stable review artifacts.
-- [ ] Document report file locations, naming, retention expectations, and
+- [x] Document report file locations, naming, retention expectations, and
   comparison workflow.
-- [ ] Add report examples for `specpm.core`, `specnode.core`, exact capability
+- [x] Add report examples for `specpm.core`, `specnode.core`, exact capability
   lookup, and exact intent lookup.
-- [ ] Keep report generation independent of package acquisition or execution.
+- [x] Keep report generation independent of package acquisition or execution.
 
 Acceptance:
 

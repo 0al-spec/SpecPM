@@ -88,6 +88,7 @@ PUBLIC_ALPHA_DOC = ROOT / "specs/PUBLIC_ALPHA.md"
 DOWNSTREAM_REGISTRY_CONSUMER_GUIDE = ROOT / "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md"
 SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT = ROOT / "specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md"
 SPECGRAPH_REGISTRY_OBSERVATION_FIXTURES = ROOT / "tests/fixtures/specgraph_registry_observation"
+REGISTRY_OBSERVATION_REPORTS_DOC = ROOT / "specs/REGISTRY_OBSERVATION_REPORTS.md"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
@@ -100,6 +101,9 @@ DOCC_ROADMAP_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Roadmap.md"
 DOCC_SPECGRAPH_INTEGRATION_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md"
 DOCC_SPECGRAPH_REGISTRY_OBSERVATION_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md"
+)
+DOCC_REGISTRY_OBSERVATION_REPORTS_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/RegistryObservationReports.md"
 )
 COMPOSE_FILE = ROOT / "compose.yaml"
 PUBLIC_INDEX_ACCEPTED_MANIFEST = ROOT / "public-index/accepted-packages.yml"
@@ -1001,6 +1005,62 @@ def test_specgraph_registry_observation_contract_documents_evidence_boundary() -
     assert "tests/fixtures/specgraph_registry_observation" in owned_binding_paths
 
 
+def test_registry_observation_reports_are_reusable_review_artifacts() -> None:
+    makefile = MAKEFILE.read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    report_doc = REGISTRY_OBSERVATION_REPORTS_DOC.read_text(encoding="utf-8")
+    docc_page = DOCC_REGISTRY_OBSERVATION_REPORTS_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    json_contracts = (ROOT / "specs/JSON_CONTRACTS.md").read_text(encoding="utf-8")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for text in (report_doc, docc_page, readme):
+        assert "make public-index-observation-report" in text
+        assert "make pages-observation-report" in text
+        assert ".specpm/registry-observations" in text
+
+    for expected in (
+        "local-public-index-observation.json",
+        "pages-public-index-observation.json",
+        "specpm.core",
+        "specnode.core",
+        "specpm.registry.public_alpha_index",
+        "specnode.typed_job_protocol",
+        "intent.registry.intent_lookup",
+        "intent.document_conversion.email_to_markdown",
+    ):
+        assert expected in report_doc
+
+    assert "do not commit routine report output" in report_doc
+    assert "diff -u" in report_doc
+    assert "package, version, capability, and intent visibility" in report_doc
+    assert "--intent <intent-id>" in json_contracts
+    assert "intent_ids: string[]" in json_contracts
+    assert "intents: object" in json_contracts
+    assert "intent_count: number | null" in json_contracts
+    assert "<doc:RegistryObservationReports>" in docc_overview
+
+    public_index_report_recipe = make_target_recipe(makefile, "public-index-observation-report")
+    pages_report_recipe = make_target_recipe(makefile, "pages-observation-report")
+    assert "remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS)" in public_index_report_recipe
+    assert "remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS)" in pages_report_recipe
+    assert "--intent intent.registry.intent_lookup" in makefile
+    assert "--intent $(PUBLIC_INDEX_SMOKE_INTENT)" in makefile
+
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    owned_binding_paths = {
+        path
+        for binding in boundary["implementationBindings"]
+        for path in binding["files"].get("owned", [])
+    }
+    assert "specs/REGISTRY_OBSERVATION_REPORTS.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/RegistryObservationReports.md" in evidence_paths
+    assert "specs/REGISTRY_OBSERVATION_REPORTS.md" in owned_binding_paths
+    assert "Sources/SpecPM/Documentation.docc/RegistryObservationReports.md" in owned_binding_paths
+
+
 def test_pull_request_template_requires_motivation_and_goals() -> None:
     template = PULL_REQUEST_TEMPLATE.read_text(encoding="utf-8")
 
@@ -1400,6 +1460,9 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
         "public-index-reload",
         "public-alpha-smoke",
         "public-alpha-report",
+        "public-index-observation-report",
+        "pages-observation-report",
+        "registry-observation-reports",
         "dev-up",
         "dev-reload",
         "dev-smoke",
@@ -1419,6 +1482,15 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "PUBLIC_ALPHA_SMOKE_CAPABILITY ?= specnode.typed_job_protocol" in makefile
     assert "PUBLIC_ALPHA_REPORT_OUTPUT ?= .specpm/public-alpha-observation.json" in makefile
     assert "PAGES_ALPHA_REPORT_OUTPUT ?= .specpm/pages-alpha-observation.json" in makefile
+    assert "REGISTRY_OBSERVATION_REPORT_DIR ?= .specpm/registry-observations" in makefile
+    assert (
+        "PUBLIC_INDEX_OBSERVATION_REPORT_OUTPUT ?= "
+        "$(REGISTRY_OBSERVATION_REPORT_DIR)/local-public-index-observation.json"
+    ) in makefile
+    assert (
+        "PAGES_OBSERVATION_REPORT_OUTPUT ?= "
+        "$(REGISTRY_OBSERVATION_REPORT_DIR)/pages-public-index-observation.json"
+    ) in makefile
     assert "SPECPM_VERSION ?=" in makefile
     assert "PAGES_BUILD_NUMBER ?= local" in makefile
     assert "PAGES_BUILD_REVISION ?=" in makefile
@@ -1430,6 +1502,8 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "--version $(PUBLIC_ALPHA_RETAINED_SPECPM_VERSION)" in makefile
     assert "--version specpm.core@$(SPECPM_VERSION)" in makefile
     assert "--capability specpm.registry.public_alpha_index" in makefile
+    assert "--intent intent.registry.intent_lookup" in makefile
+    assert "--intent $(PUBLIC_INDEX_SMOKE_INTENT)" in makefile
     assert set(make_target_prerequisites(makefile, "dev-reload")) == {
         "public-index-reload",
         "public-index-smoke",
@@ -1472,6 +1546,15 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "> $(PUBLIC_ALPHA_REPORT_OUTPUT)" in public_alpha_report_recipe
     assert "cat $(PUBLIC_ALPHA_REPORT_OUTPUT)" in public_alpha_report_recipe
 
+    public_index_report_recipe = make_target_recipe(makefile, "public-index-observation-report")
+    assert set(make_target_prerequisites(makefile, "public-index-observation-report")) == {
+        "public-index-wait"
+    }
+    assert "remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS)" in public_index_report_recipe
+    assert "--registry $(SPECPM_PUBLIC_INDEX_REGISTRY_URL)" in public_index_report_recipe
+    assert "> $(PUBLIC_INDEX_OBSERVATION_REPORT_OUTPUT)" in public_index_report_recipe
+    assert "cat $(PUBLIC_INDEX_OBSERVATION_REPORT_OUTPUT)" in public_index_report_recipe
+
     pages_alpha_recipe = make_target_recipe(makefile, "pages-alpha-smoke")
     assert set(make_target_prerequisites(makefile, "pages-alpha-smoke")) == {"pages-smoke"}
     assert "remote package $(PUBLIC_ALPHA_SMOKE_PACKAGE)" in pages_alpha_recipe
@@ -1486,6 +1569,18 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     assert "> $(PAGES_ALPHA_REPORT_OUTPUT)" in pages_alpha_report_recipe
     assert "cat $(PAGES_ALPHA_REPORT_OUTPUT)" in pages_alpha_report_recipe
 
+    pages_report_recipe = make_target_recipe(makefile, "pages-observation-report")
+    assert make_target_prerequisites(makefile, "pages-observation-report") == []
+    assert "remote observe $(PUBLIC_ALPHA_OBSERVE_ARGS)" in pages_report_recipe
+    assert "--registry $(PAGES_REGISTRY_URL)" in pages_report_recipe
+    assert "> $(PAGES_OBSERVATION_REPORT_OUTPUT)" in pages_report_recipe
+    assert "cat $(PAGES_OBSERVATION_REPORT_OUTPUT)" in pages_report_recipe
+
+    assert set(make_target_prerequisites(makefile, "registry-observation-reports")) == {
+        "public-index-observation-report",
+        "pages-observation-report",
+    }
+
     for text in (readme, agent_instructions, deploy_doc, docc_deployment):
         assert "make dev-reload" in text
         assert "make pages-smoke" in text
@@ -1493,11 +1588,14 @@ def test_deploy_first_workflow_is_documented_and_smoke_testable() -> None:
     for text in (readme, deploy_doc, docc_deployment):
         assert "make pages-alpha-smoke" in text
         assert "make pages-alpha-report" in text
+        assert "make pages-observation-report" in text
 
     assert "make public-alpha-smoke" in deploy_doc
     assert "make public-alpha-report" in deploy_doc
+    assert "make public-index-observation-report" in deploy_doc
     assert "make public-alpha-smoke" in docc_deployment
     assert "make public-alpha-report" in docc_deployment
+    assert "make public-index-observation-report" in docc_deployment
 
     assert "Backup Strategy" in deploy_doc
     assert "Flood and DDoS Boundary" in deploy_doc
@@ -1653,7 +1751,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Public Index Operator UX baseline is complete",
         "accepted-manifest pull request helper",
         "SpecGraph public registry observation contract",
-        "reusable registry observation reports",
+        "Reusable registry observation reports",
         "remote package acquisition boundary",
         "intent taxonomy governance",
         "Package content can describe desired outputs. Package content cannot command the host.",
@@ -1672,7 +1770,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Next Planned Sequence",
         "accepted-manifest pull request drafts",
         "SpecGraph public registry observation contract",
-        "registry observation reports reusable as",
+        "Reusable registry observation reports now write",
         "remote package acquisition boundary",
         "intent taxonomy governance",
         "Package content can describe desired outputs. Package content cannot command the host.",
@@ -1747,10 +1845,13 @@ def test_public_alpha_registry_seed_is_manifested_and_documented() -> None:
     assert "specpm remote package specnode.core" in public_alpha_doc
     assert "specpm remote version specnode.core@0.1.0" in public_alpha_doc
     assert "specpm remote observe" in public_alpha_doc
+    assert "--intent intent.registry.intent_lookup" in public_alpha_doc
     assert "make pages-alpha-smoke" in public_alpha_doc
     assert "make pages-alpha-report" in public_alpha_doc
+    assert "make pages-observation-report" in public_alpha_doc
     assert "make pages-alpha-smoke" in docc_public_alpha
     assert "make pages-alpha-report" in docc_public_alpha
+    assert "make pages-observation-report" in docc_public_alpha
     assert SPECNODE_RELEASE_REF in public_alpha_doc
     assert SPECNODE_RELEASE_REVISION in public_alpha_doc
     assert "<doc:PublicAlphaRegistry>" in docc_overview
@@ -3057,6 +3158,10 @@ def test_remote_registry_observation_report_fetches_expected_alpha_surface(monke
             "https://registry.example.invalid/v0/capabilities/"
             "document_conversion.email_to_markdown/packages"
         ): load_remote_registry_fixture("capability-search.json"),
+        (
+            "https://registry.example.invalid/v0/intents/"
+            "intent.document_conversion.email_to_markdown/packages"
+        ): load_remote_registry_fixture("intent-search.json"),
     }
     seen: list[str] = []
 
@@ -3072,6 +3177,7 @@ def test_remote_registry_observation_report_fetches_expected_alpha_surface(monke
         package_ids=["document_conversion.email_tools"],
         package_refs=["document_conversion.email_tools@0.1.0"],
         capability_ids=["document_conversion.email_to_markdown"],
+        intent_ids=["intent.document_conversion.email_to_markdown"],
         timeout=2.5,
     )
 
@@ -3084,16 +3190,22 @@ def test_remote_registry_observation_report_fetches_expected_alpha_surface(monke
         "package_count": 1,
         "version_count": 1,
         "capability_count": 1,
-        "check_count": 7,
+        "intent_count": 1,
+        "check_count": 9,
         "failed_check_count": 0,
     }
-    assert [check["status"] for check in report["checks"]] == ["ok"] * 7
+    assert [check["status"] for check in report["checks"]] == ["ok"] * 9
     assert report["target"] == {
         "package_ids": ["document_conversion.email_tools"],
         "package_refs": ["document_conversion.email_tools@0.1.0"],
         "capability_ids": ["document_conversion.email_to_markdown"],
+        "intent_ids": ["intent.document_conversion.email_to_markdown"],
     }
     assert report["observations"]["packages"]["document_conversion.email_tools"]["status"] == "ok"
+    assert (
+        report["observations"]["intents"]["intent.document_conversion.email_to_markdown"]["status"]
+        == "ok"
+    )
     assert seen == list(payloads)
 
 
@@ -4120,6 +4232,10 @@ def test_cli_remote_observe_json(monkeypatch, capsys) -> None:  # type: ignore[n
             "https://registry.example.invalid/v0/capabilities/"
             "document_conversion.email_to_markdown/packages"
         ): load_remote_registry_fixture("capability-search.json"),
+        (
+            "https://registry.example.invalid/v0/intents/"
+            "intent.document_conversion.email_to_markdown/packages"
+        ): load_remote_registry_fixture("intent-search.json"),
     }
 
     def fake_urlopen(request, timeout):  # type: ignore[no-untyped-def]
@@ -4139,6 +4255,8 @@ def test_cli_remote_observe_json(monkeypatch, capsys) -> None:  # type: ignore[n
             "document_conversion.email_tools@0.1.0",
             "--capability",
             "document_conversion.email_to_markdown",
+            "--intent",
+            "intent.document_conversion.email_to_markdown",
             "--json",
         ]
     )
@@ -4147,7 +4265,8 @@ def test_cli_remote_observe_json(monkeypatch, capsys) -> None:  # type: ignore[n
     assert exit_code == 0
     assert payload["status"] == "ok"
     assert payload["operation"] == "observe"
-    assert payload["summary"]["check_count"] == 7
+    assert payload["summary"]["check_count"] == 9
+    assert payload["target"]["intent_ids"] == ["intent.document_conversion.email_to_markdown"]
 
 
 def test_cli_remote_observe_text_normalizes_unknown_counts(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]

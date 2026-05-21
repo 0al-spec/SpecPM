@@ -222,6 +222,16 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Expected capability id to verify. May be passed more than once.",
     )
+    remote_observe.add_argument(
+        "--intent",
+        dest="intents",
+        action="append",
+        default=[],
+        help=(
+            "Expected intent id to verify through exact intent lookup. "
+            "May be passed more than once."
+        ),
+    )
     add_remote_registry_options(remote_observe)
     remote_observe.set_defaults(handler=handle_remote_observe)
 
@@ -515,6 +525,7 @@ def handle_remote_observe(args: argparse.Namespace) -> int:
         package_ids=args.packages,
         package_refs=args.versions,
         capability_ids=args.capabilities,
+        intent_ids=args.intents,
         timeout=args.timeout,
     )
     if args.json:

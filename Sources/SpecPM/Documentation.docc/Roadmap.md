@@ -81,13 +81,13 @@ The Public Index Operator UX baseline is complete. Maintainer tooling can now
 prepare accepted-manifest pull request drafts from valid submission reports. The
 SpecGraph public registry observation contract is also documented so downstream
 graph work can cite exact `/v0` evidence without giving SpecPM graph authority.
+Reusable registry observation reports now write local Docker and GitHub Pages
+JSON artifacts under `.specpm/registry-observations/` for downstream reviews.
 The next planned work is:
 
-1. Make local Docker and GitHub Pages registry observation reports reusable as
-   review artifacts.
-2. Design the remote package acquisition boundary before archive fetch/cache/add
+1. Design the remote package acquisition boundary before archive fetch/cache/add
    behavior is implemented.
-3. Define intent taxonomy governance for canonical `intent.*` IDs.
+2. Define intent taxonomy governance for canonical `intent.*` IDs.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
