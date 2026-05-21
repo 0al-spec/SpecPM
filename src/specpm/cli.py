@@ -228,7 +228,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         help=(
-            "Expected intent id to verify through exact intent lookup. "
+            "Expected intent id to verify through exact intent id search. "
             "May be passed more than once."
         ),
     )
