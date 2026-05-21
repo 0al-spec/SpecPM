@@ -46,6 +46,7 @@ scope:
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Publish a static browser viewer for the public `/v0` registry API.
     - Capture read-only public registry observation reports for local Docker and GitHub Pages endpoints.
+    - Document the SpecGraph public registry observation evidence contract for package visibility, lifecycle, capability, intent, and drift findings.
     - Document the static registry pipeline that turns reviewed accepted package sources into build-time `/v0` API files served by GitHub Pages.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
     - Document registry operations for fresh public static index deployment, Git-based rollback, backup/restore, and flood/DDoS planning.
@@ -174,6 +175,9 @@ provides:
     - id: specpm.registry.public_observation_report
       role: secondary
       summary: Generate read-only public registry observation reports for downstream evidence consumers.
+    - id: specpm.registry.specgraph_observation_contract
+      role: secondary
+      summary: Document the read-only `/v0` evidence SpecGraph can cite for package visibility, lifecycle state, capability, intent, and drift observations.
     - id: specpm.registry.static_registry_pipeline_docs
       role: secondary
       summary: Document the build-time static registry pipeline and request-time GitHub Pages serving boundary.
@@ -461,6 +465,7 @@ evidence:
       - specpm.roadmap.current_status
       - specpm.intent.identifier_model
       - specpm.specs.abstract_conformance_targets
+      - specpm.registry.specgraph_observation_contract
   - id: roadmap
     kind: documentation
     path: ROADMAP.md
@@ -468,6 +473,7 @@ evidence:
       - specpm.roadmap.current_status
       - specpm.registry.public_alpha_index
       - specpm.registry.static_registry_pipeline_docs
+      - specpm.registry.specgraph_observation_contract
       - specpm.deployment.deploy_first_workflow
       - specpm.intent.identifier_model
       - scope.includes
@@ -489,6 +495,7 @@ evidence:
       - interfaces.inbound
       - interfaces.outbound
       - specpm.registry.public_observation_report
+      - specpm.registry.specgraph_observation_contract
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
   - id: conformance_docs
@@ -757,6 +764,24 @@ evidence:
       - exact_intent_lookup_metadata_only
       - manifest_intents_backed_by_capabilities
       - no_semantic_authority
+  - id: specgraph_registry_observation_contract
+    kind: documentation
+    path: specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md
+    supports:
+      - specpm.registry.specgraph_observation_contract
+      - specpm.registry.public_observation_report
+      - specpm.registry.remote_api_contract
+      - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
+      - no_semantic_authority
+  - id: specgraph_registry_observation_fixtures
+    kind: test
+    path: tests/fixtures/specgraph_registry_observation
+    supports:
+      - specpm.registry.specgraph_observation_contract
+      - specpm.registry.public_observation_report
+      - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
   - id: derived_boundary
     kind: adr
     path: specs/0001_Derived_Artifact_Profile_Decision.md
@@ -799,6 +824,7 @@ evidence:
       - specpm.specs.public_interface_index_evidence
       - specpm.conformance.public_enterprise_registry_suite
       - specpm.registry.public_observation_report
+      - specpm.registry.specgraph_observation_contract
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
       - manifest_intents_backed_by_capabilities
@@ -808,6 +834,7 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.static_registry_pipeline_docs
+      - specpm.registry.specgraph_observation_contract
       - specpm.intent.identifier_model
   - id: docc_identifier_model
     kind: documentation
@@ -837,7 +864,22 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.roadmap.current_status
       - specpm.registry.static_registry_pipeline_docs
+      - specpm.registry.specgraph_observation_contract
       - specpm.intent.identifier_model
+  - id: docc_specgraph_integration
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.specgraph_observation_contract
+      - specpm.registry.public_observation_report
+  - id: docc_specgraph_registry_observation
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.specgraph_observation_contract
+      - specpm.registry.public_observation_report
   - id: docc_deployment
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/Deployment.md
@@ -967,8 +1009,11 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/Deployment.md
         - Sources/SpecPM/Documentation.docc/RegistryOperations.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
+        - Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md
         - Sources/SpecPM/Documentation.docc/AgentSkills.md
         - ROADMAP.md
+        - specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md
+        - tests/fixtures/specgraph_registry_observation
   - id: agent_skills
     path: skills/README.md
     files:

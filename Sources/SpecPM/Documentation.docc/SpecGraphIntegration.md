@@ -38,6 +38,12 @@ implements. `packages` lists the visible package IDs and versions. These
 commands read metadata only; they do not download archives, install packages,
 mutate SpecGraph state, or execute package content.
 
+The observation evidence boundary is documented in
+<doc:SpecGraphRegistryObservation>. SpecGraph should cite exact `/v0` payloads
+before claiming package visibility, missing versions, lifecycle state, observed
+intent mappings, or registry drift. SpecPM provides the metadata evidence;
+SpecGraph decides graph meaning and follow-up action.
+
 ## Intent Resolution
 
 When a user starts with plain text, SpecGraph or ContextBuilder should resolve

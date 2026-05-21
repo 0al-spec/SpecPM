@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "kind": "SpecGraphRegistryObservation",
+  "registry": {
+    "url": "https://0al-spec.github.io/SpecPM",
+    "apiVersion": "specpm.registry/v0",
+    "profile": "public_static_index",
+    "buildRevision": "0de4fca1d8c32bbe443eb9bae7a3fa4bf8f0cb6b"
+  },
+  "expectation": {
+    "packageId": "specpm.core",
+    "version": "0.2.0",
+    "capabilityIds": [
+      "specpm.registry.public_static_index"
+    ],
+    "intentIds": [
+      "intent.registry.intent_lookup"
+    ]
+  },
+  "evidence": [
+    {
+      "id": "registry_status",
+      "endpoint": "GET /v0/status",
+      "status": "ok",
+      "extracted": {
+        "package_count": 4,
+        "version_count": 5,
+        "capability_count": 63,
+        "intent_count": 18
+      }
+    },
+    {
+      "id": "package_index",
+      "endpoint": "GET /v0/packages",
+      "status": "ok",
+      "extracted": {
+        "package_ids": [
+          "specpm.core"
+        ],
+        "version_count": 5
+      }
+    },
+    {
+      "id": "package_metadata",
+      "endpoint": "GET /v0/packages/{package_id}",
+      "status": "ok",
+      "extracted": {
+        "package_id": "specpm.core",
+        "latest_version": "0.2.0"
+      }
+    },
+    {
+      "id": "version_metadata",
+      "endpoint": "GET /v0/packages/{package_id}/versions/{version}",
+      "status": "ok",
+      "extracted": {
+        "package_id": "specpm.core",
+        "version": "0.2.0",
+        "yanked": false,
+        "deprecated": false
+      }
+    },
+    {
+      "id": "capability_search",
+      "endpoint": "GET /v0/capabilities/{capability_id}/packages",
+      "status": "ok",
+      "extracted": {
+        "capability_id": "specpm.registry.public_static_index",
+        "result_count": 1
+      }
+    },
+    {
+      "id": "intent_metadata",
+      "endpoint": "GET /v0/intents/{intent_id}",
+      "status": "ok",
+      "extracted": {
+        "intent_id": "intent.registry.intent_lookup",
+        "status": "observed"
+      }
+    },
+    {
+      "id": "intent_search",
+      "endpoint": "GET /v0/intents/{intent_id}/packages",
+      "status": "ok",
+      "extracted": {
+        "intent_id": "intent.registry.intent_lookup",
+        "result_count": 1,
+        "package_ids": [
+          "specpm.core"
+        ]
+      }
+    }
+  ],
+  "findings": [
+    {
+      "subject": "package:specpm.core@0.2.0",
+      "status": "visible",
+      "evidence": [
+        "package_index",
+        "package_metadata",
+        "version_metadata"
+      ]
+    },
+    {
+      "subject": "capability:specpm.registry.public_static_index",
+      "status": "visible",
+      "evidence": [
+        "capability_search"
+      ]
+    },
+    {
+      "subject": "intent:intent.registry.intent_lookup",
+      "status": "visible",
+      "evidence": [
+        "intent_metadata",
+        "intent_search"
+      ]
+    }
+  ]
+}

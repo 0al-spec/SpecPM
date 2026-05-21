@@ -4,7 +4,8 @@ Status: Public alpha consumer guide.
 
 This guide shows how downstream tools can consume the SpecPM public registry as
 read-only metadata. It complements `specs/REMOTE_REGISTRY_API.md` and
-`specs/PUBLIC_ALPHA.md`.
+`specs/PUBLIC_ALPHA.md`. The stricter SpecGraph evidence boundary is defined in
+`specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md`.
 
 ## Registry Surfaces
 
@@ -65,6 +66,8 @@ Useful checks:
 - Required capability IDs are present in exact capability search results.
 - Observed `intent.*` IDs are treated as observations, not canonical graph
   authority.
+- Registry drift findings cite both expected and observed values, plus the
+  exact `/v0` payloads used as evidence.
 
 ## ContextBuilder
 
