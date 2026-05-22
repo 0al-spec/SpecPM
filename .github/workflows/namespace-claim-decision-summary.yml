@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build namespace claim decision summary
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require("fs");
@@ -201,7 +201,7 @@ jobs:
             await core.summary.addRaw(markdown).write();
 
       - name: Upload namespace claim decision summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: namespace-claim-decision-summary
           path: namespace-claim-decision-summary/

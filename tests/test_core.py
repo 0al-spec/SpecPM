@@ -1273,7 +1273,7 @@ def test_namespace_claim_decision_summary_workflow_is_read_only() -> None:
     assert "public-index/accepted-packages.yml" in script
 
     upload = steps["Upload namespace claim decision summary"]
-    assert upload["uses"] == "actions/upload-artifact@v4"
+    assert upload["uses"] == "actions/upload-artifact@v7"
     assert upload["with"]["name"] == "namespace-claim-decision-summary"
 
     for forbidden in (
@@ -1285,6 +1285,31 @@ def test_namespace_claim_decision_summary_workflow_is_read_only() -> None:
         "public-index generate",
     ):
         assert forbidden not in script
+
+
+def test_github_workflows_use_node24_action_generations() -> None:
+    workflow_text = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((ROOT / ".github/workflows").glob("*.yml"))
+    )
+    action_refs = set(re.findall(r"uses:\s+(actions/[-\w]+)@v(\d+)", workflow_text))
+
+    minimum_major_by_action = {
+        "actions/checkout": 6,
+        "actions/setup-python": 6,
+        "actions/upload-artifact": 7,
+        "actions/download-artifact": 8,
+        "actions/upload-pages-artifact": 5,
+        "actions/deploy-pages": 5,
+        "actions/github-script": 9,
+    }
+
+    for action, minimum_major in minimum_major_by_action.items():
+        observed_majors = {
+            int(major) for observed_action, major in action_refs if observed_action == action
+        }
+        assert observed_majors, f"Expected workflow reference for {action}"
+        assert min(observed_majors) >= minimum_major
 
 
 def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
@@ -1317,7 +1342,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert step_names.index("Upload static host artifact") < step_names.index("Upload artifact")
 
     steps_by_name = {step["name"]: step for step in steps if "name" in step}
-    assert steps_by_name["Set up Python"]["uses"] == "actions/setup-python@v5"
+    assert steps_by_name["Set up Python"]["uses"] == "actions/setup-python@v6"
     assert steps_by_name["Install SpecPM"]["run"] == 'python -m pip install -e ".[dev]"'
 
     generate = steps_by_name["Generate public index metadata"]
@@ -1344,7 +1369,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert upload["with"]["path"] == "./.docc-build"
 
     static_upload = steps_by_name["Upload static host artifact"]
-    assert static_upload["uses"] == "actions/upload-artifact@v4"
+    assert static_upload["uses"] == "actions/upload-artifact@v7"
     assert static_upload["with"]["name"] == "specpm-static-site"
     assert static_upload["with"]["path"] == "./.docc-build"
     assert static_upload["with"]["if-no-files-found"] == "error"
@@ -1366,7 +1391,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert static_host["env"]["FTP_PASS"] == "${{ secrets.FTP_PASS }}"
     assert static_host["env"]["FTP_REMOTE_ROOT"] == "${{ secrets.FTP_REMOTE_ROOT }}"
     static_steps = {step["name"]: step for step in static_host["steps"] if "name" in step}
-    assert static_steps["Download static host artifact"]["uses"] == "actions/download-artifact@v4"
+    assert static_steps["Download static host artifact"]["uses"] == "actions/download-artifact@v8"
     assert static_steps["Download static host artifact"]["with"]["name"] == "specpm-static-site"
     assert (
         "test -f specpm-static-site/index.html"
@@ -1434,7 +1459,7 @@ def test_deploy_connection_check_uses_trusted_sftp_dry_run() -> None:
     }
 
     steps = {step["name"]: step for step in job["steps"] if "name" in step}
-    assert steps["Checkout trusted workflow"]["uses"] == "actions/checkout@v4"
+    assert steps["Checkout trusted workflow"]["uses"] == "actions/checkout@v6"
     assert steps["Checkout trusted workflow"]["with"]["ref"] == (
         "${{ github.event.pull_request.base.sha }}"
     )
