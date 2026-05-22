@@ -1288,11 +1288,19 @@ def test_namespace_claim_decision_summary_workflow_is_read_only() -> None:
 
 
 def test_github_workflows_use_node24_action_generations() -> None:
+    action_ref_pattern = re.compile(r"uses:\s*[\"']?(actions/[-\w]+)@v(\d+)(?:\.\d+){0,2}[\"']?")
+    assert action_ref_pattern.findall('uses: "actions/checkout@v6.0.2"') == [
+        ("actions/checkout", "6")
+    ]
+    assert action_ref_pattern.findall("uses: 'actions/setup-python@v6'") == [
+        ("actions/setup-python", "6")
+    ]
+
     workflow_text = "\n".join(
         path.read_text(encoding="utf-8")
         for path in sorted((ROOT / ".github/workflows").glob("*.yml"))
     )
-    action_refs = set(re.findall(r"uses:\s+(actions/[-\w]+)@v(\d+)", workflow_text))
+    action_refs = action_ref_pattern.findall(workflow_text)
 
     minimum_major_by_action = {
         "actions/checkout": 6,
@@ -1308,8 +1316,11 @@ def test_github_workflows_use_node24_action_generations() -> None:
         observed_majors = {
             int(major) for observed_action, major in action_refs if observed_action == action
         }
-        assert observed_majors, f"Expected workflow reference for {action}"
-        assert min(observed_majors) >= minimum_major
+        if not observed_majors:
+            continue
+        assert min(observed_majors) >= minimum_major, (
+            f"{action} uses majors {sorted(observed_majors)}, expected >= v{minimum_major}"
+        )
 
 
 def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
