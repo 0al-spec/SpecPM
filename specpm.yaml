@@ -49,6 +49,7 @@ index:
       - specpm.registry.public_pages_deployment
       - specpm.deployment.deploy_first_workflow
       - specpm.deployment.registry_operations_runbook
+      - specpm.deployment.github_actions_maintenance_policy
       - specpm.roadmap.current_status
       - specpm.intent.identifier_model
       - specpm.specs.abstract_conformance_targets

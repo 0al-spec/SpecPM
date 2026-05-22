@@ -90,6 +90,7 @@ SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT = ROOT / "specs/SPECGRAPH_REGISTRY_OBSER
 SPECGRAPH_REGISTRY_OBSERVATION_FIXTURES = ROOT / "tests/fixtures/specgraph_registry_observation"
 REGISTRY_OBSERVATION_REPORTS_DOC = ROOT / "specs/REGISTRY_OBSERVATION_REPORTS.md"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
+GITHUB_ACTIONS_MAINTENANCE_DOC = ROOT / "specs/GITHUB_ACTIONS_MAINTENANCE.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
 DOCC_PUBLIC_ALPHA_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md"
@@ -97,6 +98,9 @@ DOCC_STATIC_REGISTRY_PIPELINE_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/StaticRegistryPipeline.md"
 )
 DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
+DOCC_GITHUB_ACTIONS_MAINTENANCE_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/GitHubActionsMaintenance.md"
+)
 DOCC_ROADMAP_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Roadmap.md"
 DOCC_SPECGRAPH_INTEGRATION_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md"
 DOCC_SPECGRAPH_REGISTRY_OBSERVATION_PAGE = (
@@ -1321,6 +1325,57 @@ def test_github_workflows_use_node24_action_generations() -> None:
         assert min(observed_majors) >= minimum_major, (
             f"{action} uses majors {sorted(observed_majors)}, expected >= v{minimum_major}"
         )
+
+
+def test_github_actions_maintenance_policy_is_documented() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    policy = GITHUB_ACTIONS_MAINTENANCE_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_GITHUB_ACTIONS_MAINTENANCE_PAGE.read_text(encoding="utf-8")
+    docc_deployment = DOCC_DEPLOYMENT_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    required_actions = (
+        "actions/checkout",
+        "actions/setup-python",
+        "actions/upload-artifact",
+        "actions/download-artifact",
+        "actions/upload-pages-artifact",
+        "actions/deploy-pages",
+        "actions/github-script",
+    )
+    for action in required_actions:
+        assert action in policy
+
+    for required_text in (
+        "Node.js 20 actions are deprecated",
+        "`pull_request_target`",
+        "first `main` run after merge",
+        "tests/test_core.py",
+        "full semantic version",
+        "third-party actions",
+        "not define SpecPM package versioning",
+    ):
+        assert required_text in policy
+
+    assert "specs/GITHUB_ACTIONS_MAINTENANCE.md" in readme
+    assert "specs/GITHUB_ACTIONS_MAINTENANCE.md" in docc_overview
+    assert "<doc:GitHubActionsMaintenance>" in docc_overview
+    assert "<doc:GitHubActionsMaintenance>" in docc_deployment
+    assert "pull_request_target" in docc_policy
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.deployment.github_actions_maintenance_policy" in manifest_capabilities
+    assert "specpm.deployment.github_actions_maintenance_policy" in boundary_capabilities
+    assert "specs/GITHUB_ACTIONS_MAINTENANCE.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/GitHubActionsMaintenance.md" in evidence_paths
 
 
 def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
