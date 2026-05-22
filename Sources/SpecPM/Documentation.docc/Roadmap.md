@@ -21,6 +21,8 @@ SpecPM is usable today for:
 - local Docker registry integration at `http://localhost:8081`;
 - public alpha registry metadata at `https://0al-spec.github.io/SpecPM`;
 - GitHub Issue intake for package submissions, removals, and namespace claims;
+- GitHub Actions runtime-major maintenance policy for official `actions/*`
+  workflow references;
 - DocC documentation, conformance fixtures, Agent Skills, and self-spec
   coverage.
 
@@ -83,11 +85,17 @@ SpecGraph public registry observation contract is also documented so downstream
 graph work can cite exact `/v0` evidence without giving SpecPM graph authority.
 Reusable registry observation reports now write local Docker and GitHub Pages
 JSON artifacts under `.specpm/registry-observations/` for downstream reviews.
+GitHub Actions runtime maintenance is documented for official action majors,
+update triggers, validation commands, and the `pull_request_target` post-merge
+verification boundary.
 The next planned work is:
 
-1. Design the remote package acquisition boundary before archive fetch/cache/add
+1. Document the GitHub Actions permissions and secret boundary for
+   least-privilege workflow permissions, `pull_request_target` review rules, and
+   SFTP/Pages deploy trust limits.
+2. Design the remote package acquisition boundary before archive fetch/cache/add
    behavior is implemented.
-2. Define intent taxonomy governance for canonical `intent.*` IDs.
+3. Define intent taxonomy governance for canonical `intent.*` IDs.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote

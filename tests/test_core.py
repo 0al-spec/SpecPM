@@ -1881,6 +1881,9 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "accepted-manifest pull request helper",
         "SpecGraph public registry observation contract",
         "Reusable registry observation reports",
+        "GitHub Actions runtime maintenance",
+        "GitHub Actions permissions and secret boundary",
+        "pull_request_target",
         "remote package acquisition boundary",
         "intent taxonomy governance",
         "Package content can describe desired outputs. Package content cannot command the host.",
@@ -1900,6 +1903,9 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "accepted-manifest pull request drafts",
         "SpecGraph public registry observation contract",
         "Reusable registry observation reports now write",
+        "GitHub Actions runtime maintenance",
+        "GitHub Actions permissions and secret boundary",
+        "pull_request_target",
         "remote package acquisition boundary",
         "intent taxonomy governance",
         "Package content can describe desired outputs. Package content cannot command the host.",
@@ -1919,6 +1925,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Phase 51. Reusable Registry Observation Reports",
         "Phase 52. Remote Package Acquisition Boundary",
         "Phase 53. Intent Taxonomy Governance",
+        "Phase 54. GitHub Actions Maintenance Policy",
+        "Phase 55. GitHub Actions Permissions and Secret Boundary",
     ):
         assert phase_heading in workplan
 
