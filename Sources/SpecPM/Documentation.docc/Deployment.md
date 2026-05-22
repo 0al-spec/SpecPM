@@ -83,6 +83,8 @@ See <doc:StaticRegistryPipeline> for the build-time pipeline that turns reviewed
 package sources into the public static registry API.
 See <doc:RegistryObservationReports> for report naming, retention, and local vs
 Pages comparison guidance.
+See <doc:GitHubActionsMaintenance> for workflow action runtime maintenance and
+the `pull_request_target` post-merge verification boundary.
 
 ## Boundaries
 
