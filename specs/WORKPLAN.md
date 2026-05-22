@@ -2,7 +2,7 @@
 
 Status: Draft
 Created: 2026-04-23
-Updated: 2026-05-21
+Updated: 2026-05-23
 Input: `PRD.md`, `RFC/SpecGraph-RFC-0001.md`, current SpecGraph SpecPM bridge
 
 ## Working Rules
@@ -1328,6 +1328,50 @@ Acceptance:
 - ContextBuilder, SpecGraph, or downstream resolver tools remain responsible
   for natural-language interpretation, embeddings, vector search, RAG, and LLM
   reranking.
+
+## Phase 54. GitHub Actions Maintenance Policy
+
+- [x] Document the maintained official `actions/*` major-version set for
+  SpecPM workflows.
+- [x] Document update triggers for GitHub Actions runtime deprecation warnings
+  and forced JavaScript runtime migrations.
+- [x] Document that quoted YAML refs and full semantic version refs must still
+  be covered by the workflow action guard.
+- [x] Document the `pull_request_target` boundary: PRs can validate proposed
+  YAML, but the changed workflow definition is fully proven only by the first
+  `main` run after merge.
+- [x] Publish the policy through README, DocC, self-spec capability/evidence,
+  and regression tests.
+
+Acceptance:
+
+- Maintainers can explain why official action major refs are updated and which
+  refs are covered by the guard.
+- Reviewers can distinguish PR validation from post-merge verification for
+  `pull_request_target` workflow changes.
+- The policy does not change workflow permissions, secrets, deployment
+  commands, third-party action policy, or package/runtime behavior.
+
+## Phase 55. GitHub Actions Permissions and Secret Boundary
+
+- [ ] Document least-privilege permissions for CI, DocC deploy, SFTP deploy,
+  issue triage, package submission, and namespace claim workflows.
+- [ ] Document which workflows may access deployment or issue-comment secrets
+  and why.
+- [ ] Document `pull_request_target` review rules for workflows that execute
+  with base-repository trust.
+- [ ] Document the SFTP and GitHub Pages deploy trust boundary, including what
+  PR checks can and cannot prove before merge.
+- [ ] Add tests that keep workflow permissions and the policy document aligned.
+
+Acceptance:
+
+- Maintainers can review workflow changes against an explicit
+  least-privilege/secret-exposure policy.
+- Future deploy or issue-automation PRs can cite one policy instead of
+  rediscovering the trust boundary.
+- The policy does not add new secrets, mutate workflow permissions by itself,
+  or weaken the existing static registry/deploy boundary.
 
 ## Post-MVP Tracks
 
