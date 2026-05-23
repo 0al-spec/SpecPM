@@ -202,7 +202,9 @@ Public index and enterprise registry deployment options are tracked in
 `specs/INDEX_SUBMISSION_FLOW.md`. The deploy-first operating loop is tracked in
 `specs/DEPLOY_FIRST.md`, and fresh deploy, backup/restore, and flood/DDoS
 planning are tracked in `specs/REGISTRY_OPERATIONS.md`. GitHub Actions runtime
-maintenance policy is tracked in `specs/GITHUB_ACTIONS_MAINTENANCE.md`. The
+maintenance policy is tracked in `specs/GITHUB_ACTIONS_MAINTENANCE.md`; workflow
+permissions, secrets, `pull_request_target`, and deploy trust boundaries are
+tracked in `specs/GITHUB_ACTIONS_PERMISSIONS.md`. The
 reference public-index submission form is
 `.github/ISSUE_TEMPLATE/add-specpackages.yml`, the reference removal request
 form is `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, the reference

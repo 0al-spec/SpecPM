@@ -91,6 +91,7 @@ SPECGRAPH_REGISTRY_OBSERVATION_FIXTURES = ROOT / "tests/fixtures/specgraph_regis
 REGISTRY_OBSERVATION_REPORTS_DOC = ROOT / "specs/REGISTRY_OBSERVATION_REPORTS.md"
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 GITHUB_ACTIONS_MAINTENANCE_DOC = ROOT / "specs/GITHUB_ACTIONS_MAINTENANCE.md"
+GITHUB_ACTIONS_PERMISSIONS_DOC = ROOT / "specs/GITHUB_ACTIONS_PERMISSIONS.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
 DOCC_PUBLIC_ALPHA_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md"
@@ -100,6 +101,9 @@ DOCC_STATIC_REGISTRY_PIPELINE_PAGE = (
 DOCC_REGISTRY_OPERATIONS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/RegistryOperations.md"
 DOCC_GITHUB_ACTIONS_MAINTENANCE_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/GitHubActionsMaintenance.md"
+)
+DOCC_GITHUB_ACTIONS_PERMISSIONS_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/GitHubActionsPermissions.md"
 )
 DOCC_ROADMAP_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Roadmap.md"
 DOCC_SPECGRAPH_INTEGRATION_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md"
@@ -1378,6 +1382,104 @@ def test_github_actions_maintenance_policy_is_documented() -> None:
     assert "Sources/SpecPM/Documentation.docc/GitHubActionsMaintenance.md" in evidence_paths
 
 
+def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    policy = GITHUB_ACTIONS_PERMISSIONS_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_GITHUB_ACTIONS_PERMISSIONS_PAGE.read_text(encoding="utf-8")
+    docc_maintenance = DOCC_GITHUB_ACTIONS_MAINTENANCE_PAGE.read_text(encoding="utf-8")
+    docc_deployment = DOCC_DEPLOYMENT_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    workflow_permissions = {
+        ROOT / ".github/workflows/ci.yml": {"contents": "read"},
+        DOCS_WORKFLOW: {"contents": "read"},
+        DEPLOY_CONNECTION_CHECK_WORKFLOW: {"contents": "read"},
+        PACKAGE_SUBMISSION_WORKFLOW: {"contents": "read", "issues": "write"},
+        PACKAGE_SUBMISSION_TRIAGE_WORKFLOW: {"contents": "read", "issues": "write"},
+        NAMESPACE_CLAIM_TRIAGE_WORKFLOW: {"contents": "read", "issues": "write"},
+        NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW: {"contents": "read", "issues": "write"},
+        NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW: {"contents": "read", "issues": "read"},
+    }
+    for workflow_path, expected_permissions in workflow_permissions.items():
+        loaded = load_yaml_file(workflow_path)
+        assert loaded.get("permissions") == expected_permissions
+        assert f"`{workflow_path.relative_to(ROOT)}`" in policy
+
+    docs_workflow = load_yaml_file(DOCS_WORKFLOW)
+    assert docs_workflow["jobs"]["deploy"]["permissions"] == {
+        "contents": "read",
+        "pages": "write",
+        "id-token": "write",
+    }
+    assert "pages: write" in policy
+    assert "id-token: write" in policy
+
+    ftp_secrets = {"FTP_HOST", "FTP_PORT", "FTP_USER", "FTP_PASS", "FTP_REMOTE_ROOT"}
+    secret_ref_pattern = re.compile(r"\${{\s*secrets\.([A-Z0-9_]+)\s*}}")
+    for workflow_path in sorted((ROOT / ".github/workflows").glob("*.yml")):
+        observed_secrets = set(
+            secret_ref_pattern.findall(workflow_path.read_text(encoding="utf-8"))
+        )
+        expected_secrets = (
+            ftp_secrets
+            if workflow_path in {DOCS_WORKFLOW, DEPLOY_CONNECTION_CHECK_WORKFLOW}
+            else set()
+        )
+        assert observed_secrets == expected_secrets
+
+    for secret_name in ftp_secrets:
+        assert secret_name in policy
+        assert secret_name in docc_policy
+
+    pull_request_target_workflows = []
+    for workflow_path in sorted((ROOT / ".github/workflows").glob("*.yml")):
+        loaded = load_yaml_file(workflow_path)
+        trigger = loaded.get("on") or loaded.get(True)
+        if isinstance(trigger, dict) and "pull_request_target" in trigger:
+            pull_request_target_workflows.append(workflow_path)
+    assert pull_request_target_workflows == [DEPLOY_CONNECTION_CHECK_WORKFLOW]
+
+    connection_check = load_yaml_file(DEPLOY_CONNECTION_CHECK_WORKFLOW)
+    job = connection_check["jobs"]["deploy-connection-check"]
+    assert job["if"] == "github.event.pull_request.head.repo.full_name == github.repository"
+    checkout_step = {step["name"]: step for step in job["steps"] if "name" in step}[
+        "Checkout trusted workflow"
+    ]
+    assert checkout_step["with"]["ref"] == "${{ github.event.pull_request.base.sha }}"
+
+    for required_text in (
+        "No repository or environment secrets",
+        "Pull request checks are build and policy evidence",
+        "`pull_request_target` workflows must not execute pull request head code",
+        "read-only SFTP directory listing",
+        "GitHub Pages: the first successful `main` documentation deploy run",
+    ):
+        assert required_text in policy
+
+    assert "specs/GITHUB_ACTIONS_PERMISSIONS.md" in readme
+    assert "specs/GITHUB_ACTIONS_PERMISSIONS.md" in docc_overview
+    assert "<doc:GitHubActionsPermissions>" in docc_overview
+    assert "<doc:GitHubActionsPermissions>" in docc_deployment
+    assert "<doc:GitHubActionsPermissions>" in docc_maintenance
+    assert "pull_request_target" in docc_policy
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    constraint_ids = {constraint["id"] for constraint in boundary["constraints"]}
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.deployment.github_actions_permissions_policy" in manifest_capabilities
+    assert "specpm.deployment.github_actions_permissions_policy" in boundary_capabilities
+    assert "github_actions_least_privilege" in constraint_ids
+    assert "specs/GITHUB_ACTIONS_PERMISSIONS.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/GitHubActionsPermissions.md" in evidence_paths
+
+
 def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     loaded = load_yaml_file(DOCS_WORKFLOW)
 
@@ -1882,7 +1984,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "SpecGraph public registry observation contract",
         "Reusable registry observation reports",
         "GitHub Actions runtime maintenance",
-        "GitHub Actions permissions and secret boundary",
+        "GitHub Actions permissions and secret-boundary policy",
         "pull_request_target",
         "remote package acquisition boundary",
         "intent taxonomy governance",
@@ -1904,7 +2006,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "SpecGraph public registry observation contract",
         "Reusable registry observation reports now write",
         "GitHub Actions runtime maintenance",
-        "GitHub Actions permissions and secret boundary",
+        "GitHub Actions permissions and secret-boundary policy",
         "pull_request_target",
         "remote package acquisition boundary",
         "intent taxonomy governance",
