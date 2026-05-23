@@ -93,11 +93,13 @@ verification boundary.
 GitHub Actions workflow permissions and secret boundaries are documented for
 allowed `GITHUB_TOKEN` scopes, FTP secret usage, `pull_request_target` review
 rules, and SFTP/Pages deploy evidence boundaries.
+The remote package acquisition boundary is now documented before any archive
+fetch/cache/add behavior: metadata lookup stays separate from download, digests
+must be verified before cache or lock writes, and package content remains
+untrusted data.
 The next planned work is:
 
-1. Design the remote package acquisition boundary before archive fetch/cache/add
-   behavior is implemented.
-2. Define intent taxonomy governance for canonical `intent.*` IDs.
+1. Define intent taxonomy governance for canonical `intent.*` IDs.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -126,3 +128,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:Deployment>
 - <doc:RegistryOperations>
 - <doc:SpecGraphIntegration>
+- <doc:RemotePackageAcquisition>

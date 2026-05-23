@@ -1290,13 +1290,13 @@ Acceptance:
 
 ## Phase 52. Remote Package Acquisition Boundary
 
-- [ ] Write a design note before implementing any archive fetch, cache, or
+- [x] Write a design note before implementing any archive fetch, cache, or
   remote add behavior.
-- [ ] Separate registry metadata lookup from archive acquisition.
-- [ ] Define digest verification, cache layout, lockfile changes, retry
+- [x] Separate registry metadata lookup from archive acquisition.
+- [x] Define digest verification, cache layout, lockfile changes, retry
   behavior, and failure modes.
-- [ ] Decide whether acquisition belongs in SpecPM core or downstream tooling.
-- [ ] Preserve the rule that package content is never executed during
+- [x] Decide whether acquisition belongs in SpecPM core or downstream tooling.
+- [x] Preserve the rule that package content is never executed during
   acquisition.
 
 Acceptance:

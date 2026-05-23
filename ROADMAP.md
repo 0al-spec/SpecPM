@@ -253,6 +253,12 @@ GitHub Actions workflow permissions and secret boundaries are now documented.
 The policy records the allowed `GITHUB_TOKEN` scopes, FTP secret usage,
 `pull_request_target` review rules, and SFTP/Pages deploy evidence boundary.
 
+The remote package acquisition boundary is now documented before implementation.
+The policy keeps registry metadata lookup separate from archive download,
+requires digest verification before cache or lock writes, and keeps package
+content untrusted during acquisition, validation, caching, and lockfile
+generation.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -260,8 +266,6 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `design: remote package acquisition boundary`
-   - decide fetch/cache/add semantics before adding remote package acquisition.
-2. `design: intent taxonomy governance`
+1. `design: intent taxonomy governance`
    - define how canonical `intent.*` domains are proposed, reviewed, and mapped
      to package capabilities.

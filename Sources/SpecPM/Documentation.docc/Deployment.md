@@ -87,6 +87,8 @@ See <doc:GitHubActionsMaintenance> for workflow action runtime maintenance and
 the `pull_request_target` post-merge verification boundary.
 See <doc:GitHubActionsPermissions> for workflow token scopes, secret access,
 SFTP connection checks, and deploy trust boundaries.
+See <doc:RemotePackageAcquisition> for the future archive fetch, digest
+verification, cache, and lockfile boundary.
 
 ## Boundaries
 
@@ -108,4 +110,5 @@ See <doc:RegistryOperations> for the detailed runbook.
 ## Source Contract
 
 The detailed operating notes are maintained in `specs/DEPLOY_FIRST.md` and
-`specs/REGISTRY_OPERATIONS.md`.
+`specs/REGISTRY_OPERATIONS.md`. The remote acquisition boundary is maintained
+in `specs/REMOTE_PACKAGE_ACQUISITION.md`.
