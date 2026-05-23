@@ -44,3 +44,6 @@ post-merge `main` run.
 
 The detailed maintenance policy is maintained in
 `specs/GITHUB_ACTIONS_MAINTENANCE.md`.
+
+See <doc:GitHubActionsPermissions> for workflow token scopes, secret access,
+and deploy trust boundaries.

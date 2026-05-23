@@ -85,6 +85,8 @@ See <doc:RegistryObservationReports> for report naming, retention, and local vs
 Pages comparison guidance.
 See <doc:GitHubActionsMaintenance> for workflow action runtime maintenance and
 the `pull_request_target` post-merge verification boundary.
+See <doc:GitHubActionsPermissions> for workflow token scopes, secret access,
+SFTP connection checks, and deploy trust boundaries.
 
 ## Boundaries
 

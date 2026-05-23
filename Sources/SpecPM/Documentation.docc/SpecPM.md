@@ -54,6 +54,7 @@ The canonical source files remain in the repository:
 - `specs/DEPLOY_FIRST.md`
 - `specs/REGISTRY_OPERATIONS.md`
 - `specs/GITHUB_ACTIONS_MAINTENANCE.md`
+- `specs/GITHUB_ACTIONS_PERMISSIONS.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
 - `RFC/SpecGraph-RFC-0001.md`
@@ -94,4 +95,5 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:Deployment>
 - <doc:RegistryOperations>
 - <doc:GitHubActionsMaintenance>
+- <doc:GitHubActionsPermissions>
 - <doc:Roadmap>

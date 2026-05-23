@@ -23,6 +23,8 @@ SpecPM is usable today for:
 - GitHub Issue intake for package submissions, removals, and namespace claims;
 - GitHub Actions runtime-major maintenance policy for official `actions/*`
   workflow references;
+- GitHub Actions permissions and secret-boundary policy for repository
+  workflows, deploy credentials, and `pull_request_target` review;
 - DocC documentation, conformance fixtures, Agent Skills, and self-spec
   coverage.
 
@@ -88,14 +90,14 @@ JSON artifacts under `.specpm/registry-observations/` for downstream reviews.
 GitHub Actions runtime maintenance is documented for official action majors,
 update triggers, validation commands, and the `pull_request_target` post-merge
 verification boundary.
+GitHub Actions workflow permissions and secret boundaries are documented for
+allowed `GITHUB_TOKEN` scopes, FTP secret usage, `pull_request_target` review
+rules, and SFTP/Pages deploy evidence boundaries.
 The next planned work is:
 
-1. Document the GitHub Actions permissions and secret boundary for
-   least-privilege workflow permissions, `pull_request_target` review rules, and
-   SFTP/Pages deploy trust limits.
-2. Design the remote package acquisition boundary before archive fetch/cache/add
+1. Design the remote package acquisition boundary before archive fetch/cache/add
    behavior is implemented.
-3. Define intent taxonomy governance for canonical `intent.*` IDs.
+2. Define intent taxonomy governance for canonical `intent.*` IDs.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote

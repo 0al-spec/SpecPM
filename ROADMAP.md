@@ -34,6 +34,8 @@ Implemented surfaces:
 - first abstract intent-level interface contract for public repository metadata;
 - GitHub Actions runtime-major maintenance policy for official `actions/*`
   workflow references;
+- GitHub Actions permissions and secret-boundary policy for repository
+  workflows, deploy credentials, and `pull_request_target` review;
 - DocC documentation, landing page, Agent Skills, conformance fixtures, and
   self-spec coverage.
 
@@ -247,6 +249,10 @@ GitHub Actions runtime maintenance is now documented. The policy records the
 official `actions/*` major-version guard, update triggers, validation commands,
 and the `pull_request_target` post-merge verification boundary.
 
+GitHub Actions workflow permissions and secret boundaries are now documented.
+The policy records the allowed `GITHUB_TOKEN` scopes, FTP secret usage,
+`pull_request_target` review rules, and SFTP/Pages deploy evidence boundary.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -254,11 +260,8 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `policy: GitHub Actions permissions and secret boundary`
-   - document least-privilege workflow permissions, secret exposure boundaries,
-     `pull_request_target` review rules, and SFTP/Pages deploy trust limits.
-2. `design: remote package acquisition boundary`
+1. `design: remote package acquisition boundary`
    - decide fetch/cache/add semantics before adding remote package acquisition.
-3. `design: intent taxonomy governance`
+2. `design: intent taxonomy governance`
    - define how canonical `intent.*` domains are proposed, reviewed, and mapped
      to package capabilities.

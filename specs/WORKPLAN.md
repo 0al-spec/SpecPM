@@ -1354,15 +1354,15 @@ Acceptance:
 
 ## Phase 55. GitHub Actions Permissions and Secret Boundary
 
-- [ ] Document least-privilege permissions for CI, DocC deploy, SFTP deploy,
+- [x] Document least-privilege permissions for CI, DocC deploy, SFTP deploy,
   issue triage, package submission, and namespace claim workflows.
-- [ ] Document which workflows may access deployment or issue-comment secrets
+- [x] Document which workflows may access deployment or issue-comment secrets
   and why.
-- [ ] Document `pull_request_target` review rules for workflows that execute
+- [x] Document `pull_request_target` review rules for workflows that execute
   with base-repository trust.
-- [ ] Document the SFTP and GitHub Pages deploy trust boundary, including what
+- [x] Document the SFTP and GitHub Pages deploy trust boundary, including what
   PR checks can and cannot prove before merge.
-- [ ] Add tests that keep workflow permissions and the policy document aligned.
+- [x] Add tests that keep workflow permissions and the policy document aligned.
 
 Acceptance:
 
