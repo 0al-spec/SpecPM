@@ -1419,11 +1419,13 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
     assert "id-token: write" in policy
 
     ftp_secrets = {"FTP_HOST", "FTP_PORT", "FTP_USER", "FTP_PASS", "FTP_REMOTE_ROOT"}
-    secret_ref_pattern = re.compile(r"\${{\s*secrets\.([A-Z0-9_]+)\s*}}")
+    secret_ref_pattern = re.compile(
+        r"\${{\s*secrets(?:\.([A-Z0-9_]+)|\[\s*[\"']([A-Z0-9_]+)[\"']\s*\])\s*}}"
+    )
     for workflow_path in sorted((ROOT / ".github/workflows").glob("*.yml")):
-        observed_secrets = set(
-            secret_ref_pattern.findall(workflow_path.read_text(encoding="utf-8"))
-        )
+        observed_secrets = set()
+        for match in secret_ref_pattern.findall(workflow_path.read_text(encoding="utf-8")):
+            observed_secrets.add(next(part for part in match if part))
         expected_secrets = (
             ftp_secrets
             if workflow_path in {DOCS_WORKFLOW, DEPLOY_CONNECTION_CHECK_WORKFLOW}
