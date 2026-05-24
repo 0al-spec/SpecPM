@@ -205,6 +205,8 @@ planning are tracked in `specs/REGISTRY_OPERATIONS.md`. GitHub Actions runtime
 maintenance policy is tracked in `specs/GITHUB_ACTIONS_MAINTENANCE.md`; workflow
 permissions, secrets, `pull_request_target`, and deploy trust boundaries are
 tracked in `specs/GITHUB_ACTIONS_PERMISSIONS.md`. The
+remote package acquisition boundary for future archive fetch, cache, lock, and
+remote add behavior is tracked in `specs/REMOTE_PACKAGE_ACQUISITION.md`. The
 reference public-index submission form is
 `.github/ISSUE_TEMPLATE/add-specpackages.yml`, the reference removal request
 form is `.github/ISSUE_TEMPLATE/remove-specpackages.yml`, the reference
@@ -227,6 +229,10 @@ reviewed `ref` plus exact commit `revision`; generation fails if the checkout no
 longer resolves to that revision. The generator does not publish packages,
 mutate remote state, grant namespace ownership, install packages, or execute
 package content.
+Future remote acquisition must keep metadata lookup separate from archive
+download, verify archive digests before cache or lock writes, and fail closed on
+missing digests, digest mismatches, unsupported profiles, invalid packages, or
+mutable source refs without exact revisions.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 

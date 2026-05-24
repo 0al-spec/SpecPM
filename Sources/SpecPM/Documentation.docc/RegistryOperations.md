@@ -75,6 +75,16 @@ production controls:
 Intent-to-spec endpoints belong in ContextBuilder, SpecGraph, or a downstream
 resolver. They are not current SpecPM core behavior.
 
+## Remote Acquisition Boundary
+
+SpecPM does not currently install, cache, or remotely add package archives for
+user projects. Future acquisition work must keep metadata lookup separate from
+archive download, verify archive digests before cache or lock writes, and fail
+closed on missing digests, digest mismatches, unsupported profiles, invalid
+packages, or mutable source refs without exact revisions.
+
+See <doc:RemotePackageAcquisition> for the detailed boundary.
+
 ## Source Contract
 
 The detailed runbook is maintained in `specs/REGISTRY_OPERATIONS.md`.

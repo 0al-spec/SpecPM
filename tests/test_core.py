@@ -92,6 +92,7 @@ REGISTRY_OBSERVATION_REPORTS_DOC = ROOT / "specs/REGISTRY_OBSERVATION_REPORTS.md
 REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 GITHUB_ACTIONS_MAINTENANCE_DOC = ROOT / "specs/GITHUB_ACTIONS_MAINTENANCE.md"
 GITHUB_ACTIONS_PERMISSIONS_DOC = ROOT / "specs/GITHUB_ACTIONS_PERMISSIONS.md"
+REMOTE_PACKAGE_ACQUISITION_DOC = ROOT / "specs/REMOTE_PACKAGE_ACQUISITION.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
 DOCC_PUBLIC_ALPHA_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md"
@@ -104,6 +105,9 @@ DOCC_GITHUB_ACTIONS_MAINTENANCE_PAGE = (
 )
 DOCC_GITHUB_ACTIONS_PERMISSIONS_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/GitHubActionsPermissions.md"
+)
+DOCC_REMOTE_PACKAGE_ACQUISITION_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md"
 )
 DOCC_ROADMAP_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Roadmap.md"
 DOCC_SPECGRAPH_INTEGRATION_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md"
@@ -1480,6 +1484,68 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
     assert "github_actions_least_privilege" in constraint_ids
     assert "specs/GITHUB_ACTIONS_PERMISSIONS.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/GitHubActionsPermissions.md" in evidence_paths
+
+
+def test_remote_package_acquisition_boundary_is_documented() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    policy = REMOTE_PACKAGE_ACQUISITION_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_REMOTE_PACKAGE_ACQUISITION_PAGE.read_text(encoding="utf-8")
+    docc_deployment = DOCC_DEPLOYMENT_PAGE.read_text(encoding="utf-8")
+    docc_registry_operations = DOCC_REGISTRY_OPERATIONS_PAGE.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for required_text in (
+        "`specpm remote ...` reads `/v0` metadata",
+        "metadata evidence",
+        "Remote acquisition must not treat mutable labels as trust roots",
+        "digest mismatch",
+        "cache collision",
+        "yanked package version",
+        "mutable source reference without an exact revision",
+        "content-addressed layout",
+        "Never execute package content",
+        "Package content can describe desired outputs.",
+        "Package content cannot command",
+    ):
+        assert required_text in policy
+
+    for required_text in (
+        "does not currently install or fetch remote package archives",
+        "Mutable labels are not trust roots",
+        "digest verification before cache or lock writes",
+        "Package content remains untrusted data",
+    ):
+        assert required_text in docc_policy
+
+    assert "specs/REMOTE_PACKAGE_ACQUISITION.md" in readme
+    assert "specs/REMOTE_PACKAGE_ACQUISITION.md" in docc_overview
+    assert "<doc:RemotePackageAcquisition>" in docc_overview
+    assert "<doc:RemotePackageAcquisition>" in docc_deployment
+    assert "<doc:RemotePackageAcquisition>" in docc_registry_operations
+    assert "<doc:RemotePackageAcquisition>" in docc_roadmap
+    assert "remote package acquisition boundary" in roadmap
+    assert "remote package acquisition boundary" in docc_roadmap
+    assert "- [x] Separate registry metadata lookup from archive acquisition." in workplan
+    assert "- [x] Preserve the rule that package content is never executed during" in workplan
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    constraint_ids = {constraint["id"] for constraint in boundary["constraints"]}
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.registry.remote_package_acquisition_policy" in manifest_capabilities
+    assert "specpm.registry.remote_package_acquisition_policy" in boundary_capabilities
+    assert "remote_acquisition_fail_closed" in constraint_ids
+    assert "specs/REMOTE_PACKAGE_ACQUISITION.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md" in evidence_paths
 
 
 def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:

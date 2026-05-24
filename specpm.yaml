@@ -40,6 +40,7 @@ index:
       - specpm.registry.public_api_viewer
       - specpm.registry.public_index_accepted_manifest
       - specpm.registry.public_index_remote_sources
+      - specpm.registry.remote_package_acquisition_policy
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke
       - specpm.registry.public_observation_report
