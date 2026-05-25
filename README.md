@@ -276,7 +276,11 @@ metadata. Packages may declare explicit capability-to-intent mappings through
 `provides.capabilities[*].intentIds`, which can be queried with exact
 `search-intent` commands. This boundary is documented in
 `specs/INTENT_DISCOVERY_BOUNDARY.md`; the identifier model is documented in
-`specs/IDENTIFIER_MODEL.md`.
+`specs/IDENTIFIER_MODEL.md`. Intent taxonomy governance for proposing,
+reviewing, deprecating, superseding, rejecting, and reserving canonical
+`intent.*` IDs is documented in `specs/INTENT_TAXONOMY_GOVERNANCE.md`.
+Observed public registry intent metadata is discovery evidence, not automatic
+standardization.
 Read-only registry consumption examples for SpecGraph, ContextBuilder, and
 SpecNode are tracked in `specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md`.
 SpecGraph-specific registry evidence rules are tracked in

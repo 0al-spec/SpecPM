@@ -76,6 +76,10 @@ The remote intent catalog is observed metadata. It can help authors discover
 which `intent.*` IDs have appeared in accepted packages, but it does not make
 those IDs canonical and does not decide package meaning.
 
+Intent taxonomy governance for proposing, reviewing, deprecating, superseding,
+rejecting, and reserving canonical `intent.*` IDs is documented in
+`specs/INTENT_TAXONOMY_GOVERNANCE.md`.
+
 ## Where Plain-Text Discovery Belongs
 
 Plain-text intent discovery belongs outside SpecPM core.

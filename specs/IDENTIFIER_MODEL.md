@@ -196,6 +196,10 @@ Canonical intent meaning remains curated by SpecGraph, ContextBuilder, or a
 future governance process. SpecPM's responsibility is to preserve and expose the
 package metadata deterministically.
 
+Intent taxonomy governance is documented in
+`specs/INTENT_TAXONOMY_GOVERNANCE.md`. Observed package declarations are
+discovery evidence, not automatic acceptance into canonical vocabulary.
+
 ## Resolution Flow
 
 SpecPM does not convert plain text to intents. That belongs to ContextBuilder,

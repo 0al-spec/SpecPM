@@ -97,9 +97,16 @@ The remote package acquisition boundary is now documented before any archive
 fetch/cache/add behavior: metadata lookup stays separate from download, digests
 must be verified before cache or lock writes, and package content remains
 untrusted data.
+Intent taxonomy governance is now documented for canonical `intent.*` proposal,
+review, lifecycle, conflict handling, experimental/private namespace use, and
+the boundary between observed metadata and accepted vocabulary. The intent
+taxonomy governance policy keeps observed metadata separate from accepted
+vocabulary.
+The phrase "intent taxonomy governance" names the current policy boundary.
 The next planned work is:
 
-1. Define intent taxonomy governance for canonical `intent.*` IDs.
+1. Design package signing, verification, revocation, and stronger provenance
+   policy for public and enterprise registry tracks.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -129,3 +136,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:RegistryOperations>
 - <doc:SpecGraphIntegration>
 - <doc:RemotePackageAcquisition>
+- <doc:IntentTaxonomyGovernance>
