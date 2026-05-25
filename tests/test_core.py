@@ -93,6 +93,7 @@ REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 GITHUB_ACTIONS_MAINTENANCE_DOC = ROOT / "specs/GITHUB_ACTIONS_MAINTENANCE.md"
 GITHUB_ACTIONS_PERMISSIONS_DOC = ROOT / "specs/GITHUB_ACTIONS_PERMISSIONS.md"
 REMOTE_PACKAGE_ACQUISITION_DOC = ROOT / "specs/REMOTE_PACKAGE_ACQUISITION.md"
+PACKAGE_SIGNING_REVOCATION_DOC = ROOT / "specs/PACKAGE_SIGNING_REVOCATION.md"
 INTENT_TAXONOMY_GOVERNANCE_DOC = ROOT / "specs/INTENT_TAXONOMY_GOVERNANCE.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
@@ -109,6 +110,9 @@ DOCC_GITHUB_ACTIONS_PERMISSIONS_PAGE = (
 )
 DOCC_REMOTE_PACKAGE_ACQUISITION_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md"
+)
+DOCC_PACKAGE_SIGNING_REVOCATION_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md"
 )
 DOCC_INTENT_TAXONOMY_GOVERNANCE_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md"
@@ -1534,6 +1538,7 @@ def test_remote_package_acquisition_boundary_is_documented() -> None:
     assert "<doc:RemotePackageAcquisition>" in docc_deployment
     assert "<doc:RemotePackageAcquisition>" in docc_registry_operations
     assert "<doc:RemotePackageAcquisition>" in docc_roadmap
+    assert "<doc:PackageSigningRevocation>" in docc_policy
     assert "remote package acquisition boundary" in roadmap
     assert "remote package acquisition boundary" in docc_roadmap
     assert "- [x] Separate registry metadata lookup from archive acquisition." in workplan
@@ -1550,6 +1555,83 @@ def test_remote_package_acquisition_boundary_is_documented() -> None:
     assert "remote_acquisition_fail_closed" in constraint_ids
     assert "specs/REMOTE_PACKAGE_ACQUISITION.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md" in evidence_paths
+
+
+def test_package_signing_revocation_policy_is_documented() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    policy = PACKAGE_SIGNING_REVOCATION_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_PACKAGE_SIGNING_REVOCATION_PAGE.read_text(encoding="utf-8")
+    docc_registry_operations = DOCC_REGISTRY_OPERATIONS_PAGE.read_text(encoding="utf-8")
+    docc_remote_acquisition = DOCC_REMOTE_PACKAGE_ACQUISITION_PAGE.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for required_text in (
+        "Current SpecPM does not verify package signatures",
+        "Digest verification proves bytes, not publisher authority",
+        "package ID",
+        "package version",
+        "archive digest algorithm and value",
+        "issuer identity or public key identity",
+        "Verification runtime must fail closed",
+        "Revocation is a policy decision, not deletion",
+        "`deprecated`: visible and usually eligible",
+        "`yanked`: visible for audit and reproducibility",
+        "`revoked`: cryptographic or governance trust is withdrawn",
+        "No private keys, signing tokens, recovery codes, or credential material",
+        "Package content can describe desired outputs. Package content cannot command the",
+    ):
+        assert required_text in policy
+
+    for required_text in (
+        "does not verify package signatures",
+        "Digest verification proves bytes, not publisher authority",
+        "Verification runtime must fail closed",
+        "Revocation is a policy decision, not deletion",
+        "`visible`, `deprecated`, `yanked`,",
+        "Future provenance receipts should record package ID and version",
+    ):
+        assert required_text in docc_policy
+
+    assert "specs/PACKAGE_SIGNING_REVOCATION.md" in readme
+    assert "specs/PACKAGE_SIGNING_REVOCATION.md" in docc_overview
+    assert "<doc:PackageSigningRevocation>" in docc_overview
+    assert "<doc:PackageSigningRevocation>" in docc_registry_operations
+    assert "<doc:PackageSigningRevocation>" in docc_remote_acquisition
+    assert "<doc:PackageSigningRevocation>" in docc_roadmap
+    assert "Package signing and revocation policy is now documented" in roadmap
+    assert "Package signing and revocation policy is now documented" in docc_roadmap
+    assert "design: provenance receipt schema and audit evidence" in roadmap
+    assert "machine-readable provenance receipt schema" in docc_roadmap
+
+    for checked_item in (
+        "- [x] Document that current SpecPM does not verify package signatures",
+        "- [x] Separate archive digest verification from publisher authority.",
+        "- [x] Define the minimum future signature subject for package ID, version,",
+        "- [x] Define fail-closed verification behavior when a trust policy requires a",
+        "- [x] Document revocation, yanked, deprecated, removed, and visible lifecycle",
+        "- [x] Define stronger provenance receipt expectations without choosing a storage",
+        "- [x] Keep runtime signature verification, key management, revocation feed",
+    ):
+        assert checked_item in workplan
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    constraint_ids = {constraint["id"] for constraint in boundary["constraints"]}
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.registry.package_signing_revocation_policy" in manifest_capabilities
+    assert "specpm.registry.package_signing_revocation_policy" in boundary_capabilities
+    assert "package_trust_policy_no_runtime_enforcement" in constraint_ids
+    assert "specs/PACKAGE_SIGNING_REVOCATION.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md" in evidence_paths
 
 
 def test_intent_taxonomy_governance_is_documented() -> None:
@@ -1601,8 +1683,8 @@ def test_intent_taxonomy_governance_is_documented() -> None:
     assert "specs/INTENT_TAXONOMY_GOVERNANCE.md" in intent_discovery
     assert "Intent taxonomy governance is now documented" in roadmap
     assert "Intent taxonomy governance is now documented" in docc_roadmap
-    assert "design: package signing and revocation policy" in roadmap
-    assert "package signing, verification, revocation" in docc_roadmap
+    assert "Package signing and revocation policy is now documented" in roadmap
+    assert "Package signing and revocation policy is now documented" in docc_roadmap
 
     for checked_item in (
         "- [x] Define how canonical `intent.*` domains are proposed, reviewed, renamed,",
@@ -2134,6 +2216,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "pull_request_target",
         "remote package acquisition boundary",
         "intent taxonomy governance",
+        "Package signing and revocation policy",
+        "design: provenance receipt schema and audit evidence",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in roadmap
@@ -2156,6 +2240,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "pull_request_target",
         "remote package acquisition boundary",
         "intent taxonomy governance",
+        "Package signing and revocation policy",
+        "machine-readable provenance receipt schema",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in docc_roadmap
@@ -2175,6 +2261,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Phase 53. Intent Taxonomy Governance",
         "Phase 54. GitHub Actions Maintenance Policy",
         "Phase 55. GitHub Actions Permissions and Secret Boundary",
+        "Phase 56. Package Signing and Revocation Policy",
     ):
         assert phase_heading in workplan
 

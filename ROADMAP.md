@@ -36,6 +36,8 @@ Implemented surfaces:
   workflow references;
 - GitHub Actions permissions and secret-boundary policy for repository
   workflows, deploy credentials, and `pull_request_target` review;
+- package signing and revocation policy for future verification, lifecycle, and
+  provenance receipt work;
 - DocC documentation, landing page, Agent Skills, conformance fixtures, and
   self-spec coverage.
 
@@ -158,12 +160,13 @@ digests.
 
 Tasks:
 
-- design package signing and verification policy;
+- maintain package signing and verification policy;
 - define revocation and yanked/deprecated version behavior for public and
   enterprise registries;
 - refine namespace claim policy without implying automatic ownership;
 - explore transparency log or append-only audit records;
-- define stronger provenance receipts for accepted public sources.
+- define stronger machine-readable provenance receipts for accepted public
+  sources.
 
 Success criteria:
 
@@ -265,6 +268,12 @@ intent metadata from accepted canonical vocabulary, defines proposal and review
 criteria, records lifecycle states such as accepted/deprecated/superseded/
 rejected/reserved, and keeps semantic interpretation outside SpecPM core.
 
+Package signing and revocation policy is now documented. The policy separates
+digest verification from publisher authority, defines future signature subjects,
+records revocation, yanked/deprecated semantics, and provenance receipt
+expectations, and keeps runtime signature verification out of the current
+implementation.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -272,6 +281,6 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `design: package signing and revocation policy`
-   - define verification, revocation, yanked/deprecated semantics, and stronger
-     provenance receipts for public and enterprise registry tracks.
+1. `design: provenance receipt schema and audit evidence`
+   - define machine-readable receipt fields, lifecycle payloads, and public vs
+     enterprise audit storage profiles.

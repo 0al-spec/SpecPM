@@ -85,6 +85,10 @@ packages, or mutable source refs without exact revisions.
 
 See <doc:RemotePackageAcquisition> for the detailed boundary.
 
+Package signing and revocation policy is documented in
+<doc:PackageSigningRevocation>. The current registry publishes digest and
+lifecycle metadata, but it does not perform runtime signature verification.
+
 ## Source Contract
 
 The detailed runbook is maintained in `specs/REGISTRY_OPERATIONS.md`.

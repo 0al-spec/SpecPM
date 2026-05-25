@@ -40,6 +40,10 @@ package selection, graph reasoning, signing infrastructure, and agent workflow
 execution need separate designs and may belong in downstream or enterprise
 tools.
 
+Package signing, verification, revocation, yanked/deprecated semantics, and
+provenance receipt expectations are documented separately in
+<doc:PackageSigningRevocation>.
+
 ## Source Contract
 
 The detailed boundary is maintained in

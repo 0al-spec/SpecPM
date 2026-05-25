@@ -56,6 +56,7 @@ scope:
     - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
     - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
     - Document intent taxonomy governance for proposing, reviewing, deprecating, superseding, rejecting, and reserving canonical `intent.*` IDs.
+    - Document package signing, revocation, yanked/deprecated semantics, verification boundaries, and provenance receipt expectations before runtime enforcement.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -72,7 +73,7 @@ scope:
     - Remote package archive download, install, or cache behavior.
     - Remote registry mutation APIs.
     - Remote package yanking governance.
-    - Package signing and trust policy.
+    - Package signature verification runtime, signing key management, and trust policy enforcement.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
     - LLM, embedding, vector search, or RAG-based intent resolution.
@@ -173,6 +174,9 @@ provides:
     - id: specpm.registry.remote_package_acquisition_policy
       role: secondary
       summary: Document the trust, digest verification, cache, lockfile, and failure-mode boundary for future remote package acquisition.
+    - id: specpm.registry.package_signing_revocation_policy
+      role: secondary
+      summary: Document package signing, verification, revocation, yanked/deprecated semantics, and provenance receipt boundaries before runtime enforcement.
     - id: specpm.registry.public_alpha_index
       role: secondary
       summary: Seed and document the read-only public alpha registry package set for SpecPM, SpecNode, and example packages.
@@ -480,6 +484,9 @@ constraints:
   - id: intent_taxonomy_observation_not_canonical
     level: MUST
     statement: SpecPM must not treat observed package intent declarations as accepted canonical taxonomy without an explicit reviewed governance decision.
+  - id: package_trust_policy_no_runtime_enforcement
+    level: MUST
+    statement: Documented package signing and revocation policy must not imply runtime signature verification, signing key management, registry mutation, or package execution authority until a separate enforcement design exists.
 evidence:
   - id: license
     kind: documentation
@@ -499,6 +506,7 @@ evidence:
       - specpm.deployment.github_actions_maintenance_policy
       - specpm.deployment.github_actions_permissions_policy
       - specpm.registry.remote_package_acquisition_policy
+      - specpm.registry.package_signing_revocation_policy
       - specpm.intent.taxonomy_governance
   - id: roadmap
     kind: documentation
@@ -509,6 +517,7 @@ evidence:
       - specpm.registry.static_registry_pipeline_docs
       - specpm.registry.specgraph_observation_contract
       - specpm.registry.remote_package_acquisition_policy
+      - specpm.registry.package_signing_revocation_policy
       - specpm.deployment.deploy_first_workflow
       - specpm.intent.identifier_model
       - specpm.intent.taxonomy_governance
@@ -805,6 +814,17 @@ evidence:
     path: specs/REMOTE_PACKAGE_ACQUISITION.md
     supports:
       - specpm.registry.remote_package_acquisition_policy
+      - specpm.registry.package_signing_revocation_policy
+      - remote_acquisition_fail_closed
+      - scope.includes
+      - scope.excludes
+  - id: package_signing_revocation_docs
+    kind: documentation
+    path: specs/PACKAGE_SIGNING_REVOCATION.md
+    supports:
+      - specpm.registry.package_signing_revocation_policy
+      - package_trust_policy_no_runtime_enforcement
+      - package_content_untrusted
       - remote_acquisition_fail_closed
       - scope.includes
       - scope.excludes
@@ -1005,6 +1025,13 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.remote_package_acquisition_policy
+      - specpm.registry.package_signing_revocation_policy
+  - id: docc_package_signing_revocation
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.package_signing_revocation_policy
   - id: docc_intent_taxonomy_governance
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
@@ -1127,6 +1154,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/GitHubActionsMaintenance.md
         - Sources/SpecPM/Documentation.docc/GitHubActionsPermissions.md
         - Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md
+        - Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
         - Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md
         - Sources/SpecPM/Documentation.docc/RegistryObservationReports.md
@@ -1136,6 +1164,7 @@ implementationBindings:
         - specs/REGISTRY_OBSERVATION_REPORTS.md
         - specs/GITHUB_ACTIONS_PERMISSIONS.md
         - specs/REMOTE_PACKAGE_ACQUISITION.md
+        - specs/PACKAGE_SIGNING_REVOCATION.md
         - specs/INTENT_TAXONOMY_GOVERNANCE.md
         - tests/fixtures/specgraph_registry_observation
   - id: agent_skills

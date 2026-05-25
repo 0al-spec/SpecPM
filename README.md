@@ -233,6 +233,11 @@ Future remote acquisition must keep metadata lookup separate from archive
 download, verify archive digests before cache or lock writes, and fail closed on
 missing digests, digest mismatches, unsupported profiles, invalid packages, or
 mutable source refs without exact revisions.
+Package signing and revocation policy is documented in
+`specs/PACKAGE_SIGNING_REVOCATION.md`. It separates current digest and
+source-revision metadata from future signature verification, revocation,
+yanked/deprecated semantics, and provenance receipts. No runtime signature
+verification is implemented yet.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 
