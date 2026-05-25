@@ -55,6 +55,7 @@ scope:
     - Document GitHub Actions workflow permissions, secret usage, pull_request_target review, and deploy trust boundaries.
     - Publish a current roadmap that separates the public alpha baseline from operator UX, downstream integration, remote acquisition, trust, enterprise, and intent resolver tracks.
     - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
+    - Document intent taxonomy governance for proposing, reviewing, deprecating, superseding, rejecting, and reserving canonical `intent.*` IDs.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -211,6 +212,11 @@ provides:
     - id: specpm.intent.identifier_model
       role: secondary
       summary: Document package IDs, capability IDs, canonical intent IDs, and exact capability-to-intent mappings.
+      intentIds:
+        - intent.specification.identifier_model
+    - id: specpm.intent.taxonomy_governance
+      role: secondary
+      summary: Document review, lifecycle, conflict, experimental namespace, and downstream boundary rules for canonical intent taxonomy.
       intentIds:
         - intent.specification.identifier_model
     - id: specpm.specs.abstract_conformance_targets
@@ -471,6 +477,9 @@ constraints:
   - id: remote_acquisition_fail_closed
     level: MUST
     statement: Future remote package acquisition must fail closed on missing digests, digest mismatches, unsupported registry profiles, unsupported archive formats, cache collisions, invalid packages, or mutable source refs without exact revisions.
+  - id: intent_taxonomy_observation_not_canonical
+    level: MUST
+    statement: SpecPM must not treat observed package intent declarations as accepted canonical taxonomy without an explicit reviewed governance decision.
 evidence:
   - id: license
     kind: documentation
@@ -490,6 +499,7 @@ evidence:
       - specpm.deployment.github_actions_maintenance_policy
       - specpm.deployment.github_actions_permissions_policy
       - specpm.registry.remote_package_acquisition_policy
+      - specpm.intent.taxonomy_governance
   - id: roadmap
     kind: documentation
     path: ROADMAP.md
@@ -501,6 +511,7 @@ evidence:
       - specpm.registry.remote_package_acquisition_policy
       - specpm.deployment.deploy_first_workflow
       - specpm.intent.identifier_model
+      - specpm.intent.taxonomy_governance
       - scope.includes
       - scope.excludes
   - id: prd
@@ -812,17 +823,27 @@ evidence:
       - no_semantic_authority
       - specpm.registry.intent_search
       - specpm.intent.identifier_model
+      - specpm.intent.taxonomy_governance
       - scope.excludes
   - id: identifier_model
     kind: documentation
     path: specs/IDENTIFIER_MODEL.md
     supports:
       - specpm.intent.identifier_model
+      - specpm.intent.taxonomy_governance
+  - id: intent_taxonomy_governance
+    kind: documentation
+    path: specs/INTENT_TAXONOMY_GOVERNANCE.md
+    supports:
+      - specpm.intent.taxonomy_governance
+      - intent_taxonomy_observation_not_canonical
+      - exact_intent_lookup_metadata_only
+      - no_semantic_authority
+      - scope.includes
+      - scope.excludes
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
-      - exact_intent_lookup_metadata_only
       - manifest_intents_backed_by_capabilities
-      - no_semantic_authority
   - id: specgraph_registry_observation_contract
     kind: documentation
     path: specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md
@@ -984,6 +1005,12 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.remote_package_acquisition_policy
+  - id: docc_intent_taxonomy_governance
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.intent.taxonomy_governance
   - id: docc_public_alpha
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md
@@ -1093,6 +1120,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md
         - Sources/SpecPM/Documentation.docc/BoundariesAndTrust.md
         - Sources/SpecPM/Documentation.docc/IntentDiscoveryBoundary.md
+        - Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
         - Sources/SpecPM/Documentation.docc/IdentifierModel.md
         - Sources/SpecPM/Documentation.docc/Deployment.md
         - Sources/SpecPM/Documentation.docc/RegistryOperations.md
@@ -1108,6 +1136,7 @@ implementationBindings:
         - specs/REGISTRY_OBSERVATION_REPORTS.md
         - specs/GITHUB_ACTIONS_PERMISSIONS.md
         - specs/REMOTE_PACKAGE_ACQUISITION.md
+        - specs/INTENT_TAXONOMY_GOVERNANCE.md
         - tests/fixtures/specgraph_registry_observation
   - id: agent_skills
     path: skills/README.md

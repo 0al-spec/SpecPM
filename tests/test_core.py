@@ -93,6 +93,7 @@ REGISTRY_OPERATIONS_DOC = ROOT / "specs/REGISTRY_OPERATIONS.md"
 GITHUB_ACTIONS_MAINTENANCE_DOC = ROOT / "specs/GITHUB_ACTIONS_MAINTENANCE.md"
 GITHUB_ACTIONS_PERMISSIONS_DOC = ROOT / "specs/GITHUB_ACTIONS_PERMISSIONS.md"
 REMOTE_PACKAGE_ACQUISITION_DOC = ROOT / "specs/REMOTE_PACKAGE_ACQUISITION.md"
+INTENT_TAXONOMY_GOVERNANCE_DOC = ROOT / "specs/INTENT_TAXONOMY_GOVERNANCE.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
 DOCC_PUBLIC_ALPHA_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/PublicAlphaRegistry.md"
@@ -108,6 +109,9 @@ DOCC_GITHUB_ACTIONS_PERMISSIONS_PAGE = (
 )
 DOCC_REMOTE_PACKAGE_ACQUISITION_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md"
+)
+DOCC_INTENT_TAXONOMY_GOVERNANCE_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md"
 )
 DOCC_ROADMAP_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Roadmap.md"
 DOCC_SPECGRAPH_INTEGRATION_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md"
@@ -1546,6 +1550,80 @@ def test_remote_package_acquisition_boundary_is_documented() -> None:
     assert "remote_acquisition_fail_closed" in constraint_ids
     assert "specs/REMOTE_PACKAGE_ACQUISITION.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md" in evidence_paths
+
+
+def test_intent_taxonomy_governance_is_documented() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    policy = INTENT_TAXONOMY_GOVERNANCE_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_INTENT_TAXONOMY_GOVERNANCE_PAGE.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    identifier_model = (ROOT / "specs/IDENTIFIER_MODEL.md").read_text(encoding="utf-8")
+    intent_discovery = (ROOT / "specs/INTENT_DISCOVERY_BOUNDARY.md").read_text(encoding="utf-8")
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for required_text in (
+        "Observation is not standardization",
+        "accepted intent",
+        "deprecated intent",
+        "rejected intent",
+        "reviewed governance process",
+        "provider-neutral",
+        "package-neutral",
+        "experimental or private intent IDs",
+        "intent.experimental.<domain>.<name>",
+        "intent.private.<org>.<domain>.<name>",
+        "must not hide or mutate declared metadata",
+        "runtime enforcement of accepted/deprecated/rejected states",
+        "SpecPM may carry intent; SpecGraph decides meaning.",
+    ):
+        assert required_text in policy
+
+    for required_text in (
+        "observed package declarations do not become canonical vocabulary",
+        "`canonical: false`",
+        "provider-neutral",
+        "`observed`, `proposed`, `accepted`, `deprecated`",
+        "Promotion to accepted canonical vocabulary requires normal review",
+    ):
+        assert required_text in docc_policy
+
+    assert "specs/INTENT_TAXONOMY_GOVERNANCE.md" in readme
+    assert "specs/INTENT_TAXONOMY_GOVERNANCE.md" in docc_overview
+    assert "<doc:IntentTaxonomyGovernance>" in docc_overview
+    assert "<doc:IntentTaxonomyGovernance>" in docc_roadmap
+    assert "specs/INTENT_TAXONOMY_GOVERNANCE.md" in identifier_model
+    assert "specs/INTENT_TAXONOMY_GOVERNANCE.md" in intent_discovery
+    assert "Intent taxonomy governance is now documented" in roadmap
+    assert "Intent taxonomy governance is now documented" in docc_roadmap
+    assert "design: package signing and revocation policy" in roadmap
+    assert "package signing, verification, revocation" in docc_roadmap
+
+    for checked_item in (
+        "- [x] Define how canonical `intent.*` domains are proposed, reviewed, renamed,",
+        "- [x] Document how package-owned capabilities map to package-neutral intent",
+        "- [x] Specify extension rules for experimental or private intent namespaces.",
+        "- [x] Define conflict handling when different packages claim similar intent",
+        "- [x] Keep semantic interpretation and candidate ranking outside SpecPM core.",
+    ):
+        assert checked_item in workplan
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    constraint_ids = {constraint["id"] for constraint in boundary["constraints"]}
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.intent.taxonomy_governance" in manifest_capabilities
+    assert "specpm.intent.taxonomy_governance" in boundary_capabilities
+    assert "intent_taxonomy_observation_not_canonical" in constraint_ids
+    assert "specs/INTENT_TAXONOMY_GOVERNANCE.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md" in evidence_paths
 
 
 def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:

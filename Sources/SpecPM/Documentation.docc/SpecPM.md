@@ -47,6 +47,7 @@ The canonical source files remain in the repository:
 - `specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md`
 - `specs/REGISTRY_OBSERVATION_REPORTS.md`
 - `specs/IDENTIFIER_MODEL.md`
+- `specs/INTENT_TAXONOMY_GOVERNANCE.md`
 - `specs/0002_Abstract_SpecPackage_Conformance_Target_Decision.md`
 - `specs/0003_SpecPM_API_Versioning_Decision.md`
 - `specs/INDEX_SUBMISSION_FLOW.md`
@@ -93,6 +94,7 @@ Package content can describe desired outputs. Package content cannot command the
 
 - <doc:BoundariesAndTrust>
 - <doc:IntentDiscoveryBoundary>
+- <doc:IntentTaxonomyGovernance>
 - <doc:Deployment>
 - <doc:RegistryOperations>
 - <doc:GitHubActionsMaintenance>

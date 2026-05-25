@@ -1310,14 +1310,14 @@ Acceptance:
 
 ## Phase 53. Intent Taxonomy Governance
 
-- [ ] Define how canonical `intent.*` domains are proposed, reviewed, renamed,
+- [x] Define how canonical `intent.*` domains are proposed, reviewed, renamed,
   deprecated, or rejected.
-- [ ] Document how package-owned capabilities map to package-neutral intent
+- [x] Document how package-owned capabilities map to package-neutral intent
   IDs.
-- [ ] Specify extension rules for experimental or private intent namespaces.
-- [ ] Define conflict handling when different packages claim similar intent
+- [x] Specify extension rules for experimental or private intent namespaces.
+- [x] Define conflict handling when different packages claim similar intent
   meanings.
-- [ ] Keep semantic interpretation and candidate ranking outside SpecPM core.
+- [x] Keep semantic interpretation and candidate ranking outside SpecPM core.
 
 Acceptance:
 

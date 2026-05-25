@@ -259,6 +259,12 @@ requires digest verification before cache or lock writes, and keeps package
 content untrusted during acquisition, validation, caching, and lockfile
 generation.
 
+Intent taxonomy governance is now documented. The intent taxonomy governance
+policy separates observed
+intent metadata from accepted canonical vocabulary, defines proposal and review
+criteria, records lifecycle states such as accepted/deprecated/superseded/
+rejected/reserved, and keeps semantic interpretation outside SpecPM core.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -266,6 +272,6 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `design: intent taxonomy governance`
-   - define how canonical `intent.*` domains are proposed, reviewed, and mapped
-     to package capabilities.
+1. `design: package signing and revocation policy`
+   - define verification, revocation, yanked/deprecated semantics, and stronger
+     provenance receipts for public and enterprise registry tracks.
