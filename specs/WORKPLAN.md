@@ -1373,6 +1373,32 @@ Acceptance:
 - The policy does not add new secrets, mutate workflow permissions by itself,
   or weaken the existing static registry/deploy boundary.
 
+## Phase 56. Package Signing and Revocation Policy
+
+- [x] Document that current SpecPM does not verify package signatures or enforce
+  publisher trust.
+- [x] Separate archive digest verification from publisher authority.
+- [x] Define the minimum future signature subject for package ID, version,
+  archive format, archive digest, registry profile, issuer identity, signing
+  time, and source revision when applicable.
+- [x] Define fail-closed verification behavior when a trust policy requires a
+  signature.
+- [x] Document revocation, yanked, deprecated, removed, and visible lifecycle
+  semantics.
+- [x] Define stronger provenance receipt expectations without choosing a storage
+  backend.
+- [x] Keep runtime signature verification, key management, revocation feed
+  hosting, registry mutation, and package execution outside current SpecPM core.
+
+Acceptance:
+
+- Maintainers can review future signing, revocation, and provenance receipt
+  work against one explicit policy boundary.
+- Consumers can distinguish byte integrity, registry visibility, lifecycle
+  metadata, publisher trust, and revocation.
+- Public static registry needs and enterprise trust requirements remain
+  separated until a concrete profile adopts them.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -1387,7 +1413,7 @@ Acceptance:
   endpoints.
 - `specpm publish`.
 - Remote package yanking governance.
-- Package signing and trust policies.
+- Package signature verification runtime and trust policy enforcement.
 - Namespace governance.
 - Natural-language or semantic capability search.
 - Plain-text intent discovery with LLM, embeddings, vector search, or RAG.

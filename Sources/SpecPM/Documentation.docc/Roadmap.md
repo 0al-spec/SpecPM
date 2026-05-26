@@ -25,6 +25,8 @@ SpecPM is usable today for:
   workflow references;
 - GitHub Actions permissions and secret-boundary policy for repository
   workflows, deploy credentials, and `pull_request_target` review;
+- package signing and revocation policy for future verification, lifecycle, and
+  provenance receipt work;
 - DocC documentation, conformance fixtures, Agent Skills, and self-spec
   coverage.
 
@@ -103,10 +105,15 @@ the boundary between observed metadata and accepted vocabulary. The intent
 taxonomy governance policy keeps observed metadata separate from accepted
 vocabulary.
 The phrase "intent taxonomy governance" names the current policy boundary.
+Package signing and revocation policy is now documented. It separates digest
+verification from publisher authority, defines future signature subjects,
+records revocation, yanked/deprecated semantics, and provenance receipt
+expectations, and keeps runtime signature verification out of the current
+implementation.
 The next planned work is:
 
-1. Design package signing, verification, revocation, and stronger provenance
-   policy for public and enterprise registry tracks.
+1. Design machine-readable provenance receipt schema, lifecycle payloads, and
+   public vs enterprise audit evidence profiles.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -137,3 +144,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:SpecGraphIntegration>
 - <doc:RemotePackageAcquisition>
 - <doc:IntentTaxonomyGovernance>
+- <doc:PackageSigningRevocation>
