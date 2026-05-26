@@ -46,4 +46,7 @@ archive digest, reviewed manifest or pull request evidence, build workflow
 identity, registry profile, verification policy version, signature result when
 available, and lifecycle state.
 
+The draft receipt envelope and audit evidence profile are documented in
+<doc:ProvenanceReceipts>.
+
 The detailed policy is maintained in `specs/PACKAGE_SIGNING_REVOCATION.md`.

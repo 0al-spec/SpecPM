@@ -58,6 +58,7 @@ The canonical source files remain in the repository:
 - `specs/GITHUB_ACTIONS_PERMISSIONS.md`
 - `specs/REMOTE_PACKAGE_ACQUISITION.md`
 - `specs/PACKAGE_SIGNING_REVOCATION.md`
+- `specs/PROVENANCE_RECEIPTS.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
 - `RFC/SpecGraph-RFC-0001.md`
@@ -102,4 +103,5 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:GitHubActionsPermissions>
 - <doc:RemotePackageAcquisition>
 - <doc:PackageSigningRevocation>
+- <doc:ProvenanceReceipts>
 - <doc:Roadmap>

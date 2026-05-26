@@ -1399,6 +1399,27 @@ Acceptance:
 - Public static registry needs and enterprise trust requirements remain
   separated until a concrete profile adopts them.
 
+## Phase 57. Provenance Receipt Schema and Audit Evidence Profile
+
+- [x] Document the draft `SpecPMProvenanceReceipt` envelope.
+- [x] Define the initial `public_static_index_build_v0` receipt profile.
+- [x] Specify required subject, source, archive, review, build, validation,
+  trust, lifecycle, and audit sections.
+- [x] Define extension rules for public and enterprise profiles.
+- [x] Document failure interpretation when future policy requires receipts.
+- [x] Add a non-normative machine-readable fixture for the receipt shape.
+- [x] Keep receipt generation, receipt publication, receipt verification,
+  registry payload mutation, lockfile changes, and package execution outside
+  current SpecPM core.
+
+Acceptance:
+
+- Future receipt generation can target one documented envelope instead of
+  inventing fields from workflow logs.
+- Reviewers can distinguish receipt evidence from trust authority.
+- Public static and enterprise receipt requirements can diverge without
+  breaking the common envelope.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

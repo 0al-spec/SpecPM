@@ -57,6 +57,7 @@ scope:
     - Document the identifier model that separates package IDs, package-owned capability IDs, and package-neutral canonical intent IDs.
     - Document intent taxonomy governance for proposing, reviewing, deprecating, superseding, rejecting, and reserving canonical `intent.*` IDs.
     - Document package signing, revocation, yanked/deprecated semantics, verification boundaries, and provenance receipt expectations before runtime enforcement.
+    - Document the provenance receipt schema and audit evidence profile for future registry, acquisition, and trust verification work.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -74,6 +75,7 @@ scope:
     - Remote registry mutation APIs.
     - Remote package yanking governance.
     - Package signature verification runtime, signing key management, and trust policy enforcement.
+    - Provenance receipt generation, publication, verification, and lockfile enforcement.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
     - LLM, embedding, vector search, or RAG-based intent resolution.
@@ -177,6 +179,9 @@ provides:
     - id: specpm.registry.package_signing_revocation_policy
       role: secondary
       summary: Document package signing, verification, revocation, yanked/deprecated semantics, and provenance receipt boundaries before runtime enforcement.
+    - id: specpm.registry.provenance_receipt_schema
+      role: secondary
+      summary: Document the draft SpecPMProvenanceReceipt envelope, public static profile, and audit evidence sections without generating receipts.
     - id: specpm.registry.public_alpha_index
       role: secondary
       summary: Seed and document the read-only public alpha registry package set for SpecPM, SpecNode, and example packages.
@@ -487,6 +492,9 @@ constraints:
   - id: package_trust_policy_no_runtime_enforcement
     level: MUST
     statement: Documented package signing and revocation policy must not imply runtime signature verification, signing key management, registry mutation, or package execution authority until a separate enforcement design exists.
+  - id: provenance_receipts_evidence_not_authority
+    level: MUST
+    statement: Provenance receipts must be treated as evidence records and must not make package content trusted, executable, or selected without the applicable validation and trust policy.
 evidence:
   - id: license
     kind: documentation
@@ -507,6 +515,7 @@ evidence:
       - specpm.deployment.github_actions_permissions_policy
       - specpm.registry.remote_package_acquisition_policy
       - specpm.registry.package_signing_revocation_policy
+      - specpm.registry.provenance_receipt_schema
       - specpm.intent.taxonomy_governance
   - id: roadmap
     kind: documentation
@@ -518,6 +527,7 @@ evidence:
       - specpm.registry.specgraph_observation_contract
       - specpm.registry.remote_package_acquisition_policy
       - specpm.registry.package_signing_revocation_policy
+      - specpm.registry.provenance_receipt_schema
       - specpm.deployment.deploy_first_workflow
       - specpm.intent.identifier_model
       - specpm.intent.taxonomy_governance
@@ -823,11 +833,27 @@ evidence:
     path: specs/PACKAGE_SIGNING_REVOCATION.md
     supports:
       - specpm.registry.package_signing_revocation_policy
+      - specpm.registry.provenance_receipt_schema
       - package_trust_policy_no_runtime_enforcement
       - package_content_untrusted
       - remote_acquisition_fail_closed
       - scope.includes
       - scope.excludes
+  - id: provenance_receipts_docs
+    kind: documentation
+    path: specs/PROVENANCE_RECEIPTS.md
+    supports:
+      - specpm.registry.provenance_receipt_schema
+      - provenance_receipts_evidence_not_authority
+      - package_trust_policy_no_runtime_enforcement
+      - scope.includes
+      - scope.excludes
+  - id: provenance_receipt_fixture
+    kind: test
+    path: tests/fixtures/provenance_receipts/public-static-receipt.example.json
+    supports:
+      - specpm.registry.provenance_receipt_schema
+      - provenance_receipts_evidence_not_authority
   - id: rfc_coverage
     kind: documentation
     path: specs/RFC_0001_COVERAGE.md
@@ -1032,6 +1058,13 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.package_signing_revocation_policy
+      - specpm.registry.provenance_receipt_schema
+  - id: docc_provenance_receipts
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.provenance_receipt_schema
   - id: docc_intent_taxonomy_governance
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
@@ -1155,6 +1188,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/GitHubActionsPermissions.md
         - Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md
         - Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md
+        - Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
         - Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md
         - Sources/SpecPM/Documentation.docc/RegistryObservationReports.md
@@ -1165,8 +1199,10 @@ implementationBindings:
         - specs/GITHUB_ACTIONS_PERMISSIONS.md
         - specs/REMOTE_PACKAGE_ACQUISITION.md
         - specs/PACKAGE_SIGNING_REVOCATION.md
+        - specs/PROVENANCE_RECEIPTS.md
         - specs/INTENT_TAXONOMY_GOVERNANCE.md
         - tests/fixtures/specgraph_registry_observation
+        - tests/fixtures/provenance_receipts
   - id: agent_skills
     path: skills/README.md
     files:

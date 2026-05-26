@@ -1,0 +1,75 @@
+{
+  "apiVersion": "specpm.receipts/v0",
+  "kind": "SpecPMProvenanceReceipt",
+  "schemaVersion": 1,
+  "receiptProfile": "public_static_index_build_v0",
+  "receiptId": "example.receipt_subject@0.1.0:sha256:aaaaaaaaaaaa",
+  "issuedAt": "2026-05-26T00:00:00Z",
+  "subject": {
+    "packageId": "example.receipt_subject",
+    "version": "0.1.0",
+    "registryProfile": "public_static_index"
+  },
+  "source": {
+    "kind": "git",
+    "repository": "https://github.com/0al-spec/SpecPM",
+    "ref": "main",
+    "revision": "2e6e523114972a8386dc3c6178400fffd0b6eb3b",
+    "path": "examples/email_tools"
+  },
+  "archive": {
+    "format": "specpm-tar-gzip-v0",
+    "size": 1064,
+    "digest": {
+      "algorithm": "sha256",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "url": "https://0al-spec.github.io/SpecPM/v0/packages/example.receipt_subject/versions/0.1.0/example.receipt_subject-0.1.0.specpm.tgz"
+  },
+  "review": {
+    "kind": "pull_request",
+    "decision": "merged",
+    "url": "https://github.com/0al-spec/SpecPM/pull/84",
+    "commit": "2e6e523114972a8386dc3c6178400fffd0b6eb3b",
+    "reviewedAt": "2026-05-26T00:00:00Z"
+  },
+  "build": {
+    "provider": "github_actions",
+    "workflow": "Deploy DocC Documentation",
+    "runId": "26423309527",
+    "runAttempt": 1,
+    "revision": "2e6e523114972a8386dc3c6178400fffd0b6eb3b"
+  },
+  "validation": {
+    "status": "valid",
+    "warningCount": 0,
+    "errorCount": 0,
+    "validatorVersion": "0.2.0"
+  },
+  "trust": {
+    "policy": "specs/PACKAGE_SIGNING_REVOCATION.md",
+    "signatureRequired": false,
+    "signatureStatus": "not_applicable",
+    "revocationStatus": "not_checked"
+  },
+  "lifecycle": {
+    "state": "visible",
+    "yanked": false,
+    "deprecated": false,
+    "revoked": false
+  },
+  "audit": {
+    "evidence": [
+      {
+        "kind": "source_commit",
+        "revision": "2e6e523114972a8386dc3c6178400fffd0b6eb3b",
+        "retention": "git-history"
+      },
+      {
+        "kind": "workflow_run",
+        "url": "https://github.com/0al-spec/SpecPM/actions/runs/26423309527",
+        "retention": "github-actions-artifact-retention"
+      }
+    ]
+  }
+}

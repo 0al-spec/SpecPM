@@ -238,6 +238,9 @@ Package signing and revocation policy is documented in
 source-revision metadata from future signature verification, revocation,
 yanked/deprecated semantics, and provenance receipts. No runtime signature
 verification is implemented yet.
+The draft provenance receipt schema and audit evidence profile are documented in
+`specs/PROVENANCE_RECEIPTS.md`; current SpecPM does not generate receipt
+artifacts.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 
