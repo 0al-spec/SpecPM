@@ -1,4 +1,4 @@
-# Spec Producer Provenance Receipt Contract
+# SpecPM Producer Receipt Contract
 
 Status: Draft
 Updated: 2026-05-26
@@ -167,7 +167,7 @@ Recommended `kind` values:
 - `config`
 - `previous_spec`
 
-Input receipts must not store raw secrets, private keys, access tokens,
+Input references must not include raw secrets, private keys, access tokens,
 credentials, recovery codes, or confidential source text that should not be
 redistributed. When an input cannot be disclosed, the producer should record a
 digest, redaction reason, and retention pointer instead of embedding the raw
