@@ -129,6 +129,9 @@ workflow artifacts, generated registry metadata, transparency logs, enterprise
 audit stores, or a later SpecPM-defined receipt format. This policy does not
 choose a storage backend.
 
+The draft receipt envelope and audit evidence profile are documented in
+`specs/PROVENANCE_RECEIPTS.md`.
+
 ## Public vs Enterprise Registries
 
 The public static registry and future enterprise registries have different

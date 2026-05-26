@@ -110,10 +110,14 @@ verification from publisher authority, defines future signature subjects,
 records revocation, yanked/deprecated semantics, and provenance receipt
 expectations, and keeps runtime signature verification out of the current
 implementation.
+Provenance receipt schema and audit evidence profile are now documented. The
+draft `SpecPMProvenanceReceipt` envelope defines source, archive, review,
+build, validation, trust, lifecycle, and audit evidence sections without adding
+receipt generation.
 The next planned work is:
 
-1. Design machine-readable provenance receipt schema, lifecycle payloads, and
-   public vs enterprise audit evidence profiles.
+1. Generate non-authoritative public static provenance receipt JSON artifacts
+   and wire them into observation reports.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -145,3 +149,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:RemotePackageAcquisition>
 - <doc:IntentTaxonomyGovernance>
 - <doc:PackageSigningRevocation>
+- <doc:ProvenanceReceipts>

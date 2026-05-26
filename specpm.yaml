@@ -42,6 +42,7 @@ index:
       - specpm.registry.public_index_remote_sources
       - specpm.registry.remote_package_acquisition_policy
       - specpm.registry.package_signing_revocation_policy
+      - specpm.registry.provenance_receipt_schema
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke
       - specpm.registry.public_observation_report

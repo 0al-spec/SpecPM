@@ -274,6 +274,11 @@ records revocation, yanked/deprecated semantics, and provenance receipt
 expectations, and keeps runtime signature verification out of the current
 implementation.
 
+Provenance receipt schema and audit evidence profile are now documented. The
+policy defines the draft `SpecPMProvenanceReceipt` envelope, public static index
+profile, required source/archive/review/build/validation/trust/lifecycle/audit
+sections, and fixture shape without adding receipt generation.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -281,6 +286,6 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `design: provenance receipt schema and audit evidence`
-   - define machine-readable receipt fields, lifecycle payloads, and public vs
-     enterprise audit storage profiles.
+1. `implementation: public static provenance receipt artifacts`
+   - generate non-authoritative receipt JSON artifacts for public static index
+     builds and wire them into observation reports.

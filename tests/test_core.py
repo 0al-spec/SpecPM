@@ -94,6 +94,10 @@ GITHUB_ACTIONS_MAINTENANCE_DOC = ROOT / "specs/GITHUB_ACTIONS_MAINTENANCE.md"
 GITHUB_ACTIONS_PERMISSIONS_DOC = ROOT / "specs/GITHUB_ACTIONS_PERMISSIONS.md"
 REMOTE_PACKAGE_ACQUISITION_DOC = ROOT / "specs/REMOTE_PACKAGE_ACQUISITION.md"
 PACKAGE_SIGNING_REVOCATION_DOC = ROOT / "specs/PACKAGE_SIGNING_REVOCATION.md"
+PROVENANCE_RECEIPTS_DOC = ROOT / "specs/PROVENANCE_RECEIPTS.md"
+PROVENANCE_RECEIPT_FIXTURE = (
+    ROOT / "tests/fixtures/provenance_receipts/public-static-receipt.example.json"
+)
 INTENT_TAXONOMY_GOVERNANCE_DOC = ROOT / "specs/INTENT_TAXONOMY_GOVERNANCE.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
@@ -114,6 +118,7 @@ DOCC_REMOTE_PACKAGE_ACQUISITION_PAGE = (
 DOCC_PACKAGE_SIGNING_REVOCATION_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md"
 )
+DOCC_PROVENANCE_RECEIPTS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md"
 DOCC_INTENT_TAXONOMY_GOVERNANCE_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md"
 )
@@ -1561,6 +1566,7 @@ def test_package_signing_revocation_policy_is_documented() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     policy = PACKAGE_SIGNING_REVOCATION_DOC.read_text(encoding="utf-8")
     docc_policy = DOCC_PACKAGE_SIGNING_REVOCATION_PAGE.read_text(encoding="utf-8")
+    docc_receipts = DOCC_PROVENANCE_RECEIPTS_PAGE.read_text(encoding="utf-8")
     docc_registry_operations = DOCC_REGISTRY_OPERATIONS_PAGE.read_text(encoding="utf-8")
     docc_remote_acquisition = DOCC_REMOTE_PACKAGE_ACQUISITION_PAGE.read_text(encoding="utf-8")
     docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
@@ -1605,10 +1611,12 @@ def test_package_signing_revocation_policy_is_documented() -> None:
     assert "<doc:PackageSigningRevocation>" in docc_registry_operations
     assert "<doc:PackageSigningRevocation>" in docc_remote_acquisition
     assert "<doc:PackageSigningRevocation>" in docc_roadmap
+    assert "<doc:ProvenanceReceipts>" in docc_policy
+    assert "specs/PROVENANCE_RECEIPTS.md" in docc_receipts
     assert "Package signing and revocation policy is now documented" in roadmap
     assert "Package signing and revocation policy is now documented" in docc_roadmap
-    assert "design: provenance receipt schema and audit evidence" in roadmap
-    assert "machine-readable provenance receipt schema" in docc_roadmap
+    assert "Provenance receipt schema and audit evidence profile" in roadmap
+    assert "SpecPMProvenanceReceipt" in docc_roadmap
 
     for checked_item in (
         "- [x] Document that current SpecPM does not verify package signatures",
@@ -1632,6 +1640,103 @@ def test_package_signing_revocation_policy_is_documented() -> None:
     assert "package_trust_policy_no_runtime_enforcement" in constraint_ids
     assert "specs/PACKAGE_SIGNING_REVOCATION.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md" in evidence_paths
+
+
+def test_provenance_receipt_schema_is_documented() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    policy = PROVENANCE_RECEIPTS_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_PROVENANCE_RECEIPTS_PAGE.read_text(encoding="utf-8")
+    docc_signing = DOCC_PACKAGE_SIGNING_REVOCATION_PAGE.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    receipt_fixture = json.loads(PROVENANCE_RECEIPT_FIXTURE.read_text(encoding="utf-8"))
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for required_text in (
+        "SpecPMProvenanceReceipt",
+        "Receipts are evidence, not authority",
+        "Current SpecPM does not generate provenance receipts",
+        "apiVersion: specpm.receipts/v0",
+        "receiptProfile: public_static_index_build_v0",
+        "subject",
+        "source",
+        "archive",
+        "review",
+        "build",
+        "validation",
+        "trust",
+        "lifecycle",
+        "audit",
+        "Absence of a receipt means no receipt evidence is available",
+        "must not be used as trust evidence",
+    ):
+        assert required_text in policy
+
+    for required_text in (
+        "Receipts are evidence, not authority",
+        "apiVersion: specpm.receipts/v0",
+        "kind: SpecPMProvenanceReceipt",
+        "public_static_index_build_v0",
+        "Current SpecPM does not generate provenance receipts",
+    ):
+        assert required_text in docc_policy
+
+    assert "specs/PROVENANCE_RECEIPTS.md" in readme
+    assert "specs/PROVENANCE_RECEIPTS.md" in docc_overview
+    assert "<doc:ProvenanceReceipts>" in docc_overview
+    assert "<doc:ProvenanceReceipts>" in docc_signing
+    assert "<doc:ProvenanceReceipts>" in docc_roadmap
+    assert "Provenance receipt schema and audit evidence profile" in roadmap
+    assert "Provenance receipt schema and audit evidence profile" in docc_roadmap
+    assert "implementation: public static provenance receipt artifacts" in roadmap
+    assert "public static provenance receipt JSON artifacts" in docc_roadmap
+
+    assert receipt_fixture["apiVersion"] == "specpm.receipts/v0"
+    assert receipt_fixture["kind"] == "SpecPMProvenanceReceipt"
+    assert receipt_fixture["schemaVersion"] == 1
+    assert receipt_fixture["receiptProfile"] == "public_static_index_build_v0"
+    assert receipt_fixture["subject"]["registryProfile"] == "public_static_index"
+    assert receipt_fixture["source"]["kind"] == "git"
+    assert re.fullmatch(r"[0-9a-f]{40}", receipt_fixture["source"]["revision"])
+    assert receipt_fixture["archive"]["format"] == "specpm-tar-gzip-v0"
+    assert receipt_fixture["archive"]["digest"]["algorithm"] == "sha256"
+    assert re.fullmatch(r"[0-9a-f]{64}", receipt_fixture["archive"]["digest"]["value"])
+    assert receipt_fixture["review"]["kind"] == "pull_request"
+    assert receipt_fixture["validation"]["status"] == "valid"
+    assert receipt_fixture["trust"]["signatureRequired"] is False
+    assert receipt_fixture["trust"]["signatureStatus"] == "not_applicable"
+    assert receipt_fixture["lifecycle"]["state"] == "visible"
+    assert isinstance(receipt_fixture["audit"]["evidence"], list)
+    assert receipt_fixture["audit"]["evidence"]
+
+    for checked_item in (
+        "- [x] Document the draft `SpecPMProvenanceReceipt` envelope.",
+        "- [x] Define the initial `public_static_index_build_v0` receipt profile.",
+        "- [x] Specify required subject, source, archive, review, build, validation,",
+        "- [x] Define extension rules for public and enterprise profiles.",
+        "- [x] Document failure interpretation when future policy requires receipts.",
+        "- [x] Add a non-normative machine-readable fixture for the receipt shape.",
+        "- [x] Keep receipt generation, receipt publication, receipt verification,",
+    ):
+        assert checked_item in workplan
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    constraint_ids = {constraint["id"] for constraint in boundary["constraints"]}
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.registry.provenance_receipt_schema" in manifest_capabilities
+    assert "specpm.registry.provenance_receipt_schema" in boundary_capabilities
+    assert "provenance_receipts_evidence_not_authority" in constraint_ids
+    assert "specs/PROVENANCE_RECEIPTS.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md" in evidence_paths
+    assert "tests/fixtures/provenance_receipts/public-static-receipt.example.json" in evidence_paths
 
 
 def test_intent_taxonomy_governance_is_documented() -> None:
@@ -2217,7 +2322,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "remote package acquisition boundary",
         "intent taxonomy governance",
         "Package signing and revocation policy",
-        "design: provenance receipt schema and audit evidence",
+        "Provenance receipt schema and audit evidence profile",
+        "implementation: public static provenance receipt artifacts",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in roadmap
@@ -2241,7 +2347,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "remote package acquisition boundary",
         "intent taxonomy governance",
         "Package signing and revocation policy",
-        "machine-readable provenance receipt schema",
+        "Provenance receipt schema and audit evidence profile",
+        "public static provenance receipt JSON artifacts",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in docc_roadmap
@@ -2262,6 +2369,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Phase 54. GitHub Actions Maintenance Policy",
         "Phase 55. GitHub Actions Permissions and Secret Boundary",
         "Phase 56. Package Signing and Revocation Policy",
+        "Phase 57. Provenance Receipt Schema and Audit Evidence Profile",
     ):
         assert phase_heading in workplan
 
