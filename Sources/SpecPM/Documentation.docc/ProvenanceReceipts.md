@@ -30,6 +30,9 @@ audit: {}
 
 The initial public static profile is `public_static_index_build_v0`.
 
+Producer-side receipts for tools that generate `SpecPackage` and
+`BoundarySpec` candidates are documented separately in <doc:ProducerReceipts>.
+
 ## Required Evidence Areas
 
 Receipts should record:

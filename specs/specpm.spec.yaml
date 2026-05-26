@@ -58,6 +58,7 @@ scope:
     - Document intent taxonomy governance for proposing, reviewing, deprecating, superseding, rejecting, and reserving canonical `intent.*` IDs.
     - Document package signing, revocation, yanked/deprecated semantics, verification boundaries, and provenance receipt expectations before runtime enforcement.
     - Document the provenance receipt schema and audit evidence profile for future registry, acquisition, and trust verification work.
+    - Document producer receipt requirements for generated SpecPackage candidates without making SpecPM run or trust producer tools.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -76,6 +77,7 @@ scope:
     - Remote package yanking governance.
     - Package signature verification runtime, signing key management, and trust policy enforcement.
     - Provenance receipt generation, publication, verification, and lockfile enforcement.
+    - Producer receipt generation, producer execution, analyzer execution, and generated package acceptance.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
     - LLM, embedding, vector search, or RAG-based intent resolution.
@@ -182,6 +184,9 @@ provides:
     - id: specpm.registry.provenance_receipt_schema
       role: secondary
       summary: Document the draft SpecPMProvenanceReceipt envelope, public static profile, and audit evidence sections without generating receipts.
+    - id: specpm.specs.producer_receipt_contract
+      role: secondary
+      summary: Document the draft SpecPMProducerReceipt envelope and generated package profile for producer tools such as SpecHarvester without running producers.
     - id: specpm.registry.public_alpha_index
       role: secondary
       summary: Seed and document the read-only public alpha registry package set for SpecPM, SpecNode, and example packages.
@@ -495,6 +500,9 @@ constraints:
   - id: provenance_receipts_evidence_not_authority
     level: MUST
     statement: Provenance receipts must be treated as evidence records and must not make package content trusted, executable, or selected without the applicable validation and trust policy.
+  - id: producer_receipts_not_generation_authority
+    level: MUST
+    statement: Producer receipts must be treated as generated package evidence and must not require SpecPM to run producers, execute prompts or analyzers, accept generated packages, or trust generated content without maintainer review.
 evidence:
   - id: license
     kind: documentation
@@ -516,6 +524,7 @@ evidence:
       - specpm.registry.remote_package_acquisition_policy
       - specpm.registry.package_signing_revocation_policy
       - specpm.registry.provenance_receipt_schema
+      - specpm.specs.producer_receipt_contract
       - specpm.intent.taxonomy_governance
   - id: roadmap
     kind: documentation
@@ -528,6 +537,7 @@ evidence:
       - specpm.registry.remote_package_acquisition_policy
       - specpm.registry.package_signing_revocation_policy
       - specpm.registry.provenance_receipt_schema
+      - specpm.specs.producer_receipt_contract
       - specpm.deployment.deploy_first_workflow
       - specpm.intent.identifier_model
       - specpm.intent.taxonomy_governance
@@ -848,12 +858,27 @@ evidence:
       - package_trust_policy_no_runtime_enforcement
       - scope.includes
       - scope.excludes
+  - id: producer_receipts_docs
+    kind: documentation
+    path: specs/PRODUCER_RECEIPTS.md
+    supports:
+      - specpm.specs.producer_receipt_contract
+      - producer_receipts_not_generation_authority
+      - provenance_receipts_evidence_not_authority
+      - scope.includes
+      - scope.excludes
   - id: provenance_receipt_fixture
     kind: test
     path: tests/fixtures/provenance_receipts/public-static-receipt.example.json
     supports:
       - specpm.registry.provenance_receipt_schema
       - provenance_receipts_evidence_not_authority
+  - id: producer_receipt_fixture
+    kind: test
+    path: tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json
+    supports:
+      - specpm.specs.producer_receipt_contract
+      - producer_receipts_not_generation_authority
   - id: rfc_coverage
     kind: documentation
     path: specs/RFC_0001_COVERAGE.md
@@ -1065,6 +1090,13 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.provenance_receipt_schema
+      - specpm.specs.producer_receipt_contract
+  - id: docc_producer_receipts
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/ProducerReceipts.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.specs.producer_receipt_contract
   - id: docc_intent_taxonomy_governance
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md

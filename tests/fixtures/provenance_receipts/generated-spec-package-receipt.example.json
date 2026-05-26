@@ -1,0 +1,147 @@
+{
+  "apiVersion": "specpm.receipts/v0",
+  "kind": "SpecPMProducerReceipt",
+  "schemaVersion": 1,
+  "receiptProfile": "generated_spec_package_v0",
+  "receiptId": "example.generated_spec@0.1.0:producer:sha256:bbbbbbbbbbbb",
+  "issuedAt": "2026-05-26T00:00:00Z",
+  "subject": {
+    "packageId": "example.generated_spec",
+    "packageVersion": "0.1.0",
+    "packageApiVersion": "specpm.dev/v0.1",
+    "packageRoot": ".",
+    "boundarySpecs": [
+      "specs/main.spec.yaml"
+    ],
+    "candidateStatus": "review-ready"
+  },
+  "producer": {
+    "name": "SpecHarvester",
+    "version": "0.1.0",
+    "repository": "https://github.com/0al-spec/SpecHarvester",
+    "revision": "1111111111111111111111111111111111111111",
+    "workflow": "local-harvest",
+    "runId": "example-run-1"
+  },
+  "inputs": [
+    {
+      "kind": "source_tree",
+      "path": "source",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "redaction": "digest_only"
+    },
+    {
+      "kind": "public_interface_index",
+      "path": "public-interface-index.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "redaction": "none"
+    },
+    {
+      "kind": "generator_prompt",
+      "path": "prompts/spec-package-draft.md",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "redaction": "digest_only"
+    }
+  ],
+  "configuration": {
+    "mode": "assisted",
+    "deterministic": false,
+    "analyzers": [
+      {
+        "name": "python-ast",
+        "version": "0.1.0"
+      }
+    ],
+    "templates": [
+      {
+        "name": "specpm-package",
+        "version": "0.1.0"
+      }
+    ],
+    "model": {
+      "provider": "example",
+      "name": "example-model"
+    },
+    "parametersDigest": {
+      "algorithm": "sha256",
+      "value": "5555555555555555555555555555555555555555555555555555555555555555"
+    }
+  },
+  "outputs": [
+    {
+      "path": "specpm.yaml",
+      "kind": "specpm_manifest",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "6666666666666666666666666666666666666666666666666666666666666666"
+      }
+    },
+    {
+      "path": "specs/main.spec.yaml",
+      "kind": "boundary_spec",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "7777777777777777777777777777777777777777777777777777777777777777"
+      }
+    },
+    {
+      "path": "evidence/generated-spec-receipt.json",
+      "kind": "producer_receipt",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "8888888888888888888888888888888888888888888888888888888888888888"
+      }
+    }
+  ],
+  "validation": {
+    "status": "warning",
+    "warningCount": 1,
+    "errorCount": 0,
+    "validator": "specpm",
+    "validatorVersion": "0.2.0",
+    "validatedAt": "2026-05-26T00:00:00Z",
+    "reportDigest": {
+      "algorithm": "sha256",
+      "value": "9999999999999999999999999999999999999999999999999999999999999999"
+    }
+  },
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "code": "lossy_summary",
+      "message": "Some source files were summarized by digest only."
+    }
+  ],
+  "review": {
+    "handoff": "pull_request",
+    "required": true,
+    "url": "https://github.com/0al-spec/SpecPM/pull/0"
+  },
+  "privacy": {
+    "secretsIncluded": false,
+    "redactions": [
+      {
+        "kind": "generator_prompt",
+        "reason": "prompt content is retained outside the public package"
+      }
+    ]
+  },
+  "audit": {
+    "evidence": [
+      {
+        "kind": "producer_run_log",
+        "path": ".specpm/producer-runs/example-run-1.json",
+        "retention": "operator-local"
+      }
+    ]
+  }
+}

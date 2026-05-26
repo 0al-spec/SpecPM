@@ -1420,6 +1420,30 @@ Acceptance:
 - Public static and enterprise receipt requirements can diverge without
   breaking the common envelope.
 
+## Phase 58. Producer Receipt Contract for Generated Specs
+
+- [x] Document the draft `SpecPMProducerReceipt` envelope.
+- [x] Define the initial `generated_spec_package_v0` producer profile.
+- [x] Specify required subject, producer, inputs, configuration, outputs,
+  validation, diagnostics, review, privacy, and audit sections.
+- [x] Document the relationship between producer receipts and registry
+  provenance receipts.
+- [x] Add SpecHarvester-facing implementation requirements without making the
+  profile vendor-specific.
+- [x] Add a non-normative machine-readable fixture for the producer receipt
+  shape.
+- [x] Keep producer execution, analyzer execution, LLM prompt execution,
+  automatic package acceptance, registry publication, and trust decisions
+  outside current SpecPM core.
+
+Acceptance:
+
+- SpecHarvester can implement a concrete receipt feature against one
+  tool-neutral contract.
+- SpecPM keeps producer evidence separate from registry publication evidence.
+- Reviewers can archive generated package provenance without treating generator
+  output as trusted package truth.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
