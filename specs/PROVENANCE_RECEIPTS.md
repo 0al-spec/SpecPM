@@ -10,7 +10,7 @@ This document defines the draft `SpecPMProvenanceReceipt` shape for future
 registry, acquisition, and trust verification work.
 
 Receipts are evidence, not authority. A receipt can record what source,
-archive, review, build, validation, trust policy, lifecycle, and deployment
+archive, review, build, validation, trust policy, lifecycle, and audit
 evidence was observed for an exact package version. It does not make package
 content trusted, does not execute package content, and does not replace archive
 digest verification, signature verification, or maintainer review.
