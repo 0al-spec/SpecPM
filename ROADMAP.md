@@ -279,6 +279,11 @@ policy defines the draft `SpecPMProvenanceReceipt` envelope, public static index
 profile, required source/archive/review/build/validation/trust/lifecycle/audit
 sections, and fixture shape without adding receipt generation.
 
+Producer receipt requirements for generated package candidates are now
+documented. The policy defines a tool-neutral `SpecPMProducerReceipt` envelope
+and `generated_spec_package_v0` profile that SpecHarvester or another producer
+can emit without giving SpecPM generator runtime authority.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against

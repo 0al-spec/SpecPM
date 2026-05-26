@@ -241,6 +241,9 @@ verification is implemented yet.
 The draft provenance receipt schema and audit evidence profile are documented in
 `specs/PROVENANCE_RECEIPTS.md`; current SpecPM does not generate receipt
 artifacts.
+Producer-side receipt requirements for generated `SpecPackage` candidates are
+documented in `specs/PRODUCER_RECEIPTS.md`; current SpecPM does not run or
+trust producer tools such as SpecHarvester.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 

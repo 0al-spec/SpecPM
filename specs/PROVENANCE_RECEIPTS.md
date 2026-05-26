@@ -33,6 +33,27 @@ does not add:
 - cache writes;
 - package execution.
 
+## Related Producer Receipts
+
+This document covers registry, acquisition, and trust-oriented receipts.
+Producer-side receipts for tools that generate `SpecPackage` and
+`BoundarySpec` candidates are documented separately in
+`specs/PRODUCER_RECEIPTS.md`.
+
+A future audit chain may cite both receipt types:
+
+```text
+SpecPMProducerReceipt
+        -> generated package candidate
+        -> maintainer review
+        -> SpecPMProvenanceReceipt
+```
+
+The producer receipt explains how a package candidate was generated. The
+registry provenance receipt explains how an accepted package was validated,
+packed, and published. Neither receipt makes package content executable or
+trusted by itself.
+
 ## Receipt Envelope
 
 A receipt artifact should be JSON-compatible data with this top-level shape:

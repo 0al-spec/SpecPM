@@ -114,6 +114,12 @@ Provenance receipt schema and audit evidence profile are now documented. The
 draft `SpecPMProvenanceReceipt` envelope defines source, archive, review,
 build, validation, trust, lifecycle, and audit evidence sections without adding
 receipt generation.
+Producer receipt requirements for generated package candidates are now
+documented. The draft `SpecPMProducerReceipt` envelope defines generated
+package subject, producer, inputs, configuration, outputs, validation,
+diagnostics, review, privacy, and audit evidence sections through the
+`generated_spec_package_v0` profile for SpecHarvester or another producer
+without adding generator runtime authority to SpecPM.
 The next planned work is:
 
 1. Generate non-authoritative public static provenance receipt JSON artifacts
@@ -150,3 +156,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:IntentTaxonomyGovernance>
 - <doc:PackageSigningRevocation>
 - <doc:ProvenanceReceipts>
+- <doc:ProducerReceipts>

@@ -98,6 +98,10 @@ PROVENANCE_RECEIPTS_DOC = ROOT / "specs/PROVENANCE_RECEIPTS.md"
 PROVENANCE_RECEIPT_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/public-static-receipt.example.json"
 )
+PRODUCER_RECEIPTS_DOC = ROOT / "specs/PRODUCER_RECEIPTS.md"
+PRODUCER_RECEIPT_FIXTURE = (
+    ROOT / "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
+)
 INTENT_TAXONOMY_GOVERNANCE_DOC = ROOT / "specs/INTENT_TAXONOMY_GOVERNANCE.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
@@ -119,6 +123,7 @@ DOCC_PACKAGE_SIGNING_REVOCATION_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md"
 )
 DOCC_PROVENANCE_RECEIPTS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md"
+DOCC_PRODUCER_RECEIPTS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/ProducerReceipts.md"
 DOCC_INTENT_TAXONOMY_GOVERNANCE_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md"
 )
@@ -1737,6 +1742,115 @@ def test_provenance_receipt_schema_is_documented() -> None:
     assert "specs/PROVENANCE_RECEIPTS.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md" in evidence_paths
     assert "tests/fixtures/provenance_receipts/public-static-receipt.example.json" in evidence_paths
+
+
+def test_producer_receipt_contract_is_documented() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    provenance_policy = PROVENANCE_RECEIPTS_DOC.read_text(encoding="utf-8")
+    policy = PRODUCER_RECEIPTS_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_PRODUCER_RECEIPTS_PAGE.read_text(encoding="utf-8")
+    docc_receipts = DOCC_PROVENANCE_RECEIPTS_PAGE.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    receipt_fixture = json.loads(PRODUCER_RECEIPT_FIXTURE.read_text(encoding="utf-8"))
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
+
+    for required_text in (
+        "SpecPMProducerReceipt",
+        "Producer receipts are evidence, not authority",
+        "SpecHarvester",
+        "tool-neutral",
+        "apiVersion: specpm.receipts/v0",
+        "receiptProfile: generated_spec_package_v0",
+        "subject",
+        "producer",
+        "inputs",
+        "configuration",
+        "outputs",
+        "validation",
+        "diagnostics",
+        "review",
+        "privacy",
+        "audit",
+        "privacy.secretsIncluded",
+        "Current SpecPM does not generate, validate, require, or index producer",
+        "must not be used as trust evidence",
+    ):
+        assert required_text in policy
+
+    for required_text in (
+        "SpecPMProducerReceipt",
+        "generated_spec_package_v0",
+        "SpecHarvester",
+        "does not make generated content trusted",
+        "Current SpecPM does not generate, validate, require, or index producer",
+    ):
+        assert required_text in docc_policy
+
+    assert "specs/PRODUCER_RECEIPTS.md" in readme
+    assert "specs/PRODUCER_RECEIPTS.md" in docc_overview
+    assert "<doc:ProducerReceipts>" in docc_overview
+    assert "<doc:ProducerReceipts>" in docc_receipts
+    assert "<doc:ProducerReceipts>" in docc_roadmap
+    assert "specs/PRODUCER_RECEIPTS.md" in provenance_policy
+    assert "SpecPMProducerReceipt" in roadmap
+    assert "SpecPMProducerReceipt" in docc_roadmap
+    assert "generated_spec_package_v0" in roadmap
+    assert "generated_spec_package_v0" in docc_roadmap
+
+    assert receipt_fixture["apiVersion"] == "specpm.receipts/v0"
+    assert receipt_fixture["kind"] == "SpecPMProducerReceipt"
+    assert receipt_fixture["schemaVersion"] == 1
+    assert receipt_fixture["receiptProfile"] == "generated_spec_package_v0"
+    assert receipt_fixture["subject"]["packageApiVersion"] == "specpm.dev/v0.1"
+    assert receipt_fixture["subject"]["candidateStatus"] == "review-ready"
+    assert receipt_fixture["producer"]["name"] == "SpecHarvester"
+    assert re.fullmatch(r"[0-9a-f]{40}", receipt_fixture["producer"]["revision"])
+    assert receipt_fixture["configuration"]["deterministic"] is False
+    assert receipt_fixture["validation"]["status"] == "warning"
+    assert receipt_fixture["review"]["required"] is True
+    assert receipt_fixture["privacy"]["secretsIncluded"] is False
+    assert {output["kind"] for output in receipt_fixture["outputs"]} >= {
+        "specpm_manifest",
+        "boundary_spec",
+        "producer_receipt",
+    }
+    for section in ("inputs", "outputs"):
+        for entry in receipt_fixture[section]:
+            assert entry["digest"]["algorithm"] == "sha256"
+            assert re.fullmatch(r"[0-9a-f]{64}", entry["digest"]["value"])
+
+    for checked_item in (
+        "- [x] Document the draft `SpecPMProducerReceipt` envelope.",
+        "- [x] Define the initial `generated_spec_package_v0` producer profile.",
+        "- [x] Specify required subject, producer, inputs, configuration, outputs,",
+        "- [x] Document the relationship between producer receipts and registry",
+        "- [x] Add SpecHarvester-facing implementation requirements without making the",
+        "- [x] Add a non-normative machine-readable fixture for the producer receipt",
+        "- [x] Keep producer execution, analyzer execution, LLM prompt execution,",
+    ):
+        assert checked_item in workplan
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    constraint_ids = {constraint["id"] for constraint in boundary["constraints"]}
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    assert "specpm.specs.producer_receipt_contract" in manifest_capabilities
+    assert "specpm.specs.producer_receipt_contract" in boundary_capabilities
+    assert "producer_receipts_not_generation_authority" in constraint_ids
+    assert "specs/PRODUCER_RECEIPTS.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/ProducerReceipts.md" in evidence_paths
+    assert (
+        "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
+        in evidence_paths
+    )
 
 
 def test_intent_taxonomy_governance_is_documented() -> None:
