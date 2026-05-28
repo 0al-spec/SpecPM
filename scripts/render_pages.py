@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import shutil
 from pathlib import Path
@@ -25,13 +26,27 @@ def main() -> int:
     parser.add_argument("--build-number", default="local")
     parser.add_argument("--build-revision", default="unknown")
     parser.add_argument("--custom-domain", default="")
+    parser.add_argument(
+        "--root-mode",
+        choices=("landing", "docs-redirect"),
+        default="landing",
+        help="Render the root page as the landing page or as a DocC redirect.",
+    )
+    parser.add_argument(
+        "--docs-url",
+        default="https://0al-spec.github.io/SpecPM/documentation/specpm/",
+        help="Absolute DocC URL used when --root-mode=docs-redirect.",
+    )
     args = parser.parse_args()
 
     output = Path(args.output)
     metadata = build_metadata(args.specpm_version, args.build_number, args.build_revision)
 
     output.mkdir(parents=True, exist_ok=True)
-    render_template(LANDING_ROOT / "index.html", output / "index.html", metadata)
+    if args.root_mode == "docs-redirect":
+        write_docs_redirect(output / "index.html", args.docs_url)
+    else:
+        render_template(LANDING_ROOT / "index.html", output / "index.html", metadata)
     render_template(LANDING_ROOT / "viewer.html", output / "viewer/index.html", metadata)
 
     copy_assets(LANDING_ROOT / "assets", output / "assets")
@@ -68,6 +83,33 @@ def copy_assets(source: Path, destination: Path) -> None:
     if destination.exists():
         shutil.rmtree(destination)
     shutil.copytree(source, destination)
+
+
+def write_docs_redirect(destination: Path, docs_url: str) -> None:
+    clean_url = docs_url.strip() or "https://0al-spec.github.io/SpecPM/documentation/specpm/"
+    escaped_url = html.escape(clean_url, quote=True)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        "\n".join(
+            [
+                "<!doctype html>",
+                '<html lang="en">',
+                "<head>",
+                '  <meta charset="utf-8" />',
+                '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
+                f'  <meta http-equiv="refresh" content="0; url={escaped_url}" />',
+                f'  <link rel="canonical" href="{escaped_url}" />',
+                "  <title>SpecPM Documentation</title>",
+                "</head>",
+                "<body>",
+                f'  <p><a href="{escaped_url}">Open SpecPM documentation</a>.</p>',
+                "</body>",
+                "</html>",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
 
 def site_metadata(metadata: dict[str, str]) -> dict[str, Any]:

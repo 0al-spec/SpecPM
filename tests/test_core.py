@@ -7,6 +7,7 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 from pathlib import Path
 from typing import Any
@@ -673,6 +674,14 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert 'id="add-package"' in landing
     assert "Add SpecPackage(s)" in landing
     assert "Read Submission Guide" in landing
+    assert (
+        'href="https://0al-spec.github.io/SpecPM/documentation/specpm/" '
+        'target="_blank" rel="noopener">Read Docs' in landing
+    )
+    assert (
+        'href="https://0al-spec.github.io/SpecPM" target="_blank" rel="noopener">Read Docs'
+        not in landing
+    )
     assert "https://0al-spec.github.io/SpecPM/documentation/specpm/addspecpackage/" in (landing)
     assert "passing <code>specpm validate</code>" in landing
     assert "GitHub Actions validates each package" in landing
@@ -704,6 +713,7 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "Static Registry Viewer" in registry_viewer
     assert "SpecPM Registry Viewer" in registry_viewer
     assert "Registry Tree" in registry_viewer
+    assert "https://0al-spec.github.io/SpecPM/documentation/specpm/" in registry_viewer
     assert "Catalog Search" in registry_viewer
     assert "Search packages, intents, capabilities" in registry_viewer
     assert 'aria-label="Search packages, intents, capabilities"' in registry_viewer
@@ -1949,9 +1959,12 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "Generate public index metadata"
     )
     assert step_names.index("Generate public index metadata") < step_names.index(
-        "Render landing and viewer"
+        "Render GitHub Pages root redirect and viewer"
     )
-    assert step_names.index("Render landing and viewer") < step_names.index(
+    assert step_names.index("Render GitHub Pages root redirect and viewer") < step_names.index(
+        "Prepare SpecPM.dev static host artifact"
+    )
+    assert step_names.index("Prepare SpecPM.dev static host artifact") < step_names.index(
         "Upload static host artifact"
     )
     assert step_names.index("Upload static host artifact") < step_names.index("Upload artifact")
@@ -1973,12 +1986,24 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert '--build-number "${{ github.run_number }}"' in generate["run"]
     assert '--build-revision "${{ github.sha }}"' in generate["run"]
 
-    render = steps_by_name["Render landing and viewer"]
+    render = steps_by_name["Render GitHub Pages root redirect and viewer"]
     assert "python scripts/render_pages.py" in render["run"]
     assert "--output ./.docc-build" in render["run"]
     assert '--specpm-version "$SPECPM_VERSION"' in render["run"]
     assert '--build-number "${{ github.run_number }}"' in render["run"]
     assert '--build-revision "${{ github.sha }}"' in render["run"]
+    assert "--root-mode docs-redirect" in render["run"]
+    assert (
+        '--docs-url "https://${{ github.repository_owner }}.github.io/'
+        '${{ github.event.repository.name }}/documentation/specpm/"' in render["run"]
+    )
+
+    static_render = steps_by_name["Prepare SpecPM.dev static host artifact"]
+    assert "rm -rf ./.static-host-build" in static_render["run"]
+    assert "cp -R ./.docc-build ./.static-host-build" in static_render["run"]
+    assert "python scripts/render_pages.py" in static_render["run"]
+    assert "--output ./.static-host-build" in static_render["run"]
+    assert "--root-mode" not in static_render["run"]
 
     upload = steps_by_name["Upload artifact"]
     assert upload["with"]["path"] == "./.docc-build"
@@ -1986,7 +2011,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     static_upload = steps_by_name["Upload static host artifact"]
     assert static_upload["uses"] == "actions/upload-artifact@v7"
     assert static_upload["with"]["name"] == "specpm-static-site"
-    assert static_upload["with"]["path"] == "./.docc-build"
+    assert static_upload["with"]["path"] == "./.static-host-build"
     assert static_upload["with"]["if-no-files-found"] == "error"
     assert static_upload["with"]["include-hidden-files"] is True
 
@@ -2049,6 +2074,43 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in upload_run
     assert "mirror -R --dry-run" not in upload_run
     assert 'mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
+
+
+def test_render_pages_can_keep_github_pages_root_as_docc_redirect(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    output = tmp_path / "site"
+    docs_url = "https://0al-spec.github.io/SpecPM/documentation/specpm/"
+    monkeypatch.chdir(ROOT)
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/render_pages.py"),
+            "--output",
+            str(output),
+            "--specpm-version",
+            "0.2.0",
+            "--build-number",
+            "local",
+            "--build-revision",
+            "1234567890abcdef",
+            "--root-mode",
+            "docs-redirect",
+            "--docs-url",
+            docs_url,
+        ],
+        check=True,
+    )
+
+    root = (output / "index.html").read_text(encoding="utf-8")
+    assert f'content="0; url={docs_url}"' in root
+    assert f'<link rel="canonical" href="{docs_url}" />' in root
+    assert "SpecPM - Resolve Needs Into Specifications" not in root
+    assert (output / "viewer/index.html").is_file()
+    assert (output / "viewer/assets/viewer.js").is_file()
+    assert (output / "site-metadata.json").is_file()
 
 
 def test_deploy_connection_check_uses_trusted_sftp_dry_run() -> None:

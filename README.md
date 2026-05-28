@@ -334,8 +334,9 @@ make docs-build
 The GitHub Pages workflow builds the same DocC catalog from
 `Sources/SpecPM/Documentation.docc`.
 
-The same Pages artifact also includes the generated read-only public index
-metadata under `/v0` and the static registry viewer at
+The GitHub Pages root redirects to the DocC overview at
+`/documentation/specpm/`. The same Pages artifact also includes the generated
+read-only public index metadata under `/v0` and the static registry viewer at
 `https://0al-spec.github.io/SpecPM/viewer/`, produced from
 `public-index/accepted-packages.yml` by `specpm public-index generate` during
 the documentation workflow. This is static hosting only; remote manifest entries
