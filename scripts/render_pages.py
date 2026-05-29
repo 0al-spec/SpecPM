@@ -15,6 +15,7 @@ TEMPLATE_TOKENS = {
     "__SPECPM_BUILD_REVISION__": "revision",
     "__SPECPM_BUILD_REVISION_SHORT__": "revision_short",
 }
+DEFAULT_DOCS_URL = "https://0al-spec.github.io/SpecPM/documentation/specpm/"
 
 
 def main() -> int:
@@ -34,7 +35,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--docs-url",
-        default="https://0al-spec.github.io/SpecPM/documentation/specpm/",
+        default=DEFAULT_DOCS_URL,
         help="Absolute DocC URL used when --root-mode=docs-redirect.",
     )
     args = parser.parse_args()
@@ -86,7 +87,7 @@ def copy_assets(source: Path, destination: Path) -> None:
 
 
 def write_docs_redirect(destination: Path, docs_url: str) -> None:
-    clean_url = docs_url.strip() or "https://0al-spec.github.io/SpecPM/documentation/specpm/"
+    clean_url = docs_url.strip() or DEFAULT_DOCS_URL
     escaped_url = html.escape(clean_url, quote=True)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(
