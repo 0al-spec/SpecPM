@@ -1,7 +1,7 @@
 # SpecPM Roadmap
 
 Status: Public alpha roadmap
-Updated: 2026-05-23
+Updated: 2026-05-29
 
 SpecPM is the package substrate for SpecGraph. It packages, validates, indexes,
 inspects, preserves, and exposes reusable specification intent. It does not own
@@ -291,6 +291,110 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-1. `implementation: public static provenance receipt artifacts`
-   - generate non-authoritative receipt JSON artifacts for public static index
-     builds and wire them into observation reports.
+### 1. Public Static Provenance Receipt Artifacts
+
+Motivation:
+
+The public static index is generated deterministically, but downstream
+consumers currently see the final `/v0` JSON, package archives, and observation
+reports without a dedicated build receipt that explains which source manifest,
+pinned revisions, archive digests, and SpecPM implementation revision produced
+that snapshot.
+
+Goal:
+
+Generate non-authoritative receipt JSON artifacts for public static index
+builds and wire them into registry observation reports. The receipt should make
+the public index build auditable without turning it into a signature, trust
+proof, transparency log, or mutable registry service.
+
+Expected outcome:
+
+SpecGraph, ContextBuilder, SpecNode, and human operators can cite one
+machine-readable receipt when discussing whether a package version, archive
+digest, or registry snapshot came from the expected public index build.
+
+### 2. Public Index Operator UX
+
+Motivation:
+
+GitHub Issues already provide the public package intake model, but maintainer
+acceptance is still too manual: reviewers must translate validated issue
+content into `public-index/accepted-packages.yml` changes by hand while keeping
+labels, validation state, and audit history consistent.
+
+Goal:
+
+Define maintainer labels, acceptance checklists, and a future helper flow that
+can prepare a reviewed pull request from a valid submission issue. The helper
+may prepare labels, comments, pinned revisions, and manifest snippets, but
+accepted package changes must remain human-reviewed pull requests.
+
+Expected outcome:
+
+Valid external submissions can become auditable manifest PRs with less manual
+copying, while SpecPM still avoids `specpm publish`, upload endpoints,
+unauthenticated mutation APIs, package installation, and package content
+execution.
+
+### 3. Downstream Registry Consumer Contract
+
+Motivation:
+
+SpecGraph, ContextBuilder, SpecNode, and lab deploy checks need to consume the
+same `/v0` registry surface without guessing which endpoints are normative,
+which reports are diagnostic, and how registry drift should be recorded.
+
+Goal:
+
+Document consumer examples and expected reports for `/v0/status`,
+`/v0/packages`, package lookup, version lookup, exact capability search,
+observed intent catalog metadata, and exact intent lookup.
+
+Expected outcome:
+
+Downstream tools can report registry availability, visible package counts,
+missing package versions, capability visibility, intent visibility, and drift
+with concrete JSON evidence instead of project-specific interpretation.
+
+### 4. Remote Package Acquisition Design
+
+Motivation:
+
+SpecPM already has read-only remote metadata lookup. Any future package
+acquisition must not accidentally blur metadata discovery, archive download,
+digest verification, local cache behavior, lockfile semantics, publisher trust,
+or package execution boundaries.
+
+Goal:
+
+Write a design note before implementing remote fetch/install behavior. The note
+should separate metadata lookup from archive acquisition, define digest
+verification and cache layout, describe lockfile changes and failure modes, and
+preserve the rule that package content is never executed during acquisition.
+
+Expected outcome:
+
+Future acquisition work can be evaluated against explicit trust and cache
+semantics before any CLI or registry behavior changes.
+
+### 5. SpecHarvester Producer Contract
+
+Motivation:
+
+Producer tools such as SpecHarvester need a stable target for generated
+SpecPackage candidates. Without an explicit producer contract, generators may
+emit package-shaped data that validates locally but lacks the evidence,
+receipt, and review boundaries needed for public index intake.
+
+Goal:
+
+Define requirements for generated `specpm.yaml`, `BoundarySpec` documents,
+evidence references, producer receipts, validation expectations, and the
+boundary between generated candidate packages and accepted public packages.
+
+Expected outcome:
+
+SpecHarvester and other producer tools can generate reviewable SpecPM package
+candidates without gaining authority to publish, mutate the public index,
+execute package content, or bypass maintainer review.
