@@ -94,11 +94,24 @@ jobs:
             --build-revision "${{ github.sha }}" \
             --json
 
-      - name: Render landing and viewer
+      - name: Render GitHub Pages root redirect and viewer
         run: |
           SPECPM_VERSION="$(python -c 'from specpm import __version__; print(__version__)')"
           python scripts/render_pages.py \
             --output ./.docc-build \
+            --specpm-version "$SPECPM_VERSION" \
+            --build-number "${{ github.run_number }}" \
+            --build-revision "${{ github.sha }}" \
+            --root-mode docs-redirect \
+            --docs-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/documentation/specpm/"
+
+      - name: Prepare SpecPM.dev static host artifact
+        run: |
+          rm -rf ./.static-host-build
+          cp -R ./.docc-build ./.static-host-build
+          SPECPM_VERSION="$(python -c 'from specpm import __version__; print(__version__)')"
+          python scripts/render_pages.py \
+            --output ./.static-host-build \
             --specpm-version "$SPECPM_VERSION" \
             --build-number "${{ github.run_number }}" \
             --build-revision "${{ github.sha }}"
@@ -108,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: specpm-static-site
-          path: "./.docc-build"
+          path: "./.static-host-build"
           if-no-files-found: error
           include-hidden-files: true
 
