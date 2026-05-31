@@ -265,6 +265,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--build-revision",
         help="Source revision to embed in registry status metadata.",
     )
+    public_index_generate.add_argument(
+        "--issued-at",
+        help="UTC timestamp to embed in generated provenance receipt artifacts.",
+    )
     public_index_generate.add_argument("--json", action="store_true", help="Emit stable JSON.")
     public_index_generate.set_defaults(handler=handle_public_index_generate)
 
@@ -545,6 +549,7 @@ def handle_public_index_generate(args: argparse.Namespace) -> int:
             "version": args.specpm_version,
             "build_number": args.build_number,
             "revision": args.build_revision,
+            "issued_at": args.issued_at,
         },
     )
     if args.json:

@@ -96,12 +96,13 @@ package content.
 ## Public Static Index
 
 ```bash
-specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--json]
+specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--issued-at <utc-timestamp>] [--json]
 ```
 
 The public index generator validates and deterministically packs package
 directories, then writes static `/v0` remote registry metadata for package
-status, package index, package lookup, package version lookup, and exact
+status, package index, package lookup, package version lookup, provenance
+receipt artifacts, and exact
 capability search, observed intent catalog, and exact intent search. The output
 can be hosted by GitHub Pages or another static host.
 

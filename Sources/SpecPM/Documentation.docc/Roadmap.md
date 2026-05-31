@@ -113,7 +113,13 @@ implementation.
 Provenance receipt schema and audit evidence profile are now documented. The
 draft `SpecPMProvenanceReceipt` envelope defines source, archive, review,
 build, validation, trust, lifecycle, and audit evidence sections without adding
-receipt generation.
+trust authority.
+The public static provenance receipt JSON artifacts are now generated for public
+index package versions. Task label:
+`implementation: public static provenance receipt artifacts`. The generated
+receipts are non-authoritative audit evidence and do not add signature
+verification, lockfile enforcement, remote acquisition, mutable registry
+publication, or package execution.
 Producer receipt requirements for generated package candidates are now
 documented. The draft `SpecPMProducerReceipt` envelope defines generated
 package subject, producer, inputs, configuration, outputs, validation,
@@ -122,31 +128,24 @@ diagnostics, review, privacy, and audit evidence sections through the
 without adding generator runtime authority to SpecPM.
 The immediate planned sequence is:
 
-1. Public static provenance receipt artifacts.
-   Task label: `implementation: public static provenance receipt artifacts`.
-   Motivation: downstream consumers need a build receipt that connects source
-   manifest, pinned revisions, archive digests, observation reports, and the
-   SpecPM implementation revision for a public `/v0` snapshot. Goal: generate
-   non-authoritative public static provenance receipt JSON artifacts and wire
-   them into observation reports.
-2. Public index operator UX.
+1. Public index operator UX.
    Motivation: GitHub Issues are already the public intake model, but
    maintainer acceptance still requires too much manual copying. Goal: define
    labels, checklists, and future helper behavior for preparing reviewed
    `public-index/accepted-packages.yml` pull requests without adding
    request-time mutation.
-3. Downstream registry consumer contract.
+2. Downstream registry consumer contract.
    Motivation: SpecGraph, ContextBuilder, SpecNode, and lab deploy checks need
    the same interpretation of `/v0` registry endpoints and drift evidence.
    Goal: document consumer examples and expected reports for status, package
    lookup, version lookup, capability search, observed intent metadata, and
    exact intent lookup.
-4. Remote package acquisition design.
+3. Remote package acquisition design.
    Motivation: read-only metadata lookup must remain separate from future
    archive download, digest verification, cache writes, lockfile semantics, and
    package execution boundaries. Goal: write the design note before any remote
    fetch/install implementation.
-5. SpecHarvester producer contract.
+4. SpecHarvester producer contract.
    Motivation: producer tools need a stable target for generated SpecPackage
    candidates. Goal: define requirements for generated `specpm.yaml`,
    `BoundarySpec` documents, evidence references, producer receipts, validation

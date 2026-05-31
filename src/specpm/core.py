@@ -1394,7 +1394,7 @@ def remote_observation_summary(
     registry_payload = status_report.get("payload")
     registry = registry_payload.get("registry") if isinstance(registry_payload, dict) else None
     package_index_payload = package_index_report.get("payload")
-    return {
+    summary = {
         "registry_status": status_report.get("status"),
         "package_index_status": package_index_report.get("status"),
         "package_count": get_int(registry, "package_count")
@@ -1410,6 +1410,12 @@ def remote_observation_summary(
         "check_count": len(checks),
         "failed_check_count": sum(1 for check in checks if check.get("status") != "ok"),
     }
+    provenance_receipt_count = (
+        get_int(registry, "provenance_receipt_count") if isinstance(registry, dict) else None
+    )
+    if provenance_receipt_count is not None:
+        summary["provenance_receipt_count"] = provenance_receipt_count
+    return summary
 
 
 def get_int(mapping: Any, key: str) -> int | None:

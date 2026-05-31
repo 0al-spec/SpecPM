@@ -277,7 +277,14 @@ implementation.
 Provenance receipt schema and audit evidence profile are now documented. The
 policy defines the draft `SpecPMProvenanceReceipt` envelope, public static index
 profile, required source/archive/review/build/validation/trust/lifecycle/audit
-sections, and fixture shape without adding receipt generation.
+sections, and fixture shape.
+
+Public static provenance receipt artifact generation is now implemented for
+public index package versions. Task label:
+`implementation: public static provenance receipt artifacts`. The generated
+receipts are non-authoritative audit evidence and do not add signature
+verification, lockfile enforcement, remote acquisition, mutable registry
+publication, or package execution.
 
 Producer receipt requirements for generated package candidates are now
 documented. The policy defines a tool-neutral `SpecPMProducerReceipt` envelope
@@ -291,32 +298,7 @@ remain maintainer-reviewed pull requests against
 
 ## Next Planned Sequence
 
-### 1. Public Static Provenance Receipt Artifacts
-
-Task label: `implementation: public static provenance receipt artifacts`
-
-Motivation:
-
-The public static index is generated deterministically, but downstream
-consumers currently see the final `/v0` JSON, package archives, and observation
-reports without a dedicated build receipt that explains which source manifest,
-pinned revisions, archive digests, and SpecPM implementation revision produced
-that snapshot.
-
-Goal:
-
-Generate non-authoritative receipt JSON artifacts for public static index
-builds and wire them into registry observation reports. The receipt should make
-the public index build auditable without turning it into a signature, trust
-proof, transparency log, or mutable registry service.
-
-Expected outcome:
-
-SpecGraph, ContextBuilder, SpecNode, and human operators can cite one
-machine-readable receipt when discussing whether a package version, archive
-digest, or registry snapshot came from the expected public index build.
-
-### 2. Public Index Operator UX
+### 1. Public Index Operator UX
 
 Motivation:
 
@@ -339,7 +321,7 @@ copying, while SpecPM still avoids `specpm publish`, upload endpoints,
 unauthenticated mutation APIs, package installation, and package content
 execution.
 
-### 3. Downstream Registry Consumer Contract
+### 2. Downstream Registry Consumer Contract
 
 Motivation:
 
@@ -359,7 +341,7 @@ Downstream tools can report registry availability, visible package counts,
 missing package versions, capability visibility, intent visibility, and drift
 with concrete JSON evidence instead of project-specific interpretation.
 
-### 4. Remote Package Acquisition Design
+### 3. Remote Package Acquisition Design
 
 Motivation:
 
@@ -380,7 +362,7 @@ Expected outcome:
 Future acquisition work can be evaluated against explicit trust and cache
 semantics before any CLI or registry behavior changes.
 
-### 5. SpecHarvester Producer Contract
+### 4. SpecHarvester Producer Contract
 
 Motivation:
 

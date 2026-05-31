@@ -368,6 +368,8 @@ index repo
       packages/{package_id}/versions/{version}/index.json
       packages/{package_id}/versions/{version}/index.html
       packages/{package_id}/versions/{version}/{package_id}-{version}.specpm.tgz
+      packages/{package_id}/versions/{version}/provenance-receipt/index.json
+      packages/{package_id}/versions/{version}/provenance-receipt/index.html
       capabilities/{capability_id}/packages/index.json
       capabilities/{capability_id}/packages/index.html
       intents/index.json
@@ -408,7 +410,8 @@ client, or execute package content. Remote accepted manifest entries are source
 checkouts used for static generation only.
 
 The generator validates package directories, creates deterministic
-`specpm-tar-gzip-v0` archives, validates generated package/version/capability
+`specpm-tar-gzip-v0` archives, writes non-authoritative provenance receipt
+artifacts for package versions, validates generated package/version/capability
 payloads against the remote registry contract, and writes static files in
 deterministic order.
 
@@ -419,7 +422,8 @@ registry endpoints like `/v0/packages/{package_id}` without a custom backend.
 This command is still a static metadata generator. It does not accept public
 submissions, change issue labels, publish through a remote mutation API,
 install packages, fetch remote archives as a client, or execute package
-content.
+content. Generated receipts are audit evidence only; they do not verify
+signature trust or grant package authority.
 
 ## Local Public Index Service
 

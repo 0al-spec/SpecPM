@@ -47,8 +47,9 @@ Build-time work happens after reviewed source changes:
 - maintainers update `public-index/accepted-packages.yml`;
 - accepted remote sources are pinned to exact commit revisions;
 - `specpm public-index generate` validates accepted packages;
-- the generator writes static `/v0` registry metadata and deterministic package
-  archives into the Pages artifact.
+- the generator writes static `/v0` registry metadata, deterministic package
+  archives, and non-authoritative provenance receipt artifacts into the Pages
+  artifact.
 
 Request-time work is static file serving:
 
@@ -79,6 +80,7 @@ GET /v0/status
 GET /v0/packages
 GET /v0/packages/{package_id}
 GET /v0/packages/{package_id}/versions/{version}
+GET /v0/packages/{package_id}/versions/{version}/provenance-receipt
 GET /v0/capabilities/{capability_id}/packages
 GET /v0/intents
 GET /v0/intents/{intent_id}
@@ -87,7 +89,7 @@ GET /v0/intents/{intent_id}/packages
 
 These endpoints are metadata lookup surfaces. They do not install packages,
 download archives into a project, execute package content, authenticate users,
-or publish new packages.
+publish new packages, or verify receipt trust.
 
 `/v0/intents` and `/v0/intents/{intent_id}` are observed catalog endpoints.
 They show intent IDs found in accepted packages, but they do not make those IDs
