@@ -1,7 +1,7 @@
 # SpecPM Roadmap
 
 Status: Public alpha roadmap
-Updated: 2026-05-29
+Updated: 2026-05-31
 
 SpecPM is the package substrate for SpecGraph. It packages, validates, indexes,
 inspects, preserves, and exposes reusable specification intent. It does not own
@@ -292,6 +292,8 @@ remain maintainer-reviewed pull requests against
 ## Next Planned Sequence
 
 ### 1. Public Static Provenance Receipt Artifacts
+
+Task label: `implementation: public static provenance receipt artifacts`
 
 Motivation:
 

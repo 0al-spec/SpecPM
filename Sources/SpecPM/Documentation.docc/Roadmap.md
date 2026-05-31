@@ -120,10 +120,38 @@ package subject, producer, inputs, configuration, outputs, validation,
 diagnostics, review, privacy, and audit evidence sections through the
 `generated_spec_package_v0` profile for SpecHarvester or another producer
 without adding generator runtime authority to SpecPM.
-The next planned work is:
+The immediate planned sequence is:
 
-1. Generate non-authoritative public static provenance receipt JSON artifacts
-   and wire them into observation reports.
+1. Public static provenance receipt artifacts.
+   Task label: `implementation: public static provenance receipt artifacts`.
+   Motivation: downstream consumers need a build receipt that connects source
+   manifest, pinned revisions, archive digests, observation reports, and the
+   SpecPM implementation revision for a public `/v0` snapshot. Goal: generate
+   non-authoritative public static provenance receipt JSON artifacts and wire
+   them into observation reports.
+2. Public index operator UX.
+   Motivation: GitHub Issues are already the public intake model, but
+   maintainer acceptance still requires too much manual copying. Goal: define
+   labels, checklists, and future helper behavior for preparing reviewed
+   `public-index/accepted-packages.yml` pull requests without adding
+   request-time mutation.
+3. Downstream registry consumer contract.
+   Motivation: SpecGraph, ContextBuilder, SpecNode, and lab deploy checks need
+   the same interpretation of `/v0` registry endpoints and drift evidence.
+   Goal: document consumer examples and expected reports for status, package
+   lookup, version lookup, capability search, observed intent metadata, and
+   exact intent lookup.
+4. Remote package acquisition design.
+   Motivation: read-only metadata lookup must remain separate from future
+   archive download, digest verification, cache writes, lockfile semantics, and
+   package execution boundaries. Goal: write the design note before any remote
+   fetch/install implementation.
+5. SpecHarvester producer contract.
+   Motivation: producer tools need a stable target for generated SpecPackage
+   candidates. Goal: define requirements for generated `specpm.yaml`,
+   `BoundarySpec` documents, evidence references, producer receipts, validation
+   expectations, and the boundary between generated candidates and accepted
+   public packages.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
