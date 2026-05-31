@@ -190,7 +190,8 @@ jobs:
           printf 'Static host human size: '
           du -sh specpm-static-site | awk '{ print $1 }'
           echo "Largest static host files:"
-          find specpm-static-site -type f -printf '%s %p\n' | sort -nr | head -20
+          find specpm-static-site -type f -printf '%s %p\n' | sort -nr > /tmp/specpm-static-site-largest-files.txt
+          head -20 /tmp/specpm-static-site-largest-files.txt
 
       - name: Validate deploy settings
         run: |
@@ -212,7 +213,15 @@ jobs:
         run: |
           DEPLOY_PORT="${FTP_PORT:-22}"
           mkdir -p "$HOME/.ssh"
-          ssh-keyscan -T 20 -p "$DEPLOY_PORT" "$FTP_HOST" > "$HOME/.ssh/known_hosts"
+          : > "$HOME/.ssh/known_hosts"
+          for attempt in 1 2 3; do
+            if ssh-keyscan -T 20 -p "$DEPLOY_PORT" "$FTP_HOST" >> "$HOME/.ssh/known_hosts"; then
+              break
+            fi
+            echo "ssh-keyscan attempt $attempt failed; retrying." >&2
+            sleep 5
+          done
+          test -s "$HOME/.ssh/known_hosts"
 
       - name: Check SpecPM.dev SFTP target
         timeout-minutes: 3
