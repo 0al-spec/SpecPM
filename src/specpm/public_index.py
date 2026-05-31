@@ -609,7 +609,11 @@ def public_index_provenance_receipt(
     validation = package.get("validation", {})
     warning_count = len(validation.get("warnings", [])) if isinstance(validation, dict) else 0
     error_count = len(validation.get("errors", [])) if isinstance(validation, dict) else 0
+    validation_status = public_index_receipt_validation_status(
+        validation, warning_count=warning_count, error_count=error_count
+    )
     source = package.get("accepted_source", {})
+    state = package.get("state", {})
     archive_digest = package["source"]["digest"]["value"]
     build_revision = str(metadata.get("revision") or "unknown").strip() or "unknown"
     build_number = str(metadata.get("build_number") or "").strip()
@@ -667,7 +671,7 @@ def public_index_provenance_receipt(
         "review": public_index_receipt_review(source),
         "build": build,
         "validation": {
-            "status": "valid" if error_count == 0 else "invalid",
+            "status": validation_status,
             "warningCount": warning_count,
             "errorCount": error_count,
             "validatorVersion": public_index_implementation_metadata(metadata)["version"],
@@ -679,15 +683,41 @@ def public_index_provenance_receipt(
             "revocationStatus": "not_checked",
         },
         "lifecycle": {
-            "state": "visible",
-            "yanked": package["state"]["yanked"],
-            "deprecated": package["state"]["deprecated"],
-            "revoked": False,
+            "state": public_index_receipt_lifecycle_state(state),
+            "yanked": isinstance(state, dict) and state.get("yanked") is True,
+            "deprecated": isinstance(state, dict) and state.get("deprecated") is True,
+            "revoked": isinstance(state, dict) and state.get("revoked") is True,
         },
         "audit": {
             "evidence": audit_evidence,
         },
     }
+
+
+def public_index_receipt_validation_status(
+    validation: Any,
+    *,
+    warning_count: int,
+    error_count: int,
+) -> str:
+    status = validation.get("status") if isinstance(validation, dict) else None
+    if status == "invalid" or error_count > 0:
+        return "invalid"
+    if status == "warning_only" or warning_count > 0:
+        return "warning"
+    return "valid"
+
+
+def public_index_receipt_lifecycle_state(state: Any) -> str:
+    if not isinstance(state, dict):
+        return "visible"
+    if state.get("revoked") is True:
+        return "revoked"
+    if state.get("yanked") is True:
+        return "yanked"
+    if state.get("deprecated") is True:
+        return "deprecated"
+    return "visible"
 
 
 def public_index_receipt_review(source: Any) -> dict[str, Any]:

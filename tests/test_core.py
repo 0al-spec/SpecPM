@@ -517,6 +517,44 @@ def update_email_package(
     write_yaml_file(spec_path, spec)
 
 
+def public_index_receipt_test_package(
+    *,
+    validation: dict[str, Any] | None = None,
+    state: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "package_id": "document_conversion.email_tools",
+        "version": "0.1.0",
+        "accepted_source": {
+            "kind": "local_path",
+            "path": "examples/email_tools",
+        },
+        "source": {
+            "url": (
+                "https://registry.example.invalid/v0/packages/"
+                "document_conversion.email_tools/versions/0.1.0/"
+                "document_conversion.email_tools-0.1.0.specpm.tgz"
+            ),
+            "digest": {
+                "algorithm": "sha256",
+                "value": "a" * 64,
+            },
+            "size": 123,
+        },
+        "validation": validation
+        or {
+            "status": "valid",
+            "warnings": [],
+            "errors": [],
+        },
+        "state": state
+        or {
+            "yanked": False,
+            "deprecated": False,
+        },
+    }
+
+
 def write_fake_specnode_checkout(checkout: Path) -> None:
     checkout.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ROOT / "examples/email_tools", checkout)
@@ -4272,6 +4310,49 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     assert receipt_payload["lifecycle"]["state"] == "visible"
     assert receipt_payload["audit"]["evidence"]
     assert sorted(report["written_files"]) == report["written_files"]
+
+
+def test_public_index_provenance_receipt_reports_warning_validation_status() -> None:
+    package = public_index_receipt_test_package(
+        validation={
+            "status": "warning_only",
+            "warnings": [
+                {
+                    "code": "example_warning",
+                    "message": "Example warning.",
+                }
+            ],
+            "errors": [],
+        }
+    )
+
+    receipt = public_index_module.public_index_provenance_receipt(package, None)
+
+    assert receipt["validation"]["status"] == "warning"
+    assert receipt["validation"]["warningCount"] == 1
+    assert receipt["validation"]["errorCount"] == 0
+
+
+@pytest.mark.parametrize(
+    ("state", "expected_state"),
+    [
+        ({"yanked": True, "deprecated": False}, "yanked"),
+        ({"yanked": False, "deprecated": True}, "deprecated"),
+        ({"revoked": True, "yanked": True, "deprecated": True}, "revoked"),
+    ],
+)
+def test_public_index_provenance_receipt_summarizes_lifecycle_state(
+    state: dict[str, Any],
+    expected_state: str,
+) -> None:
+    package = public_index_receipt_test_package(state=state)
+
+    receipt = public_index_module.public_index_provenance_receipt(package, None)
+
+    assert receipt["lifecycle"]["state"] == expected_state
+    assert receipt["lifecycle"]["yanked"] is (state.get("yanked") is True)
+    assert receipt["lifecycle"]["deprecated"] is (state.get("deprecated") is True)
+    assert receipt["lifecycle"]["revoked"] is (state.get("revoked") is True)
 
 
 def test_public_index_generate_treats_identical_duplicate_version_as_noop(
