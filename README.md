@@ -181,7 +181,7 @@ Implemented first slice:
 - `specpm remote intent <intent-id> --registry <url> [--json]`
 - `specpm remote search-intent <intent-id> --registry <url> [--json]`
 - `specpm remote observe --registry <url> [--package <package-id>] [--version <package-id@version>] [--capability <capability-id>] [--json]`
-- `specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--json]`
+- `specpm public-index generate [<package-dir>...] [--manifest <accepted-packages.yml>] --output <dir> --registry <url> [--issued-at <utc-timestamp>] [--json]`
 
 Inbox JSON includes bundle layout checks, validation status, handoff continuity
 fields, and actionable gaps for incomplete SpecGraph export bundles.
@@ -239,8 +239,9 @@ source-revision metadata from future signature verification, revocation,
 yanked/deprecated semantics, and provenance receipts. No runtime signature
 verification is implemented yet.
 The draft provenance receipt schema and audit evidence profile are documented in
-`specs/PROVENANCE_RECEIPTS.md`; current SpecPM does not generate receipt
-artifacts.
+`specs/PROVENANCE_RECEIPTS.md`; `specpm public-index generate` emits
+non-authoritative receipt artifacts for generated public static index package
+versions.
 Producer-side receipt requirements for generated `SpecPackage` candidates are
 documented in `specs/PRODUCER_RECEIPTS.md`; current SpecPM does not run or
 trust producer tools such as SpecHarvester.

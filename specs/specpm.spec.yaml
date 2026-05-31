@@ -58,6 +58,7 @@ scope:
     - Document intent taxonomy governance for proposing, reviewing, deprecating, superseding, rejecting, and reserving canonical `intent.*` IDs.
     - Document package signing, revocation, yanked/deprecated semantics, verification boundaries, and provenance receipt expectations before runtime enforcement.
     - Document the provenance receipt schema and audit evidence profile for future registry, acquisition, and trust verification work.
+    - Generate non-authoritative provenance receipt artifacts for public static index package versions.
     - Document producer receipt requirements for generated SpecPackage candidates without making SpecPM run or trust producer tools.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
@@ -76,7 +77,7 @@ scope:
     - Remote registry mutation APIs.
     - Remote package yanking governance.
     - Package signature verification runtime, signing key management, and trust policy enforcement.
-    - Provenance receipt generation, publication, verification, and lockfile enforcement.
+    - Provenance receipt verification, trust enforcement, and lockfile enforcement.
     - Producer receipt generation, producer execution, analyzer execution, and generated package acceptance.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
@@ -183,7 +184,10 @@ provides:
       summary: Document package signing, verification, revocation, yanked/deprecated semantics, and provenance receipt boundaries before runtime enforcement.
     - id: specpm.registry.provenance_receipt_schema
       role: secondary
-      summary: Document the draft SpecPMProvenanceReceipt envelope, public static profile, and audit evidence sections without generating receipts.
+      summary: Document the draft SpecPMProvenanceReceipt envelope, public static profile, and audit evidence sections.
+    - id: specpm.registry.public_index_provenance_receipts
+      role: secondary
+      summary: Generate non-authoritative SpecPMProvenanceReceipt artifacts for public static index package versions without treating receipts as trust authority.
     - id: specpm.specs.producer_receipt_contract
       role: secondary
       summary: Document the draft SpecPMProducerReceipt envelope and generated package profile for producer tools such as SpecHarvester without running producers.

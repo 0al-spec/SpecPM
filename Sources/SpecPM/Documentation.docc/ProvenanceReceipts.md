@@ -1,7 +1,7 @@
 # Provenance Receipts
 
-SpecPM provenance receipts are planned machine-readable evidence records for
-exact package versions or registry snapshots.
+SpecPM provenance receipts are machine-readable evidence records for exact
+package versions or registry snapshots.
 
 Receipts are evidence, not authority. A receipt records what source, archive,
 review, build, validation, trust policy, lifecycle, and audit evidence was
@@ -49,8 +49,12 @@ Receipts should record:
 
 ## Boundary
 
-Current SpecPM does not generate provenance receipts. Future receipt generation,
-publication, verification, or registry payload changes must reference the
+Current SpecPM generates non-authoritative provenance receipt artifacts for
+public static index package versions during `specpm public-index generate`.
+These receipts are static evidence artifacts only; they do not verify
+signatures, enforce trust, mutate remote registry state, write lockfiles, cache
+archives, or execute package content. Future receipt verification, trust
+enforcement, acquisition, or enterprise registry behavior must reference the
 detailed policy first.
 
 The detailed policy is maintained in `specs/PROVENANCE_RECEIPTS.md`.

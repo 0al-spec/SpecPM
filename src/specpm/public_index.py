@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
@@ -22,6 +23,7 @@ from specpm.core import (
     pack_package,
     resolve_inside,
     semver_key,
+    sha256_file,
     validate_remote_registry_payload,
     write_json_file,
 )
@@ -63,6 +65,7 @@ def generate_public_index_from_inputs(
                 resolved_package_dirs,
                 output_dir,
                 registry_url,
+                source_contexts=public_index_source_contexts(manifest["sources"]),
                 build_metadata=build_metadata,
             )
     return generate_public_index(
@@ -347,6 +350,7 @@ def generate_public_index(
     output_dir: Path,
     registry_url: str,
     *,
+    source_contexts: dict[str, dict[str, Any]] | None = None,
     build_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     resolved_output = output_dir.resolve()
@@ -377,7 +381,12 @@ def generate_public_index(
         seen: dict[tuple[str, str], dict[str, Any]] = {}
 
         for package_dir in package_dirs:
-            package_result = prepare_public_index_package(package_dir, staging_output, registry_url)
+            package_result = prepare_public_index_package(
+                package_dir,
+                staging_output,
+                registry_url,
+                source_context=public_index_source_context(package_dir, source_contexts),
+            )
             if package_result["status"] != "ok":
                 errors.extend(package_result["errors"])
                 continue
@@ -405,6 +414,12 @@ def generate_public_index(
         if errors:
             return public_index_report("invalid", resolved_output, registry_url, [], errors)
 
+        receipt_files = write_public_index_provenance_receipts(
+            staging_output,
+            packages,
+            registry_url,
+            build_metadata=build_metadata,
+        )
         payloads = build_public_index_payloads(
             packages,
             build_metadata=build_metadata,
@@ -414,6 +429,7 @@ def generate_public_index(
             return public_index_report("invalid", resolved_output, registry_url, [], payload_errors)
 
         written_files = write_public_index_payloads(staging_output, payloads)
+        written_files.extend(receipt_files)
         written_files.extend(package["archive_path"] for package in packages)
         written_files = sorted(
             {relative_output_path(staging_output, Path(path)) for path in written_files}
@@ -427,6 +443,8 @@ def prepare_public_index_package(
     package_dir: Path,
     output_dir: Path,
     registry_url: str,
+    *,
+    source_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     inspection = inspect_package(package_dir)
     validation = inspection["validation"]
@@ -490,10 +508,196 @@ def prepare_public_index_package(
                 "size": pack_report["archive_size"],
                 "url": source_url,
             },
+            "accepted_source": public_index_receipt_source(source_context, package_dir),
+            "validation": pack_report["validation"],
             "archive_path": str(archive_path),
         },
         "errors": [],
     }
+
+
+def public_index_source_contexts(
+    sources: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    contexts: dict[str, dict[str, Any]] = {}
+    for source in sources:
+        package_dir = source.get("package_dir")
+        if isinstance(package_dir, str) and package_dir:
+            contexts[str(Path(package_dir).resolve())] = source
+    return contexts
+
+
+def public_index_source_context(
+    package_dir: Path,
+    source_contexts: dict[str, dict[str, Any]] | None,
+) -> dict[str, Any]:
+    resolved = str(package_dir.resolve())
+    if source_contexts and resolved in source_contexts:
+        return source_contexts[resolved]
+    return {
+        "kind": "local_path",
+        "path": public_index_local_source_path(package_dir),
+        "package_dir": resolved,
+    }
+
+
+def public_index_receipt_source(
+    source_context: dict[str, Any] | None,
+    package_dir: Path,
+) -> dict[str, Any]:
+    context = source_context or {}
+    if context.get("kind") == "git":
+        return {
+            "kind": "git",
+            "repository": context.get("repository"),
+            "ref": context.get("ref"),
+            "revision": context.get("revision"),
+            "path": context.get("path") or ".",
+        }
+    return {
+        "kind": "local_path",
+        "path": context.get("path") or public_index_local_source_path(package_dir),
+    }
+
+
+def public_index_local_source_path(package_dir: Path) -> str:
+    resolved = package_dir.resolve()
+    try:
+        return resolved.relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return str(package_dir)
+
+
+def write_public_index_provenance_receipts(
+    output_dir: Path,
+    packages: list[dict[str, Any]],
+    registry_url: str,
+    *,
+    build_metadata: dict[str, Any] | None,
+) -> list[str]:
+    written: list[str] = []
+    for package in packages:
+        receipt_path = output_dir / provenance_receipt_payload_path(package)
+        receipt = public_index_provenance_receipt(package, build_metadata)
+        write_json_file(receipt_path, receipt)
+        package["provenance_receipt"] = {
+            "kind": "provenance_receipt",
+            "apiVersion": receipt["apiVersion"],
+            "receiptProfile": receipt["receiptProfile"],
+            "url": public_index_url(
+                registry_url, provenance_receipt_payload_path(package).split("/")
+            ),
+            "digest": {
+                "algorithm": "sha256",
+                "value": sha256_file(receipt_path),
+            },
+            "size": receipt_path.stat().st_size,
+        }
+        written.append(str(receipt_path))
+
+        index_html_path = receipt_path.with_name("index.html")
+        write_json_file(index_html_path, receipt)
+        written.append(str(index_html_path))
+    return written
+
+
+def public_index_provenance_receipt(
+    package: dict[str, Any],
+    build_metadata: dict[str, Any] | None,
+) -> dict[str, Any]:
+    metadata = build_metadata or {}
+    validation = package.get("validation", {})
+    warning_count = len(validation.get("warnings", [])) if isinstance(validation, dict) else 0
+    error_count = len(validation.get("errors", [])) if isinstance(validation, dict) else 0
+    source = package.get("accepted_source", {})
+    archive_digest = package["source"]["digest"]["value"]
+    build_revision = str(metadata.get("revision") or "unknown").strip() or "unknown"
+    build_number = str(metadata.get("build_number") or "").strip()
+    issued_at = str(metadata.get("issued_at") or "").strip() or datetime.now(timezone.utc).replace(
+        microsecond=0
+    ).isoformat().replace("+00:00", "Z")
+
+    build: dict[str, Any] = {
+        "provider": "github_actions" if build_number and build_number != "local" else "local",
+        "workflow": "specpm public-index generate",
+        "revision": build_revision,
+        "builder": "SpecPM",
+        "implementation": public_index_implementation_metadata(metadata),
+    }
+    if build_number:
+        build["runId"] = build_number
+
+    audit_evidence: list[dict[str, Any]] = [
+        {
+            "kind": "archive_digest",
+            "digest": package["source"]["digest"],
+            "retention": "public-static-index",
+        },
+        {
+            "kind": "registry_payload",
+            "path": version_payload_path(package),
+            "retention": "public-static-index",
+        },
+    ]
+    if isinstance(source, dict) and source.get("kind") == "git":
+        audit_evidence.insert(
+            0,
+            {
+                "kind": "source_commit",
+                "repository": source.get("repository"),
+                "revision": source.get("revision"),
+                "retention": "git-history",
+            },
+        )
+
+    return {
+        "apiVersion": "specpm.receipts/v0",
+        "kind": "SpecPMProvenanceReceipt",
+        "schemaVersion": 1,
+        "receiptProfile": "public_static_index_build_v0",
+        "receiptId": (f"{package['package_id']}@{package['version']}:sha256:{archive_digest[:12]}"),
+        "issuedAt": issued_at,
+        "subject": {
+            "packageId": package["package_id"],
+            "version": package["version"],
+            "registryProfile": "public_static_index",
+        },
+        "source": source,
+        "archive": package["source"],
+        "review": public_index_receipt_review(source),
+        "build": build,
+        "validation": {
+            "status": "valid" if error_count == 0 else "invalid",
+            "warningCount": warning_count,
+            "errorCount": error_count,
+            "validatorVersion": public_index_implementation_metadata(metadata)["version"],
+        },
+        "trust": {
+            "policy": "specs/PACKAGE_SIGNING_REVOCATION.md",
+            "signatureRequired": False,
+            "signatureStatus": "not_applicable",
+            "revocationStatus": "not_checked",
+        },
+        "lifecycle": {
+            "state": "visible",
+            "yanked": package["state"]["yanked"],
+            "deprecated": package["state"]["deprecated"],
+            "revoked": False,
+        },
+        "audit": {
+            "evidence": audit_evidence,
+        },
+    }
+
+
+def public_index_receipt_review(source: Any) -> dict[str, Any]:
+    review: dict[str, Any] = {
+        "kind": "manual",
+        "decision": "accepted",
+    }
+    if isinstance(source, dict) and source.get("kind") == "git":
+        review["commit"] = source.get("revision")
+    return review
 
 
 def build_public_index_payloads(
@@ -635,6 +839,9 @@ def remote_registry_summary(
         "version_count": len(packages),
         "capability_count": len(capabilities),
         "intent_count": len(intents),
+        "provenance_receipt_count": sum(
+            1 for package in packages if isinstance(package.get("provenance_receipt"), dict)
+        ),
         "implementation": implementation,
     }
 
@@ -748,6 +955,7 @@ def remote_package_version_payload(package: dict[str, Any]) -> dict[str, Any]:
             "compatibility": package["compatibility"],
             "state": package["state"],
             "source": package["source"],
+            "provenance_receipt": package.get("provenance_receipt"),
         },
     }
 
@@ -995,6 +1203,13 @@ def registry_status_payload_path() -> str:
 
 def version_payload_path(package: dict[str, Any]) -> str:
     return f"v0/packages/{package['package_id']}/versions/{package['version']}/index.json"
+
+
+def provenance_receipt_payload_path(package: dict[str, Any]) -> str:
+    return (
+        f"v0/packages/{package['package_id']}/versions/"
+        f"{package['version']}/provenance-receipt/index.json"
+    )
 
 
 def capability_payload_path(capability_id: str) -> str:

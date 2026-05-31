@@ -1408,9 +1408,8 @@ Acceptance:
 - [x] Define extension rules for public and enterprise profiles.
 - [x] Document failure interpretation when future policy requires receipts.
 - [x] Add a non-normative machine-readable fixture for the receipt shape.
-- [x] Keep receipt generation, receipt publication, receipt verification,
-  registry payload mutation, lockfile changes, and package execution outside
-  current SpecPM core.
+- [x] Keep receipt verification, trust enforcement, lockfile changes, cache
+  writes, and package execution outside current SpecPM core.
 
 Acceptance:
 
@@ -1420,7 +1419,27 @@ Acceptance:
 - Public static and enterprise receipt requirements can diverge without
   breaking the common envelope.
 
-## Phase 58. Producer Receipt Contract for Generated Specs
+## Phase 58. Public Static Provenance Receipt Artifacts
+
+- [x] Generate non-authoritative `SpecPMProvenanceReceipt` JSON artifacts for
+  public static index package versions.
+- [x] Publish each receipt under the package version static `/v0` path.
+- [x] Add receipt descriptors to package version metadata so downstream
+  observation reports can cite the artifact.
+- [x] Preserve the boundary that receipts are evidence, not trust authority.
+
+Acceptance:
+
+- `specpm public-index generate` writes a receipt for each generated package
+  version.
+- Receipt artifacts identify the package version, source context, archive
+  digest, build metadata, validation summary, lifecycle state, and audit
+  evidence.
+- Public index generation still does not publish packages, mutate remote
+  registry state, verify signatures, write lockfiles, cache remote archives, or
+  execute package content.
+
+## Phase 59. Producer Receipt Contract for Generated Specs
 
 - [x] Document the draft `SpecPMProducerReceipt` envelope.
 - [x] Define the initial `generated_spec_package_v0` producer profile.

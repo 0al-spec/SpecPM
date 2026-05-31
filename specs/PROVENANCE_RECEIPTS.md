@@ -17,21 +17,21 @@ digest verification, signature verification, or maintainer review.
 
 ## Current Boundary
 
-Current SpecPM does not generate provenance receipts. Current public `/v0`
-metadata includes package source descriptors, archive digests, lifecycle state,
-implementation build metadata, and static registry payloads, but no dedicated
-receipt artifact.
+Current SpecPM generates non-authoritative provenance receipt artifacts for
+public static index package versions during `specpm public-index generate`.
+Current public `/v0` metadata includes package source descriptors, archive
+digests, lifecycle state, implementation build metadata, static registry
+payloads, and a receipt descriptor for each generated package version.
 
-This policy defines a schema contract for future receipt artifacts only. It
-does not add:
+This policy and implementation do not add:
 
-- receipt generation;
-- registry payload mutation;
+- receipt verification;
 - signature verification;
 - revocation feed handling;
 - lockfile changes;
 - cache writes;
-- package execution.
+- package execution;
+- mutable registry publication APIs.
 
 ## Related Producer Receipts
 
@@ -289,7 +289,8 @@ receipt and must not be used as trust evidence.
 
 ## Source Contract
 
-This document is policy evidence for future provenance receipt work. Runtime
-receipt generation, receipt publication, receipt verification, or registry
-payload changes must reference this boundary and define implementation-specific
-failure behavior before landing.
+This document is policy evidence for provenance receipt work. Current runtime
+receipt generation is limited to non-authoritative public static index
+artifacts. Future receipt verification, trust enforcement, lockfile integration,
+remote acquisition, or enterprise registry behavior must reference this
+boundary and define implementation-specific failure behavior before landing.

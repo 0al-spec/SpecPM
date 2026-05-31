@@ -1675,7 +1675,7 @@ def test_provenance_receipt_schema_is_documented() -> None:
     for required_text in (
         "SpecPMProvenanceReceipt",
         "Receipts are evidence, not authority",
-        "Current SpecPM does not generate provenance receipts",
+        "Current SpecPM generates non-authoritative provenance receipt artifacts",
         "apiVersion: specpm.receipts/v0",
         "receiptProfile: public_static_index_build_v0",
         "subject",
@@ -1697,7 +1697,7 @@ def test_provenance_receipt_schema_is_documented() -> None:
         "apiVersion: specpm.receipts/v0",
         "kind: SpecPMProvenanceReceipt",
         "public_static_index_build_v0",
-        "Current SpecPM does not generate provenance receipts",
+        "Current SpecPM generates non-authoritative provenance receipt artifacts",
     ):
         assert required_text in docc_policy
 
@@ -1736,7 +1736,9 @@ def test_provenance_receipt_schema_is_documented() -> None:
         "- [x] Define extension rules for public and enterprise profiles.",
         "- [x] Document failure interpretation when future policy requires receipts.",
         "- [x] Add a non-normative machine-readable fixture for the receipt shape.",
-        "- [x] Keep receipt generation, receipt publication, receipt verification,",
+        "- [x] Keep receipt verification, trust enforcement, lockfile changes,",
+        "- [x] Generate non-authoritative `SpecPMProvenanceReceipt` JSON artifacts",
+        "- [x] Add receipt descriptors to package version metadata",
     ):
         assert checked_item in workplan
 
@@ -1747,7 +1749,9 @@ def test_provenance_receipt_schema_is_documented() -> None:
     constraint_ids = {constraint["id"] for constraint in boundary["constraints"]}
     evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
     assert "specpm.registry.provenance_receipt_schema" in manifest_capabilities
+    assert "specpm.registry.public_index_provenance_receipts" in manifest_capabilities
     assert "specpm.registry.provenance_receipt_schema" in boundary_capabilities
+    assert "specpm.registry.public_index_provenance_receipts" in boundary_capabilities
     assert "provenance_receipts_evidence_not_authority" in constraint_ids
     assert "specs/PROVENANCE_RECEIPTS.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md" in evidence_paths
@@ -4131,6 +4135,15 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
             output / "v0/packages/document_conversion.email_tools/versions/0.1.0/index.json"
         ).read_text(encoding="utf-8")
     )
+    receipt_path = (
+        output
+        / "v0/packages/document_conversion.email_tools/versions/0.1.0/"
+        / "provenance-receipt/index.json"
+    )
+    receipt_payload = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt_directory_index = json.loads(
+        receipt_path.with_name("index.html").read_text(encoding="utf-8")
+    )
     capability_payload = json.loads(
         (
             output / "v0/capabilities/document_conversion.email_to_markdown/packages/index.json"
@@ -4179,6 +4192,7 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
         "version_count": 1,
         "capability_count": 1,
         "intent_count": 1,
+        "provenance_receipt_count": 1,
         "implementation": {
             "name": "SpecPM",
             "version": __version__,
@@ -4221,8 +4235,42 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
         "document_conversion.email_tools/versions/0.1.0/"
         "document_conversion.email_tools-0.1.0.specpm.tgz"
     )
+    assert version_payload["package"]["provenance_receipt"]["url"] == (
+        "https://registry.example.invalid/v0/packages/"
+        "document_conversion.email_tools/versions/0.1.0/"
+        "provenance-receipt/index.json"
+    )
+    assert version_payload["package"]["provenance_receipt"]["digest"]["value"] == sha256_path(
+        receipt_path
+    )
     assert version_payload["package"]["source"]["digest"]["value"] == sha256_path(archive)
     assert version_payload["package"]["source"]["size"] == archive.stat().st_size
+    assert receipt_directory_index == receipt_payload
+    assert receipt_payload["apiVersion"] == "specpm.receipts/v0"
+    assert receipt_payload["kind"] == "SpecPMProvenanceReceipt"
+    assert receipt_payload["receiptProfile"] == "public_static_index_build_v0"
+    assert receipt_payload["receiptId"].startswith("document_conversion.email_tools@0.1.0:sha256:")
+    assert receipt_payload["issuedAt"].endswith("Z")
+    assert receipt_payload["subject"] == {
+        "packageId": "document_conversion.email_tools",
+        "version": "0.1.0",
+        "registryProfile": "public_static_index",
+    }
+    assert receipt_payload["source"] == {
+        "kind": "local_path",
+        "path": "examples/email_tools",
+    }
+    assert receipt_payload["archive"] == version_payload["package"]["source"]
+    assert receipt_payload["review"] == {"kind": "manual", "decision": "accepted"}
+    assert receipt_payload["validation"] == {
+        "status": "valid",
+        "warningCount": 0,
+        "errorCount": 0,
+        "validatorVersion": __version__,
+    }
+    assert receipt_payload["trust"]["signatureStatus"] == "not_applicable"
+    assert receipt_payload["lifecycle"]["state"] == "visible"
+    assert receipt_payload["audit"]["evidence"]
     assert sorted(report["written_files"]) == report["written_files"]
 
 
@@ -4736,6 +4784,21 @@ def test_public_index_generate_accepts_pinned_remote_manifest(
 
     assert report["status"] == "ok"
     assert (tmp_path / "site/v0/packages/document_conversion.email_tools/index.json").is_file()
+    receipt_payload = json.loads(
+        (
+            tmp_path
+            / "site/v0/packages/document_conversion.email_tools/versions/0.1.0/"
+            / "provenance-receipt/index.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert receipt_payload["source"] == {
+        "kind": "git",
+        "repository": "https://github.com/0al-spec/email-tools.git",
+        "ref": "main",
+        "revision": revision,
+        "path": ".",
+    }
+    assert receipt_payload["review"]["commit"] == revision
 
 
 def test_public_index_accepted_manifest_rejects_path_escape(tmp_path: Path) -> None:
@@ -4774,6 +4837,8 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
             str(tmp_path / "site"),
             "--registry",
             "http://localhost:8081",
+            "--issued-at",
+            "2026-05-31T00:00:00Z",
             "--json",
         ]
     )
@@ -4782,7 +4847,15 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
     payload = json.loads(captured.out)
     assert exit_code == 0
     assert payload["status"] == "ok"
-    assert payload["written_count"] == 19
+    assert payload["written_count"] == 21
+    receipt_payload = json.loads(
+        (
+            tmp_path
+            / "site/v0/packages/document_conversion.email_tools/versions/0.1.0/"
+            / "provenance-receipt/index.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert receipt_payload["issuedAt"] == "2026-05-31T00:00:00Z"
 
 
 def test_cli_public_index_generate_accepts_reviewed_manifest(
