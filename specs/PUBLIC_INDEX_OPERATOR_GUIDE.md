@@ -1,7 +1,7 @@
 # Public Index Operator Guide
 
 Status: Public alpha operator guide.
-Updated: 2026-05-21
+Updated: 2026-05-31
 Scope: public index package submission maintainer review
 
 This guide defines the maintainer workflow for accepting public
@@ -34,6 +34,55 @@ The optional `.github/workflows/package-submission-triage.yml` workflow prepares
 these labels and applies `package:under-review` when no package review status is
 present. It does not apply terminal labels.
 
+## Label Transition Policy
+
+The label state is review evidence, not registry state. The accepted manifest
+and generated static registry remain the source of public package visibility.
+
+- Automation may apply `package:under-review` and keep the review labels
+  available on the repository.
+- `package:validated` means a candidate is reviewable. It does not mean the
+  package is accepted into the public index.
+- `package:needs-fix` should include an actionable issue comment or validation
+  report section that explains the requested change.
+- `package:blocked` should include the policy, ownership, safety, or repository
+  access question that prevents acceptance.
+- `package:duplicate` should link the already accepted source or the open
+  accepted-manifest pull request that covers the same `package_id@version`.
+- `package:accepted` should link the reviewed accepted-manifest pull request
+  and, when available, the generated registry evidence for the accepted
+  package version.
+- A package-submission issue should have at most one terminal label:
+  `package:accepted`, `package:rejected`, `package:blocked`, or
+  `package:duplicate`.
+
+Changing a terminal label after new evidence appears is a maintainer decision.
+The new comment should explain the reason and link the replacement pull request,
+validation report, or registry evidence.
+
+## Operator Flow
+
+Maintainers should use this sequence for ordinary public package intake:
+
+1. Confirm the issue has `package-submission` and the triage workflow left it in
+   `package:under-review`.
+2. Read the latest validation report and confirm that the submitted repository,
+   package path, `package_id@version`, and pinned revision are the expected
+   candidate.
+3. Choose the next review state: `package:needs-fix`, `package:blocked`,
+   `package:duplicate`, or proceed toward an accepted-manifest pull request.
+4. Run the accepted-manifest helper in dry-run mode first and review the source
+   records it would append.
+5. Apply the helper on a review branch only after maintainer review agrees with
+   the candidate records.
+6. Run the public-index generation checks and record the commands in the pull
+   request body.
+7. After merge, apply `package:accepted` and link the issue, reviewed pull
+   request, and generated static registry evidence.
+
+This flow intentionally keeps issue validation, maintainer review, manifest
+changes, and generated registry publication as separate steps.
+
 ## Acceptance Checklist
 
 Before adding an entry to `public-index/accepted-packages.yml`, maintainers
@@ -53,7 +102,12 @@ should verify:
   content.
 - Namespace or ownership questions have explicit maintainer review evidence
   when they matter for acceptance.
-- The accepted manifest pull request shows generated registry checks passing.
+- The accepted manifest pull request references the source submission issue.
+- The accepted manifest pull request changes only
+  `public-index/accepted-packages.yml` or directly related policy/docs/test
+  files needed for the acceptance.
+- The accepted manifest pull request shows generated registry checks passing
+  and records the commands that were actually run.
 
 ## Accepted Manifest PR
 
@@ -106,6 +160,25 @@ without editing the manifest.
 The generated pull request body is a draft. Maintainers must still run the
 public-index generation checks, keep the PR reviewable, and replace pending
 validation notes with the exact commands they ran before merge.
+
+## Helper Contract
+
+The helper tools produce review inputs for maintainers. They are intentionally
+not registry publication authority.
+
+- `scripts/validate_index_submission.py` may render validation evidence and a
+  candidate accepted-manifest snippet.
+- `scripts/prepare_accepted_manifest_pr.py` may prepare a manifest diff and a
+  draft pull request body from a valid submission report.
+- Dry-run mode is the default review posture; maintainers should inspect it
+  before using `--apply`.
+- Helper output must keep the issue URL, repository URL, source `ref`, exact
+  `revision`, package path, and package identities visible for review.
+- Helpers must not apply terminal labels, decide acceptance, push branches,
+  open pull requests, merge pull requests, grant namespace ownership, execute
+  package content, or publish a package.
+- Helpers must not publish a package as a side effect of validation, dry-run, or
+  manifest preparation.
 
 ## Boundaries
 

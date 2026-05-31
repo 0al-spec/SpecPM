@@ -105,6 +105,12 @@ public-index/accepted-packages.yml
 Remote accepted entries are pinned to an exact commit revision before registry
 generation. This keeps the public index reproducible and reviewable.
 
+Maintainer review follows the public index operator guide in
+`specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`: labels are review evidence,
+`package:validated` is not acceptance, terminal labels are maintainer-only, and
+accepted packages enter the registry through reviewed
+`public-index/accepted-packages.yml` pull requests.
+
 After merge, the GitHub Pages workflow regenerates the static registry metadata
 served under:
 
