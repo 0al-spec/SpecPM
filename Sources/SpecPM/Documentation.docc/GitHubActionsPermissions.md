@@ -32,6 +32,11 @@ requests, and performs a directory listing rather than an upload.
 Pull request checks are pre-merge evidence. GitHub Pages and SpecPM.dev
 deployment evidence comes from the first trusted `main` run after merge.
 
+The SpecPM.dev upload job also records safe deployment diagnostics: static
+artifact file count, byte size, `lftp` command tracing, recent transfer log
+entries, and elapsed upload seconds. These logs help distinguish a slow SFTP
+upload from a stuck upload without exposing FTP secrets.
+
 ## Source Contract
 
 The detailed permissions and secret boundary is maintained in

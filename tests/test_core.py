@@ -1488,6 +1488,25 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
     assert "pages: write" in policy
     assert "id-token: write" in policy
 
+    static_host_job = docs_workflow["jobs"]["deploy-static-host"]
+    static_host_steps = {step["name"]: step for step in static_host_job["steps"] if "name" in step}
+    static_host_summary = static_host_steps["Summarize static host artifact"]["run"]
+    static_host_upload = static_host_steps["Upload to SpecPM.dev over SFTP"]
+    upload_script = static_host_upload["run"]
+    assert static_host_job["timeout-minutes"] == 30
+    assert static_host_upload["timeout-minutes"] == 25
+    assert "wc -l < /tmp/specpm-static-site-files.txt" in static_host_summary
+    assert "du -sb specpm-static-site" in static_host_summary
+    assert "Largest static host files:" in static_host_summary
+    assert "Uploading $FILE_COUNT files ($BYTE_SIZE bytes)" in upload_script
+    assert "timeout --kill-after=30s 18m lftp" in upload_script
+    assert "set cmd:trace yes" in upload_script
+    assert "set xfer:log yes" in upload_script
+    assert 'set xfer:log-file "$TRANSFER_LOG"' in upload_script
+    assert "mirror -R --verbose=2" in upload_script
+    assert "SFTP upload completed in" in upload_script
+    assert 'tail -40 "$TRANSFER_LOG"' in upload_script
+
     ftp_secrets = {"FTP_HOST", "FTP_PORT", "FTP_USER", "FTP_PASS", "FTP_REMOTE_ROOT"}
     secret_ref_pattern = re.compile(
         r"\${{\s*secrets(?:\.([A-Z0-9_]+)|\[\s*[\"']([A-Z0-9_]+)[\"']\s*\])\s*}}"
@@ -1529,6 +1548,9 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
         "`pull_request_target` workflows must not execute pull request head code",
         "read-only SFTP directory listing",
         "GitHub Pages: the first successful `main` documentation deploy run",
+        "file count and byte size",
+        "explicit wall-clock timeout",
+        "recent transfer log entries",
     ):
         assert required_text in policy
 
@@ -1538,6 +1560,7 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
     assert "<doc:GitHubActionsPermissions>" in docc_deployment
     assert "<doc:GitHubActionsPermissions>" in docc_maintenance
     assert "pull_request_target" in docc_policy
+    assert "safe deployment diagnostics" in docc_policy
 
     manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
     boundary_capabilities = {
@@ -2080,8 +2103,14 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         in (static_steps["Validate static host artifact"]["run"])
     )
     summarize_run = static_steps["Summarize static host artifact"]["run"]
-    assert "find specpm-static-site -type f | wc -l" in summarize_run
+    assert (
+        "find specpm-static-site -type f | sort > /tmp/specpm-static-site-files.txt"
+        in summarize_run
+    )
+    assert "wc -l < /tmp/specpm-static-site-files.txt" in summarize_run
+    assert "du -sb specpm-static-site" in summarize_run
     assert "du -sh specpm-static-site" in summarize_run
+    assert "Largest static host files:" in summarize_run
     validate_deploy_run = static_steps["Validate deploy settings"]["run"]
     assert 'test -n "$FTP_HOST"' in validate_deploy_run
     assert 'test -n "$FTP_USER"' in validate_deploy_run
@@ -2109,13 +2138,18 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in upload_run
     assert "SFTP upload" in upload_run
     assert "set cmd:fail-exit yes" in upload_run
+    assert "set cmd:trace yes" in upload_run
     assert "set net:max-retries 1" in upload_run
     assert "set net:timeout 20" in upload_run
     assert "set net:reconnect-interval-base 5" in upload_run
+    assert "set xfer:log yes" in upload_run
+    assert 'set xfer:log-file "$TRANSFER_LOG"' in upload_run
     assert "timeout --kill-after=30s 18m lftp" in upload_run
     assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in upload_run
+    assert "SFTP upload completed in" in upload_run
+    assert 'tail -40 "$TRANSFER_LOG"' in upload_run
     assert "mirror -R --dry-run" not in upload_run
-    assert 'mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
+    assert 'mirror -R --verbose=2 --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
 
 
 def test_render_pages_can_keep_github_pages_root_as_docc_redirect(

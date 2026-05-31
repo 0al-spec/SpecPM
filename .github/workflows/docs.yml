@@ -182,9 +182,15 @@ jobs:
 
       - name: Summarize static host artifact
         run: |
+          find specpm-static-site -type f | sort > /tmp/specpm-static-site-files.txt
           printf 'Static host file count: '
-          find specpm-static-site -type f | wc -l
-          du -sh specpm-static-site
+          wc -l < /tmp/specpm-static-site-files.txt
+          printf 'Static host byte size: '
+          du -sb specpm-static-site | awk '{ print $1 }'
+          printf 'Static host human size: '
+          du -sh specpm-static-site | awk '{ print $1 }'
+          echo "Largest static host files:"
+          find specpm-static-site -type f -printf '%s %p\n' | sort -nr | head -20
 
       - name: Validate deploy settings
         run: |
@@ -226,15 +232,29 @@ jobs:
         timeout-minutes: 25
         run: |
           DEPLOY_PORT="${FTP_PORT:-22}"
+          UPLOAD_STARTED_AT="$(date +%s)"
+          TRANSFER_LOG="/tmp/specpm-lftp-transfer.log"
+          FILE_COUNT="$(find specpm-static-site -type f | wc -l)"
+          BYTE_SIZE="$(du -sb specpm-static-site | awk '{ print $1 }')"
+          echo "Uploading $FILE_COUNT files ($BYTE_SIZE bytes) to SpecPM.dev over SFTP."
           echo "::group::SFTP upload"
           timeout --kill-after=30s 18m lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT" <<EOF
           set cmd:fail-exit yes
+          set cmd:trace yes
           set sftp:connect-program "ssh -a -x -o ServerAliveInterval=15 -o ServerAliveCountMax=2 -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
           set net:max-retries 1
           set net:timeout 20
           set net:reconnect-interval-base 5
+          set xfer:log yes
+          set xfer:log-file "$TRANSFER_LOG"
           lcd specpm-static-site
-          mirror -R --verbose --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"
+          mirror -R --verbose=2 --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"
           bye
           EOF
+          UPLOAD_FINISHED_AT="$(date +%s)"
+          echo "SFTP upload completed in $((UPLOAD_FINISHED_AT - UPLOAD_STARTED_AT)) seconds."
+          if [ -s "$TRANSFER_LOG" ]; then
+            echo "Recent lftp transfer log entries:"
+            tail -40 "$TRANSFER_LOG"
+          fi
           echo "::endgroup::"
