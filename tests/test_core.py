@@ -1498,6 +1498,8 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
     assert "wc -l < /tmp/specpm-static-site-files.txt" in static_host_summary
     assert "du -sb specpm-static-site" in static_host_summary
     assert "Largest static host files:" in static_host_summary
+    assert "sort -nr > /tmp/specpm-static-site-largest-files.txt" in static_host_summary
+    assert "head -20 /tmp/specpm-static-site-largest-files.txt" in static_host_summary
     assert "Uploading $FILE_COUNT files ($BYTE_SIZE bytes)" in upload_script
     assert "timeout --kill-after=30s 18m lftp" in upload_script
     assert "set cmd:trace yes" in upload_script
@@ -2122,7 +2124,10 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     )
     known_hosts_run = static_steps["Prepare SFTP known hosts"]["run"]
     assert 'DEPLOY_PORT="${FTP_PORT:-22}"' in known_hosts_run
+    assert "for attempt in 1 2 3; do" in known_hosts_run
     assert 'ssh-keyscan -T 20 -p "$DEPLOY_PORT" "$FTP_HOST"' in known_hosts_run
+    assert "ssh-keyscan attempt $attempt failed; retrying." in known_hosts_run
+    assert 'test -s "$HOME/.ssh/known_hosts"' in known_hosts_run
     check_target = static_steps["Check SpecPM.dev SFTP target"]
     assert check_target["timeout-minutes"] == 3
     check_target_run = check_target["run"]
