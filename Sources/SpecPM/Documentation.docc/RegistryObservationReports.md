@@ -49,9 +49,14 @@ Reports remain read-only metadata artifacts; they do not download archives,
 install packages, execute package content, mutate registry state, or decide
 SpecGraph graph meaning.
 
+The downstream consumer contract in <doc:DownstreamRegistryConsumers> defines
+the minimum evidence fields and failure vocabulary that these reports can
+support in project-specific reviews.
+
 ## References
 
 - <doc:PublicAlphaRegistry>
+- <doc:DownstreamRegistryConsumers>
 - <doc:SpecGraphRegistryObservation>
 - <doc:Deployment>
 - <doc:JSONContracts>

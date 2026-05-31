@@ -243,6 +243,11 @@ defines which `/v0` payloads SpecGraph can cite for package visibility,
 missing versions, lifecycle state, observed intents, and drift without giving
 SpecPM graph authority.
 
+The Downstream Registry Consumer Contract is documented for SpecGraph,
+ContextBuilder, SpecNode, and lab deploy checks. It defines normative `/v0`
+endpoint classes, minimum evidence fields, failure vocabulary, and read-only
+consumer obligations without turning SpecPM into a resolver or runtime.
+
 Reusable registry observation reports are now documented and exposed through
 Make targets for local Docker and GitHub Pages. They write review-oriented JSON
 artifacts under `.specpm/registry-observations/` and include package, version,
@@ -303,27 +308,7 @@ submission issues to generated static registry evidence.
 
 ## Next Planned Sequence
 
-### 1. Downstream Registry Consumer Contract
-
-Motivation:
-
-SpecGraph, ContextBuilder, SpecNode, and lab deploy checks need to consume the
-same `/v0` registry surface without guessing which endpoints are normative,
-which reports are diagnostic, and how registry drift should be recorded.
-
-Goal:
-
-Document consumer examples and expected reports for `/v0/status`,
-`/v0/packages`, package lookup, version lookup, exact capability search,
-observed intent catalog metadata, and exact intent lookup.
-
-Expected outcome:
-
-Downstream tools can report registry availability, visible package counts,
-missing package versions, capability visibility, intent visibility, and drift
-with concrete JSON evidence instead of project-specific interpretation.
-
-### 2. Remote Package Acquisition Design
+### 1. Remote Package Acquisition Design
 
 Motivation:
 
@@ -344,7 +329,7 @@ Expected outcome:
 Future acquisition work can be evaluated against explicit trust and cache
 semantics before any CLI or registry behavior changes.
 
-### 3. SpecHarvester Producer Contract
+### 2. SpecHarvester Producer Contract
 
 Motivation:
 

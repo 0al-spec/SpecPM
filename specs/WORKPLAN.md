@@ -1492,6 +1492,33 @@ Acceptance:
   registry without review, execute package content, or grant namespace
   ownership.
 
+## Phase 61. Downstream Registry Consumer Contract
+
+- [x] Define normative `/v0` endpoint classes for status, package catalog,
+  package metadata, exact version metadata, capability lookup, intent catalog,
+  intent metadata, and exact intent package lookup.
+- [x] Document minimum evidence fields downstream tools should preserve when
+  citing registry observations.
+- [x] Specify failure vocabulary for unavailable registries, unsupported API
+  versions, malformed payloads, missing subjects, lifecycle-blocked versions,
+  drift, and inconclusive evidence.
+- [x] Clarify consumer obligations for SpecGraph, ContextBuilder, SpecNode, and
+  lab deploy checks.
+- [x] Add a public DocC page for downstream registry consumers and link it from
+  the SpecGraph integration and observation report pages.
+- [x] Keep consumer interpretation, graph reasoning, candidate selection,
+  artifact generation, job execution, archive acquisition, and package content
+  execution outside SpecPM core.
+
+Acceptance:
+
+- Downstream projects can cite concrete `/v0` registry evidence without
+  guessing which endpoint supports a claim.
+- Drift and failure reports can distinguish registry availability, payload
+  shape, missing subjects, lifecycle policy, and expectation mismatch.
+- SpecPM remains the exact metadata substrate; downstream consumers own policy,
+  graph meaning, generated artifacts, and runtime action.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

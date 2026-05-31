@@ -44,6 +44,7 @@ The canonical source files remain in the repository:
 - `specs/JSON_CONTRACTS.md`
 - `specs/CONFORMANCE.md`
 - `specs/REMOTE_REGISTRY_API.md`
+- `specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md`
 - `specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md`
 - `specs/REGISTRY_OBSERVATION_REPORTS.md`
 - `specs/IDENTIFIER_MODEL.md`
@@ -88,6 +89,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:JSONContracts>
 - <doc:Conformance>
 - <doc:SpecGraphIntegration>
+- <doc:DownstreamRegistryConsumers>
 - <doc:SpecGraphRegistryObservation>
 - <doc:RegistryObservationReports>
 - <doc:AgentSkills>
