@@ -110,6 +110,13 @@ Deployment evidence is:
   authenticate to the configured SFTP root and list it, not evidence that a
   candidate pull request can upload or publish content.
 
+The SpecPM.dev upload job must summarize the static artifact before it connects
+to SFTP, including file count and byte size. Its upload step must keep an
+explicit wall-clock timeout and emit transfer diagnostics that are safe for logs:
+command tracing for `lftp` commands, recent transfer log entries, and elapsed
+seconds. These diagnostics are deployment evidence, not secret disclosure; logs
+must not print passwords, private keys, or raw credential values.
+
 When a pull request changes workflow permissions, secrets, deployment commands,
 or `pull_request_target` behavior, reviewers should treat green PR checks as
 pre-merge evidence only and verify the first post-merge `main` run.
