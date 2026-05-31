@@ -1506,7 +1506,7 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
     assert "set xfer:log yes" in upload_script
     assert 'set xfer:log-file "$TRANSFER_LOG"' in upload_script
     assert "mirror -R --verbose=2" in upload_script
-    assert "SFTP upload completed in" in upload_script
+    assert "SFTP upload exited with status $UPLOAD_STATUS" in upload_script
     assert 'tail -40 "$TRANSFER_LOG"' in upload_script
 
     ftp_secrets = {"FTP_HOST", "FTP_PORT", "FTP_USER", "FTP_PASS", "FTP_REMOTE_ROOT"}
@@ -2149,10 +2149,14 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
     assert "set net:reconnect-interval-base 5" in upload_run
     assert "set xfer:log yes" in upload_run
     assert 'set xfer:log-file "$TRANSFER_LOG"' in upload_run
+    assert "set +e" in upload_run
     assert "timeout --kill-after=30s 18m lftp" in upload_run
+    assert 'UPLOAD_STATUS="$?"' in upload_run
+    assert "set -e" in upload_run
     assert 'lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT"' in upload_run
-    assert "SFTP upload completed in" in upload_run
+    assert "SFTP upload exited with status $UPLOAD_STATUS" in upload_run
     assert 'tail -40 "$TRANSFER_LOG"' in upload_run
+    assert 'exit "$UPLOAD_STATUS"' in upload_run
     assert "mirror -R --dry-run" not in upload_run
     assert 'mirror -R --verbose=2 --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"' in upload_run
 

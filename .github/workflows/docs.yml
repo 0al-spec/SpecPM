@@ -247,6 +247,7 @@ jobs:
           BYTE_SIZE="$(du -sb specpm-static-site | awk '{ print $1 }')"
           echo "Uploading $FILE_COUNT files ($BYTE_SIZE bytes) to SpecPM.dev over SFTP."
           echo "::group::SFTP upload"
+          set +e
           timeout --kill-after=30s 18m lftp -u "$FTP_USER,$FTP_PASS" "sftp://$FTP_HOST:$DEPLOY_PORT" <<EOF
           set cmd:fail-exit yes
           set cmd:trace yes
@@ -260,10 +261,13 @@ jobs:
           mirror -R --verbose=2 --exclude-glob .DS_Store . "$FTP_REMOTE_ROOT"
           bye
           EOF
+          UPLOAD_STATUS="$?"
+          set -e
           UPLOAD_FINISHED_AT="$(date +%s)"
-          echo "SFTP upload completed in $((UPLOAD_FINISHED_AT - UPLOAD_STARTED_AT)) seconds."
+          echo "SFTP upload exited with status $UPLOAD_STATUS after $((UPLOAD_FINISHED_AT - UPLOAD_STARTED_AT)) seconds."
           if [ -s "$TRANSFER_LOG" ]; then
             echo "Recent lftp transfer log entries:"
             tail -40 "$TRANSFER_LOG"
           fi
           echo "::endgroup::"
+          exit "$UPLOAD_STATUS"
