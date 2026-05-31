@@ -1463,6 +1463,35 @@ Acceptance:
 - Reviewers can archive generated package provenance without treating generator
   output as trusted package truth.
 
+## Phase 60. Public Index Operator UX Hardening
+
+- [x] Define package-submission label transitions as review evidence rather
+  than registry state.
+- [x] Specify that `package:validated` is reviewable evidence, not acceptance.
+- [x] Require terminal labels to be maintainer-owned and limited to one active
+  terminal state per submission issue.
+- [x] Document the ordinary operator flow from issue triage through dry-run
+  helper review, accepted-manifest pull request, merge, and static registry
+  evidence links.
+- [x] Tighten the accepted-manifest pull request checklist around issue links,
+  exact source records, scoped diffs, generated registry checks, and command
+  evidence.
+- [x] Document the helper contract so helper output remains review input and
+  does not apply terminal labels, decide acceptance, push, open, or merge pull
+  requests.
+
+Acceptance:
+
+- Maintainers can process a valid package-submission issue without relying on
+  implicit label semantics.
+- Package acceptance remains rooted in reviewed
+  `public-index/accepted-packages.yml` pull requests and generated static
+  registry evidence.
+- Automation still may prepare validation evidence, candidate snippets, labels,
+  and draft pull request text, but it must not publish packages, mutate the
+  registry without review, execute package content, or grant namespace
+  ownership.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

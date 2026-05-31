@@ -126,26 +126,24 @@ package subject, producer, inputs, configuration, outputs, validation,
 diagnostics, review, privacy, and audit evidence sections through the
 `generated_spec_package_v0` profile for SpecHarvester or another producer
 without adding generator runtime authority to SpecPM.
+Public index operator flow hardening is now documented. The operator guide
+defines label transition policy, terminal label ownership, dry-run helper
+review posture, accepted-manifest pull request checklist, and audit links from
+submission issues to generated static registry evidence.
 The immediate planned sequence is:
 
-1. Public index operator UX.
-   Motivation: GitHub Issues are already the public intake model, but
-   maintainer acceptance still requires too much manual copying. Goal: define
-   labels, checklists, and future helper behavior for preparing reviewed
-   `public-index/accepted-packages.yml` pull requests without adding
-   request-time mutation.
-2. Downstream registry consumer contract.
+1. Downstream registry consumer contract.
    Motivation: SpecGraph, ContextBuilder, SpecNode, and lab deploy checks need
    the same interpretation of `/v0` registry endpoints and drift evidence.
    Goal: document consumer examples and expected reports for status, package
    lookup, version lookup, capability search, observed intent metadata, and
    exact intent lookup.
-3. Remote package acquisition design.
+2. Remote package acquisition design.
    Motivation: read-only metadata lookup must remain separate from future
    archive download, digest verification, cache writes, lockfile semantics, and
    package execution boundaries. Goal: write the design note before any remote
    fetch/install implementation.
-4. SpecHarvester producer contract.
+3. SpecHarvester producer contract.
    Motivation: producer tools need a stable target for generated SpecPackage
    candidates. Goal: define requirements for generated `specpm.yaml`,
    `BoundarySpec` documents, evidence references, producer receipts, validation

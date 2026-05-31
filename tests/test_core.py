@@ -905,8 +905,12 @@ def test_namespace_claim_policy_documents_review_boundary() -> None:
 def test_public_index_operator_guide_documents_package_review_boundary() -> None:
     guide_text = PUBLIC_INDEX_OPERATOR_GUIDE.read_text(encoding="utf-8")
     guide_lower = guide_text.lower()
+    guide_flat = guide_lower.replace("\n", " ")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     index_flow = (ROOT / "specs/INDEX_SUBMISSION_FLOW.md").read_text(encoding="utf-8")
+    add_spec_package = (ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md").read_text(
+        encoding="utf-8"
+    )
     manifest = load_yaml_file(ROOT / "specpm.yaml")
     boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
 
@@ -922,9 +926,20 @@ def test_public_index_operator_guide_documents_package_review_boundary() -> None
         assert label in guide_text
 
     assert "Acceptance Checklist" in guide_text
+    assert "Label Transition Policy" in guide_text
+    assert "Operator Flow" in guide_text
+    assert "Helper Contract" in guide_text
     assert "validation report status is `valid`" in guide_text
+    assert "`package:validated` means a candidate is reviewable" in guide_text
+    assert "at most one terminal label" in guide_text
+    assert "terminal labels are maintainer-only" in add_spec_package
+    assert "Dry-run mode is the default review posture" in guide_text
+    assert "reviewed accepted-manifest pull request" in guide_text
+    assert "generated static registry evidence" in guide_text
     assert "reviewed pull request" in guide_lower
     assert "must not decide acceptance" in guide_lower
+    assert "must not apply terminal labels" in guide_lower
+    assert "must not publish a package" in guide_flat
     assert "public-index/accepted-packages.yml" in guide_text
     assert ".github/workflows/package-submission-triage.yml" in guide_text
     assert "scripts/prepare_accepted_manifest_pr.py" in guide_text
@@ -2585,6 +2600,10 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Package signing and revocation policy",
         "Provenance receipt schema and audit evidence profile",
         "implementation: public static provenance receipt artifacts",
+        "Public index operator flow hardening",
+        "label transition policy",
+        "terminal label ownership",
+        "Downstream Registry Consumer Contract",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in roadmap
@@ -2610,6 +2629,10 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Package signing and revocation policy",
         "Provenance receipt schema and audit evidence profile",
         "public static provenance receipt JSON artifacts",
+        "Public index operator flow hardening",
+        "label transition policy",
+        "terminal label ownership",
+        "Downstream registry consumer contract",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in docc_roadmap
@@ -2631,6 +2654,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Phase 55. GitHub Actions Permissions and Secret Boundary",
         "Phase 56. Package Signing and Revocation Policy",
         "Phase 57. Provenance Receipt Schema and Audit Evidence Profile",
+        "Phase 60. Public Index Operator UX Hardening",
     ):
         assert phase_heading in workplan
 

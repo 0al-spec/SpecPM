@@ -296,32 +296,14 @@ prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
 `public-index/accepted-packages.yml`.
 
+Public index operator flow hardening is now documented. The operator guide
+defines label transition policy, terminal label ownership, dry-run helper
+review posture, accepted-manifest pull request checklist, and audit links from
+submission issues to generated static registry evidence.
+
 ## Next Planned Sequence
 
-### 1. Public Index Operator UX
-
-Motivation:
-
-GitHub Issues already provide the public package intake model, but maintainer
-acceptance is still too manual: reviewers must translate validated issue
-content into `public-index/accepted-packages.yml` changes by hand while keeping
-labels, validation state, and audit history consistent.
-
-Goal:
-
-Define maintainer labels, acceptance checklists, and a future helper flow that
-can prepare a reviewed pull request from a valid submission issue. The helper
-may prepare labels, comments, pinned revisions, and manifest snippets, but
-accepted package changes must remain human-reviewed pull requests.
-
-Expected outcome:
-
-Valid external submissions can become auditable manifest PRs with less manual
-copying, while SpecPM still avoids `specpm publish`, upload endpoints,
-unauthenticated mutation APIs, package installation, and package content
-execution.
-
-### 2. Downstream Registry Consumer Contract
+### 1. Downstream Registry Consumer Contract
 
 Motivation:
 
@@ -341,7 +323,7 @@ Downstream tools can report registry availability, visible package counts,
 missing package versions, capability visibility, intent visibility, and drift
 with concrete JSON evidence instead of project-specific interpretation.
 
-### 3. Remote Package Acquisition Design
+### 2. Remote Package Acquisition Design
 
 Motivation:
 
@@ -362,7 +344,7 @@ Expected outcome:
 Future acquisition work can be evaluated against explicit trust and cache
 semantics before any CLI or registry behavior changes.
 
-### 4. SpecHarvester Producer Contract
+### 3. SpecHarvester Producer Contract
 
 Motivation:
 
