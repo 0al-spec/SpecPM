@@ -1659,6 +1659,15 @@ def test_remote_package_acquisition_boundary_is_documented() -> None:
         "yanked package version",
         "mutable source reference without an exact revision",
         "content-addressed layout",
+        "Acquisition State Machine",
+        "`observed_metadata`",
+        "`verified_archive`",
+        "`locked_package`",
+        "Cache and lock writes must be atomic",
+        "Digest verification is required for acquisition, but it proves only byte",
+        "Retry and Partial Write Behavior",
+        "`trust_policy_unmet`",
+        "`partial_write_recovered`",
         "Never execute package content",
         "Package content can describe desired outputs.",
         "Package content cannot command",
@@ -1670,6 +1679,10 @@ def test_remote_package_acquisition_boundary_is_documented() -> None:
         "Mutable labels are not trust roots",
         "digest verification before cache or lock writes",
         "Package content remains untrusted data",
+        "`observed_metadata`",
+        "`locked_package`",
+        "Digest verification proves bytes, not publisher authority",
+        "partial-write recovery",
     ):
         assert required_text in docc_policy
 
@@ -1682,8 +1695,12 @@ def test_remote_package_acquisition_boundary_is_documented() -> None:
     assert "<doc:PackageSigningRevocation>" in docc_policy
     assert "remote package acquisition boundary" in roadmap
     assert "remote package acquisition boundary" in docc_roadmap
+    assert "Remote package acquisition design invariants are now documented" in roadmap
+    assert "Remote package acquisition design invariants are now documented" in docc_roadmap
     assert "- [x] Separate registry metadata lookup from archive acquisition." in workplan
     assert "- [x] Preserve the rule that package content is never executed during" in workplan
+    assert "Phase 62. Remote Package Acquisition Design Invariants" in workplan
+    assert "- [x] Define explicit acquisition states from `observed_metadata` through" in workplan
 
     manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
     boundary_capabilities = {

@@ -103,6 +103,10 @@ The remote package acquisition boundary is now documented before any archive
 fetch/cache/add behavior: metadata lookup stays separate from download, digests
 must be verified before cache or lock writes, and package content remains
 untrusted data.
+Remote package acquisition design invariants are now documented. The policy
+defines explicit acquisition states, atomic cache and lock writes, retry and
+partial-write behavior, trust/signature/receipt separation, and structured
+failure categories before any remote fetch/install runtime exists.
 Intent taxonomy governance is now documented for canonical `intent.*` proposal,
 review, lifecycle, conflict handling, experimental/private namespace use, and
 the boundary between observed metadata and accepted vocabulary. The intent
@@ -136,12 +140,7 @@ review posture, accepted-manifest pull request checklist, and audit links from
 submission issues to generated static registry evidence.
 The immediate planned sequence is:
 
-1. Remote package acquisition design.
-   Motivation: read-only metadata lookup must remain separate from future
-   archive download, digest verification, cache writes, lockfile semantics, and
-   package execution boundaries. Goal: write the design note before any remote
-   fetch/install implementation.
-2. SpecHarvester producer contract.
+1. SpecHarvester producer contract.
    Motivation: producer tools need a stable target for generated SpecPackage
    candidates. Goal: define requirements for generated `specpm.yaml`,
    `BoundarySpec` documents, evidence references, producer receipts, validation
