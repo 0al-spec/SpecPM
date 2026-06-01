@@ -1909,6 +1909,8 @@ def test_producer_receipt_contract_is_documented() -> None:
     roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
     workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
     receipt_fixture = json.loads(PRODUCER_RECEIPT_FIXTURE.read_text(encoding="utf-8"))
+    roadmap_flat = roadmap.replace("\n", " ")
+    docc_roadmap_flat = docc_roadmap.replace("\n", " ")
     manifest = load_yaml_file(ROOT / "specpm.yaml")
     boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
 
@@ -1926,9 +1928,18 @@ def test_producer_receipt_contract_is_documented() -> None:
         "outputs",
         "validation",
         "diagnostics",
-        "review",
+        "diagnostics: {}",
+        "humanReview",
         "privacy",
         "audit",
+        "producer-receipt.json",
+        "validation-report.json",
+        "diagnostics.json",
+        "self-hash problem",
+        "configuration.digest",
+        "outputs[]",
+        "humanReview.status: approved",
+        "public_index_acceptance",
         "privacy.secretsIncluded",
         "Current SpecPM does not generate, validate, require, or index producer",
         "must not be used as trust evidence",
@@ -1940,9 +1951,13 @@ def test_producer_receipt_contract_is_documented() -> None:
         "generated_spec_package_v0",
         "SpecHarvester",
         "does not make generated content trusted",
+        "producer-receipt.json",
+        "configuration.digest",
+        "humanReview.status: approved",
         "Current SpecPM does not generate, validate, require, or index producer",
     ):
         assert required_text in docc_policy
+    assert "diagnostics: {}" in docc_policy
 
     assert "specs/PRODUCER_RECEIPTS.md" in readme
     assert "specs/PRODUCER_RECEIPTS.md" in docc_overview
@@ -1954,6 +1969,10 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "SpecPMProducerReceipt" in docc_roadmap
     assert "generated_spec_package_v0" in roadmap
     assert "generated_spec_package_v0" in docc_roadmap
+    assert "Producer candidate bundle contract alignment is now documented" in roadmap
+    assert "Producer candidate bundle contract alignment is now documented" in docc_roadmap
+    assert "The next implementation sequence belongs in SpecHarvester" in roadmap_flat
+    assert "The next implementation sequence belongs in SpecHarvester" in docc_roadmap_flat
 
     assert receipt_fixture["apiVersion"] == "specpm.receipts/v0"
     assert receipt_fixture["kind"] == "SpecPMProducerReceipt"
@@ -1964,18 +1983,27 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert receipt_fixture["producer"]["name"] == "SpecHarvester"
     assert re.fullmatch(r"[0-9a-f]{40}", receipt_fixture["producer"]["revision"])
     assert receipt_fixture["configuration"]["deterministic"] is False
+    assert receipt_fixture["configuration"]["digest"]["algorithm"] == "sha256"
     assert receipt_fixture["validation"]["status"] == "warning"
-    assert receipt_fixture["review"]["required"] is True
+    assert receipt_fixture["validation"]["reportPath"] == "validation-report.json"
+    assert receipt_fixture["diagnostics"]["status"] == "warnings"
+    assert receipt_fixture["diagnostics"]["path"] == "diagnostics.json"
+    assert receipt_fixture["humanReview"]["status"] == "required"
+    assert "public_index_acceptance" in receipt_fixture["humanReview"]["requiredFor"]
     assert receipt_fixture["privacy"]["secretsIncluded"] is False
-    assert {output["kind"] for output in receipt_fixture["outputs"]} >= {
-        "specpm_manifest",
+    assert {output["role"] for output in receipt_fixture["outputs"]} >= {
+        "manifest",
         "boundary_spec",
-        "producer_receipt",
+        "validation_report",
+        "diagnostics",
     }
+    assert all(output["path"] != "producer-receipt.json" for output in receipt_fixture["outputs"])
     for section in ("inputs", "outputs"):
         for entry in receipt_fixture[section]:
             assert entry["digest"]["algorithm"] == "sha256"
             assert re.fullmatch(r"[0-9a-f]{64}", entry["digest"]["value"])
+    assert receipt_fixture["diagnostics"]["digest"]["algorithm"] == "sha256"
+    assert re.fullmatch(r"[0-9a-f]{64}", receipt_fixture["diagnostics"]["digest"]["value"])
 
     for checked_item in (
         "- [x] Document the draft `SpecPMProducerReceipt` envelope.",
@@ -1985,6 +2013,10 @@ def test_producer_receipt_contract_is_documented() -> None:
         "- [x] Add SpecHarvester-facing implementation requirements without making the",
         "- [x] Add a non-normative machine-readable fixture for the producer receipt",
         "- [x] Keep producer execution, analyzer execution, LLM prompt execution,",
+        "Phase 63. Producer Candidate Bundle Contract Alignment",
+        "- [x] Define `producer-receipt.json` as the machine-readable candidate",
+        "- [x] Exclude `producer-receipt.json` from `outputs[]` to avoid the",
+        "- [x] Define candidate bundle preflight rejection diagnostics without adding a",
     ):
         assert checked_item in workplan
 
@@ -2666,6 +2698,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Downstream Registry Consumer Contract",
         "endpoint classes",
         "failure vocabulary",
+        "Producer candidate bundle contract alignment",
+        "producer-receipt.json",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in roadmap
@@ -2697,6 +2731,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Downstream registry consumer contract",
         "endpoint classes",
         "failure vocabulary",
+        "Producer candidate bundle contract alignment",
+        "producer-receipt.json",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in docc_roadmap
@@ -2720,6 +2756,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Phase 57. Provenance Receipt Schema and Audit Evidence Profile",
         "Phase 60. Public Index Operator UX Hardening",
         "Phase 61. Downstream Registry Consumer Contract",
+        "Phase 63. Producer Candidate Bundle Contract Alignment",
     ):
         assert phase_heading in workplan
 

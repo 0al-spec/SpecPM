@@ -5,7 +5,7 @@ tools that generate or assist `SpecPackage` and `BoundarySpec` content.
 
 Producer receipts are evidence, not authority. A receipt records which producer
 tool, inputs, configuration, output files, validation result, diagnostics,
-review handoff, privacy claims, and audit evidence produced a package
+human review handoff, privacy claims, and audit evidence produced a package
 candidate. It does not make generated content trusted, accept a package into a
 registry, verify signatures, or require SpecPM to run the producer.
 
@@ -27,13 +27,32 @@ inputs: []
 configuration: {}
 outputs: []
 validation: {}
-diagnostics: []
-review: {}
+diagnostics: {}
+humanReview: {}
 privacy: {}
 audit: {}
 ```
 
 The initial generated package profile is `generated_spec_package_v0`.
+
+## Candidate Bundle
+
+Generated candidates intended for SpecPM review should use this minimum layout:
+
+```text
+candidate/
+  specpm.yaml
+  specs/*.spec.yaml
+  producer-receipt.json
+  validation-report.json
+  diagnostics.json
+```
+
+`producer-receipt.json` is the machine-readable handoff contract. It hashes
+generated outputs such as `specpm.yaml`, `specs/*.spec.yaml`,
+`validation-report.json`, and `diagnostics.json`, but it does not include itself
+in `outputs[]`. Receipt byte verification belongs in an external review
+artifact or pull request tooling.
 
 ## Required Evidence Areas
 
@@ -43,13 +62,20 @@ Producer receipts should record:
 - producer name, version, repository, and exact source revision when available;
 - source, analyzer, template, prompt, configuration, and previous-spec inputs
   by digest;
-- generated `specpm.yaml`, `specs/*.spec.yaml`, and evidence file digests;
+- `configuration.digest` for the normalized generation configuration;
+- generated `specpm.yaml`, `specs/*.spec.yaml`, validation report,
+  diagnostics, and evidence file digests;
 - validation status, warning count, and error count;
-- diagnostics for skipped files, unsupported languages, uncertainty, or lossy
-  summaries;
-- review handoff evidence;
+- diagnostics status and entries for skipped files, unsupported languages,
+  uncertainty, or lossy summaries;
+- human review handoff evidence, including `requiredFor` such as
+  `public_index_acceptance`;
 - redaction and secret-handling claims;
 - audit evidence references.
+
+Public index acceptance requires `humanReview.status: approved` or an explicit
+maintainer override recorded in the accepted-manifest pull request. Producer
+output alone never accepts or publishes a package.
 
 ## Boundary
 

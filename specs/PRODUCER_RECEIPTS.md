@@ -1,7 +1,7 @@
 # SpecPM Producer Receipt Contract
 
 Status: Draft
-Updated: 2026-05-26
+Updated: 2026-06-02
 Scope: producer-side provenance receipts for generated SpecPackage candidates
 
 ## Purpose
@@ -11,9 +11,9 @@ generate or assist `SpecPackage` and `BoundarySpec` content.
 
 Producer receipts are evidence, not authority. A producer receipt records which
 tool, inputs, configuration, validation result, output files, diagnostics, and
-review handoff produced a package candidate. It does not make generated package
-content trusted, does not prove runtime behavior, does not replace maintainer
-review, and does not require SpecPM to run the producer.
+human review handoff produced a package candidate. It does not make generated
+package content trusted, does not prove runtime behavior, does not replace
+maintainer review, and does not require SpecPM to run the producer.
 
 The first expected downstream producer is SpecHarvester, but the contract is
 tool-neutral. Any generator may emit the same profile when it produces
@@ -59,6 +59,36 @@ This document does not add:
 - remote input fetching;
 - cache, lockfile, or registry payload mutation.
 
+## Producer Candidate Bundle Contract
+
+A generated candidate bundle intended for SpecPM review should use this minimum
+layout:
+
+```text
+candidate/
+  specpm.yaml
+  specs/*.spec.yaml
+  producer-receipt.json
+  validation-report.json
+  diagnostics.json
+```
+
+`producer-receipt.json` is the machine-readable handoff contract for the
+bundle. It records the producer, inputs, normalized configuration, generated
+outputs, validation report, diagnostics, privacy claims, and human review
+requirements.
+
+The receipt must hash generated bundle outputs, but it must not hash itself in
+`outputs[]`. Including `producer-receipt.json` in `outputs[]` creates a
+self-hash problem. If tooling needs to verify the receipt bytes, it should use
+an external envelope, pull request artifact digest, or review-system digest
+outside the receipt body.
+
+Public index acceptance of a generated candidate requires
+`humanReview.status: approved` or an explicit maintainer override recorded in
+the accepted-manifest pull request. Producer output alone never accepts or
+publishes a package.
+
 ## Receipt Envelope
 
 A producer receipt artifact should be JSON-compatible data with this top-level
@@ -77,8 +107,8 @@ inputs: []
 configuration: {}
 outputs: []
 validation: {}
-diagnostics: []
-review: {}
+diagnostics: {}
+humanReview: {}
 privacy: {}
 audit: {}
 ```
@@ -98,8 +128,9 @@ Required top-level fields:
 - `configuration`: generation mode, analyzers, templates, and model metadata.
 - `outputs`: generated files and their digests.
 - `validation`: validation performed by the producer or handoff workflow.
-- `diagnostics`: warnings, skipped inputs, or generation limitations.
-- `review`: maintainer or reviewer handoff evidence.
+- `diagnostics`: diagnostics status, artifact reference, and compact entries
+  for warnings, skipped inputs, or generation limitations.
+- `humanReview`: maintainer or reviewer handoff evidence.
 - `privacy`: redaction and secret-handling claims.
 - `audit`: external evidence references and retention hints.
 
@@ -159,10 +190,12 @@ Recommended `kind` values:
 - `source_tree`
 - `source_file`
 - `documentation`
+- `harvested_evidence`
 - `package_manifest`
 - `public_interface_index`
 - `manual_note`
 - `generator_prompt`
+- `refinement_prompt`
 - `template`
 - `config`
 - `previous_spec`
@@ -178,6 +211,7 @@ content.
 Required fields:
 
 - `mode`
+- `digest`
 
 Recommended fields:
 
@@ -185,30 +219,37 @@ Recommended fields:
 - `templates`
 - `model`
 - `deterministic`
-- `parametersDigest`
+- `normalizedSummary`
 
 `deterministic: false` is valid for LLM-assisted generation. In that case, the
 receipt records an observation of the run, not a reproducibility guarantee.
+
+`digest` should hash the normalized generation configuration or a stable
+configuration summary. It should include prompt/config choices when those
+choices affected output, but it must not expose private prompt text or secrets.
 
 ### `outputs`
 
 Each output reference should include:
 
 - `path`
-- `kind`
+- `role`
 - `digest.algorithm`
 - `digest.value`
 
-Expected output kinds include:
+Expected output roles include:
 
-- `specpm_manifest`
+- `manifest`
 - `boundary_spec`
+- `validation_report`
+- `diagnostics`
 - `evidence`
 - `foreign_artifact`
-- `producer_receipt`
 
 The output digest must describe the generated file bytes after redaction and
-normalization performed by the producer.
+normalization performed by the producer. `producer-receipt.json` is excluded
+from `outputs[]`; receipt byte verification belongs in an external envelope or
+review artifact digest.
 
 ### `validation`
 
@@ -223,6 +264,7 @@ Recommended fields:
 - `validator`
 - `validatorVersion`
 - `validatedAt`
+- `reportPath`
 - `reportDigest`
 
 If the producer ran `specpm validate`, the receipt should record the validator
@@ -231,7 +273,17 @@ unless the profile is explicitly extended for that purpose.
 
 ### `diagnostics`
 
-Diagnostics should be compact, reviewable entries with:
+Required fields:
+
+- `status`: `clean`, `warnings`, or `failed`.
+
+Recommended fields:
+
+- `path`
+- `digest`
+- `entries`
+
+Diagnostics entries should be compact and reviewable:
 
 - `severity`
 - `code`
@@ -239,12 +291,13 @@ Diagnostics should be compact, reviewable entries with:
 
 Recommended severity values are `info`, `warning`, and `error`.
 
-### `review`
+### `humanReview`
 
 Required fields:
 
 - `handoff`: `none`, `pull_request`, `issue`, `commit`, or `manual`.
-- `required`
+- `status`
+- `requiredFor`
 
 Recommended fields:
 
@@ -252,8 +305,19 @@ Recommended fields:
 - `reviewer`
 - `reviewedAt`
 
-Generated packages should normally set `required: true`. A producer receipt is
-not a substitute for maintainer review.
+`status` should be one of:
+
+- `required`
+- `pending`
+- `approved`
+- `rejected`
+- `not_applicable`
+
+`requiredFor` should name the decision that requires review, such as
+`public_index_acceptance`. Generated packages submitted to the public index
+should normally use `status: required` or `status: pending` before maintainer
+review. Public index acceptance requires `status: approved` or an explicit
+maintainer override recorded outside the receipt.
 
 ### `privacy`
 
@@ -311,17 +375,45 @@ A SpecHarvester implementation of this profile should:
 - emit `apiVersion: specpm.receipts/v0`;
 - emit `kind: SpecPMProducerReceipt`;
 - emit `receiptProfile: generated_spec_package_v0`;
+- emit `producer-receipt.json` beside the generated candidate bundle;
 - record the generated package ID, version, API version, and root path;
 - record SpecHarvester version and exact source revision when available;
-- record source, analyzer, template, prompt, and configuration inputs by digest;
-- record generated `specpm.yaml`, `specs/*.spec.yaml`, and evidence file
-  digests;
+- record source snapshots, harvested evidence, public interface indexes,
+  analyzer output, templates, refinement prompts, and configuration inputs by
+  digest when they affected output;
+- record `configuration.digest`;
+- record generated `specpm.yaml`, `specs/*.spec.yaml`,
+  `validation-report.json`, `diagnostics.json`, and evidence file digests in
+  `outputs[]`;
+- exclude `producer-receipt.json` from `outputs[]` to avoid self-hashing;
 - record validation status when `specpm validate` was run;
-- record diagnostics for skipped files, unsupported languages, model
+- record `diagnostics.status` plus a diagnostics file path and digest when
+  diagnostics exist;
+- record diagnostics entries for skipped files, unsupported languages, model
   uncertainty, or lossy summaries;
+- record `humanReview.requiredFor`, especially `public_index_acceptance` for
+  public index handoff;
 - set `privacy.secretsIncluded` to `false` for public handoff receipts;
 - avoid embedding private prompts, private source text, tokens, credentials, or
   local machine paths that should not leave the producer environment.
+
+## Candidate Bundle Preflight
+
+Producer-side preflight should fail before handoff when:
+
+- `producer-receipt.json` is missing or malformed;
+- required bundle files are missing;
+- an `outputs[]` digest does not match generated bytes;
+- `producer-receipt.json` appears in `outputs[]`;
+- `configuration.digest` is missing;
+- `validation-report.json` is missing when validation status says validation
+  ran;
+- `diagnostics.status` is `failed`;
+- generated IDs are unstable or invalid;
+- generated claims lack evidence references;
+- `privacy.secretsIncluded` is `true` for public handoff;
+- the generated `package_id@version` overlaps an already accepted namespace or
+  version without maintainer review evidence.
 
 ## Extension Rules
 

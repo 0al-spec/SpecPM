@@ -134,18 +134,22 @@ package subject, producer, inputs, configuration, outputs, validation,
 diagnostics, review, privacy, and audit evidence sections through the
 `generated_spec_package_v0` profile for SpecHarvester or another producer
 without adding generator runtime authority to SpecPM.
+Producer candidate bundle contract alignment is now documented. The policy
+defines the `candidate/` layout, `producer-receipt.json` handoff contract,
+input and configuration digests, output roles and hashes, validation and
+diagnostics artifacts, human review status for `public_index_acceptance`, and
+the rule that receipts do not hash themselves.
 Public index operator flow hardening is now documented. The operator guide
 defines label transition policy, terminal label ownership, dry-run helper
 review posture, accepted-manifest pull request checklist, and audit links from
 submission issues to generated static registry evidence.
 The immediate planned sequence is:
 
-1. SpecHarvester producer contract.
-   Motivation: producer tools need a stable target for generated SpecPackage
-   candidates. Goal: define requirements for generated `specpm.yaml`,
-   `BoundarySpec` documents, evidence references, producer receipts, validation
-   expectations, and the boundary between generated candidates and accepted
-   public packages.
+The SpecPM-side producer candidate bundle contract is documented. The next
+implementation sequence belongs in SpecHarvester: emit `producer-receipt.json`,
+write validation and diagnostics artifacts beside generated candidates, add
+local preflight/hash verification, surface receipt/provenance in the viewer,
+and link the generated bundle back to this SpecPM contract.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
