@@ -294,7 +294,9 @@ reviewing, deprecating, superseding, rejecting, and reserving canonical
 Observed public registry intent metadata is discovery evidence, not automatic
 standardization.
 Read-only registry consumption examples for SpecGraph, ContextBuilder, and
-SpecNode are tracked in `specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md`.
+SpecNode are tracked in `specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md`. That
+guide defines endpoint classes, minimum evidence fields, drift/failure
+vocabulary, and read-only consumer obligations for `/v0` registry evidence.
 SpecGraph-specific registry evidence rules are tracked in
 `specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md`.
 

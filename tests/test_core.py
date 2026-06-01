@@ -971,6 +971,16 @@ def test_downstream_registry_consumer_guide_documents_read_only_consumption() ->
     guide_text = DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.read_text(encoding="utf-8")
     guide_lower = guide_text.lower()
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    docc_page = (
+        ROOT / "Sources/SpecPM/Documentation.docc/DownstreamRegistryConsumers.md"
+    ).read_text(encoding="utf-8")
+    docc_overview = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(
+        encoding="utf-8"
+    )
+    docc_integration = DOCC_SPECGRAPH_INTEGRATION_PAGE.read_text(encoding="utf-8")
+    docc_reports = DOCC_REGISTRY_OBSERVATION_REPORTS_PAGE.read_text(encoding="utf-8")
+    manifest = load_yaml_file(ROOT / "specpm.yaml")
+    boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
 
     for endpoint in (
         "GET /v0/status",
@@ -989,12 +999,45 @@ def test_downstream_registry_consumer_guide_documents_read_only_consumption() ->
 
     assert "specpm.registry/v0" in guide_text
     assert "specpm.dev/v0.1" in guide_text
+    assert "Normative Endpoint Classes" in guide_text
+    assert "Minimum Evidence Envelope" in guide_text
+    assert "Failure Semantics" in guide_text
+    assert '"observedAt": "2026-06-01T00:00:00Z"' in guide_text
+    assert '"httpStatus": 200' in guide_text
+    assert "unsupported_api_version" in guide_text
+    assert "malformed_payload" in guide_text
+    assert "missing_subject" in guide_text
+    assert "lifecycle_blocked" in guide_text
+    assert "SpecPM owns the registry metadata shape" in guide_text
+    assert "Downstream consumers own policy" in guide_text
     assert "remote observe" in guide_text
     assert "specnode.typed_job_protocol" in guide_text
     assert "read-only" in guide_lower
     assert "should not execute package content" in guide_lower
     assert "semantic search" in guide_lower
+    assert "endpoint classes, minimum evidence fields" in readme
     assert "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md" in readme
+    assert "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md" in docc_page
+    assert "observed timestamp, HTTP response status" in docc_page
+    assert "<doc:DownstreamRegistryConsumers>" in docc_overview
+    assert "<doc:DownstreamRegistryConsumers>" in docc_integration
+    assert "<doc:DownstreamRegistryConsumers>" in docc_reports
+
+    manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
+    boundary_capabilities = {
+        capability["id"] for capability in boundary["provides"]["capabilities"]
+    }
+    evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
+    owned_binding_paths = {
+        path
+        for binding in boundary["implementationBindings"]
+        for path in binding["files"].get("owned", [])
+    }
+    assert "specpm.registry.downstream_consumer_contract" in manifest_capabilities
+    assert "specpm.registry.downstream_consumer_contract" in boundary_capabilities
+    assert "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/DownstreamRegistryConsumers.md" in evidence_paths
+    assert "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md" in owned_binding_paths
 
 
 def test_specgraph_registry_observation_contract_documents_evidence_boundary() -> None:
@@ -2604,6 +2647,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "label transition policy",
         "terminal label ownership",
         "Downstream Registry Consumer Contract",
+        "endpoint classes",
+        "failure vocabulary",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in roadmap
@@ -2633,6 +2678,8 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "label transition policy",
         "terminal label ownership",
         "Downstream registry consumer contract",
+        "endpoint classes",
+        "failure vocabulary",
         "Package content can describe desired outputs. Package content cannot command the host.",
     ):
         assert required_text in docc_roadmap
@@ -2655,6 +2702,7 @@ def test_current_roadmap_documents_alpha_status_and_next_tracks() -> None:
         "Phase 56. Package Signing and Revocation Policy",
         "Phase 57. Provenance Receipt Schema and Audit Evidence Profile",
         "Phase 60. Public Index Operator UX Hardening",
+        "Phase 61. Downstream Registry Consumer Contract",
     ):
         assert phase_heading in workplan
 

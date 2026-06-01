@@ -39,6 +39,7 @@ commands read metadata only; they do not download archives, install packages,
 mutate SpecGraph state, or execute package content.
 
 The observation evidence boundary is documented in
+<doc:DownstreamRegistryConsumers> and specialized for SpecGraph in
 <doc:SpecGraphRegistryObservation>. SpecGraph should cite exact `/v0` payloads
 before claiming package visibility, missing versions, lifecycle state, observed
 intent mappings, or registry drift. SpecPM provides the metadata evidence;
@@ -94,3 +95,5 @@ Package content can describe desired outputs. Package content cannot command the
 - `specs/PRD.md`
 - `specs/0001_Derived_Artifact_Profile_Decision.md`
 - <doc:BoundariesAndTrust>
+- <doc:DownstreamRegistryConsumers>
+- <doc:SpecGraphRegistryObservation>

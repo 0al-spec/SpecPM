@@ -87,6 +87,10 @@ The Public Index Operator UX baseline is complete. Maintainer tooling can now
 prepare accepted-manifest pull request drafts from valid submission reports. The
 SpecGraph public registry observation contract is also documented so downstream
 graph work can cite exact `/v0` evidence without giving SpecPM graph authority.
+The Downstream registry consumer contract is documented for SpecGraph,
+ContextBuilder, SpecNode, and lab deploy checks. It defines normative `/v0`
+endpoint classes, minimum evidence fields, failure vocabulary, and read-only
+consumer obligations without turning SpecPM into a resolver or runtime.
 Reusable registry observation reports now write local Docker and GitHub Pages
 JSON artifacts under `.specpm/registry-observations/` for downstream reviews.
 GitHub Actions runtime maintenance is documented for official action majors,
@@ -132,18 +136,12 @@ review posture, accepted-manifest pull request checklist, and audit links from
 submission issues to generated static registry evidence.
 The immediate planned sequence is:
 
-1. Downstream registry consumer contract.
-   Motivation: SpecGraph, ContextBuilder, SpecNode, and lab deploy checks need
-   the same interpretation of `/v0` registry endpoints and drift evidence.
-   Goal: document consumer examples and expected reports for status, package
-   lookup, version lookup, capability search, observed intent metadata, and
-   exact intent lookup.
-2. Remote package acquisition design.
+1. Remote package acquisition design.
    Motivation: read-only metadata lookup must remain separate from future
    archive download, digest verification, cache writes, lockfile semantics, and
    package execution boundaries. Goal: write the design note before any remote
    fetch/install implementation.
-3. SpecHarvester producer contract.
+2. SpecHarvester producer contract.
    Motivation: producer tools need a stable target for generated SpecPackage
    candidates. Goal: define requirements for generated `specpm.yaml`,
    `BoundarySpec` documents, evidence references, producer receipts, validation

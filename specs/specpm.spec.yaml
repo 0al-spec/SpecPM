@@ -47,6 +47,7 @@ scope:
     - Deploy generated public index metadata as static `/v0` GitHub Pages content alongside DocC documentation.
     - Publish a static browser viewer for the public `/v0` registry API.
     - Capture reusable read-only public registry observation reports for local Docker and GitHub Pages endpoints.
+    - Document the downstream registry consumer contract for exact `/v0` endpoint evidence, drift reporting, and read-only obligations.
     - Document the SpecGraph public registry observation evidence contract for package visibility, lifecycle, capability, intent, and drift findings.
     - Document the static registry pipeline that turns reviewed accepted package sources into build-time `/v0` API files served by GitHub Pages.
     - Run and document a deploy-first local Docker and GitHub Pages smoke workflow for registry-related changes.
@@ -200,6 +201,9 @@ provides:
     - id: specpm.registry.public_observation_report
       role: secondary
       summary: Generate reusable read-only public registry observation reports for downstream evidence consumers.
+    - id: specpm.registry.downstream_consumer_contract
+      role: secondary
+      summary: Document exact `/v0` endpoint classes, evidence fields, failure vocabulary, and read-only obligations for downstream registry consumers.
     - id: specpm.registry.specgraph_observation_contract
       role: secondary
       summary: Document the read-only `/v0` evidence SpecGraph can cite for package visibility, lifecycle state, capability, intent, and drift observations.
@@ -594,6 +598,7 @@ evidence:
       - specpm.conformance.remote_registry_payloads
       - specpm.conformance.fixture_manifest
       - specpm.conformance.public_enterprise_registry_suite
+      - specpm.registry.downstream_consumer_contract
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
       - specpm.registry.public_observation_report
@@ -769,8 +774,21 @@ evidence:
     path: specs/REGISTRY_OBSERVATION_REPORTS.md
     supports:
       - specpm.registry.public_observation_report
+      - specpm.registry.downstream_consumer_contract
       - specpm.registry.specgraph_observation_contract
       - specpm.deployment.deploy_first_workflow
+      - scope.includes
+      - scope.excludes
+  - id: downstream_registry_consumer_guide
+    kind: documentation
+    path: specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md
+    supports:
+      - specpm.registry.downstream_consumer_contract
+      - specpm.registry.public_observation_report
+      - specpm.registry.remote_api_contract
+      - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
+      - no_semantic_authority
       - scope.includes
       - scope.excludes
   - id: compose
@@ -923,6 +941,7 @@ evidence:
     kind: documentation
     path: specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md
     supports:
+      - specpm.registry.downstream_consumer_contract
       - specpm.registry.specgraph_observation_contract
       - specpm.registry.public_observation_report
       - specpm.registry.remote_api_contract
@@ -1028,13 +1047,25 @@ evidence:
     path: Sources/SpecPM/Documentation.docc/SpecGraphIntegration.md
     supports:
       - specpm.documentation.docc_site
+      - specpm.registry.downstream_consumer_contract
       - specpm.registry.specgraph_observation_contract
       - specpm.registry.public_observation_report
+  - id: docc_downstream_registry_consumers
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/DownstreamRegistryConsumers.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.downstream_consumer_contract
+      - specpm.registry.public_observation_report
+      - specpm.registry.remote_api_contract
+      - specpm.registry.intent_search
+      - specpm.registry.observed_intent_catalog
   - id: docc_specgraph_registry_observation
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md
     supports:
       - specpm.documentation.docc_site
+      - specpm.registry.downstream_consumer_contract
       - specpm.registry.specgraph_observation_contract
       - specpm.registry.public_observation_report
   - id: docc_registry_observation_reports
@@ -1042,6 +1073,7 @@ evidence:
     path: Sources/SpecPM/Documentation.docc/RegistryObservationReports.md
     supports:
       - specpm.documentation.docc_site
+      - specpm.registry.downstream_consumer_contract
       - specpm.registry.public_observation_report
       - specpm.registry.specgraph_observation_contract
       - specpm.deployment.deploy_first_workflow
@@ -1226,10 +1258,12 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md
         - Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
+        - Sources/SpecPM/Documentation.docc/DownstreamRegistryConsumers.md
         - Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md
         - Sources/SpecPM/Documentation.docc/RegistryObservationReports.md
         - Sources/SpecPM/Documentation.docc/AgentSkills.md
         - ROADMAP.md
+        - specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md
         - specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md
         - specs/REGISTRY_OBSERVATION_REPORTS.md
         - specs/GITHUB_ACTIONS_PERMISSIONS.md
