@@ -50,6 +50,24 @@
         "value": "4444444444444444444444444444444444444444444444444444444444444444"
       },
       "redaction": "digest_only"
+    },
+    {
+      "kind": "harvested_evidence",
+      "path": "harvest/evidence.json",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "redaction": "none"
+    },
+    {
+      "kind": "refinement_prompt",
+      "path": "prompts/refine-boundary.md",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "abababababababababababababababababababababababababababababababab"
+      },
+      "redaction": "digest_only"
     }
   ],
   "configuration": {
@@ -71,34 +89,43 @@
       "provider": "example",
       "name": "example-model"
     },
-    "parametersDigest": {
+    "digest": {
       "algorithm": "sha256",
       "value": "5555555555555555555555555555555555555555555555555555555555555555"
-    }
+    },
+    "normalizedSummary": "assisted generation with python-ast analyzer and package template"
   },
   "outputs": [
     {
       "path": "specpm.yaml",
-      "kind": "specpm_manifest",
       "digest": {
         "algorithm": "sha256",
         "value": "6666666666666666666666666666666666666666666666666666666666666666"
-      }
+      },
+      "role": "manifest"
     },
     {
       "path": "specs/main.spec.yaml",
-      "kind": "boundary_spec",
       "digest": {
         "algorithm": "sha256",
         "value": "7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      "role": "boundary_spec"
+    },
+    {
+      "path": "validation-report.json",
+      "role": "validation_report",
+      "digest": {
+        "algorithm": "sha256",
+        "value": "9999999999999999999999999999999999999999999999999999999999999999"
       }
     },
     {
-      "path": "evidence/generated-spec-receipt.json",
-      "kind": "producer_receipt",
+      "path": "diagnostics.json",
+      "role": "diagnostics",
       "digest": {
         "algorithm": "sha256",
-        "value": "8888888888888888888888888888888888888888888888888888888888888888"
+        "value": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
       }
     }
   ],
@@ -109,22 +136,26 @@
     "validator": "specpm",
     "validatorVersion": "0.2.0",
     "validatedAt": "2026-05-26T00:00:00Z",
+    "reportPath": "validation-report.json",
     "reportDigest": {
       "algorithm": "sha256",
       "value": "9999999999999999999999999999999999999999999999999999999999999999"
     }
   },
-  "diagnostics": [
-    {
-      "severity": "warning",
-      "code": "lossy_summary",
-      "message": "Some source files were summarized by digest only."
-    }
-  ],
-  "review": {
-    "handoff": "pull_request",
-    "required": true,
-    "url": "https://github.com/0al-spec/SpecPM/pull/0"
+  "diagnostics": {
+    "status": "warnings",
+    "path": "diagnostics.json",
+    "digest": {
+      "algorithm": "sha256",
+      "value": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+    },
+    "entries": [
+      {
+        "severity": "warning",
+        "code": "lossy_summary",
+        "message": "Some source files were summarized by digest only."
+      }
+    ]
   },
   "privacy": {
     "secretsIncluded": false,
@@ -143,5 +174,13 @@
         "retention": "operator-local"
       }
     ]
+  },
+  "humanReview": {
+    "handoff": "pull_request",
+    "status": "required",
+    "requiredFor": [
+      "public_index_acceptance"
+    ],
+    "url": "https://github.com/0al-spec/SpecPM/pull/0"
   }
 }

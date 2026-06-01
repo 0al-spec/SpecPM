@@ -1544,6 +1544,37 @@ Acceptance:
 - Digest, signature, receipt, lifecycle, and downstream policy boundaries
   remain explicit and fail closed.
 
+## Phase 63. Producer Candidate Bundle Contract Alignment
+
+- [x] Define `producer-receipt.json` as the machine-readable candidate bundle
+  handoff contract.
+- [x] Document the minimum candidate bundle layout with `specpm.yaml`,
+  `specs/*.spec.yaml`, `validation-report.json`, `diagnostics.json`, and the
+  producer receipt.
+- [x] Require input references for source snapshots, harvested evidence,
+  public interface indexes, prompts, templates, config, and previous specs when
+  they influence output.
+- [x] Require `configuration.digest` for normalized generation config or a
+  stable config summary.
+- [x] Define `outputs[].role` and generated output hashes for manifests,
+  boundary specs, validation reports, diagnostics, evidence, and foreign
+  artifacts.
+- [x] Exclude `producer-receipt.json` from `outputs[]` to avoid the self-hash
+  problem.
+- [x] Define diagnostics status and human review status, including
+  `humanReview.requiredFor: public_index_acceptance`.
+- [x] Define candidate bundle preflight rejection diagnostics without adding a
+  SpecPM runtime verifier.
+
+Acceptance:
+
+- SpecHarvester can emit a reviewable candidate bundle against a concrete
+  SpecPM contract before SpecPM implements receipt verification.
+- Generated output hashes, validation reports, diagnostics, and review status
+  are machine-readable and auditable.
+- Public index acceptance still requires maintainer review or explicit
+  maintainer override; producer output never publishes a package by itself.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

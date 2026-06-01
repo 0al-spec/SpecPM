@@ -301,6 +301,12 @@ documented. The policy defines a tool-neutral `SpecPMProducerReceipt` envelope
 and `generated_spec_package_v0` profile that SpecHarvester or another producer
 can emit without giving SpecPM generator runtime authority.
 
+Producer candidate bundle contract alignment is now documented. The policy
+defines the `candidate/` layout, `producer-receipt.json` handoff contract,
+input and configuration digests, output roles and hashes, validation and
+diagnostics artifacts, human review status for `public_index_acceptance`, and
+the rule that receipts do not hash themselves.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -313,23 +319,8 @@ submission issues to generated static registry evidence.
 
 ## Next Planned Sequence
 
-### 1. SpecHarvester Producer Contract
-
-Motivation:
-
-Producer tools such as SpecHarvester need a stable target for generated
-SpecPackage candidates. Without an explicit producer contract, generators may
-emit package-shaped data that validates locally but lacks the evidence,
-receipt, and review boundaries needed for public index intake.
-
-Goal:
-
-Define requirements for generated `specpm.yaml`, `BoundarySpec` documents,
-evidence references, producer receipts, validation expectations, and the
-boundary between generated candidate packages and accepted public packages.
-
-Expected outcome:
-
-SpecHarvester and other producer tools can generate reviewable SpecPM package
-candidates without gaining authority to publish, mutate the public index,
-execute package content, or bypass maintainer review.
+The SpecPM-side producer candidate bundle contract is documented. The next
+implementation sequence belongs in SpecHarvester: emit `producer-receipt.json`,
+write validation and diagnostics artifacts beside generated candidates, add
+local preflight/hash verification, surface receipt/provenance in the viewer,
+and link the generated bundle back to this SpecPM contract.
