@@ -1002,6 +1002,8 @@ def test_downstream_registry_consumer_guide_documents_read_only_consumption() ->
     assert "Normative Endpoint Classes" in guide_text
     assert "Minimum Evidence Envelope" in guide_text
     assert "Failure Semantics" in guide_text
+    assert '"observedAt": "2026-06-01T00:00:00Z"' in guide_text
+    assert '"httpStatus": 200' in guide_text
     assert "unsupported_api_version" in guide_text
     assert "malformed_payload" in guide_text
     assert "missing_subject" in guide_text
@@ -1016,6 +1018,7 @@ def test_downstream_registry_consumer_guide_documents_read_only_consumption() ->
     assert "endpoint classes, minimum evidence fields" in readme
     assert "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md" in readme
     assert "specs/DOWNSTREAM_REGISTRY_CONSUMER_GUIDE.md" in docc_page
+    assert "observed timestamp, HTTP response status" in docc_page
     assert "<doc:DownstreamRegistryConsumers>" in docc_overview
     assert "<doc:DownstreamRegistryConsumers>" in docc_integration
     assert "<doc:DownstreamRegistryConsumers>" in docc_reports

@@ -86,6 +86,7 @@ claim should preserve this minimum envelope:
     "profile": "public_static_index",
     "buildRevision": "f399b11122b91c3880d655fd5f4bb944e522af60"
   },
+  "observedAt": "2026-06-01T00:00:00Z",
   "subject": {
     "kind": "packageVersion",
     "packageId": "specpm.core",

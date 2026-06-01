@@ -22,8 +22,8 @@ evidence surface:
   `GET /v0/intents/{intent_id}/packages` record observed intent metadata.
 
 Every reusable observation should preserve the registry base URL, endpoint,
-registry API family, build revision, expected values, observed values, and
-payload evidence or payload digest.
+registry API family, build revision, observed timestamp, HTTP response status,
+expected values, observed values, and payload evidence or payload digest.
 
 ## Failure Semantics
 
