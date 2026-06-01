@@ -1519,6 +1519,31 @@ Acceptance:
 - SpecPM remains the exact metadata substrate; downstream consumers own policy,
   graph meaning, generated artifacts, and runtime action.
 
+## Phase 62. Remote Package Acquisition Design Invariants
+
+- [x] Define explicit acquisition states from `observed_metadata` through
+  `locked_package`.
+- [x] Specify that downloaded bytes are not acquired, verified bytes are not
+  publisher trust, and cached packages are not host execution authority.
+- [x] Document atomic cache and lockfile write rules for temporary downloads,
+  digest verification, validation, idempotent reacquisition, and digest changes.
+- [x] Separate digest verification from signature verification, revocation
+  policy, and provenance receipt enforcement.
+- [x] Define retry and partial-write behavior before cache or lock state is
+  committed.
+- [x] Add structured failure categories for future acquisition diagnostics.
+- [x] Keep `specpm remote` metadata lookup separate from archive acquisition,
+  package installation, dependency solving, package execution, publisher trust,
+  and runtime policy enforcement.
+
+Acceptance:
+
+- Future remote acquisition implementation has a concrete state model and
+  atomicity requirements before runtime work starts.
+- Cache and lock writes cannot imply trust or execution authority.
+- Digest, signature, receipt, lifecycle, and downstream policy boundaries
+  remain explicit and fail closed.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

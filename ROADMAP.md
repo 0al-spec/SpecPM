@@ -267,6 +267,11 @@ requires digest verification before cache or lock writes, and keeps package
 content untrusted during acquisition, validation, caching, and lockfile
 generation.
 
+Remote package acquisition design invariants are now documented. The policy
+defines explicit acquisition states, atomic cache and lock writes, retry and
+partial-write behavior, trust/signature/receipt separation, and structured
+failure categories before any remote fetch/install runtime exists.
+
 Intent taxonomy governance is now documented. The intent taxonomy governance
 policy separates observed
 intent metadata from accepted canonical vocabulary, defines proposal and review
@@ -308,28 +313,7 @@ submission issues to generated static registry evidence.
 
 ## Next Planned Sequence
 
-### 1. Remote Package Acquisition Design
-
-Motivation:
-
-SpecPM already has read-only remote metadata lookup. Any future package
-acquisition must not accidentally blur metadata discovery, archive download,
-digest verification, local cache behavior, lockfile semantics, publisher trust,
-or package execution boundaries.
-
-Goal:
-
-Write a design note before implementing remote fetch/install behavior. The note
-should separate metadata lookup from archive acquisition, define digest
-verification and cache layout, describe lockfile changes and failure modes, and
-preserve the rule that package content is never executed during acquisition.
-
-Expected outcome:
-
-Future acquisition work can be evaluated against explicit trust and cache
-semantics before any CLI or registry behavior changes.
-
-### 2. SpecHarvester Producer Contract
+### 1. SpecHarvester Producer Contract
 
 Motivation:
 
