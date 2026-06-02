@@ -1904,7 +1904,7 @@ def test_producer_receipt_contract_is_documented() -> None:
     provenance_policy = PROVENANCE_RECEIPTS_DOC.read_text(encoding="utf-8")
     policy = PRODUCER_RECEIPTS_DOC.read_text(encoding="utf-8")
     docc_policy = DOCC_PRODUCER_RECEIPTS_PAGE.read_text(encoding="utf-8")
-    proposal_policy = (ROOT / "SPECS/PRODUCER_BUNDLE_PROPOSAL_POLICY.md").read_text(
+    proposal_policy = (ROOT / "specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md").read_text(
         encoding="utf-8"
     )
     docc_proposal_policy = DOCC_PRODUCER_BUNDLE_POLICY_PAGE.read_text(encoding="utf-8")
