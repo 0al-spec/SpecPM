@@ -1575,6 +1575,35 @@ Acceptance:
 - Public index acceptance still requires maintainer review or explicit
   maintainer override; producer output never publishes a package by itself.
 
+## Phase 64. SpecHarvester Producer Bundle Intake
+
+- [x] Document SpecPM-side proposal policy for producer candidate bundles,
+  defining how SpecPM maintainers review SpecHarvester-generated bundle
+  evidence without treating producer receipts, validation reports, diagnostics,
+  preflight, or static previews as registry authority.
+- [ ] Add a candidate bundle intake checklist to public-index proposal and
+  accepted-manifest review documentation.
+- [ ] Align SpecHarvester-to-SpecPM proposal automation so proposal pull
+  requests explicitly include or link producer receipt, validation report,
+  diagnostics report, preflight report, and static viewer evidence.
+- [ ] Add an optional SpecPM CI preflight gate for producer-backed proposals,
+  starting as policy/reporting evidence before becoming a strict gate.
+- [ ] Define a shared cross-repository fixture policy so SpecPM contract
+  examples and SpecHarvester generated bundle examples cannot silently drift.
+- [ ] Define an external registry acceptance decision record that links
+  maintainer decisions to producer bundle evidence without making producer
+  receipts authoritative.
+
+Acceptance:
+
+- SpecPM review policy can consume SpecHarvester producer evidence without
+  running producer tools or accepting generated packages automatically.
+- Producer bundle evidence remains distinct from SpecPM validation,
+  accepted-source review, registry provenance receipts, and maintainer
+  decisions.
+- Remaining SpecPM/SpecHarvester boundary work is visible as explicit follow-up
+  tasks rather than hidden in prose.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

@@ -307,6 +307,11 @@ input and configuration digests, output roles and hashes, validation and
 diagnostics artifacts, human review status for `public_index_acceptance`, and
 the rule that receipts do not hash themselves.
 
+SpecPM-side producer bundle proposal policy is now documented. Producer
+candidate bundles from SpecHarvester or another tool are proposal evidence, not
+registry authority; maintainers still own package validation, accepted-source
+review, override records, and acceptance decisions.
+
 This baseline still preserves the public static index boundary: automation may
 prepare labels, comments, and candidate snippets, but accepted package changes
 remain maintainer-reviewed pull requests against
@@ -319,8 +324,10 @@ submission issues to generated static registry evidence.
 
 ## Next Planned Sequence
 
-The SpecPM-side producer candidate bundle contract is documented. The next
-implementation sequence belongs in SpecHarvester: emit `producer-receipt.json`,
-write validation and diagnostics artifacts beside generated candidates, add
-local preflight/hash verification, surface receipt/provenance in the viewer,
-and link the generated bundle back to this SpecPM contract.
+The SpecHarvester producer loop now has receipt, validation report,
+diagnostics report, preflight, viewer, handoff documentation, and end-to-end
+smoke coverage. The next seam work belongs at the SpecPM intake boundary:
+candidate bundle intake checklist, proposal automation evidence links,
+optional SpecPM CI preflight, shared cross-repository fixtures, and an external
+acceptance decision record that keeps producer receipts separate from registry
+authority.

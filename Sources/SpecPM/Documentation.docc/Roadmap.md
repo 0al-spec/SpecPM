@@ -139,17 +139,23 @@ defines the `candidate/` layout, `producer-receipt.json` handoff contract,
 input and configuration digests, output roles and hashes, validation and
 diagnostics artifacts, human review status for `public_index_acceptance`, and
 the rule that receipts do not hash themselves.
+SpecPM-side producer bundle proposal policy is now documented. Producer
+candidate bundles from SpecHarvester or another tool are proposal evidence, not
+registry authority; maintainers still own package validation, accepted-source
+review, override records, and acceptance decisions.
 Public index operator flow hardening is now documented. The operator guide
 defines label transition policy, terminal label ownership, dry-run helper
 review posture, accepted-manifest pull request checklist, and audit links from
 submission issues to generated static registry evidence.
 The immediate planned sequence is:
 
-The SpecPM-side producer candidate bundle contract is documented. The next
-implementation sequence belongs in SpecHarvester: emit `producer-receipt.json`,
-write validation and diagnostics artifacts beside generated candidates, add
-local preflight/hash verification, surface receipt/provenance in the viewer,
-and link the generated bundle back to this SpecPM contract.
+The SpecHarvester producer loop now has receipt, validation report,
+diagnostics report, preflight, viewer, handoff documentation, and end-to-end
+smoke coverage. The next seam work belongs at the SpecPM intake boundary:
+candidate bundle intake checklist, proposal automation evidence links,
+optional SpecPM CI preflight, shared cross-repository fixtures, and an external
+acceptance decision record that keeps producer receipts separate from registry
+authority.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -183,3 +189,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:PackageSigningRevocation>
 - <doc:ProvenanceReceipts>
 - <doc:ProducerReceipts>
+- <doc:ProducerBundleProposalPolicy>

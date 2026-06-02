@@ -77,6 +77,9 @@ Public index acceptance requires `humanReview.status: approved` or an explicit
 maintainer override recorded in the accepted-manifest pull request. Producer
 output alone never accepts or publishes a package.
 
+SpecPM-side proposal review policy for these bundles is documented in
+<doc:ProducerBundleProposalPolicy>.
+
 ## Boundary
 
 Current SpecPM does not generate, validate, require, or index producer

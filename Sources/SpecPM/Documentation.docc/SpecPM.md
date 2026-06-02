@@ -108,4 +108,5 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:PackageSigningRevocation>
 - <doc:ProvenanceReceipts>
 - <doc:ProducerReceipts>
+- <doc:ProducerBundleProposalPolicy>
 - <doc:Roadmap>
