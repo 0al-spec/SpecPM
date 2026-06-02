@@ -192,6 +192,9 @@ provides:
     - id: specpm.specs.producer_receipt_contract
       role: secondary
       summary: Document the draft SpecPMProducerReceipt envelope and generated package profile for producer tools such as SpecHarvester without running producers.
+    - id: specpm.specs.producer_bundle_proposal_policy
+      role: secondary
+      summary: Document SpecPM-side proposal review policy for producer candidate bundles without treating producer evidence as registry authority.
     - id: specpm.registry.public_alpha_index
       role: secondary
       summary: Seed and document the read-only public alpha registry package set for SpecPM, SpecNode, and example packages.
@@ -889,6 +892,16 @@ evidence:
       - provenance_receipts_evidence_not_authority
       - scope.includes
       - scope.excludes
+  - id: producer_bundle_proposal_policy_docs
+    kind: documentation
+    path: specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md
+    supports:
+      - specpm.specs.producer_bundle_proposal_policy
+      - specpm.specs.producer_receipt_contract
+      - producer_receipts_not_generation_authority
+      - provenance_receipts_evidence_not_authority
+      - scope.includes
+      - scope.excludes
   - id: provenance_receipt_fixture
     kind: test
     path: tests/fixtures/provenance_receipts/public-static-receipt.example.json
@@ -1132,6 +1145,13 @@ evidence:
     path: Sources/SpecPM/Documentation.docc/ProducerReceipts.md
     supports:
       - specpm.documentation.docc_site
+      - specpm.specs.producer_receipt_contract
+  - id: docc_producer_bundle_proposal_policy
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/ProducerBundleProposalPolicy.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.producer_receipt_contract
   - id: docc_intent_taxonomy_governance
     kind: documentation

@@ -245,6 +245,10 @@ versions.
 Producer-side receipt requirements for generated `SpecPackage` candidates are
 documented in `specs/PRODUCER_RECEIPTS.md`; current SpecPM does not run or
 trust producer tools such as SpecHarvester.
+SpecPM-side review policy for SpecHarvester-style producer candidate bundles is
+documented in `specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md`; producer evidence can
+support a proposal, but maintainer review and SpecPM validation remain the
+acceptance boundary.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 

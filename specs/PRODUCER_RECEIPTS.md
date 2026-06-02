@@ -89,6 +89,9 @@ Public index acceptance of a generated candidate requires
 the accepted-manifest pull request. Producer output alone never accepts or
 publishes a package.
 
+SpecPM-side proposal review policy for these bundles is maintained in
+`specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md`.
+
 ## Receipt Envelope
 
 A producer receipt artifact should be JSON-compatible data with this top-level

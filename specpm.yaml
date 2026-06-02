@@ -45,6 +45,7 @@ index:
       - specpm.registry.provenance_receipt_schema
       - specpm.registry.public_index_provenance_receipts
       - specpm.specs.producer_receipt_contract
+      - specpm.specs.producer_bundle_proposal_policy
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke
       - specpm.registry.public_observation_report
