@@ -109,6 +109,55 @@ should verify:
 - The accepted manifest pull request shows generated registry checks passing
   and records the commands that were actually run.
 
+## Producer-Backed Candidate Bundle Intake
+
+When a public-index proposal relies on a SpecHarvester or other producer
+candidate bundle, maintainers should treat the bundle as review evidence and
+apply the normal acceptance checklist above. Producer evidence does not replace
+SpecPM validation, accepted-source review, namespace review, or the maintainer
+decision. The producer bundle is not registry authority.
+
+The proposal or accepted-manifest pull request should include or link:
+
+- `specpm.yaml` and referenced `specs/*.spec.yaml` files from the candidate
+  bundle;
+- `producer-receipt.json`;
+- `validation-report.json`;
+- `diagnostics.json`;
+- producer preflight report or command output;
+- static viewer output or reviewer-accessible preview, when available;
+- the proposed accepted-source diff or manifest entry;
+- the issue, pull request, or maintainer note that records the final
+  acceptance decision.
+
+Before accepting the producer-backed entry, maintainers should verify:
+
+- the candidate package validates under a supported SpecPM package API version;
+- the receipt uses `apiVersion: specpm.receipts/v0`,
+  `kind: SpecPMProducerReceipt`, and
+  `receiptProfile: generated_spec_package_v0`;
+- `producer-receipt.json` is not listed in `outputs[]`;
+- receipt output digests match the candidate bundle files;
+- `validation.reportDigest` matches `validation-report.json`;
+- `diagnostics.digest` matches `diagnostics.json`;
+- `privacy.secretsIncluded` is `false` for public handoff;
+- `humanReview.requiredFor` includes `public_index_acceptance`;
+- `humanReview.status` is still treated as review-gated until the maintainer
+  records acceptance outside the producer receipt;
+- diagnostics are `clean` or warning-only with maintainer-reviewed rationale;
+- no private local paths, tokens, credentials, private keys, or confidential
+  source bodies are included in public evidence;
+- generated claims are reviewed against package evidence and are not trusted
+  solely because the producer emitted them.
+
+Reject or request regeneration when required producer files are missing, digest
+checks disagree, diagnostics are `failed`, public handoff includes secrets, the
+candidate identity disagrees across artifacts, or the proposal asks SpecPM to
+execute producer tools, prompts, analyzers, package scripts, or package
+content. Any override must be recorded in the accepted-manifest pull request,
+submission issue, or future acceptance decision record, not by editing the
+producer receipt.
+
 ## Accepted Manifest PR
 
 The accepted manifest pull request should add one immutable source record per

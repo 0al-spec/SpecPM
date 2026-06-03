@@ -1581,7 +1581,7 @@ Acceptance:
   defining how SpecPM maintainers review SpecHarvester-generated bundle
   evidence without treating producer receipts, validation reports, diagnostics,
   preflight, or static previews as registry authority.
-- [ ] Add a candidate bundle intake checklist to public-index proposal and
+- [x] Add a candidate bundle intake checklist to public-index proposal and
   accepted-manifest review documentation.
 - [ ] Align SpecHarvester-to-SpecPM proposal automation so proposal pull
   requests explicitly include or link producer receipt, validation report,

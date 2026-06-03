@@ -143,6 +143,11 @@ SpecPM-side producer bundle proposal policy is now documented. Producer
 candidate bundles from SpecHarvester or another tool are proposal evidence, not
 registry authority; maintainers still own package validation, accepted-source
 review, override records, and acceptance decisions.
+Producer-backed public-index intake is now documented in the operator guide
+and submission flow. Accepted-manifest pull requests that rely on SpecHarvester
+or other producer bundles should link the receipt, validation report,
+diagnostics report, preflight evidence, static viewer evidence when available,
+and proposed accepted-source diff before maintainer acceptance.
 Public index operator flow hardening is now documented. The operator guide
 defines label transition policy, terminal label ownership, dry-run helper
 review posture, accepted-manifest pull request checklist, and audit links from
@@ -152,10 +157,9 @@ The immediate planned sequence is:
 The SpecHarvester producer loop now has receipt, validation report,
 diagnostics report, preflight, viewer, handoff documentation, and end-to-end
 smoke coverage. The next seam work belongs at the SpecPM intake boundary:
-candidate bundle intake checklist, proposal automation evidence links,
-optional SpecPM CI preflight, shared cross-repository fixtures, and an external
-acceptance decision record that keeps producer receipts separate from registry
-authority.
+proposal automation evidence links, optional SpecPM CI preflight, shared
+cross-repository fixtures, and an external acceptance decision record that
+keeps producer receipts separate from registry authority.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote

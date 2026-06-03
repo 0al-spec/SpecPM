@@ -63,6 +63,10 @@ receipt uses `apiVersion: specpm.receipts/v0`,
 Reviewers must still inspect package claims against evidence. A generated claim
 is not trusted solely because a producer emitted it.
 
+The public-index operator intake checklist is maintained in
+`specs/PUBLIC_INDEX_OPERATOR_GUIDE.md` so accepted-manifest pull requests and
+producer-backed proposals use the same evidence requirements.
+
 ## Reject And Warning Signals
 
 Reject or request regeneration when required files are missing, receipt identity
