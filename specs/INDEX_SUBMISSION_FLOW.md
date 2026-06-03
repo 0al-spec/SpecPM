@@ -322,6 +322,16 @@ maintainers should record immutable accepted version sources in
 record is a pinned public Git source or future archive source for one exact
 package version, not a copied package directory inside the SpecPM repository.
 
+Producer-backed submissions, including SpecHarvester candidate bundles, must be
+reviewed through the same accepted-source path. The producer bundle may provide
+proposal evidence, but it is not registry authority and does not bypass
+maintainer review. The proposal or accepted-manifest pull request should link
+the bundle `producer-receipt.json`, `validation-report.json`,
+`diagnostics.json`, producer preflight report, static viewer evidence when
+available, and the proposed accepted-source diff. Maintainers should apply the
+producer-backed intake checklist in `specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`
+before accepting the manifest entry.
+
 For example, two versions of one package should be represented as two accepted
 source records:
 

@@ -939,6 +939,15 @@ def test_public_index_operator_guide_documents_package_review_boundary() -> None
     assert "Dry-run mode is the default review posture" in guide_text
     assert "reviewed accepted-manifest pull request" in guide_text
     assert "generated static registry evidence" in guide_text
+    assert "Producer-Backed Candidate Bundle Intake" in guide_text
+    assert "producer-receipt.json" in guide_text
+    assert "validation-report.json" in guide_text
+    assert "diagnostics.json" in guide_text
+    assert "producer preflight report or command output" in guide_text
+    assert "static viewer output or reviewer-accessible preview" in guide_text
+    assert "public_index_acceptance" in guide_text
+    assert "producer receipt" in guide_lower
+    assert "not registry authority" in guide_lower
     assert "reviewed pull request" in guide_lower
     assert "must not decide acceptance" in guide_lower
     assert "must not apply terminal labels" in guide_lower
@@ -953,6 +962,13 @@ def test_public_index_operator_guide_documents_package_review_boundary() -> None
     assert "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md" in index_flow
     assert "`submission-report.json`" in index_flow
     assert "draft pull request body" in index_flow.replace("\n", " ")
+    assert "Producer-backed submissions" in index_flow
+    assert "SpecHarvester candidate bundles" in index_flow
+    assert "producer-receipt.json" in index_flow
+    assert "validation-report.json" in index_flow
+    assert "diagnostics.json" in index_flow
+    assert "producer preflight report" in index_flow
+    assert "static viewer evidence" in index_flow
 
     manifest_capabilities = set(manifest["index"]["provides"]["capabilities"])
     boundary_capabilities = {
@@ -1986,6 +2002,7 @@ def test_producer_receipt_contract_is_documented() -> None:
         "public_index_acceptance",
         "privacy.secretsIncluded",
         "producer receipts separate from registry authority",
+        "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md",
     ):
         assert required_text in proposal_policy
 
@@ -1997,6 +2014,7 @@ def test_producer_receipt_contract_is_documented() -> None:
         "Minimum Evidence",
         "Intake Checklist",
         "Maintainer Override",
+        "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md",
     ):
         assert required_text in docc_proposal_policy
 
@@ -2017,10 +2035,12 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "Producer candidate bundle contract alignment is now documented" in docc_roadmap
     assert "SpecPM-side producer bundle proposal policy is now documented" in roadmap
     assert "SpecPM-side producer bundle proposal policy is now documented" in docc_roadmap
+    assert "Producer-backed public-index intake is now documented" in roadmap
+    assert "Producer-backed public-index intake is now documented" in docc_roadmap
     assert "The SpecHarvester producer loop now has receipt" in roadmap_flat
     assert "The SpecHarvester producer loop now has receipt" in docc_roadmap_flat
-    assert "candidate bundle intake checklist" in roadmap_flat
-    assert "candidate bundle intake checklist" in docc_roadmap_flat
+    assert "proposal automation evidence links" in roadmap_flat
+    assert "proposal automation evidence links" in docc_roadmap_flat
 
     assert receipt_fixture["apiVersion"] == "specpm.receipts/v0"
     assert receipt_fixture["kind"] == "SpecPMProducerReceipt"
@@ -2067,7 +2087,7 @@ def test_producer_receipt_contract_is_documented() -> None:
         "- [x] Define candidate bundle preflight rejection diagnostics without adding a",
         "Phase 64. SpecHarvester Producer Bundle Intake",
         "- [x] Document SpecPM-side proposal policy for producer candidate bundles,",
-        "- [ ] Add a candidate bundle intake checklist to public-index proposal and",
+        "- [x] Add a candidate bundle intake checklist to public-index proposal and",
         "- [ ] Align SpecHarvester-to-SpecPM proposal automation so proposal pull",
         "- [ ] Add an optional SpecPM CI preflight gate for producer-backed proposals,",
         "- [ ] Define a shared cross-repository fixture policy so SpecPM contract",

@@ -1,7 +1,7 @@
 # Producer Candidate Bundle Proposal Policy
 
 Status: Draft
-Updated: 2026-06-02
+Updated: 2026-06-04
 Scope: SpecPM review policy for producer-generated candidate bundles
 
 ## Purpose
@@ -86,6 +86,10 @@ Before accepting a producer-backed proposal, a maintainer should verify:
 - The candidate package claims are still reviewed against package evidence and
   are not trusted solely because the producer emitted them.
 
+The public-index operator intake version of this checklist is maintained in
+`specs/PUBLIC_INDEX_OPERATOR_GUIDE.md` so accepted-manifest pull requests use
+the same evidence requirements during package review.
+
 ## Reject Signals
 
 For producer-backed proposals, maintainers should reject or request
@@ -137,13 +141,12 @@ This keeps producer receipts separate from registry authority.
 
 The remaining SpecPM/SpecHarvester boundary work is:
 
-1. Add a SpecPM candidate bundle intake checklist to proposal documentation.
-2. Align SpecHarvester-to-SpecPM proposal automation with the bundle evidence
+1. Align SpecHarvester-to-SpecPM proposal automation with the bundle evidence
    shape.
-3. Add an optional SpecPM CI preflight gate for producer-backed proposals.
-4. Maintain a shared cross-repository fixture policy so SpecPM contract
+2. Add an optional SpecPM CI preflight gate for producer-backed proposals.
+3. Maintain a shared cross-repository fixture policy so SpecPM contract
    examples and SpecHarvester generated examples do not drift.
-5. Define an external registry acceptance decision record that links maintainer
+4. Define an external registry acceptance decision record that links maintainer
    decisions to producer bundle evidence without making receipts authoritative.
 
 These follow-ups should be incremental. The first SpecPM step is policy and
