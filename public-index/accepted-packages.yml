@@ -15,3 +15,4 @@ packages:
     ref: v0.1.0
     revision: 2ad889ed413370f79710f235a08b43aaaaecf81e
     path: .
+  - path: public-index/generated/xyflow.core/0.1.0

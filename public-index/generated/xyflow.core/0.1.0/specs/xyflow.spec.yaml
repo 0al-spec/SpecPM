@@ -1,0 +1,146 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: xyflow.core
+  title: xyflow Generated Public Package Boundary
+  version: 0.1.0
+  status: draft
+  authors:
+    - name: SpecHarvester
+intent:
+  summary: "Capture observed public package intent for xyflow: A highly customizable React library for building node-based editors and interactive flow charts"
+scope:
+  boundedContext: xyflow
+  includes:
+    - Describe observed public package metadata from an allowlisted harvest snapshot.
+    - Declare package capabilities and intent IDs inferred from static manifests.
+    - Preserve source repository provenance and harvest policy metadata.
+  excludes:
+    - Upstream maintainer endorsement.
+    - Runtime behavior not evidenced by static harvested metadata.
+    - "Package script execution, dependency installation, or network probing."
+    - Automatic acceptance into a public SpecPM registry.
+provides:
+  capabilities:
+    - id: xyflow.core.monorepo
+      role: secondary
+      summary: A highly customizable React library for building node-based editors and interactive flow charts
+      intentIds:
+        - intent.javascript.react_library
+        - intent.package.javascript_library
+        - intent.repository.package_workspace
+        - intent.ui.flow_diagramming
+        - intent.ui.node_based_editor
+    - id: xyflow.core.react
+      role: primary
+      summary: React Flow - A highly customizable React library for building node-based editors and interactive flow charts.
+      intentIds:
+        - intent.javascript.react_library
+        - intent.package.javascript_library
+        - intent.ui.flow_diagramming
+        - intent.ui.node_based_editor
+    - id: xyflow.core.svelte
+      role: primary
+      summary: "Svelte Flow - A highly customizable Svelte library for building node-based editors, workflow systems, diagrams and more."
+      intentIds:
+        - intent.javascript.svelte_library
+        - intent.package.javascript_library
+        - intent.ui.diagramming
+        - intent.ui.flow_diagramming
+        - intent.ui.node_based_editor
+    - id: xyflow.core.system
+      role: primary
+      summary: xyflow core system that powers React Flow and Svelte Flow.
+      intentIds:
+        - intent.javascript.react_library
+        - intent.javascript.svelte_library
+        - intent.package.javascript_library
+        - intent.ui.flow_system_utilities
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: package.monorepo
+      kind: library
+      summary: Observed import surface for @xyflow/monorepo.
+      outputs:
+        - name: package_manifest
+          mediaTypes:
+            - application/json
+    - id: package.react
+      kind: library
+      summary: Observed import surface for @xyflow/react.
+      outputs:
+        - name: package_manifest
+          mediaTypes:
+            - application/json
+        - name: package_exports
+          mediaTypes:
+            - application/javascript
+            - text/css
+    - id: package.svelte
+      kind: library
+      summary: Observed import surface for @xyflow/svelte.
+      outputs:
+        - name: package_manifest
+          mediaTypes:
+            - application/json
+        - name: package_exports
+          mediaTypes:
+            - application/javascript
+            - text/css
+    - id: package.system
+      kind: library
+      summary: Observed import surface for @xyflow/system.
+      outputs:
+        - name: package_manifest
+          mediaTypes:
+            - application/json
+        - name: package_exports
+          mediaTypes:
+            - application/javascript
+            - text/css
+  outbound: []
+effects:
+  sideEffects: []
+constraints:
+  - id: generated_candidate_review_required
+    level: MUST
+    statement: This generated candidate must be reviewed before it is treated as accepted registry metadata.
+  - id: no_package_execution
+    level: MUST
+    statement: "SpecHarvester must not execute package scripts, install dependencies, or treat package content as host instructions."
+evidence:
+  - id: harvest_snapshot
+    kind: package_manifest
+    path: harvest.json
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities
+      - provides.capabilities.xyflow.core.monorepo
+      - provides.capabilities.xyflow.core.react
+      - provides.capabilities.xyflow.core.svelte
+      - provides.capabilities.xyflow.core.system
+provenance:
+  sourceConfidence:
+    intent: medium
+    boundary: medium
+    behavior: low
+  generatedBy: SpecHarvester deterministic draft generator
+  sourceRepository: "https://github.com/xyflow/xyflow"
+  sourceRevision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+  harvestPolicy:
+    contentAuthority: untrusted_metadata
+    execution: none
+    networkAccess: none
+    packageScripts: not_run
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+keywords:
+  - generated
+  - specharvester
+  - xyflow
