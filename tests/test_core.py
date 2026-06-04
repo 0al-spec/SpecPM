@@ -5224,14 +5224,14 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
         SPECNODE_RELEASE_REF,
         SPECNODE_RELEASE_REVISION,
     )
-    assert report["package_dirs"] == [
+    expected_alpha_package_dirs = [
         str((ROOT / "examples/email_tools").resolve()),
         str((ROOT / "packages/intent.package.public_repository_metadata").resolve()),
         str(checkout),
         str(ROOT.resolve()),
         str(specnode_checkout),
     ]
-    assert report["sources"] == [
+    expected_alpha_sources = [
         {
             "kind": "local",
             "path": "examples/email_tools",
@@ -5266,6 +5266,18 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
             "package_dir": str(specnode_checkout),
         },
     ]
+    assert report["package_dirs"][: len(expected_alpha_package_dirs)] == (
+        expected_alpha_package_dirs
+    )
+    assert report["sources"][: len(expected_alpha_sources)] == expected_alpha_sources
+    generated_sources = report["sources"][len(expected_alpha_sources) :]
+    generated_package_dirs = report["package_dirs"][len(expected_alpha_package_dirs) :]
+    assert len(generated_package_dirs) == len(generated_sources)
+    for source, package_dir in zip(generated_sources, generated_package_dirs, strict=True):
+        assert source["kind"] == "local"
+        assert source["path"].startswith("public-index/generated/")
+        assert source["package_dir"] == package_dir
+        assert package_dir == str((ROOT / source["path"]).resolve())
     assert report["errors"] == []
 
     output = tmp_path / "site"
