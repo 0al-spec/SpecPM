@@ -61,6 +61,7 @@ The canonical source files remain in the repository:
 - `specs/PACKAGE_SIGNING_REVOCATION.md`
 - `specs/PROVENANCE_RECEIPTS.md`
 - `specs/PRODUCER_RECEIPTS.md`
+- `specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
 - `RFC/SpecGraph-RFC-0001.md`
@@ -109,4 +110,5 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:ProvenanceReceipts>
 - <doc:ProducerReceipts>
 - <doc:ProducerBundleProposalPolicy>
+- <doc:ProducerBundleFixturePolicy>
 - <doc:Roadmap>

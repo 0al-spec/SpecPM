@@ -166,6 +166,14 @@ workflow runs this command only when the pull request body contains both
 machine-readable evidence blocks. Non-producer pull requests are reported as
 skipped.
 
+## Fixture Alignment
+
+Cross-repository fixture ownership and drift handling are defined in
+`specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md`. SpecPM owns the consumer contract
+examples and preflight expectations. SpecHarvester owns generated candidate
+bundle examples. Neither repository should use the other's mutable `main` branch
+as a fixture trust root.
+
 ## Planned Follow-Up Work
 
 The remaining SpecPM/SpecHarvester boundary work is:
@@ -173,9 +181,7 @@ The remaining SpecPM/SpecHarvester boundary work is:
 1. Align SpecHarvester-to-SpecPM proposal automation with the bundle evidence
    shape.
 2. Add an optional SpecPM CI preflight gate for producer-backed proposals.
-3. Maintain a shared cross-repository fixture policy so SpecPM contract
-   examples and SpecHarvester generated examples do not drift.
-4. Define an external registry acceptance decision record that links maintainer
+3. Define an external registry acceptance decision record that links maintainer
    decisions to producer bundle evidence without making receipts authoritative.
 
 These follow-ups should be incremental. The first SpecPM step is policy and

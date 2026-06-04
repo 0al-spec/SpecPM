@@ -249,6 +249,10 @@ SpecPM-side review policy for SpecHarvester-style producer candidate bundles is
 documented in `specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md`; producer evidence can
 support a proposal, but maintainer review and SpecPM validation remain the
 acceptance boundary.
+Shared SpecPM/SpecHarvester fixture alignment is documented in
+`specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md`; cross-repository checks should pin
+exact commits or copy reviewed local fixtures rather than reading mutable
+`main` branches as trust roots.
 Producer-backed pull requests can be checked with
 `specpm producer-bundle preflight --body <proposal-body.md> --json`; this
 consumer-side preflight reads `producerEvidenceLinks` and
