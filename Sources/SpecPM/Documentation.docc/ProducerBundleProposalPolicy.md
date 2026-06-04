@@ -122,3 +122,9 @@ SpecHarvester-to-SpecPM pull request body requirements are defined in
 <doc:ProducerBundleProposalAutomation>. Producer automation should emit
 `producerEvidenceLinks` and `registryAcceptanceDecision` fenced JSON blocks for
 consumer-side SpecPM preflight.
+
+## Acceptance Decision Record
+
+Machine-readable maintainer decisions are defined in
+<doc:RegistryAcceptanceDecisions>. The record links producer evidence to
+maintainer review while keeping producer receipts as `evidence_only`.

@@ -182,12 +182,18 @@ proposal automation are defined in
 `producerEvidenceLinks` and `registryAcceptanceDecision` fenced JSON blocks so
 SpecPM CI can run consumer-side preflight without executing producer tools.
 
+## Acceptance Decision Record
+
+Machine-readable maintainer decisions are defined in
+`specs/REGISTRY_ACCEPTANCE_DECISIONS.md`. A
+`SpecPMRegistryAcceptanceDecision` links package identity, proposal location,
+maintainer review, accepted-source effect, and producer evidence paths while
+keeping `producerReceiptAuthority: evidence_only`.
+
 ## Planned Follow-Up Work
 
-The remaining SpecPM/SpecHarvester boundary work is:
-
-1. Define an external registry acceptance decision record that links maintainer
-   decisions to producer bundle evidence without making receipts authoritative.
+The remaining SpecPM/SpecHarvester boundary work is implementation follow-up:
+wire producer automation and maintainer tooling to the documented contracts.
 
 These follow-ups should be incremental. The first SpecPM step is policy and
 review vocabulary; runtime enforcement can follow only after the review policy

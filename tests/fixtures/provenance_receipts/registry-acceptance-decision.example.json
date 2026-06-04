@@ -1,0 +1,36 @@
+{
+  "apiVersion": "specpm.decisions/v0",
+  "decisionId": "specpm-decision-2026-06-04-example-package-0.1.0",
+  "kind": "SpecPMRegistryAcceptanceDecision",
+  "maintainerReview": {
+    "decidedAt": "2026-06-04T00:00:00Z",
+    "decisionBy": "SpecPM maintainer",
+    "reviewLocation": "https://github.com/0al-spec/SpecPM/pull/0",
+    "summary": "Accepted after SpecPM validation and evidence review."
+  },
+  "outcome": {
+    "acceptedManifestChanged": true,
+    "publishOnMerge": true
+  },
+  "producerEvidence": {
+    "diagnosticsPath": "public-index/generated/example.package/0.1.0/diagnostics.json",
+    "producerReceiptAuthority": "evidence_only",
+    "producerReceiptPath": "public-index/generated/example.package/0.1.0/producer-receipt.json",
+    "proposalEvidenceLinks": "pull_request_body",
+    "validationReportPath": "public-index/generated/example.package/0.1.0/validation-report.json"
+  },
+  "requiredFor": [
+    "public_index_acceptance"
+  ],
+  "schemaVersion": 1,
+  "status": "approved",
+  "subject": {
+    "acceptedSourcePath": "public-index/accepted-packages.yml",
+    "packageId": "example.package",
+    "proposal": {
+      "kind": "pull_request",
+      "url": "https://github.com/0al-spec/SpecPM/pull/0"
+    },
+    "version": "0.1.0"
+  }
+}

@@ -77,6 +77,9 @@ For producer-opened proposals the initial status should be:
 
 Producers must not set this status to `approved`. Approval belongs to SpecPM
 maintainer review or to a future explicit acceptance decision record.
+After review, maintainers may record the final decision with the external
+`SpecPMRegistryAcceptanceDecision` contract in
+`specs/REGISTRY_ACCEPTANCE_DECISIONS.md`.
 
 ## Minimal Proposal Shape
 

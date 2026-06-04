@@ -27,5 +27,8 @@ keep `producerReceiptAuthority` as `evidence_only`.
 Producers must not mark proposals as approved. Maintainer review remains the
 registry acceptance authority.
 
+After review, maintainers may record the final decision using
+<doc:RegistryAcceptanceDecisions>.
+
 The canonical contract is
 `specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md`.

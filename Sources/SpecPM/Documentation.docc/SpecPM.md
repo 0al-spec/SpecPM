@@ -63,6 +63,7 @@ The canonical source files remain in the repository:
 - `specs/PRODUCER_RECEIPTS.md`
 - `specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md`
 - `specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md`
+- `specs/REGISTRY_ACCEPTANCE_DECISIONS.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
 - `RFC/SpecGraph-RFC-0001.md`
@@ -113,4 +114,5 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:ProducerBundleProposalPolicy>
 - <doc:ProducerBundleProposalAutomation>
 - <doc:ProducerBundleFixturePolicy>
+- <doc:RegistryAcceptanceDecisions>
 - <doc:Roadmap>

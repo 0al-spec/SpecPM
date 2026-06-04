@@ -167,6 +167,9 @@ SpecHarvester-to-SpecPM proposal automation contract is now documented. Producer
 pull requests should include machine-readable `producerEvidenceLinks` and
 `registryAcceptanceDecision` blocks that SpecPM can preflight without executing
 producer tools.
+External registry acceptance decision records are now documented. They connect
+producer evidence to maintainer review and accepted-source effects while keeping
+producer receipts as `evidence_only` support material.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
