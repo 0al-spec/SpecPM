@@ -46,6 +46,7 @@ all secrets as privileged and keeps explicit workflow boundaries around them.
 | `.github/workflows/deploy-connection-check.yml` | `pull_request_target` for deployment workflow paths | `contents: read`. | May read `FTP_HOST`, `FTP_PORT`, `FTP_USER`, `FTP_PASS`, and `FTP_REMOTE_ROOT` from the `FTP` environment. | Check that the SFTP target is reachable without uploading files. |
 | `.github/workflows/package-submission-check.yml` | `issues` labeled `package-submission` | `contents: read`, `issues: write`. | No repository or environment secrets. | Validate public package submission text and post/update one validation comment. |
 | `.github/workflows/package-submission-triage.yml` | `issues` labeled `package-submission` | `contents: read`, `issues: write`. | No repository or environment secrets. | Prepare review labels and an idempotent maintainer guidance comment. |
+| `.github/workflows/producer-bundle-preflight.yml` | `pull_request` | `contents: read`. | No repository or environment secrets. | If the pull request body includes producer bundle evidence blocks, run consumer-side `specpm producer-bundle preflight`; otherwise report a skip. |
 | `.github/workflows/namespace-claim-triage.yml` | `issues` labeled `namespace-claim` | `contents: read`, `issues: write`. | No repository or environment secrets. | Prepare namespace review labels and an idempotent policy comment. |
 | `.github/workflows/namespace-claim-decision-report.yml` | `issues` labeled/unlabeled `namespace-claim` | `contents: read`, `issues: write`. | No repository or environment secrets. | Report maintainer-applied namespace decision labels. |
 | `.github/workflows/namespace-claim-decision-summary.yml` | `workflow_dispatch`, schedule | `contents: read`, `issues: read`. | No repository or environment secrets. | Write read-only namespace decision summaries and upload workflow artifacts. |
@@ -67,10 +68,10 @@ by:
 - `.github/workflows/deploy-connection-check.yml`, job
   `deploy-connection-check`.
 
-Package submission and namespace claim workflows must not read repository or
-environment secrets. They process public GitHub Issue content and may use
-`GITHUB_TOKEN` only for the documented comment, label, search, and artifact
-operations.
+Package submission, producer bundle preflight, and namespace claim workflows
+must not read repository or environment secrets. They process public GitHub
+Issue or pull request content and may use `GITHUB_TOKEN` only for the documented
+comment, label, search, artifact, and read-only checkout operations.
 
 ## `pull_request_target` Review Rules
 

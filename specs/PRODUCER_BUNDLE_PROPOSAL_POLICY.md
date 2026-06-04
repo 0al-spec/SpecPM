@@ -137,6 +137,35 @@ The producer receipt must not be edited to pretend that an override happened.
 Receipts describe producer output; SpecPM review records acceptance decisions.
 This keeps producer receipts separate from registry authority.
 
+## Optional CI Preflight
+
+SpecPM provides an optional consumer-side preflight command for producer-backed
+pull requests:
+
+```bash
+specpm producer-bundle preflight --body <proposal-body.md> [--root <checkout-or-artifact-root>] --json
+```
+
+The command reads machine-readable `producerEvidenceLinks` and
+`registryAcceptanceDecision` JSON blocks from a proposal body. It verifies that
+required producer evidence roles are present, that path scopes are explicit,
+that optional static viewer and producer preflight evidence are reported when
+available, and that the registry acceptance decision keeps producer receipts as
+`evidence_only`.
+
+When `--root` is provided, the preflight also checks linked files and SHA-256
+digests under that root. It never executes producer tools, package scripts,
+analyzers, prompts, or package content.
+
+The preflight is review evidence. A passing report does not accept, publish,
+sign, install, or trust a package. A proposal still requires SpecPM validation,
+accepted-source review, and maintainer decision.
+
+The optional `.github/workflows/producer-bundle-preflight.yml` pull request
+workflow runs this command only when the pull request body contains both
+machine-readable evidence blocks. Non-producer pull requests are reported as
+skipped.
+
 ## Planned Follow-Up Work
 
 The remaining SpecPM/SpecHarvester boundary work is:

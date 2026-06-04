@@ -53,6 +53,7 @@ from specpm.index_submission import (
     render_submission_report_markdown,
     validate_submission_body,
 )
+from specpm.producer_bundle import preflight_producer_bundle
 from specpm.public_index import (
     generate_public_index,
     generate_public_index_from_inputs,
@@ -71,6 +72,7 @@ NAMESPACE_CLAIM_POLICY = ROOT / "specs/NAMESPACE_CLAIM_POLICY.md"
 PUBLIC_INDEX_OPERATOR_GUIDE = ROOT / "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 PACKAGE_SUBMISSION_TRIAGE_WORKFLOW = ROOT / ".github/workflows/package-submission-triage.yml"
+PRODUCER_BUNDLE_PREFLIGHT_WORKFLOW = ROOT / ".github/workflows/producer-bundle-preflight.yml"
 NAMESPACE_CLAIM_TRIAGE_WORKFLOW = ROOT / ".github/workflows/namespace-claim-triage.yml"
 NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-report.yml"
@@ -235,6 +237,109 @@ def sha256_path(path: Path) -> str:
         for chunk in iter(lambda: file.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def write_producer_bundle_pr_body(
+    path: Path,
+    *,
+    manifest_digest: str = "sha256:placeholder",
+    include_decision: bool = True,
+) -> None:
+    decision_block = ""
+    if include_decision:
+        decision_block = """
+```json
+{
+  "registryAcceptanceDecision": {
+    "status": "external_required",
+    "requiredFor": ["public_index_acceptance"],
+    "authority": "SpecPM maintainer review",
+    "recordKind": "SpecPMRegistryAcceptanceDecision",
+    "recordLocation": "SpecPM pull request or accepted-source review record",
+    "producerReceiptAuthority": "evidence_only"
+  }
+}
+```
+"""
+    path.write_text(
+        f"""
+# Producer-backed proposal
+
+```json
+{{
+  "producerEvidenceLinks": [
+    {{
+      "role": "accepted_source_bundle",
+      "path": "public-index/generated/example.package/0.1.0",
+      "pathScope": "repo_relative",
+      "required": true,
+      "status": "expected"
+    }},
+    {{
+      "role": "manifest",
+      "path": "public-index/generated/example.package/0.1.0/specpm.yaml",
+      "pathScope": "repo_relative",
+      "required": true,
+      "status": "present",
+      "digest": "{manifest_digest}"
+    }},
+    {{
+      "role": "boundary_spec",
+      "path": "public-index/generated/example.package/0.1.0/specs/example.spec.yaml",
+      "pathScope": "repo_relative",
+      "required": true,
+      "status": "present"
+    }},
+    {{
+      "role": "producer_receipt",
+      "path": "public-index/generated/example.package/0.1.0/producer-receipt.json",
+      "pathScope": "repo_relative",
+      "required": true,
+      "status": "present"
+    }},
+    {{
+      "role": "validation_report",
+      "path": "public-index/generated/example.package/0.1.0/validation-report.json",
+      "pathScope": "repo_relative",
+      "required": true,
+      "status": "present"
+    }},
+    {{
+      "role": "diagnostics",
+      "path": "public-index/generated/example.package/0.1.0/diagnostics.json",
+      "pathScope": "repo_relative",
+      "required": true,
+      "status": "present"
+    }},
+    {{
+      "role": "producer_preflight",
+      "path": "producer-preflight-report.json",
+      "pathScope": "workflow_artifact",
+      "required": false,
+      "status": "missing"
+    }},
+    {{
+      "role": "static_viewer",
+      "path": "static-viewer/index.html",
+      "pathScope": "workflow_artifact",
+      "required": false,
+      "status": "missing"
+    }},
+    {{
+      "role": "accepted_source_diff",
+      "path": "pull-request-diff",
+      "pathScope": "pull_request",
+      "required": true,
+      "status": "expected"
+    }}
+  ]
+}}
+```
+{decision_block}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def load_conformance_suite() -> dict[str, Any]:
@@ -1547,6 +1652,7 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
         DEPLOY_CONNECTION_CHECK_WORKFLOW: {"contents": "read"},
         PACKAGE_SUBMISSION_WORKFLOW: {"contents": "read", "issues": "write"},
         PACKAGE_SUBMISSION_TRIAGE_WORKFLOW: {"contents": "read", "issues": "write"},
+        PRODUCER_BUNDLE_PREFLIGHT_WORKFLOW: {"contents": "read"},
         NAMESPACE_CLAIM_TRIAGE_WORKFLOW: {"contents": "read", "issues": "write"},
         NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW: {"contents": "read", "issues": "write"},
         NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW: {"contents": "read", "issues": "read"},
@@ -1652,6 +1758,33 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
     assert "github_actions_least_privilege" in constraint_ids
     assert "specs/GITHUB_ACTIONS_PERMISSIONS.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/GitHubActionsPermissions.md" in evidence_paths
+
+
+def test_producer_bundle_preflight_workflow_is_read_only_and_evidence_scoped() -> None:
+    loaded = load_yaml_file(PRODUCER_BUNDLE_PREFLIGHT_WORKFLOW)
+    trigger = loaded.get("on") or loaded.get(True)
+    assert "pull_request" in trigger
+    assert "pull_request_target" not in trigger
+    assert loaded["permissions"] == {"contents": "read"}
+
+    job = loaded["jobs"]["producer-bundle-preflight"]
+    steps = {step["name"]: step for step in job["steps"] if "name" in step}
+    proposal_script = steps["Write pull request body"]["run"]
+    preflight_script = steps["Preflight producer bundle evidence"]["run"]
+
+    assert "producerEvidenceLinks" in proposal_script
+    assert "registryAcceptanceDecision" in proposal_script
+    assert "json.loads" in proposal_script
+    assert "```json" in proposal_script
+    assert "RUNNER_TEMP" in proposal_script
+    assert "should_run" in proposal_script
+    assert "false" in proposal_script
+    assert steps["Check out pull request"]["uses"] == "actions/checkout@v6"
+    assert steps["Set up Python"]["uses"] == "actions/setup-python@v6"
+    assert "producer-bundle preflight" in preflight_script
+    assert "steps.proposal.outputs.body_path" in preflight_script
+    assert '--root "$GITHUB_WORKSPACE"' in preflight_script
+    assert "--json" in preflight_script
 
 
 def test_remote_package_acquisition_boundary_is_documented() -> None:
@@ -2089,7 +2222,7 @@ def test_producer_receipt_contract_is_documented() -> None:
         "- [x] Document SpecPM-side proposal policy for producer candidate bundles,",
         "- [x] Add a candidate bundle intake checklist to public-index proposal and",
         "- [ ] Align SpecHarvester-to-SpecPM proposal automation so proposal pull",
-        "- [ ] Add an optional SpecPM CI preflight gate for producer-backed proposals,",
+        "- [x] Add an optional SpecPM CI preflight gate for producer-backed proposals,",
         "- [ ] Define a shared cross-repository fixture policy so SpecPM contract",
         "- [ ] Define an external registry acceptance decision record that links",
     ):
@@ -2110,10 +2243,135 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/ProducerReceipts.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/ProducerBundleProposalPolicy.md" in evidence_paths
+    assert "specpm producer-bundle preflight" in proposal_policy
+    assert "producerEvidenceLinks" in proposal_policy
+    assert "registryAcceptanceDecision" in proposal_policy
+    assert "evidence_only" in proposal_policy
+    assert "specpm producer-bundle preflight" in docc_proposal_policy
+    assert "producerEvidenceLinks" in docc_proposal_policy
+    assert "registryAcceptanceDecision" in docc_proposal_policy
+    assert "evidence_only" in docc_proposal_policy
     assert (
         "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
         in evidence_paths
     )
+
+
+def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:
+    root = tmp_path / "checkout"
+    package = root / "public-index/generated/example.package/0.1.0"
+    package.mkdir(parents=True)
+    specs_dir = package / "specs"
+    specs_dir.mkdir()
+    manifest = package / "specpm.yaml"
+    manifest.write_text("schemaVersion: 1\nmetadata:\n  id: example.package\n", encoding="utf-8")
+    (specs_dir / "example.spec.yaml").write_text("apiVersion: specpm.dev/v0.1\n", encoding="utf-8")
+    for name in ("producer-receipt.json", "validation-report.json", "diagnostics.json"):
+        (package / name).write_text("{}\n", encoding="utf-8")
+    body = tmp_path / "body.md"
+    write_producer_bundle_pr_body(body, manifest_digest=f"sha256:{sha256_path(manifest)}")
+
+    report = preflight_producer_bundle(body, root=root)
+
+    assert report["kind"] == "SpecPMProducerBundlePreflightReport"
+    assert report["status"] == "warning"
+    assert report["summary"] == {
+        "producerEvidenceRoleCount": 9,
+        "errorCount": 0,
+        "warningCount": 2,
+    }
+    assert set(report["producerEvidenceRoles"]) == {
+        "accepted_source_bundle",
+        "accepted_source_diff",
+        "boundary_spec",
+        "diagnostics",
+        "manifest",
+        "producer_preflight",
+        "producer_receipt",
+        "static_viewer",
+        "validation_report",
+    }
+    assert report["registryAcceptanceDecision"] == {
+        "producerReceiptAuthority": "evidence_only",
+        "recordKind": "SpecPMRegistryAcceptanceDecision",
+        "status": "external_required",
+    }
+    assert issue_codes(report["warnings"]) == {"producer_evidence_optional_missing"}
+
+
+def test_cli_producer_bundle_preflight_emits_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "checkout"
+    package = root / "public-index/generated/example.package/0.1.0"
+    package.mkdir(parents=True)
+    specs_dir = package / "specs"
+    specs_dir.mkdir()
+    manifest = package / "specpm.yaml"
+    manifest.write_text("schemaVersion: 1\nmetadata:\n  id: example.package\n", encoding="utf-8")
+    (specs_dir / "example.spec.yaml").write_text("apiVersion: specpm.dev/v0.1\n", encoding="utf-8")
+    for name in ("producer-receipt.json", "validation-report.json", "diagnostics.json"):
+        (package / name).write_text("{}\n", encoding="utf-8")
+    body = tmp_path / "body.md"
+    write_producer_bundle_pr_body(body, manifest_digest=f"sha256:{sha256_path(manifest)}")
+
+    exit_code = main(
+        ["producer-bundle", "preflight", "--body", str(body), "--root", str(root), "--json"]
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+    assert exit_code == 0
+    assert report["status"] == "warning"
+    assert report["summary"]["errorCount"] == 0
+    assert report["registryAcceptanceDecision"]["status"] == "external_required"
+
+
+def test_producer_bundle_preflight_rejects_missing_registry_decision(tmp_path: Path) -> None:
+    body = tmp_path / "body.md"
+    write_producer_bundle_pr_body(body, include_decision=False)
+
+    report = preflight_producer_bundle(body)
+
+    assert report["status"] == "failed"
+    assert "registry_acceptance_decision_missing" in issue_codes(report["errors"])
+    assert "registry_acceptance_decision_status_invalid" in issue_codes(report["errors"])
+
+
+def test_producer_bundle_preflight_rejects_missing_pull_request_path(tmp_path: Path) -> None:
+    body = tmp_path / "body.md"
+    write_producer_bundle_pr_body(body)
+    body.write_text(
+        body.read_text(encoding="utf-8").replace(
+            '"path": "pull-request-diff",',
+            '"path": "",',
+        ),
+        encoding="utf-8",
+    )
+
+    report = preflight_producer_bundle(body)
+
+    assert report["status"] == "failed"
+    assert "producer_evidence_path_missing" in issue_codes(report["errors"])
+
+
+def test_producer_bundle_preflight_rejects_digest_mismatch(tmp_path: Path) -> None:
+    root = tmp_path / "checkout"
+    package = root / "public-index/generated/example.package/0.1.0"
+    package.mkdir(parents=True)
+    specs_dir = package / "specs"
+    specs_dir.mkdir()
+    (package / "specpm.yaml").write_text("schemaVersion: 1\n", encoding="utf-8")
+    (specs_dir / "example.spec.yaml").write_text("apiVersion: specpm.dev/v0.1\n", encoding="utf-8")
+    for name in ("producer-receipt.json", "validation-report.json", "diagnostics.json"):
+        (package / name).write_text("{}\n", encoding="utf-8")
+    body = tmp_path / "body.md"
+    write_producer_bundle_pr_body(body, manifest_digest=f"sha256:{'0' * 64}")
+
+    report = preflight_producer_bundle(body, root=root)
+
+    assert report["status"] == "failed"
+    assert "producer_evidence_digest_mismatch" in issue_codes(report["errors"])
 
 
 def test_intent_taxonomy_governance_is_documented() -> None:
