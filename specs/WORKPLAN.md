@@ -1590,7 +1590,7 @@ Acceptance:
   starting as policy/reporting evidence before becoming a strict gate.
 - [x] Define a shared cross-repository fixture policy so SpecPM contract
   examples and SpecHarvester generated bundle examples cannot silently drift.
-- [ ] Define an external registry acceptance decision record that links
+- [x] Define an external registry acceptance decision record that links
   maintainer decisions to producer bundle evidence without making producer
   receipts authoritative.
 

@@ -257,6 +257,9 @@ Producer-backed proposal automation should follow
 `specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md` so pull request bodies expose
 machine-readable `producerEvidenceLinks` and `registryAcceptanceDecision`
 blocks for SpecPM preflight.
+Maintainer acceptance records are documented in
+`specs/REGISTRY_ACCEPTANCE_DECISIONS.md`; they link producer evidence to a
+SpecPM maintainer decision while keeping producer receipts as `evidence_only`.
 Producer-backed pull requests can be checked with
 `specpm producer-bundle preflight --body <proposal-body.md> --json`; this
 consumer-side preflight reads `producerEvidenceLinks` and

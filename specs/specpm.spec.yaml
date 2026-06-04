@@ -201,6 +201,9 @@ provides:
     - id: specpm.specs.producer_bundle_fixture_policy
       role: secondary
       summary: Document shared SpecPM and SpecHarvester fixture ownership and drift-sensitive producer bundle fields.
+    - id: specpm.registry.acceptance_decision_record
+      role: secondary
+      summary: Document external maintainer registry acceptance decision records that link producer evidence without making receipts authoritative.
     - id: specpm.registry.public_alpha_index
       role: secondary
       summary: Seed and document the read-only public alpha registry package set for SpecPM, SpecNode, and example packages.
@@ -941,6 +944,16 @@ evidence:
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
+  - id: registry_acceptance_decision_docs
+    kind: documentation
+    path: specs/REGISTRY_ACCEPTANCE_DECISIONS.md
+    supports:
+      - specpm.registry.acceptance_decision_record
+      - specpm.specs.producer_bundle_proposal_policy
+      - specpm.specs.producer_bundle_proposal_automation
+      - producer_receipts_not_generation_authority
+      - scope.includes
+      - scope.excludes
   - id: provenance_receipt_fixture
     kind: test
     path: tests/fixtures/provenance_receipts/public-static-receipt.example.json
@@ -952,6 +965,12 @@ evidence:
     path: tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json
     supports:
       - specpm.specs.producer_receipt_contract
+      - producer_receipts_not_generation_authority
+  - id: registry_acceptance_decision_fixture
+    kind: test
+    path: tests/fixtures/provenance_receipts/registry-acceptance-decision.example.json
+    supports:
+      - specpm.registry.acceptance_decision_record
       - producer_receipts_not_generation_authority
   - id: rfc_coverage
     kind: documentation
@@ -1206,6 +1225,13 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.specs.producer_bundle_proposal_automation
       - specpm.specs.producer_bundle_proposal_policy
+  - id: docc_registry_acceptance_decisions
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/RegistryAcceptanceDecisions.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.acceptance_decision_record
+      - specpm.specs.producer_bundle_proposal_policy
   - id: docc_intent_taxonomy_governance
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
@@ -1334,6 +1360,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md
         - Sources/SpecPM/Documentation.docc/ProducerBundleProposalAutomation.md
         - Sources/SpecPM/Documentation.docc/ProducerBundleFixturePolicy.md
+        - Sources/SpecPM/Documentation.docc/RegistryAcceptanceDecisions.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
         - Sources/SpecPM/Documentation.docc/DownstreamRegistryConsumers.md
         - Sources/SpecPM/Documentation.docc/SpecGraphRegistryObservation.md
@@ -1346,6 +1373,7 @@ implementationBindings:
         - specs/GITHUB_ACTIONS_PERMISSIONS.md
         - specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md
         - specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md
+        - specs/REGISTRY_ACCEPTANCE_DECISIONS.md
         - specs/REMOTE_PACKAGE_ACQUISITION.md
         - specs/PACKAGE_SIGNING_REVOCATION.md
         - specs/PROVENANCE_RECEIPTS.md
