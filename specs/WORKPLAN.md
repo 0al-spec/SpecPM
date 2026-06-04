@@ -1583,7 +1583,7 @@ Acceptance:
   preflight, or static previews as registry authority.
 - [x] Add a candidate bundle intake checklist to public-index proposal and
   accepted-manifest review documentation.
-- [ ] Align SpecHarvester-to-SpecPM proposal automation so proposal pull
+- [x] Align SpecHarvester-to-SpecPM proposal automation so proposal pull
   requests explicitly include or link producer receipt, validation report,
   diagnostics report, preflight report, and static viewer evidence.
 - [x] Add an optional SpecPM CI preflight gate for producer-backed proposals,

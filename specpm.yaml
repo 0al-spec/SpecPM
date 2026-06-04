@@ -46,6 +46,7 @@ index:
       - specpm.registry.public_index_provenance_receipts
       - specpm.specs.producer_receipt_contract
       - specpm.specs.producer_bundle_proposal_policy
+      - specpm.specs.producer_bundle_proposal_automation
       - specpm.specs.producer_bundle_fixture_policy
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke

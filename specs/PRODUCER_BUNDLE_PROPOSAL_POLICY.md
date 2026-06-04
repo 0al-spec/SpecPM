@@ -174,14 +174,19 @@ examples and preflight expectations. SpecHarvester owns generated candidate
 bundle examples. Neither repository should use the other's mutable `main` branch
 as a fixture trust root.
 
+## Proposal Automation
+
+Machine-readable pull request body requirements for SpecHarvester-to-SpecPM
+proposal automation are defined in
+`specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md`. Producer automation should emit
+`producerEvidenceLinks` and `registryAcceptanceDecision` fenced JSON blocks so
+SpecPM CI can run consumer-side preflight without executing producer tools.
+
 ## Planned Follow-Up Work
 
 The remaining SpecPM/SpecHarvester boundary work is:
 
-1. Align SpecHarvester-to-SpecPM proposal automation with the bundle evidence
-   shape.
-2. Add an optional SpecPM CI preflight gate for producer-backed proposals.
-3. Define an external registry acceptance decision record that links maintainer
+1. Define an external registry acceptance decision record that links maintainer
    decisions to producer bundle evidence without making receipts authoritative.
 
 These follow-ups should be incremental. The first SpecPM step is policy and

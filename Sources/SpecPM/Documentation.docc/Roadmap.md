@@ -163,6 +163,10 @@ keeps producer receipts separate from registry authority.
 Shared SpecPM/SpecHarvester fixture policy is now documented: SpecPM owns
 consumer contract examples, SpecHarvester owns generated output examples, and
 cross-repository checks must avoid mutable `main` as a fixture trust root.
+SpecHarvester-to-SpecPM proposal automation contract is now documented. Producer
+pull requests should include machine-readable `producerEvidenceLinks` and
+`registryAcceptanceDecision` blocks that SpecPM can preflight without executing
+producer tools.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
