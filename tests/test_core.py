@@ -5230,6 +5230,7 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
         str(checkout),
         str(ROOT.resolve()),
         str(specnode_checkout),
+        str((ROOT / "public-index/generated/xyflow.core/0.1.0").resolve()),
     ]
     assert report["sources"] == [
         {
@@ -5264,6 +5265,11 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
             "revision": SPECNODE_RELEASE_REVISION,
             "path": ".",
             "package_dir": str(specnode_checkout),
+        },
+        {
+            "kind": "local",
+            "path": "public-index/generated/xyflow.core/0.1.0",
+            "package_dir": str((ROOT / "public-index/generated/xyflow.core/0.1.0").resolve()),
         },
     ]
     assert report["errors"] == []
