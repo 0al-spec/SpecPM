@@ -1,0 +1,355 @@
+{
+  "files": [
+    {
+      "kind": "workflow",
+      "path": ".github/workflows/codespell.yml",
+      "sha256": "abf0d7af35eb32ea03fbd7389d5f5e2a744395efa43196f359d393451c2c150f",
+      "size": 400
+    },
+    {
+      "kind": "workflow",
+      "path": ".github/workflows/dispatchWebsiteUpdate.yaml",
+      "sha256": "8428b7643bad2edbbe45818660599be3b231f05cfb6ee70fa6d6b5b3e069a2ed",
+      "size": 1125
+    },
+    {
+      "kind": "workflow",
+      "path": ".github/workflows/playwright.yml",
+      "sha256": "d59dfc1b19f169d97d11ec6e47fb498e760f6140c0d785b335c15d4522b2a0fe",
+      "size": 511
+    },
+    {
+      "kind": "workflow",
+      "path": ".github/workflows/release.yml",
+      "sha256": "7d0ef1fdc48d20afb8fdea47faa1d8785c8185051b9e60f79b2945f9625cac70",
+      "size": 677
+    },
+    {
+      "kind": "license",
+      "path": "LICENSE",
+      "sha256": "023119ac20fb1c8c9930abe0bcd196989a1960388529a96fc43cebf96f07c9ff",
+      "size": 1073
+    },
+    {
+      "headings": [
+        "The xyflow mono repo",
+        "Commercial usage",
+        "Getting started",
+        "Releases",
+        "Built by [xyflow](https://xyflow.com)",
+        "License"
+      ],
+      "kind": "documentation",
+      "path": "README.md",
+      "sha256": "be7df4c1810d7c7d0e44e26d08404a97fa9ab62d3fdf3e5fd4c31f3070472d63",
+      "size": 5271
+    },
+    {
+      "headings": [
+        "Examples for Testing & Development",
+        "Overview",
+        "E2E"
+      ],
+      "kind": "documentation",
+      "path": "examples/README.md",
+      "sha256": "da5fce623ea139f0033c39fc422e64ae845cfb8f9dc154ea1adc60ad854103cc",
+      "size": 436
+    },
+    {
+      "kind": "package_manifest",
+      "package": {
+        "description": "A highly customizable React library for building node-based editors and interactive flow charts",
+        "devDependencies": [
+          "@changesets/changelog-github",
+          "@changesets/cli",
+          "@playwright/test",
+          "concurrently",
+          "eslint",
+          "prettier",
+          "react",
+          "react-dom",
+          "rimraf",
+          "rollup",
+          "turbo",
+          "typescript"
+        ],
+        "license": "MIT",
+        "name": "@xyflow/monorepo",
+        "scripts": [
+          "build",
+          "build:all",
+          "clean",
+          "dev",
+          "dev:react",
+          "dev:svelte",
+          "lint",
+          "preinstall",
+          "release",
+          "test:react",
+          "test:react:ui",
+          "test:svelte",
+          "test:svelte:ui",
+          "typecheck"
+        ],
+        "version": "0.0.0"
+      },
+      "path": "package.json",
+      "sha256": "5ce8c826877d3028c31729daa27d76aff8e28d1f087115052c289104938332f9",
+      "size": 1485
+    },
+    {
+      "headings": [
+        "Key Features",
+        "Commercial Usage",
+        "Installation",
+        "Quickstart",
+        "Development",
+        "Testing",
+        "xyflow Team",
+        "Community Packages",
+        "Credits",
+        "License"
+      ],
+      "kind": "documentation",
+      "path": "packages/react/README.md",
+      "sha256": "d61d3061725de60ee80ec9864ba1356a71a5a10bb40aeedacd8e7e7d8c3e078c",
+      "size": 6610
+    },
+    {
+      "kind": "package_manifest",
+      "package": {
+        "dependencies": [
+          "@xyflow/system",
+          "classcat",
+          "zustand"
+        ],
+        "description": "React Flow - A highly customizable React library for building node-based editors and interactive flow charts.",
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "@xyflow/eslint-config",
+          "@xyflow/rollup-config",
+          "@xyflow/tsconfig",
+          "autoprefixer",
+          "cssnano",
+          "postcss",
+          "postcss-cli",
+          "postcss-combine-duplicated-selectors",
+          "postcss-import",
+          "postcss-nested",
+          "postcss-rename",
+          "react",
+          "typescript"
+        ],
+        "exports": [
+          ".",
+          "./dist/base.css",
+          "./dist/style.css",
+          "./package.json"
+        ],
+        "license": "MIT",
+        "name": "@xyflow/react",
+        "peerDependencies": [
+          "react",
+          "react-dom"
+        ],
+        "scripts": [
+          "build",
+          "css",
+          "css-watch",
+          "dev",
+          "lint",
+          "typecheck"
+        ],
+        "version": "12.10.2"
+      },
+      "path": "packages/react/package.json",
+      "sha256": "62dec991957847e98c7d18e01b4561cff5bccc1ec106998c0f5eccead4b1463b",
+      "size": 2668
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/react/src/index.ts",
+      "sha256": "004dac65bb42f1c755ae174ea9250ba34d6d53ad226801c077043fce0ac777d9",
+      "size": 4551
+    },
+    {
+      "headings": [
+        "Key Features",
+        "Installation",
+        "Getting started",
+        "How to Contribute",
+        "Development",
+        "Maintainers",
+        "License"
+      ],
+      "kind": "documentation",
+      "path": "packages/svelte/README.md",
+      "sha256": "33234d4d4a88a87c7f711734d989dc8bd962b2f8e21c5f79993b7f06e410c8c5",
+      "size": 5500
+    },
+    {
+      "kind": "package_manifest",
+      "package": {
+        "dependencies": [
+          "@svelte-put/shortcut",
+          "@xyflow/system"
+        ],
+        "description": "Svelte Flow - A highly customizable Svelte library for building node-based editors, workflow systems, diagrams and more.",
+        "devDependencies": [
+          "@eslint/compat",
+          "@eslint/js",
+          "@sveltejs/adapter-auto",
+          "@sveltejs/kit",
+          "@sveltejs/package",
+          "@sveltejs/vite-plugin-svelte",
+          "@typescript-eslint/eslint-plugin",
+          "@typescript-eslint/parser",
+          "autoprefixer",
+          "cssnano",
+          "dotenv",
+          "eslint",
+          "eslint-config-prettier",
+          "eslint-plugin-svelte",
+          "globals",
+          "postcss",
+          "postcss-cli",
+          "postcss-combine-duplicated-selectors",
+          "postcss-import",
+          "postcss-nested",
+          "postcss-rename",
+          "prettier",
+          "prettier-plugin-svelte",
+          "svelte",
+          "svelte-check",
+          "svelte-eslint-parser",
+          "svelte-preprocess",
+          "tslib",
+          "typescript",
+          "typescript-eslint"
+        ],
+        "exports": [
+          ".",
+          "./dist/base.css",
+          "./dist/style.css",
+          "./package.json"
+        ],
+        "license": "MIT",
+        "name": "@xyflow/svelte",
+        "peerDependencies": [
+          "svelte"
+        ],
+        "scripts": [
+          "build",
+          "check",
+          "check:watch",
+          "css",
+          "css-watch",
+          "dev",
+          "format",
+          "lint",
+          "typecheck"
+        ],
+        "type": "module",
+        "version": "1.5.2"
+      },
+      "path": "packages/svelte/package.json",
+      "sha256": "a5bcaff6a9ab5255705054e72e762791a5986c366074db6256bd4a6b8f3d5e1e",
+      "size": 2933
+    },
+    {
+      "headings": [
+        "@xyflow/system",
+        "Installation",
+        "What is this package?",
+        "Features",
+        "Usage",
+        "Example: Bezier Edge Path Creation",
+        "API Reference",
+        "Contributing"
+      ],
+      "kind": "documentation",
+      "path": "packages/system/README.md",
+      "sha256": "f007cc7dfe35262c5a8e7e61a9efc5eae54c539d3a4c3dbd55f3edf671b8347f",
+      "size": 2469
+    },
+    {
+      "kind": "package_manifest",
+      "package": {
+        "dependencies": [
+          "@types/d3-drag",
+          "@types/d3-interpolate",
+          "@types/d3-selection",
+          "@types/d3-transition",
+          "@types/d3-zoom",
+          "d3-drag",
+          "d3-interpolate",
+          "d3-selection",
+          "d3-zoom"
+        ],
+        "description": "xyflow core system that powers React Flow and Svelte Flow.",
+        "devDependencies": [
+          "@types/node",
+          "@xyflow/eslint-config",
+          "@xyflow/rollup-config",
+          "@xyflow/tsconfig",
+          "typescript"
+        ],
+        "exports": [
+          "."
+        ],
+        "license": "MIT",
+        "name": "@xyflow/system",
+        "scripts": [
+          "build",
+          "dev",
+          "lint",
+          "typecheck"
+        ],
+        "version": "0.0.76"
+      },
+      "path": "packages/system/package.json",
+      "sha256": "4ab83b02596c8a60f884ec08d4a9f1930932717b81cb80a7dbb3716f2c0c30a3",
+      "size": 1995
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/index.ts",
+      "sha256": "1ed754d6574b3d08d9bcc143507a1dacf006bd91cbc2bd9a5d3d40b61b77cd88",
+      "size": 220
+    },
+    {
+      "kind": "workspace_manifest",
+      "path": "pnpm-workspace.yaml",
+      "sha256": "ab4edc78eb8db269195ac55bcd98bbd4f4ac11fa29ae13f1ce40e47c29832246",
+      "size": 74
+    },
+    {
+      "kind": "workspace_manifest",
+      "path": "turbo.json",
+      "sha256": "7316e647bde5b08d6715ab47807a7bd293f547db2fc44a6715b00afcb12a3806",
+      "size": 437
+    }
+  ],
+  "kind": "SpecHarvesterEvidenceSnapshot",
+  "policy": {
+    "contentAuthority": "untrusted_metadata",
+    "execution": "none",
+    "networkAccess": "none",
+    "packageScripts": "not_run"
+  },
+  "schemaVersion": 1,
+  "skippedFiles": [],
+  "source": {
+    "kind": "local_checkout",
+    "label": "xyflow",
+    "repository": "https://github.com/xyflow/xyflow",
+    "revision": "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd"
+  },
+  "summary": {
+    "fileCount": 18,
+    "packageManifestCount": 4,
+    "skippedFileCount": 0
+  }
+}

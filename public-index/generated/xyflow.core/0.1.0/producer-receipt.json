@@ -1,0 +1,149 @@
+{
+  "apiVersion": "specpm.receipts/v0",
+  "audit": {
+    "evidence": [
+      {
+        "kind": "producer_receipt_contract",
+        "path": "docs/PRODUCER_CANDIDATE_BUNDLE.md",
+        "retention": "repository"
+      }
+    ]
+  },
+  "configuration": {
+    "deterministic": true,
+    "digest": {
+      "algorithm": "sha256",
+      "value": "fbc3a52084ebe968a5fc40d4a4ce97818513fa96b1b03675fa3d5c4df176466f"
+    },
+    "mode": "deterministic_draft",
+    "normalizedSummary": "SpecHarvester deterministic draft generation",
+    "templates": [
+      {
+        "name": "specpm-package-boundary",
+        "version": "0.1.0"
+      }
+    ]
+  },
+  "diagnostics": {
+    "digest": {
+      "algorithm": "sha256",
+      "value": "37309eeec70f57d9833e7c24ccbcdd47e23b4fbe68947f76d1ea104231be6170"
+    },
+    "entries": [
+      {
+        "code": "privacy_public_handoff",
+        "message": "Generated diagnostics are path, digest, and summary metadata only; raw private source, private prompts, tokens, and credentials are excluded.",
+        "severity": "info"
+      },
+      {
+        "code": "human_review_required",
+        "message": "Generated candidates require maintainer review before public index acceptance.",
+        "severity": "info"
+      },
+      {
+        "code": "producer_receipt_is_evidence",
+        "message": "Producer receipts are evidence and do not imply SpecPM acceptance.",
+        "severity": "info"
+      }
+    ],
+    "path": "diagnostics.json",
+    "status": "clean"
+  },
+  "humanReview": {
+    "handoff": "pull_request",
+    "requiredFor": [
+      "public_index_acceptance"
+    ],
+    "status": "required"
+  },
+  "inputs": [
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "fbc3a52084ebe968a5fc40d4a4ce97818513fa96b1b03675fa3d5c4df176466f"
+      },
+      "kind": "config",
+      "path": "spec_harvester.draft.configuration",
+      "redaction": "none"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "749adb2b88010cc06b40a12a7a03929ad79736cf9c411d8407b009678e688443"
+      },
+      "kind": "harvested_evidence",
+      "location": "bundle",
+      "path": "harvest.json",
+      "redaction": "none"
+    }
+  ],
+  "issuedAt": "2026-06-04T21:11:02Z",
+  "kind": "SpecPMProducerReceipt",
+  "outputs": [
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "37309eeec70f57d9833e7c24ccbcdd47e23b4fbe68947f76d1ea104231be6170"
+      },
+      "path": "diagnostics.json",
+      "role": "diagnostics"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "d37b5db370feeb4dc89449516848adc46d50b4dd9508a4608f2167253cd85bcf"
+      },
+      "path": "specpm.yaml",
+      "role": "manifest"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "a2e5fa9a6ef6bf13b669b6e0f4e694e8c9659907b9f4c03540c6ddfb2280dfab"
+      },
+      "path": "specs/xyflow.spec.yaml",
+      "role": "boundary_spec"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "0d3d4710773cef30e3de1bf6142991bfa6b7d180ac5cf88d53ec3c6db7c1f4a1"
+      },
+      "path": "validation-report.json",
+      "role": "validation_report"
+    }
+  ],
+  "privacy": {
+    "redactions": [],
+    "secretsIncluded": false
+  },
+  "producer": {
+    "name": "SpecHarvester",
+    "repository": "https://github.com/0al-spec/SpecHarvester",
+    "version": "0.1.0",
+    "workflow": "draft"
+  },
+  "receiptId": "xyflow.core@0.1.0:producer:sha256:1cf519097f5d",
+  "receiptProfile": "generated_spec_package_v0",
+  "schemaVersion": 1,
+  "subject": {
+    "boundarySpecs": [
+      "specs/xyflow.spec.yaml"
+    ],
+    "candidateStatus": "review-ready",
+    "packageApiVersion": "specpm.dev/v0.1",
+    "packageId": "xyflow.core",
+    "packageRoot": ".",
+    "packageVersion": "0.1.0"
+  },
+  "validation": {
+    "errorCount": 0,
+    "reportDigest": {
+      "algorithm": "sha256",
+      "value": "0d3d4710773cef30e3de1bf6142991bfa6b7d180ac5cf88d53ec3c6db7c1f4a1"
+    },
+    "reportPath": "validation-report.json",
+    "status": "valid",
+    "warningCount": 0
+  }
+}
