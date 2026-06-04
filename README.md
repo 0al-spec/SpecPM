@@ -249,6 +249,11 @@ SpecPM-side review policy for SpecHarvester-style producer candidate bundles is
 documented in `specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md`; producer evidence can
 support a proposal, but maintainer review and SpecPM validation remain the
 acceptance boundary.
+Producer-backed pull requests can be checked with
+`specpm producer-bundle preflight --body <proposal-body.md> --json`; this
+consumer-side preflight reads `producerEvidenceLinks` and
+`registryAcceptanceDecision` evidence without running producer tools or
+accepting the package.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 

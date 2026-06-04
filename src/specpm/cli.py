@@ -30,6 +30,7 @@ from specpm.core import (
     validate_package,
     yank_index_package,
 )
+from specpm.producer_bundle import preflight_producer_bundle
 from specpm.public_index import generate_public_index_from_inputs
 
 
@@ -271,6 +272,29 @@ def build_parser() -> argparse.ArgumentParser:
     )
     public_index_generate.add_argument("--json", action="store_true", help="Emit stable JSON.")
     public_index_generate.set_defaults(handler=handle_public_index_generate)
+
+    producer_bundle = subparsers.add_parser(
+        "producer-bundle", help="Review producer-backed proposal evidence."
+    )
+    producer_bundle_subparsers = producer_bundle.add_subparsers(
+        dest="producer_bundle_command", required=True
+    )
+    producer_bundle_preflight = producer_bundle_subparsers.add_parser(
+        "preflight", help="Preflight producerEvidenceLinks and registryAcceptanceDecision."
+    )
+    producer_bundle_preflight.add_argument(
+        "--body",
+        required=True,
+        help=(
+            "Markdown or JSON file containing producerEvidenceLinks and registryAcceptanceDecision."
+        ),
+    )
+    producer_bundle_preflight.add_argument(
+        "--root",
+        help="Optional checkout/artifact root used to verify linked evidence files and digests.",
+    )
+    producer_bundle_preflight.add_argument("--json", action="store_true", help="Emit stable JSON.")
+    producer_bundle_preflight.set_defaults(handler=handle_producer_bundle_preflight)
 
     return parser
 
@@ -564,6 +588,18 @@ def handle_public_index_generate(args: argparse.Namespace) -> int:
     return 0 if report["status"] == "ok" else 1
 
 
+def handle_producer_bundle_preflight(args: argparse.Namespace) -> int:
+    report = preflight_producer_bundle(
+        Path(args.body),
+        root=Path(args.root) if args.root else None,
+    )
+    if args.json:
+        print_json(report)
+    else:
+        print_producer_bundle_preflight(report)
+    return 1 if report["status"] == "failed" else 0
+
+
 def emit_remote_registry_report(report: dict[str, Any], json_output: bool) -> int:
     if json_output:
         print_json(report)
@@ -574,6 +610,18 @@ def emit_remote_registry_report(report: dict[str, Any], json_output: bool) -> in
 
 def print_json(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, indent=2, sort_keys=True))
+
+
+def print_producer_bundle_preflight(report: dict[str, Any]) -> None:
+    summary = report["summary"]
+    print(
+        f"{report['status']}: producer bundle preflight "
+        f"({summary['errorCount']} errors, {summary['warningCount']} warnings)"
+    )
+    for issue_payload in report["errors"]:
+        print(f"error {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+    for issue_payload in report["warnings"]:
+        print(f"warning {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
 
 
 def print_remote_registry(report: dict[str, Any]) -> None:

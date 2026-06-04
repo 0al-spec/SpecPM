@@ -115,6 +115,22 @@ must resolve to the exact pinned revision before validation. The command does
 not publish to a remote service, mutate GitHub issues, install packages,
 download archives as a client, or execute package content.
 
+## Producer Bundle Preflight
+
+```bash
+specpm producer-bundle preflight --body <proposal-body.md> [--root <checkout-or-artifact-root>] [--json]
+```
+
+The command reads machine-readable `producerEvidenceLinks` and
+`registryAcceptanceDecision` JSON blocks from a producer-backed proposal body.
+It verifies required evidence roles, explicit `pathScope` values, required
+`public_index_acceptance` decision metadata, and the `evidence_only` producer
+receipt boundary. With `--root`, it also verifies linked evidence file
+existence and SHA-256 digests under that root.
+
+This is a consumer-side review preflight. It does not run SpecHarvester,
+execute package content, or accept a package.
+
 ## Local Public Index Service
 
 ```bash

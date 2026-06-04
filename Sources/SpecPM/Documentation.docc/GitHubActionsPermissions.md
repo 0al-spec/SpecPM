@@ -17,6 +17,9 @@ runtime-major updates.
 Most workflows either use read-only repository access or issue-scoped write
 access for comments and labels. The documentation deploy workflow has a
 separate GitHub Pages deploy job with `pages: write` and `id-token: write`.
+The producer bundle preflight workflow is a read-only pull request check: it
+only runs consumer-side evidence validation when a pull request body includes
+producer bundle evidence blocks.
 
 The only deployment secrets currently allowed are `FTP_HOST`, `FTP_PORT`,
 `FTP_USER`, `FTP_PASS`, and `FTP_REMOTE_ROOT`. They are scoped to the `FTP`

@@ -381,6 +381,14 @@ interfaces:
           mediaTypes:
             - application/json
             - text/plain
+    - id: cli_producer-bundle
+      kind: cli
+      summary: specpm producer-bundle preflight for consumer-side review of producerEvidenceLinks and registryAcceptanceDecision proposal evidence.
+      outputs:
+        - name: producer_bundle_preflight_report
+          mediaTypes:
+            - application/json
+            - text/plain
     - id: python_core_api
       kind: library
       summary: Importable functions in specpm.core for automation and tests.
@@ -730,6 +738,11 @@ evidence:
     path: .github/workflows/package-submission-check.yml
     supports:
       - specpm.registry.index_submission_flow
+  - id: producer_bundle_preflight_workflow
+    kind: source
+    path: .github/workflows/producer-bundle-preflight.yml
+    supports:
+      - specpm.specs.producer_bundle_proposal_policy
   - id: index_submission_validator_source
     kind: source
     path: src/specpm/index_submission.py
@@ -1205,7 +1218,9 @@ implementationBindings:
     files:
       owned:
         - src/specpm/cli.py
+        - src/specpm/producer_bundle.py
       border:
+        - .github/workflows/producer-bundle-preflight.yml
         - README.md
         - specs/CLI_EXIT_CODES.md
   - id: core

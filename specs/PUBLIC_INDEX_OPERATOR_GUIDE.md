@@ -158,6 +158,18 @@ content. Any override must be recorded in the accepted-manifest pull request,
 submission issue, or future acceptance decision record, not by editing the
 producer receipt.
 
+For producer-backed pull requests that include machine-readable
+`producerEvidenceLinks` and `registryAcceptanceDecision` blocks, maintainers or
+CI may run:
+
+```bash
+specpm producer-bundle preflight --body <proposal-body.md> [--root <checkout-or-artifact-root>] --json
+```
+
+This is a consumer-side preflight of proposal evidence only. It does not run
+SpecHarvester, does not execute package content, and does not replace the final
+maintainer decision.
+
 ## Accepted Manifest PR
 
 The accepted manifest pull request should add one immutable source record per

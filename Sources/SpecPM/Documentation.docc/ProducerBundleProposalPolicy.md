@@ -90,3 +90,22 @@ receipt reference, the failed or missing evidence being overridden, the reason
 the package can still be reviewed safely, and the maintainer review location.
 
 Receipts describe producer output. SpecPM review records acceptance decisions.
+
+## Optional CI Preflight
+
+SpecPM can preflight machine-readable producer proposal evidence:
+
+```bash
+specpm producer-bundle preflight --body <proposal-body.md> [--root <checkout-or-artifact-root>] --json
+```
+
+The command reads `producerEvidenceLinks` and `registryAcceptanceDecision`
+blocks from a pull request body, checks required roles, explicit path scopes,
+and the `evidence_only` producer receipt boundary. With `--root`, it also checks
+linked files and SHA-256 digests under that root.
+
+The preflight is review evidence only. It never runs producer tools or package
+content and does not replace maintainer acceptance.
+
+The optional `.github/workflows/producer-bundle-preflight.yml` pull request
+workflow runs this command only for producer-backed proposal bodies.

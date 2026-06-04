@@ -1586,7 +1586,7 @@ Acceptance:
 - [ ] Align SpecHarvester-to-SpecPM proposal automation so proposal pull
   requests explicitly include or link producer receipt, validation report,
   diagnostics report, preflight report, and static viewer evidence.
-- [ ] Add an optional SpecPM CI preflight gate for producer-backed proposals,
+- [x] Add an optional SpecPM CI preflight gate for producer-backed proposals,
   starting as policy/reporting evidence before becoming a strict gate.
 - [ ] Define a shared cross-repository fixture policy so SpecPM contract
   examples and SpecHarvester generated bundle examples cannot silently drift.
