@@ -195,6 +195,9 @@ provides:
     - id: specpm.specs.producer_bundle_proposal_policy
       role: secondary
       summary: Document SpecPM-side proposal review policy for producer candidate bundles without treating producer evidence as registry authority.
+    - id: specpm.specs.producer_bundle_proposal_automation
+      role: secondary
+      summary: Document the machine-readable SpecHarvester-to-SpecPM proposal body contract for producer evidence links and acceptance decision metadata.
     - id: specpm.specs.producer_bundle_fixture_policy
       role: secondary
       summary: Document shared SpecPM and SpecHarvester fixture ownership and drift-sensitive producer bundle fields.
@@ -928,6 +931,16 @@ evidence:
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
+  - id: producer_bundle_proposal_automation_docs
+    kind: documentation
+    path: specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md
+    supports:
+      - specpm.specs.producer_bundle_proposal_automation
+      - specpm.specs.producer_bundle_proposal_policy
+      - specpm.specs.producer_bundle_fixture_policy
+      - producer_receipts_not_generation_authority
+      - scope.includes
+      - scope.excludes
   - id: provenance_receipt_fixture
     kind: test
     path: tests/fixtures/provenance_receipts/public-static-receipt.example.json
@@ -1186,6 +1199,13 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.specs.producer_bundle_fixture_policy
       - specpm.specs.producer_bundle_proposal_policy
+  - id: docc_producer_bundle_proposal_automation
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/ProducerBundleProposalAutomation.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.specs.producer_bundle_proposal_automation
+      - specpm.specs.producer_bundle_proposal_policy
   - id: docc_intent_taxonomy_governance
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
@@ -1312,6 +1332,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md
         - Sources/SpecPM/Documentation.docc/PackageSigningRevocation.md
         - Sources/SpecPM/Documentation.docc/ProvenanceReceipts.md
+        - Sources/SpecPM/Documentation.docc/ProducerBundleProposalAutomation.md
         - Sources/SpecPM/Documentation.docc/ProducerBundleFixturePolicy.md
         - Sources/SpecPM/Documentation.docc/Roadmap.md
         - Sources/SpecPM/Documentation.docc/DownstreamRegistryConsumers.md
@@ -1323,6 +1344,7 @@ implementationBindings:
         - specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md
         - specs/REGISTRY_OBSERVATION_REPORTS.md
         - specs/GITHUB_ACTIONS_PERMISSIONS.md
+        - specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md
         - specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md
         - specs/REMOTE_PACKAGE_ACQUISITION.md
         - specs/PACKAGE_SIGNING_REVOCATION.md

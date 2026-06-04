@@ -115,3 +115,10 @@ workflow runs this command only for producer-backed proposal bodies.
 Cross-repository fixture ownership and drift handling are defined in
 <doc:ProducerBundleFixturePolicy>. SpecPM owns consumer contract examples and
 preflight expectations. SpecHarvester owns generated candidate bundle examples.
+
+## Proposal Automation
+
+SpecHarvester-to-SpecPM pull request body requirements are defined in
+<doc:ProducerBundleProposalAutomation>. Producer automation should emit
+`producerEvidenceLinks` and `registryAcceptanceDecision` fenced JSON blocks for
+consumer-side SpecPM preflight.

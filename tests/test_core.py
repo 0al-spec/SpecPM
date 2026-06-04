@@ -102,6 +102,7 @@ PROVENANCE_RECEIPT_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/public-static-receipt.example.json"
 )
 PRODUCER_RECEIPTS_DOC = ROOT / "specs/PRODUCER_RECEIPTS.md"
+PRODUCER_BUNDLE_PROPOSAL_AUTOMATION_DOC = ROOT / "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md"
 PRODUCER_BUNDLE_FIXTURE_POLICY_DOC = ROOT / "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md"
 PRODUCER_RECEIPT_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
@@ -130,6 +131,9 @@ DOCC_PROVENANCE_RECEIPTS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Proven
 DOCC_PRODUCER_RECEIPTS_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/ProducerReceipts.md"
 DOCC_PRODUCER_BUNDLE_POLICY_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/ProducerBundleProposalPolicy.md"
+)
+DOCC_PRODUCER_BUNDLE_PROPOSAL_AUTOMATION_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/ProducerBundleProposalAutomation.md"
 )
 DOCC_PRODUCER_BUNDLE_FIXTURE_POLICY_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/ProducerBundleFixturePolicy.md"
@@ -2061,6 +2065,10 @@ def test_producer_receipt_contract_is_documented() -> None:
         encoding="utf-8"
     )
     docc_proposal_policy = DOCC_PRODUCER_BUNDLE_POLICY_PAGE.read_text(encoding="utf-8")
+    proposal_automation = PRODUCER_BUNDLE_PROPOSAL_AUTOMATION_DOC.read_text(encoding="utf-8")
+    docc_proposal_automation = DOCC_PRODUCER_BUNDLE_PROPOSAL_AUTOMATION_PAGE.read_text(
+        encoding="utf-8"
+    )
     fixture_policy = PRODUCER_BUNDLE_FIXTURE_POLICY_DOC.read_text(encoding="utf-8")
     docc_fixture_policy = DOCC_PRODUCER_BUNDLE_FIXTURE_POLICY_PAGE.read_text(encoding="utf-8")
     docc_receipts = DOCC_PROVENANCE_RECEIPTS_PAGE.read_text(encoding="utf-8")
@@ -2073,6 +2081,7 @@ def test_producer_receipt_contract_is_documented() -> None:
     receipt_fixture = json.loads(PRODUCER_RECEIPT_FIXTURE.read_text(encoding="utf-8"))
     roadmap_flat = roadmap.replace("\n", " ")
     docc_roadmap_flat = docc_roadmap.replace("\n", " ")
+    docc_proposal_automation_flat = docc_proposal_automation.replace("\n", " ")
     docc_fixture_policy_flat = docc_fixture_policy.replace("\n", " ")
     manifest = load_yaml_file(ROOT / "specpm.yaml")
     boundary = load_yaml_file(ROOT / "specs/specpm.spec.yaml")
@@ -2144,6 +2153,7 @@ def test_producer_receipt_contract_is_documented() -> None:
         "producer receipts separate from registry authority",
         "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md",
         "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md",
+        "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md",
     ):
         assert required_text in proposal_policy
 
@@ -2157,8 +2167,45 @@ def test_producer_receipt_contract_is_documented() -> None:
         "Maintainer Override",
         "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md",
         "<doc:ProducerBundleFixturePolicy>",
+        "<doc:ProducerBundleProposalAutomation>",
     ):
         assert required_text in docc_proposal_policy
+
+    for required_text in (
+        "Producer Bundle Proposal Automation Contract",
+        "SpecHarvester-to-SpecPM pull request body contract",
+        "producerEvidenceLinks",
+        "registryAcceptanceDecision",
+        "accepted_source_bundle",
+        "boundary_spec",
+        "producer_preflight",
+        "static_viewer",
+        "external_required",
+        "public_index_acceptance",
+        "producerReceiptAuthority",
+        "evidence_only",
+        "Producers must not set this status to `approved`",
+        "include or link producer receipt, validation report, diagnostics report",
+    ):
+        assert required_text in proposal_automation
+    minimal_proposal_section = proposal_automation.split("## Minimal Proposal Shape", 1)[1].split(
+        "## Automation Expectations", 1
+    )[0]
+    assert '"producerEvidenceLinks"' in minimal_proposal_section
+    assert '"registryAcceptanceDecision"' in minimal_proposal_section
+
+    for required_text in (
+        "Producer Bundle Proposal Automation",
+        "producerEvidenceLinks",
+        "registryAcceptanceDecision",
+        "boundary_spec",
+        "external_required",
+        "producerReceiptAuthority",
+        "evidence_only",
+        "Maintainer review remains the registry acceptance authority",
+        "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md",
+    ):
+        assert required_text in docc_proposal_automation_flat
 
     for required_text in (
         "Producer Bundle Fixture Policy",
@@ -2186,11 +2233,14 @@ def test_producer_receipt_contract_is_documented() -> None:
 
     assert "specs/PRODUCER_RECEIPTS.md" in readme
     assert "specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md" in readme
+    assert "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md" in readme
     assert "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md" in readme
     assert "specs/PRODUCER_RECEIPTS.md" in docc_overview
+    assert "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md" in docc_overview
     assert "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md" in docc_overview
     assert "<doc:ProducerReceipts>" in docc_overview
     assert "<doc:ProducerBundleProposalPolicy>" in docc_overview
+    assert "<doc:ProducerBundleProposalAutomation>" in docc_overview
     assert "<doc:ProducerBundleFixturePolicy>" in docc_overview
     assert "<doc:ProducerReceipts>" in docc_receipts
     assert "<doc:ProducerReceipts>" in docc_roadmap
@@ -2212,6 +2262,8 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "proposal automation evidence links" in docc_roadmap_flat
     assert "Shared SpecPM/SpecHarvester fixture policy is now documented" in roadmap
     assert "Shared SpecPM/SpecHarvester fixture policy is now documented" in docc_roadmap
+    assert "SpecHarvester-to-SpecPM proposal automation contract is now documented" in roadmap
+    assert "SpecHarvester-to-SpecPM proposal automation contract is now documented" in docc_roadmap
 
     assert receipt_fixture["apiVersion"] == "specpm.receipts/v0"
     assert receipt_fixture["kind"] == "SpecPMProducerReceipt"
@@ -2259,7 +2311,7 @@ def test_producer_receipt_contract_is_documented() -> None:
         "Phase 64. SpecHarvester Producer Bundle Intake",
         "- [x] Document SpecPM-side proposal policy for producer candidate bundles,",
         "- [x] Add a candidate bundle intake checklist to public-index proposal and",
-        "- [ ] Align SpecHarvester-to-SpecPM proposal automation so proposal pull",
+        "- [x] Align SpecHarvester-to-SpecPM proposal automation so proposal pull",
         "- [x] Add an optional SpecPM CI preflight gate for producer-backed proposals,",
         "- [x] Define a shared cross-repository fixture policy so SpecPM contract",
         "- [ ] Define an external registry acceptance decision record that links",
@@ -2274,16 +2326,20 @@ def test_producer_receipt_contract_is_documented() -> None:
     evidence_paths = {evidence["path"] for evidence in boundary["evidence"]}
     assert "specpm.specs.producer_receipt_contract" in manifest_capabilities
     assert "specpm.specs.producer_bundle_proposal_policy" in manifest_capabilities
+    assert "specpm.specs.producer_bundle_proposal_automation" in manifest_capabilities
     assert "specpm.specs.producer_bundle_fixture_policy" in manifest_capabilities
     assert "specpm.specs.producer_receipt_contract" in boundary_capabilities
     assert "specpm.specs.producer_bundle_proposal_policy" in boundary_capabilities
+    assert "specpm.specs.producer_bundle_proposal_automation" in boundary_capabilities
     assert "specpm.specs.producer_bundle_fixture_policy" in boundary_capabilities
     assert "producer_receipts_not_generation_authority" in constraint_ids
     assert "specs/PRODUCER_RECEIPTS.md" in evidence_paths
     assert "specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md" in evidence_paths
+    assert "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md" in evidence_paths
     assert "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/ProducerReceipts.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/ProducerBundleProposalPolicy.md" in evidence_paths
+    assert "Sources/SpecPM/Documentation.docc/ProducerBundleProposalAutomation.md" in evidence_paths
     assert "Sources/SpecPM/Documentation.docc/ProducerBundleFixturePolicy.md" in evidence_paths
     assert "specpm producer-bundle preflight" in proposal_policy
     assert "producerEvidenceLinks" in proposal_policy
