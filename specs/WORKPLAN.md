@@ -1588,7 +1588,7 @@ Acceptance:
   diagnostics report, preflight report, and static viewer evidence.
 - [x] Add an optional SpecPM CI preflight gate for producer-backed proposals,
   starting as policy/reporting evidence before becoming a strict gate.
-- [ ] Define a shared cross-repository fixture policy so SpecPM contract
+- [x] Define a shared cross-repository fixture policy so SpecPM contract
   examples and SpecHarvester generated bundle examples cannot silently drift.
 - [ ] Define an external registry acceptance decision record that links
   maintainer decisions to producer bundle evidence without making producer

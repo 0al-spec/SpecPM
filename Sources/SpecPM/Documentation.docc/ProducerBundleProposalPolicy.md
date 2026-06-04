@@ -109,3 +109,9 @@ content and does not replace maintainer acceptance.
 
 The optional `.github/workflows/producer-bundle-preflight.yml` pull request
 workflow runs this command only for producer-backed proposal bodies.
+
+## Fixture Alignment
+
+Cross-repository fixture ownership and drift handling are defined in
+<doc:ProducerBundleFixturePolicy>. SpecPM owns consumer contract examples and
+preflight expectations. SpecHarvester owns generated candidate bundle examples.

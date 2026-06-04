@@ -336,3 +336,7 @@ smoke coverage. The next seam work belongs at the SpecPM intake boundary:
 proposal automation evidence links, optional SpecPM CI preflight, shared
 cross-repository fixtures, and an external acceptance decision record that
 keeps producer receipts separate from registry authority.
+
+Shared SpecPM/SpecHarvester fixture policy is now documented: SpecPM owns
+consumer contract examples, SpecHarvester owns generated output examples, and
+cross-repository checks must avoid mutable `main` as a fixture trust root.
