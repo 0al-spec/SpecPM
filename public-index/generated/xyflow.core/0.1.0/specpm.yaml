@@ -1,0 +1,47 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: xyflow.core
+  name: xyflow
+  version: 0.1.0
+  summary: Unofficial generated SpecPackage for xyflow public package metadata.
+  license: MIT
+  authors:
+    - name: SpecHarvester
+preview_only: true
+specs:
+  - path: specs/xyflow.spec.yaml
+index:
+  provides:
+    capabilities:
+      - xyflow.core.monorepo
+      - xyflow.core.react
+      - xyflow.core.svelte
+      - xyflow.core.system
+    intents:
+      - intent.javascript.react_library
+      - intent.javascript.svelte_library
+      - intent.package.javascript_library
+      - intent.repository.package_workspace
+      - intent.ui.diagramming
+      - intent.ui.flow_diagramming
+      - intent.ui.flow_system_utilities
+      - intent.ui.node_based_editor
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - web
+    - node
+  languages:
+    - typescript
+    - javascript
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+keywords:
+  - generated
+  - specharvester
+  - xyflow
