@@ -48,6 +48,7 @@ index:
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.producer_bundle_proposal_automation
       - specpm.specs.producer_bundle_fixture_policy
+      - specpm.specs.spec_quality_model
       - specpm.registry.acceptance_decision_record
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke

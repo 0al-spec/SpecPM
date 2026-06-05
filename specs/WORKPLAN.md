@@ -1604,6 +1604,38 @@ Acceptance:
 - Remaining SpecPM/SpecHarvester boundary work is visible as explicit follow-up
   tasks rather than hidden in prose.
 
+## Phase 65. Spec Quality Review Model
+
+- [x] Document a shared SpecPackage quality model for maintainers, authors, and
+  producer-backed proposal reviewers.
+- [x] Define review dimensions for validation, evidence coverage, boundary
+  discipline, subject usefulness, interface depth, reproducibility, and consumer
+  utility.
+- [x] Define non-normative L0-L5 quality levels so valid preview packages,
+  evidence-backed previews, consumer-useful contracts, and accepted contracts can
+  be discussed without changing runtime validation.
+- [x] Link generated candidate review back to producer receipts, validation
+  reports, diagnostics, registry acceptance decisions, and maintainer authority.
+
+Motivation:
+
+- SpecPM needs a repeatable way to discuss whether a generated or manually
+  authored spec is merely valid, safe as preview data, useful to consumers, or
+  strong enough for reviewed public registry acceptance.
+
+Goal:
+
+- Provide a documentation-level review vocabulary before introducing automated
+  scoring, stricter linting, or producer-side quality gates.
+
+Acceptance:
+
+- Spec quality is documented as a review model, not a new runtime validator.
+- Reviewers can apply the model to SpecHarvester-generated package proposals
+  without treating producer output or model notes as registry authority.
+- Future automation can build on explicit dimensions and quality levels instead
+  of inventing a separate scoring vocabulary.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
