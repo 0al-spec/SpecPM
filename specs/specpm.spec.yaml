@@ -201,6 +201,9 @@ provides:
     - id: specpm.specs.producer_bundle_fixture_policy
       role: secondary
       summary: Document shared SpecPM and SpecHarvester fixture ownership and drift-sensitive producer bundle fields.
+    - id: specpm.specs.spec_quality_model
+      role: secondary
+      summary: Document the review model for SpecPackage validation, evidence coverage, boundary discipline, interface depth, reproducibility, and consumer utility.
     - id: specpm.registry.acceptance_decision_record
       role: secondary
       summary: Document external maintainer registry acceptance decision records that link producer evidence without making receipts authoritative.
@@ -553,6 +556,7 @@ evidence:
       - specpm.registry.package_signing_revocation_policy
       - specpm.registry.provenance_receipt_schema
       - specpm.specs.producer_receipt_contract
+      - specpm.specs.spec_quality_model
       - specpm.intent.taxonomy_governance
   - id: roadmap
     kind: documentation
@@ -954,6 +958,19 @@ evidence:
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
+  - id: spec_quality_model_docs
+    kind: documentation
+    path: specs/SPEC_QUALITY_MODEL.md
+    supports:
+      - specpm.specs.spec_quality_model
+      - specpm.specs.producer_receipt_contract
+      - specpm.specs.producer_bundle_proposal_policy
+      - specpm.specs.producer_bundle_proposal_automation
+      - specpm.registry.acceptance_decision_record
+      - producer_receipts_not_generation_authority
+      - provenance_receipts_evidence_not_authority
+      - scope.includes
+      - scope.excludes
   - id: provenance_receipt_fixture
     kind: test
     path: tests/fixtures/provenance_receipts/public-static-receipt.example.json
@@ -1231,6 +1248,13 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.acceptance_decision_record
+      - specpm.specs.producer_bundle_proposal_policy
+  - id: docc_spec_quality_model
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/SpecQualityModel.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.specs.spec_quality_model
       - specpm.specs.producer_bundle_proposal_policy
   - id: docc_intent_taxonomy_governance
     kind: documentation

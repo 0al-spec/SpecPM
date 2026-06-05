@@ -158,6 +158,11 @@ make format-check
 make docker-test
 ```
 
+Spec authoring quality is measured separately from repository CI health. The
+review model for package validity, evidence coverage, boundary discipline,
+interface depth, reproducibility, and consumer utility is documented in
+`specs/SPEC_QUALITY_MODEL.md`.
+
 Implemented first slice:
 
 - `specpm validate <package-dir> [--json]`
@@ -321,7 +326,9 @@ SpecGraph-specific registry evidence rules are tracked in
 `specs/SPECGRAPH_REGISTRY_OBSERVATION_CONTRACT.md`.
 
 CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
-implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`.
+implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`. Spec
+quality review levels and evidence coverage heuristics are documented in
+`specs/SPEC_QUALITY_MODEL.md`.
 
 This repository is also a self-describing SpecPM package. The root
 `specpm.yaml` and `specs/specpm.spec.yaml` describe the implemented public CLI
