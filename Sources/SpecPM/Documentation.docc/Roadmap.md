@@ -190,6 +190,9 @@ inherit capabilities, trust, lifecycle state, or acceptance status.
 Package relation vocabulary is now documented for `contains`, `composes`,
 `refines`, `satisfies`, `supersedes`, and `related` metadata claims, including
 evidence expectations and non-goals.
+Package-set search semantics are now documented. Exact lookup remains
+index-based and may return aggregate, scoped package, abstract-contract, and
+relation-context results without requiring root-to-leaf traversal.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -226,3 +229,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:ProducerBundleProposalPolicy>
 - <doc:PackageSets>
 - <doc:PackageRelations>
+- <doc:PackageSetSearch>

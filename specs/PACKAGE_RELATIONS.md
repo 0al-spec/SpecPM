@@ -293,8 +293,9 @@ Follow-up tasks should define:
 
 - extension-safe relation storage shape;
 - static `/v0` relation metadata;
-- exact search result `scope` values;
 - relation rendering in the static viewer;
 - SpecHarvester relation proposal output;
 - multi-package producer bundle intake checks.
 
+Exact search result scope and relation-context search boundaries are defined in
+`specs/PACKAGE_SET_SEARCH.md`.

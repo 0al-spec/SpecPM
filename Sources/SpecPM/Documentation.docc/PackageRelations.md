@@ -63,7 +63,8 @@ be required to find the first useful result.
 
 - `specs/PACKAGE_RELATIONS.md`
 - `specs/PACKAGE_SETS.md`
+- `specs/PACKAGE_SET_SEARCH.md`
 - <doc:PackageSets>
+- <doc:PackageSetSearch>
 - <doc:PackageModel>
 - <doc:ProducerBundleProposalPolicy>
-

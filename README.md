@@ -336,6 +336,9 @@ acceptance status.
 Package relation vocabulary is documented in `specs/PACKAGE_RELATIONS.md`,
 including `contains`, `composes`, `refines`, `satisfies`, `supersedes`, and
 `related` relation metadata.
+Package-set search semantics are documented in `specs/PACKAGE_SET_SEARCH.md`;
+exact lookup remains index-based and can return aggregate and scoped package
+results without requiring tree traversal.
 
 This repository is also a self-describing SpecPM package. The root
 `specpm.yaml` and `specs/specpm.spec.yaml` describe the implemented public CLI
