@@ -81,8 +81,9 @@ authority.
 ## References
 
 - `specs/PACKAGE_SETS.md`
+- `specs/PACKAGE_RELATIONS.md`
 - `specs/WORKPLAN.md`
+- <doc:PackageRelations>
 - <doc:PackageModel>
 - <doc:ProducerBundleProposalPolicy>
 - <doc:SpecQualityModel>
-

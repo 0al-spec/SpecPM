@@ -143,8 +143,9 @@ return aggregate and scoped package results directly; consumers should not need
 to traverse a root-to-leaf tree before finding a useful package.
 
 The current package-set boundary is documented in <doc:PackageSets> and
-`specs/PACKAGE_SETS.md`. Runtime schema, relation vocabulary, and public
-registry metadata are planned follow-up work.
+`specs/PACKAGE_SETS.md`. Package relation vocabulary is documented in
+<doc:PackageRelations> and `specs/PACKAGE_RELATIONS.md`. Runtime schema and
+public registry metadata are planned follow-up work.
 
 ## BoundarySpec
 
@@ -187,7 +188,9 @@ instructions and do not grant authority over host behavior.
 - `specs/IDENTIFIER_MODEL.md`
 - `specs/0002_Abstract_SpecPackage_Conformance_Target_Decision.md`
 - `specs/PACKAGE_SETS.md`
+- `specs/PACKAGE_RELATIONS.md`
 - `RFC/SpecGraph-RFC-0001.md`
 - <doc:IdentifierModel>
 - <doc:PackageSets>
+- <doc:PackageRelations>
 - <doc:BoundariesAndTrust>

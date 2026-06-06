@@ -50,6 +50,7 @@ index:
       - specpm.specs.producer_bundle_fixture_policy
       - specpm.specs.spec_quality_model
       - specpm.specs.package_sets
+      - specpm.specs.package_relations
       - specpm.registry.acceptance_decision_record
       - specpm.registry.public_alpha_index
       - specpm.registry.public_alpha_smoke

@@ -333,6 +333,9 @@ Package-set boundaries are documented in `specs/PACKAGE_SETS.md`. Package sets
 represent repository, workspace, ecosystem, or product-family entrypoints
 without making member packages inherit capabilities, trust, lifecycle state, or
 acceptance status.
+Package relation vocabulary is documented in `specs/PACKAGE_RELATIONS.md`,
+including `contains`, `composes`, `refines`, `satisfies`, `supersedes`, and
+`related` relation metadata.
 
 This repository is also a self-describing SpecPM package. The root
 `specpm.yaml` and `specs/specpm.spec.yaml` describe the implemented public CLI

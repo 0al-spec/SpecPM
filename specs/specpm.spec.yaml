@@ -62,6 +62,7 @@ scope:
     - Generate non-authoritative provenance receipt artifacts for public static index package versions.
     - Document producer receipt requirements for generated SpecPackage candidates without making SpecPM run or trust producer tools.
     - Document package-set boundaries for repository, workspace, ecosystem, and product-family entrypoints without adding inheritance, dependency solving, or automatic acceptance.
+    - Document package relation vocabulary, evidence expectations, and non-goals for package-set and package-to-package navigation.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -82,6 +83,7 @@ scope:
     - Provenance receipt verification, trust enforcement, and lockfile enforcement.
     - Producer receipt generation, producer execution, analyzer execution, and generated package acceptance.
     - Package-set runtime schema, relation enforcement, dependency solving, inherited package claims, and automatic package-set acceptance.
+    - Automatic package relation inference, relation path traversal as a required search mechanism, relation-based trust inheritance, and relation-based package selection.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
     - LLM, embedding, vector search, or RAG-based intent resolution.
@@ -209,6 +211,9 @@ provides:
     - id: specpm.specs.package_sets
       role: secondary
       summary: Document package-set collection boundaries for aggregate discovery without adding inheritance, dependency solving, resolver authority, or automatic acceptance.
+    - id: specpm.specs.package_relations
+      role: secondary
+      summary: Document package relation vocabulary, evidence expectations, search boundaries, and non-goals without adding inference, inheritance, or automatic selection.
     - id: specpm.registry.acceptance_decision_record
       role: secondary
       summary: Document external maintainer registry acceptance decision records that link producer evidence without making receipts authoritative.
@@ -985,6 +990,15 @@ evidence:
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
+  - id: package_relations_docs
+    kind: documentation
+    path: specs/PACKAGE_RELATIONS.md
+    supports:
+      - specpm.specs.package_relations
+      - specpm.specs.producer_bundle_proposal_policy
+      - producer_receipts_not_generation_authority
+      - scope.includes
+      - scope.excludes
   - id: provenance_receipt_fixture
     kind: test
     path: tests/fixtures/provenance_receipts/public-static-receipt.example.json
@@ -1277,6 +1291,13 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.specs.package_sets
       - specpm.specs.producer_bundle_proposal_policy
+  - id: docc_package_relations
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/PackageRelations.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.specs.package_relations
+      - specpm.specs.producer_bundle_proposal_policy
   - id: docc_intent_taxonomy_governance
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
@@ -1386,6 +1407,7 @@ implementationBindings:
         - .github/workflows/docs.yml
         - Sources/SpecPM/Documentation.docc/PackageModel.md
         - Sources/SpecPM/Documentation.docc/PackageSets.md
+        - Sources/SpecPM/Documentation.docc/PackageRelations.md
         - Sources/SpecPM/Documentation.docc/CLIReference.md
         - Sources/SpecPM/Documentation.docc/JSONContracts.md
         - Sources/SpecPM/Documentation.docc/Conformance.md
@@ -1424,6 +1446,7 @@ implementationBindings:
         - specs/PACKAGE_SIGNING_REVOCATION.md
         - specs/PROVENANCE_RECEIPTS.md
         - specs/PACKAGE_SETS.md
+        - specs/PACKAGE_RELATIONS.md
         - specs/INTENT_TAXONOMY_GOVERNANCE.md
         - tests/fixtures/specgraph_registry_observation
         - tests/fixtures/provenance_receipts
