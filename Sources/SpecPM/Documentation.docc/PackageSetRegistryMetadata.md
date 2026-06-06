@@ -61,6 +61,8 @@ Consumers that ignore `relationContext` should still see the direct result.
 - `specs/PACKAGE_SET_REGISTRY_METADATA.md`
 - `specs/PACKAGE_SET_SEARCH.md`
 - `specs/PACKAGE_RELATIONS.md`
+- `specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`
 - <doc:PackageSetSearch>
 - <doc:PackageRelations>
+- <doc:SpecHarvesterMonorepoDiscovery>
 - <doc:DownstreamRegistryConsumers>

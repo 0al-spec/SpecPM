@@ -65,6 +65,7 @@ scope:
     - Document package relation vocabulary, evidence expectations, and non-goals for package-set and package-to-package navigation.
     - Document package-set exact index and search semantics with explicit result scopes and relation context boundaries.
     - Document future public registry metadata shape for package sets, members, relations, result scopes, and relation context.
+    - Document SpecHarvester monorepo discovery handoff for package-set and scoped member package candidates without making producer output authoritative.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -88,6 +89,7 @@ scope:
     - Automatic package relation inference, relation path traversal as a required search mechanism, relation-based trust inheritance, and relation-based package selection.
     - Package-set search runtime implementation, relation expansion query modes, automatic result ranking authority, and semantic package selection.
     - Package-set registry generator implementation, public `/v0` payload migration, viewer implementation, and package-set conformance fixtures.
+    - SpecHarvester monorepo discovery implementation, producer execution from SpecPM, automatic bundle-set acceptance, and producer-owned registry publication.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
     - LLM, embedding, vector search, or RAG-based intent resolution.
@@ -224,6 +226,9 @@ provides:
     - id: specpm.specs.package_set_registry_metadata
       role: secondary
       summary: Document future public registry metadata shape for package sets, members, relations, result scopes, relation context, and feature signaling.
+    - id: specpm.specs.specharvester_monorepo_discovery
+      role: secondary
+      summary: Document SpecHarvester monorepo discovery handoff for workspace inventories, package-set candidates, scoped member candidates, relations, and review evidence.
     - id: specpm.registry.acceptance_decision_record
       role: secondary
       summary: Document external maintainer registry acceptance decision records that link producer evidence without making receipts authoritative.
@@ -998,6 +1003,7 @@ evidence:
       - specpm.specs.package_sets
       - specpm.specs.package_set_search
       - specpm.specs.package_set_registry_metadata
+      - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.producer_bundle_proposal_policy
       - producer_receipts_not_generation_authority
       - scope.includes
@@ -1009,6 +1015,7 @@ evidence:
       - specpm.specs.package_relations
       - specpm.specs.package_set_search
       - specpm.specs.package_set_registry_metadata
+      - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.producer_bundle_proposal_policy
       - producer_receipts_not_generation_authority
       - scope.includes
@@ -1021,6 +1028,7 @@ evidence:
       - specpm.specs.package_sets
       - specpm.specs.package_relations
       - specpm.specs.package_set_registry_metadata
+      - specpm.specs.specharvester_monorepo_discovery
       - specpm.registry.intent_search
       - scope.includes
       - scope.excludes
@@ -1032,8 +1040,21 @@ evidence:
       - specpm.specs.package_set_search
       - specpm.specs.package_relations
       - specpm.specs.package_sets
+      - specpm.specs.specharvester_monorepo_discovery
       - specpm.registry.remote_api_contract
       - specpm.registry.intent_search
+      - scope.includes
+      - scope.excludes
+  - id: specharvester_monorepo_discovery_docs
+    kind: documentation
+    path: specs/SPECHARVESTER_MONOREPO_DISCOVERY.md
+    supports:
+      - specpm.specs.specharvester_monorepo_discovery
+      - specpm.specs.package_sets
+      - specpm.specs.package_relations
+      - specpm.specs.package_set_registry_metadata
+      - specpm.specs.producer_bundle_proposal_policy
+      - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
   - id: provenance_receipt_fixture
@@ -1329,6 +1350,7 @@ evidence:
       - specpm.specs.package_sets
       - specpm.specs.package_set_search
       - specpm.specs.package_set_registry_metadata
+      - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.producer_bundle_proposal_policy
   - id: docc_package_relations
     kind: documentation
@@ -1338,6 +1360,7 @@ evidence:
       - specpm.specs.package_relations
       - specpm.specs.package_set_search
       - specpm.specs.package_set_registry_metadata
+      - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.producer_bundle_proposal_policy
   - id: docc_package_set_search
     kind: documentation
@@ -1348,6 +1371,7 @@ evidence:
       - specpm.specs.package_sets
       - specpm.specs.package_relations
       - specpm.specs.package_set_registry_metadata
+      - specpm.specs.specharvester_monorepo_discovery
       - specpm.registry.intent_search
   - id: docc_package_set_registry_metadata
     kind: documentation
@@ -1358,7 +1382,18 @@ evidence:
       - specpm.specs.package_set_search
       - specpm.specs.package_relations
       - specpm.specs.package_sets
+      - specpm.specs.specharvester_monorepo_discovery
       - specpm.registry.remote_api_contract
+  - id: docc_specharvester_monorepo_discovery
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/SpecHarvesterMonorepoDiscovery.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.specs.specharvester_monorepo_discovery
+      - specpm.specs.package_sets
+      - specpm.specs.package_relations
+      - specpm.specs.package_set_registry_metadata
+      - specpm.specs.producer_bundle_proposal_policy
   - id: docc_intent_taxonomy_governance
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
@@ -1471,6 +1506,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/PackageRelations.md
         - Sources/SpecPM/Documentation.docc/PackageSetSearch.md
         - Sources/SpecPM/Documentation.docc/PackageSetRegistryMetadata.md
+        - Sources/SpecPM/Documentation.docc/SpecHarvesterMonorepoDiscovery.md
         - Sources/SpecPM/Documentation.docc/CLIReference.md
         - Sources/SpecPM/Documentation.docc/JSONContracts.md
         - Sources/SpecPM/Documentation.docc/Conformance.md
@@ -1512,6 +1548,7 @@ implementationBindings:
         - specs/PACKAGE_RELATIONS.md
         - specs/PACKAGE_SET_SEARCH.md
         - specs/PACKAGE_SET_REGISTRY_METADATA.md
+        - specs/SPECHARVESTER_MONOREPO_DISCOVERY.md
         - specs/INTENT_TAXONOMY_GOVERNANCE.md
         - tests/fixtures/specgraph_registry_observation
         - tests/fixtures/provenance_receipts

@@ -384,8 +384,58 @@ External registry acceptance decision records are now documented. They connect
 producer evidence to maintainer review and accepted-source effects while keeping
 producer receipts as `evidence_only` support material.
 
-The next large design track is package sets and monorepo decomposition. This
-track should define aggregate package-set entrypoints, package relation
-vocabulary, index/search semantics that do not require tree traversal, public
-registry metadata for package-set membership, SpecHarvester monorepo discovery
-handoff, and an `xyflow` reference scenario before changing runtime behavior.
+Package-set concept and boundaries are now documented. Package sets are
+collection entrypoints for repositories, workspaces, ecosystems, and product
+families; they preserve aggregate discovery without making member packages
+inherit capabilities, trust, lifecycle state, or acceptance status.
+Package relation vocabulary is now documented for `contains`, `composes`,
+`refines`, `satisfies`, `supersedes`, and `related` metadata claims, including
+evidence expectations and non-goals.
+Package-set search semantics are now documented. Exact lookup remains
+index-based and may return aggregate, scoped package, abstract-contract, and
+relation-context results without requiring root-to-leaf traversal.
+Package-set registry metadata shape is now drafted for additive `/v0` fields
+covering package-set subject metadata, members, accepted relations, result
+scope, relation context, and feature signaling.
+SpecHarvester monorepo discovery handoff is now documented for workspace
+inventory, stable package ID proposals, package-set and scoped member
+candidates, relation proposal output, and bundle-set review evidence.
+
+These are planned tracks. They do not add package upload, request-time registry
+mutation, package execution, semantic resolution, graph authority, or remote
+archive acquisition to SpecPM core.
+
+## Explicit Non-Goals For SpecPM Core
+
+SpecPM core does not own:
+
+- PRD, brief, issue breakdown, or test-plan generation;
+- prompt execution or agent runtime behavior;
+- artifact evaluation runtime;
+- graph reasoning or canonical SpecGraph refinement;
+- package-provided host instructions;
+- public request-time mutation APIs;
+- online intent-to-spec runtime.
+
+Package content can describe desired outputs. Package content cannot command the
+host.
+
+## References
+
+- [Static registry pipeline](specs/STATIC_REGISTRY_PIPELINE.md)
+- [Identifier model](specs/IDENTIFIER_MODEL.md)
+- [Public alpha registry](specs/PUBLIC_ALPHA_REGISTRY.md)
+- [Deployment](specs/DEPLOYMENT.md)
+- [Registry operations](specs/REGISTRY_OPERATIONS.md)
+- [SpecGraph integration](specs/SPECGRAPH_INTEGRATION.md)
+- [Remote package acquisition](specs/REMOTE_PACKAGE_ACQUISITION.md)
+- [Intent taxonomy governance](specs/INTENT_TAXONOMY_GOVERNANCE.md)
+- [Package signing and revocation](specs/PACKAGE_SIGNING_REVOCATION.md)
+- [Provenance receipts](specs/PROVENANCE_RECEIPTS.md)
+- [Producer receipts](specs/PRODUCER_RECEIPTS.md)
+- [Producer bundle proposal policy](specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md)
+- [Package sets](specs/PACKAGE_SETS.md)
+- [Package relations](specs/PACKAGE_RELATIONS.md)
+- [Package set search](specs/PACKAGE_SET_SEARCH.md)
+- [Package set registry metadata](specs/PACKAGE_SET_REGISTRY_METADATA.md)
+- [SpecHarvester monorepo discovery](specs/SPECHARVESTER_MONOREPO_DISCOVERY.md)
