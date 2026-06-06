@@ -1638,7 +1638,7 @@ Acceptance:
 
 ## Phase 66. Package Sets and Monorepo Decomposition
 
-Status: In progress.
+Status: Complete.
 
 ### P66-T1. Package Set Concept and Boundary
 
@@ -1817,6 +1817,8 @@ Result:
 
 ### P66-T7. Xyflow Reference Scenario
 
+Status: Completed.
+
 Motivation:
 
 - The current `xyflow.core` candidate shows the central design tension: scoped
@@ -1834,6 +1836,14 @@ Expected result:
 - Maintainers have a concrete fixture for deciding whether package-set behavior
   is understandable, useful for discovery, and precise enough for public-index
   review.
+
+Result:
+
+- `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`, the DocC Xyflow Package Set
+  Reference page, and non-normative JSON fixtures under
+  `tests/fixtures/package_sets/xyflow-reference/` capture the reference
+  scenario for `xyflow.workspace`, `xyflow.system`, `xyflow.react`, and
+  `xyflow.svelte`.
 
 Acceptance:
 

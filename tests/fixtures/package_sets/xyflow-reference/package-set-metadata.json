@@ -1,0 +1,30 @@
+{
+  "package_id": "xyflow.workspace",
+  "version": "0.1.0",
+  "subject": {
+    "kind": "package_set",
+    "scope": "aggregate"
+  },
+  "packageSet": {
+    "profile": "specpm.package_set/v0",
+    "setType": "workspace",
+    "summary": "xyflow workspace for node-based editors and interactive flow systems.",
+    "members": [
+      {
+        "package_id": "xyflow.system",
+        "role": "core_runtime",
+        "type": "contains"
+      },
+      {
+        "package_id": "xyflow.react",
+        "role": "react_binding",
+        "type": "contains"
+      },
+      {
+        "package_id": "xyflow.svelte",
+        "role": "svelte_binding",
+        "type": "contains"
+      }
+    ]
+  }
+}

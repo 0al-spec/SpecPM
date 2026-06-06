@@ -1,0 +1,18 @@
+{
+  "intent": "intent.ui.flow_system_utilities",
+  "results": [
+    {
+      "package": "xyflow.system",
+      "version": "0.1.0",
+      "scope": "package",
+      "match": "direct",
+      "relations": [
+        {
+          "type": "contains",
+          "source": "xyflow.workspace",
+          "target": "xyflow.system"
+        }
+      ]
+    }
+  ]
+}

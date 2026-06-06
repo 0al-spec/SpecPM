@@ -64,4 +64,5 @@ Maintainers may accept only part of a generated bundle set.
 - <doc:PackageRelations>
 - <doc:PackageSetRegistryMetadata>
 - <doc:MultiPackageProducerIntake>
+- <doc:XyflowPackageSetReference>
 - <doc:ProducerBundleProposalPolicy>

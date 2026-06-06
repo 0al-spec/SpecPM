@@ -349,6 +349,9 @@ evidence without making producer output registry authority.
 Multi-package producer bundle intake is documented in
 `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`; maintainers can accept package sets,
 member packages, and relations independently.
+The `xyflow` package-set reference scenario is documented in
+`specs/XYFLOW_PACKAGE_SET_REFERENCE.md`, with non-normative fixtures under
+`tests/fixtures/package_sets/xyflow-reference/`.
 
 This repository is also a self-describing SpecPM package. The root
 `specpm.yaml` and `specs/specpm.spec.yaml` describe the implemented public CLI

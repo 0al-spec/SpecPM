@@ -202,6 +202,9 @@ candidates, relation proposal output, and bundle-set review evidence.
 Multi-package producer bundle intake is now documented so maintainers can
 review package-set proposals, scoped member candidates, and relation proposals
 with partial acceptance and explicit accepted-source effects.
+The `xyflow` package-set reference scenario is now documented with example
+workspace inventory, package-set metadata, relation proposals, and exact intent
+search result scope fixtures.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -242,3 +245,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:PackageSetRegistryMetadata>
 - <doc:SpecHarvesterMonorepoDiscovery>
 - <doc:MultiPackageProducerIntake>
+- <doc:XyflowPackageSetReference>

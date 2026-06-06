@@ -1,0 +1,52 @@
+{
+  "relations": [
+    {
+      "type": "contains",
+      "source": "xyflow.workspace",
+      "target": "xyflow.system",
+      "evidence": [
+        {
+          "kind": "source_file",
+          "path": "pnpm-workspace.yaml"
+        },
+        {
+          "kind": "source_file",
+          "path": "packages/system/package.json"
+        }
+      ],
+      "reviewStatus": "producer_observed"
+    },
+    {
+      "type": "contains",
+      "source": "xyflow.workspace",
+      "target": "xyflow.react",
+      "evidence": [
+        {
+          "kind": "source_file",
+          "path": "pnpm-workspace.yaml"
+        },
+        {
+          "kind": "source_file",
+          "path": "packages/react/package.json"
+        }
+      ],
+      "reviewStatus": "producer_observed"
+    },
+    {
+      "type": "contains",
+      "source": "xyflow.workspace",
+      "target": "xyflow.svelte",
+      "evidence": [
+        {
+          "kind": "source_file",
+          "path": "pnpm-workspace.yaml"
+        },
+        {
+          "kind": "source_file",
+          "path": "packages/svelte/package.json"
+        }
+      ],
+      "reviewStatus": "producer_observed"
+    }
+  ]
+}
