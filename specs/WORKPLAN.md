@@ -1729,6 +1729,8 @@ Result:
 
 ### P66-T4. Public Registry Metadata Shape
 
+Status: Completed.
+
 Motivation:
 
 - Downstream tools and static viewers need a stable way to render package-set
@@ -1745,6 +1747,14 @@ Expected result:
 
 - The public registry can expose package-set navigation as metadata while
   preserving existing `SpecPackage` lookup and exact search behavior.
+
+Result:
+
+- `specs/PACKAGE_SET_REGISTRY_METADATA.md` and the DocC Package Set Registry
+  Metadata page draft additive `/v0` fields for package-set subject metadata,
+  member summaries, relation summaries, result scope, relation context, intent
+  catalog scope counts, feature signaling, viewer expectations, and future
+  conformance fixtures.
 
 ### P66-T5. SpecHarvester Monorepo Discovery Contract
 

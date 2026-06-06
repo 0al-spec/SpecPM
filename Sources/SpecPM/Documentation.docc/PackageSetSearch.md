@@ -74,9 +74,10 @@ resolvers, SpecGraph, ContextBuilder, or human reviewers.
 ## References
 
 - `specs/PACKAGE_SET_SEARCH.md`
+- `specs/PACKAGE_SET_REGISTRY_METADATA.md`
 - `specs/PACKAGE_SETS.md`
 - `specs/PACKAGE_RELATIONS.md`
+- <doc:PackageSetRegistryMetadata>
 - <doc:PackageSets>
 - <doc:PackageRelations>
 - <doc:IdentifierModel>
-
