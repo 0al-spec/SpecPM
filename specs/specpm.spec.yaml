@@ -986,6 +986,17 @@ evidence:
     path: specs/PACKAGE_SETS.md
     supports:
       - specpm.specs.package_sets
+      - specpm.specs.package_relations
+      - specpm.specs.producer_bundle_proposal_policy
+      - producer_receipts_not_generation_authority
+      - scope.includes
+      - scope.excludes
+  - id: package_relations_docs
+    kind: documentation
+    path: specs/PACKAGE_RELATIONS.md
+    supports:
+      - specpm.specs.package_relations
+      - specpm.specs.package_sets
       - specpm.specs.producer_bundle_proposal_policy
       - producer_receipts_not_generation_authority
       - scope.includes
@@ -1289,6 +1300,15 @@ evidence:
     path: Sources/SpecPM/Documentation.docc/PackageSets.md
     supports:
       - specpm.documentation.docc_site
+      - specpm.specs.package_sets
+      - specpm.specs.package_relations
+      - specpm.specs.producer_bundle_proposal_policy
+  - id: docc_package_relations
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/PackageRelations.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.specs.package_relations
       - specpm.specs.package_sets
       - specpm.specs.producer_bundle_proposal_policy
   - id: docc_package_relations
