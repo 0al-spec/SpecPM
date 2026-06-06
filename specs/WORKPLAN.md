@@ -1788,6 +1788,8 @@ Result:
 
 ### P66-T6. Multi-Package Producer Bundle Intake
 
+Status: Completed.
+
 Motivation:
 
 - SpecPM needs to review generated package-set proposals without executing
@@ -1804,6 +1806,14 @@ Expected result:
 - A producer-backed PR can propose `xyflow.workspace` plus scoped member
   packages with clear evidence links, separate validation status, and explicit
   maintainer decisions for each accepted package/version.
+
+Result:
+
+- `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md` and the DocC Multi-Package Producer
+  Intake page define required evidence, bundle-set checklist, partial
+  acceptance, relation acceptance, accepted-source effects, CI preflight
+  expectations, failure/warning signals, and non-goals for package-set producer
+  proposals.
 
 ### P66-T7. Xyflow Reference Scenario
 

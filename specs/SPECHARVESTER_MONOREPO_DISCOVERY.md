@@ -274,8 +274,9 @@ SpecHarvester implementation follow-up should add:
 
 SpecPM follow-up should add:
 
-- multi-package producer bundle intake policy;
 - package-set registry metadata generation;
 - conformance fixtures;
 - `xyflow` reference scenario.
 
+Multi-package producer bundle intake policy is defined in
+`specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`.

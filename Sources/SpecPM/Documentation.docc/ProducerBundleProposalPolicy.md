@@ -128,3 +128,10 @@ consumer-side SpecPM preflight.
 Machine-readable maintainer decisions are defined in
 <doc:RegistryAcceptanceDecisions>. The record links producer evidence to
 maintainer review while keeping producer receipts as `evidence_only`.
+
+## Multi-Package Intake
+
+Package-set proposals that include multiple related generated packages are
+covered by <doc:MultiPackageProducerIntake>. Maintainers may accept only part of
+the bundle set, and package-set acceptance does not imply member package or
+relation acceptance.

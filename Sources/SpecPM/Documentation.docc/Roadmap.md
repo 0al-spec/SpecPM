@@ -199,6 +199,9 @@ scope, relation context, and feature signaling.
 SpecHarvester monorepo discovery handoff is now documented for workspace
 inventory, stable package ID proposals, package-set and scoped member
 candidates, relation proposal output, and bundle-set review evidence.
+Multi-package producer bundle intake is now documented so maintainers can
+review package-set proposals, scoped member candidates, and relation proposals
+with partial acceptance and explicit accepted-source effects.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -238,3 +241,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:PackageSetSearch>
 - <doc:PackageSetRegistryMetadata>
 - <doc:SpecHarvesterMonorepoDiscovery>
+- <doc:MultiPackageProducerIntake>

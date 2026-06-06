@@ -192,6 +192,9 @@ keeping `producerReceiptAuthority: evidence_only`.
 
 ## Planned Follow-Up Work
 
+Multi-package producer bundle intake for package-set proposals is defined in
+`specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`.
+
 The remaining SpecPM/SpecHarvester boundary work is implementation follow-up:
 wire producer automation and maintainer tooling to the documented contracts.
 
