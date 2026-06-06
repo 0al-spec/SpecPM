@@ -1,262 +1,150 @@
 {
+  "analyzerPolicy": {
+    "allowedConfidence": [
+      "high",
+      "medium",
+      "low"
+    ],
+    "allowedExecutions": [
+      "none"
+    ],
+    "inputAuthority": "untrusted_repository_content",
+    "networkAccess": "none",
+    "outputAuthority": "untrusted_analyzer_metadata",
+    "packageScripts": "not_run",
+    "requiresAnalyzerId": true,
+    "requiresAnalyzerVersion": true,
+    "requiresSourceDigests": true,
+    "requiresSourceRevision": true,
+    "schemaVersion": 1
+  },
+  "classifierPolicy": {
+    "adapterContract": {
+      "allowedObservationKinds": [
+        "language",
+        "vendored_file",
+        "generated_file",
+        "package",
+        "license",
+        "symbol",
+        "syntax_node"
+      ],
+      "mergeRule": "External classifier observations can enrich review evidence but must not override manifest-first ProjectProfile evidence.",
+      "requiredFields": [
+        "classifierId",
+        "classifierVersion",
+        "sourceRevision",
+        "sourceDigest",
+        "outputDigest",
+        "observations"
+      ]
+    },
+    "allowedExecutions": [
+      "none"
+    ],
+    "defaultMode": "disabled",
+    "inputAuthority": "untrusted_repository_content",
+    "manifestEvidencePrecedence": "manifest_first",
+    "networkAccess": "none",
+    "outputAuthority": "advisory_untrusted_metadata",
+    "packageScripts": "not_run",
+    "registry": {
+      "schemaVersion": 1,
+      "statusValues": [
+        "approved_optional",
+        "deferred",
+        "rejected"
+      ],
+      "tools": [
+        {
+          "categories": [
+            "language_classification",
+            "vendored_filtering",
+            "generated_filtering"
+          ],
+          "fallback": "Use manifest-first ProjectProfile evidence when unavailable.",
+          "id": "github-linguist",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "approved_optional"
+        },
+        {
+          "categories": [
+            "language_classification",
+            "vendored_filtering",
+            "generated_filtering"
+          ],
+          "fallback": "Use manifest-first ProjectProfile evidence when unavailable.",
+          "id": "go-enry",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "approved_optional"
+        },
+        {
+          "categories": [
+            "package_cataloging",
+            "sbom_generation",
+            "declared_dependency_evidence"
+          ],
+          "fallback": "Skip SBOM enrichment and keep collected manifests as primary evidence.",
+          "id": "syft",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "approved_optional"
+        },
+        {
+          "categories": [
+            "license_detection",
+            "copyright_detection",
+            "package_metadata",
+            "provenance_evidence"
+          ],
+          "fallback": "Use LICENSE file hints and manifest license fields already collected.",
+          "id": "scancode-toolkit",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "deferred"
+        },
+        {
+          "categories": [
+            "symbol_extraction",
+            "public_interface_indexing"
+          ],
+          "fallback": "Use language-specific static analyzers or manifest-only analyzer plan.",
+          "id": "universal-ctags",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "deferred"
+        },
+        {
+          "categories": [
+            "syntax_indexing",
+            "ast_extraction",
+            "public_interface_indexing"
+          ],
+          "fallback": "Use existing Python ast and JS/TS export analyzers where available.",
+          "id": "tree-sitter",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "deferred"
+        }
+      ]
+    },
+    "registrySchemaVersion": 1,
+    "requiresClassifierId": true,
+    "requiresClassifierVersion": true,
+    "requiresPinnedToolVersion": true,
+    "requiresSourceDigests": true,
+    "requiresSourceRevision": true,
+    "schemaVersion": 1
+  },
   "files": [
     {
-      "kind": "workflow",
-      "path": ".github/workflows/codespell.yml",
-      "sha256": "abf0d7af35eb32ea03fbd7389d5f5e2a744395efa43196f359d393451c2c150f",
-      "size": 400
-    },
-    {
-      "kind": "workflow",
-      "path": ".github/workflows/dispatchWebsiteUpdate.yaml",
-      "sha256": "8428b7643bad2edbbe45818660599be3b231f05cfb6ee70fa6d6b5b3e069a2ed",
-      "size": 1125
-    },
-    {
-      "kind": "workflow",
-      "path": ".github/workflows/playwright.yml",
-      "sha256": "d59dfc1b19f169d97d11ec6e47fb498e760f6140c0d785b335c15d4522b2a0fe",
-      "size": 511
-    },
-    {
-      "kind": "workflow",
-      "path": ".github/workflows/release.yml",
-      "sha256": "7d0ef1fdc48d20afb8fdea47faa1d8785c8185051b9e60f79b2945f9625cac70",
-      "size": 677
-    },
-    {
       "kind": "license",
+      "licenseHint": "MIT",
       "path": "LICENSE",
       "sha256": "023119ac20fb1c8c9930abe0bcd196989a1960388529a96fc43cebf96f07c9ff",
       "size": 1073
     },
     {
-      "headings": [
-        "The xyflow mono repo",
-        "Commercial usage",
-        "Getting started",
-        "Releases",
-        "Built by [xyflow](https://xyflow.com)",
-        "License"
-      ],
-      "kind": "documentation",
-      "path": "README.md",
-      "sha256": "be7df4c1810d7c7d0e44e26d08404a97fa9ab62d3fdf3e5fd4c31f3070472d63",
-      "size": 5271
-    },
-    {
-      "headings": [
-        "Examples for Testing & Development",
-        "Overview",
-        "E2E"
-      ],
-      "kind": "documentation",
-      "path": "examples/README.md",
-      "sha256": "da5fce623ea139f0033c39fc422e64ae845cfb8f9dc154ea1adc60ad854103cc",
-      "size": 436
-    },
-    {
-      "kind": "package_manifest",
-      "package": {
-        "description": "A highly customizable React library for building node-based editors and interactive flow charts",
-        "devDependencies": [
-          "@changesets/changelog-github",
-          "@changesets/cli",
-          "@playwright/test",
-          "concurrently",
-          "eslint",
-          "prettier",
-          "react",
-          "react-dom",
-          "rimraf",
-          "rollup",
-          "turbo",
-          "typescript"
-        ],
-        "license": "MIT",
-        "name": "@xyflow/monorepo",
-        "scripts": [
-          "build",
-          "build:all",
-          "clean",
-          "dev",
-          "dev:react",
-          "dev:svelte",
-          "lint",
-          "preinstall",
-          "release",
-          "test:react",
-          "test:react:ui",
-          "test:svelte",
-          "test:svelte:ui",
-          "typecheck"
-        ],
-        "version": "0.0.0"
-      },
-      "path": "package.json",
-      "sha256": "5ce8c826877d3028c31729daa27d76aff8e28d1f087115052c289104938332f9",
-      "size": 1485
-    },
-    {
-      "headings": [
-        "Key Features",
-        "Commercial Usage",
-        "Installation",
-        "Quickstart",
-        "Development",
-        "Testing",
-        "xyflow Team",
-        "Community Packages",
-        "Credits",
-        "License"
-      ],
-      "kind": "documentation",
-      "path": "packages/react/README.md",
-      "sha256": "d61d3061725de60ee80ec9864ba1356a71a5a10bb40aeedacd8e7e7d8c3e078c",
-      "size": 6610
-    },
-    {
-      "kind": "package_manifest",
-      "package": {
-        "dependencies": [
-          "@xyflow/system",
-          "classcat",
-          "zustand"
-        ],
-        "description": "React Flow - A highly customizable React library for building node-based editors and interactive flow charts.",
-        "devDependencies": [
-          "@types/node",
-          "@types/react",
-          "@types/react-dom",
-          "@xyflow/eslint-config",
-          "@xyflow/rollup-config",
-          "@xyflow/tsconfig",
-          "autoprefixer",
-          "cssnano",
-          "postcss",
-          "postcss-cli",
-          "postcss-combine-duplicated-selectors",
-          "postcss-import",
-          "postcss-nested",
-          "postcss-rename",
-          "react",
-          "typescript"
-        ],
-        "exports": [
-          ".",
-          "./dist/base.css",
-          "./dist/style.css",
-          "./package.json"
-        ],
-        "license": "MIT",
-        "name": "@xyflow/react",
-        "peerDependencies": [
-          "react",
-          "react-dom"
-        ],
-        "scripts": [
-          "build",
-          "css",
-          "css-watch",
-          "dev",
-          "lint",
-          "typecheck"
-        ],
-        "version": "12.10.2"
-      },
-      "path": "packages/react/package.json",
-      "sha256": "62dec991957847e98c7d18e01b4561cff5bccc1ec106998c0f5eccead4b1463b",
-      "size": 2668
-    },
-    {
       "kind": "source_entrypoint",
-      "path": "packages/react/src/index.ts",
-      "sha256": "004dac65bb42f1c755ae174ea9250ba34d6d53ad226801c077043fce0ac777d9",
-      "size": 4551
-    },
-    {
-      "headings": [
-        "Key Features",
-        "Installation",
-        "Getting started",
-        "How to Contribute",
-        "Development",
-        "Maintainers",
-        "License"
-      ],
-      "kind": "documentation",
-      "path": "packages/svelte/README.md",
-      "sha256": "33234d4d4a88a87c7f711734d989dc8bd962b2f8e21c5f79993b7f06e410c8c5",
-      "size": 5500
-    },
-    {
-      "kind": "package_manifest",
-      "package": {
-        "dependencies": [
-          "@svelte-put/shortcut",
-          "@xyflow/system"
-        ],
-        "description": "Svelte Flow - A highly customizable Svelte library for building node-based editors, workflow systems, diagrams and more.",
-        "devDependencies": [
-          "@eslint/compat",
-          "@eslint/js",
-          "@sveltejs/adapter-auto",
-          "@sveltejs/kit",
-          "@sveltejs/package",
-          "@sveltejs/vite-plugin-svelte",
-          "@typescript-eslint/eslint-plugin",
-          "@typescript-eslint/parser",
-          "autoprefixer",
-          "cssnano",
-          "dotenv",
-          "eslint",
-          "eslint-config-prettier",
-          "eslint-plugin-svelte",
-          "globals",
-          "postcss",
-          "postcss-cli",
-          "postcss-combine-duplicated-selectors",
-          "postcss-import",
-          "postcss-nested",
-          "postcss-rename",
-          "prettier",
-          "prettier-plugin-svelte",
-          "svelte",
-          "svelte-check",
-          "svelte-eslint-parser",
-          "svelte-preprocess",
-          "tslib",
-          "typescript",
-          "typescript-eslint"
-        ],
-        "exports": [
-          ".",
-          "./dist/base.css",
-          "./dist/style.css",
-          "./package.json"
-        ],
-        "license": "MIT",
-        "name": "@xyflow/svelte",
-        "peerDependencies": [
-          "svelte"
-        ],
-        "scripts": [
-          "build",
-          "check",
-          "check:watch",
-          "css",
-          "css-watch",
-          "dev",
-          "format",
-          "lint",
-          "typecheck"
-        ],
-        "type": "module",
-        "version": "1.5.2"
-      },
-      "path": "packages/svelte/package.json",
-      "sha256": "a5bcaff6a9ab5255705054e72e762791a5986c366074db6256bd4a6b8f3d5e1e",
-      "size": 2933
+      "path": "packages/system/.eslintrc.js",
+      "sha256": "687179d896ce99568b2729f3dd52c8d5de631757ce06024279f16945ebdebf5b",
+      "size": 74
     },
     {
       "headings": [
@@ -271,6 +159,11 @@
       ],
       "kind": "documentation",
       "path": "packages/system/README.md",
+      "semanticHints": [
+        "api",
+        "documentation",
+        "reference"
+      ],
       "sha256": "f007cc7dfe35262c5a8e7e61a9efc5eae54c539d3a4c3dbd55f3edf671b8347f",
       "size": 2469
     },
@@ -315,21 +208,267 @@
     },
     {
       "kind": "source_entrypoint",
+      "path": "packages/system/src/constants.ts",
+      "sha256": "905dc3727a171deab1c66f9d59d331b4b98898735e7daedc5e4d261ae1c1f765",
+      "size": 3406
+    },
+    {
+      "kind": "source_entrypoint",
       "path": "packages/system/src/index.ts",
       "sha256": "1ed754d6574b3d08d9bcc143507a1dacf006bd91cbc2bd9a5d3d40b61b77cd88",
       "size": 220
     },
     {
-      "kind": "workspace_manifest",
-      "path": "pnpm-workspace.yaml",
-      "sha256": "ab4edc78eb8db269195ac55bcd98bbd4f4ac11fa29ae13f1ce40e47c29832246",
-      "size": 74
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/types/changes.ts",
+      "sha256": "7831ea8cb1bd82d856f8476c021fd401d5c7d86d415c0b20886204815b6c9a13",
+      "size": 2368
     },
     {
-      "kind": "workspace_manifest",
-      "path": "turbo.json",
-      "sha256": "7316e647bde5b08d6715ab47807a7bd293f547db2fc44a6715b00afcb12a3806",
-      "size": 437
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/types/edges.ts",
+      "sha256": "8e69102383bb49310946dc0277516a33b66eb22ef94d2691ad0f67a69e817acb",
+      "size": 4147
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/types/general.ts",
+      "sha256": "86bf825bf3582fc3a40e8daeb72cfced1fa441d2c605e946a8c0d44cd7adb9c9",
+      "size": 11666
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/types/handles.ts",
+      "sha256": "20b0dda3f7b7393506ad3f2eca3ae55e7e7e7055fdb23cbd6cf0c13a66019f36",
+      "size": 1663
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/types/index.ts",
+      "sha256": "aeb8e8e06b280225adcb57b5f9037c20f436e2cbbed2baf663f98dd8c079fc02",
+      "size": 183
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/types/nodes.ts",
+      "sha256": "302d90a02f9326033c9ed5d9d1dab3ec148cc2b9848703483a4f5f5f804aeadf",
+      "size": 5076
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/types/panzoom.ts",
+      "sha256": "a34579a60b1438e9e157d39d0268ac6c0d61495c7f0da6efc74311646ed6ac5a",
+      "size": 2154
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/types/utils.ts",
+      "sha256": "803c7154c440cf01568dcad6e39c51ae85d44bbdc3e9fff1807132332e2d7119",
+      "size": 1813
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/connections.ts",
+      "sha256": "bb63658fa1e79b236f193aeedfab692922d37963087b2c07c02cbf700d8df147",
+      "size": 1027
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/dom.ts",
+      "sha256": "d62b634284b929867302be63700db4385da733ab1b08e1edfd58cde56653c4f3",
+      "size": 3256
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/edge-toolbar.ts",
+      "sha256": "d130b6aed632fedb39cd442194985ae2fb78ebcbf7fc734d8c568811be4112c7",
+      "size": 575
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/edges/bezier-edge.ts",
+      "sha256": "cedae29c746d69b15160eabba05a96c6c42e7fff5c2efcb88a956d38bb27d906",
+      "size": 4647
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/edges/general.ts",
+      "sha256": "36771b14d948f71b7ee8177c353023549c99d0ce3cec222e8194aea8cfc15225",
+      "size": 7068
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/edges/index.ts",
+      "sha256": "3f9a50b3bd5d05ce64a1eaa5b6d9e4557b09f052cdf770f6960729230865811b",
+      "size": 155
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/edges/positions.ts",
+      "sha256": "abe8f831891e2fb381a09b5660650cf27f17ed06e8dece4eb01137091253765c",
+      "size": 3968
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/edges/smoothstep-edge.ts",
+      "sha256": "868723b11b692e4c10bf8457e115c8e5d69f25efaf942fbedea61ab636d936b8",
+      "size": 10882
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/edges/straight-edge.ts",
+      "sha256": "40bb2e63a07d02b2c6c486d946ca643b82bf621ed84c21bd9f568e7f317c01b3",
+      "size": 1946
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/general.ts",
+      "sha256": "1511ea321f315b47cb8a441b690eade4bdf06251a6e520fc0a9379f688332af9",
+      "size": 13325
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/graph.ts",
+      "sha256": "77af369faa3f0eb9e6b962f698e34d27dc2c6be534f081af572ac1f59e9835e3",
+      "size": 15740
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/index.ts",
+      "sha256": "30a82ac2d8c8a45ffaaf0b168dfcc9e477cac0c0928a95ac95caf799a7c83177",
+      "size": 308
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/marker.ts",
+      "sha256": "25dee5606d10cfbb29417e0c78c0a649d3457395464a1543d72fa9960a73d6bf",
+      "size": 1318
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/node-toolbar.ts",
+      "sha256": "fbe6541d799ce55af3601711be554d1f15507c8402ada31f38e036e1b611f43a",
+      "size": 1535
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/shallow-node-data.ts",
+      "sha256": "889f2bc5781feb29f9e3f5e4046ecd272962176722de7faee87ffdd7541ed7c3",
+      "size": 579
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/store.ts",
+      "sha256": "506ef2caa525a5e6f12fd74a3ab626a3ecf773e6d2865ac336d755be3123e639",
+      "size": 19226
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/utils/types.ts",
+      "sha256": "74de51a68ddae304f5e529e479c541e6692b6c06475a986cd6c06384c450e412",
+      "size": 192
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xydrag/XYDrag.ts",
+      "sha256": "66d193f7b7a2c3a41b7b98ed9306f74e52ae0df01ca9ca7921b02af3749e64e7",
+      "size": 12548
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xydrag/index.ts",
+      "sha256": "957e2258cd6c97d582673e83239141e810a42caf4862514a7db6806b35414c25",
+      "size": 26
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xydrag/utils.ts",
+      "sha256": "38b3c8e1e3e903aee1da751b2b6ab354abd6e1fc30b53c08fc60debcc4f0b140",
+      "size": 4117
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyhandle/XYHandle.ts",
+      "sha256": "faf566b090f326d108db6f7986f47d63cd2a361ce49af30797e28efbea26c08a",
+      "size": 9327
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyhandle/index.ts",
+      "sha256": "066f0ab8c0d0100b9db417204defa31a9aa9d8c6194ba7aebf71375701afcf21",
+      "size": 28
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyhandle/types.ts",
+      "sha256": "76ec242e8b1c5160cfcbe0ae5f126f6507bd34fa80d92fbc7b56af9b2a4da97f",
+      "size": 1757
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyhandle/utils.ts",
+      "sha256": "9cec0423d541cb5c821f669f163f5e4a96cc97adbd1fddf19fd5030c632a9461",
+      "size": 3935
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyminimap/index.ts",
+      "sha256": "630a1ee424eecee78f4b80b7fe89188cb621c4c80a7864ec177d4c31f00fc2e2",
+      "size": 3746
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xypanzoom/XYPanZoom.ts",
+      "sha256": "1ed21c36fd727e7b91afec2b54381772c2c06b16d8fe33f5ccef95ecd50259a9",
+      "size": 8457
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xypanzoom/eventhandler.ts",
+      "sha256": "42572f449202d3ee67f2bd3071cf016dd2c4c1bb8fcedd826f26d3d2c90d832f",
+      "size": 7322
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xypanzoom/filter.ts",
+      "sha256": "872cf851016cb64ca204aad2fb4243673cc0e511aaf50136e89a8ac88f9b4d61",
+      "size": 3173
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xypanzoom/index.ts",
+      "sha256": "b2b9e2d66040fdada60701a2c6a44de785b4635fded7c5abdf333db98b14b986",
+      "size": 29
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xypanzoom/utils.ts",
+      "sha256": "f2e4939e6abdf6b3621dcc5dcc4aa1490f5c1dd98cc2664b3c8f812cd25347dc",
+      "size": 1580
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyresizer/XYResizer.ts",
+      "sha256": "4eaac7bf6eb292394946f1b73fd712f11f3fb2712638e4d73f5fe3c0c544760e",
+      "size": 10435
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyresizer/index.ts",
+      "sha256": "3e46c022f080be631daf4d4945ce934d01576f9d40546fd46842acaa045f1d24",
+      "size": 54
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyresizer/types.ts",
+      "sha256": "c07a0f90180d7675f0172a9287d2237a8ef2dc1d46149a23ae495d35028946a6",
+      "size": 1674
+    },
+    {
+      "kind": "source_entrypoint",
+      "path": "packages/system/src/xyresizer/utils.ts",
+      "sha256": "fcf8f39ca70b4766f53dd304a51caa852f63d54d301355fbc46372b3d4725ced",
+      "size": 10777
     }
   ],
   "kind": "SpecHarvesterEvidenceSnapshot",
@@ -339,17 +478,75 @@
     "networkAccess": "none",
     "packageScripts": "not_run"
   },
+  "projectProfile": {
+    "analyzerPlan": [
+      {
+        "ecosystem": "npm",
+        "evidencePaths": [
+          "packages/system/package.json"
+        ],
+        "id": "spec_harvester.js_ts_public_api",
+        "language": "javascript",
+        "reason": "package.json evidence can feed JavaScript/TypeScript export analysis.",
+        "status": "recommended"
+      }
+    ],
+    "diagnostics": [],
+    "ecosystems": [
+      {
+        "confidence": "high",
+        "evidencePaths": [
+          "packages/system/package.json"
+        ],
+        "id": "npm",
+        "language": "javascript",
+        "packageManager": "npm",
+        "reason": "package.json manifest parsed as npm package evidence."
+      }
+    ],
+    "languages": [
+      {
+        "confidence": "high",
+        "evidencePaths": [
+          "packages/system/package.json"
+        ],
+        "id": "javascript",
+        "reason": "package.json manifest parsed as npm package evidence."
+      }
+    ],
+    "manifests": [
+      {
+        "confidence": "high",
+        "ecosystem": "npm",
+        "kind": "package_manifest",
+        "language": "javascript",
+        "packageManager": "npm",
+        "parser": "spec_harvester.package_json",
+        "path": "packages/system/package.json",
+        "reason": "package.json manifest parsed as npm package evidence.",
+        "sha256": "4ab83b02596c8a60f884ec08d4a9f1930932717b81cb80a7dbb3716f2c0c30a3"
+      }
+    ],
+    "schemaVersion": 1
+  },
   "schemaVersion": 1,
   "skippedFiles": [],
   "source": {
     "kind": "local_checkout",
     "label": "xyflow",
     "repository": "https://github.com/xyflow/xyflow",
-    "revision": "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd"
+    "revision": "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd",
+    "target": {
+      "kind": "folder",
+      "label": "system",
+      "path": "packages/system"
+    }
   },
   "summary": {
-    "fileCount": 18,
-    "packageManifestCount": 4,
-    "skippedFileCount": 0
+    "fileCount": 48,
+    "licenseFileCount": 1,
+    "packageManifestCount": 1,
+    "skippedFileCount": 0,
+    "targetKind": "folder"
   }
 }

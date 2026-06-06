@@ -4,7 +4,7 @@
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "d37b5db370feeb4dc89449516848adc46d50b4dd9508a4608f2167253cd85bcf"
+        "value": "1bd562cb1ce57872831a637de104814eee629eb2d328929705e08e7b07177a20"
       },
       "id": "required_manifest_specpm_yaml",
       "path": "specpm.yaml",
@@ -14,10 +14,10 @@
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "a2e5fa9a6ef6bf13b669b6e0f4e694e8c9659907b9f4c03540c6ddfb2280dfab"
+        "value": "8542337094df8ff84a477d40d0a85f5f6cc02fc9632882fcfb86f676e957745d"
       },
-      "id": "required_boundary_spec_specs_xyflow_spec_yaml",
-      "path": "specs/xyflow.spec.yaml",
+      "id": "required_boundary_spec_specs_system_spec_yaml",
+      "path": "specs/system.spec.yaml",
       "role": "boundary_spec",
       "status": "passed"
     }

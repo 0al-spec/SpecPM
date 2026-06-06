@@ -13,7 +13,7 @@
     "deterministic": true,
     "digest": {
       "algorithm": "sha256",
-      "value": "fbc3a52084ebe968a5fc40d4a4ce97818513fa96b1b03675fa3d5c4df176466f"
+      "value": "c478285a011c7e7b235186b5c58a81411d8d58fa03e802cc495792fe072b0ff8"
     },
     "mode": "deterministic_draft",
     "normalizedSummary": "SpecHarvester deterministic draft generation",
@@ -60,7 +60,7 @@
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "fbc3a52084ebe968a5fc40d4a4ce97818513fa96b1b03675fa3d5c4df176466f"
+        "value": "c478285a011c7e7b235186b5c58a81411d8d58fa03e802cc495792fe072b0ff8"
       },
       "kind": "config",
       "path": "spec_harvester.draft.configuration",
@@ -69,7 +69,7 @@
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "749adb2b88010cc06b40a12a7a03929ad79736cf9c411d8407b009678e688443"
+        "value": "e7055224bcf4952428918da764d9a10ac257a9ca270246826e813c389c7b2673"
       },
       "kind": "harvested_evidence",
       "location": "bundle",
@@ -77,7 +77,7 @@
       "redaction": "none"
     }
   ],
-  "issuedAt": "2026-06-04T21:11:02Z",
+  "issuedAt": "2026-06-05T22:44:23Z",
   "kind": "SpecPMProducerReceipt",
   "outputs": [
     {
@@ -91,7 +91,15 @@
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "d37b5db370feeb4dc89449516848adc46d50b4dd9508a4608f2167253cd85bcf"
+        "value": "e7055224bcf4952428918da764d9a10ac257a9ca270246826e813c389c7b2673"
+      },
+      "path": "harvest.json",
+      "role": "evidence"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "1bd562cb1ce57872831a637de104814eee629eb2d328929705e08e7b07177a20"
       },
       "path": "specpm.yaml",
       "role": "manifest"
@@ -99,15 +107,15 @@
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "a2e5fa9a6ef6bf13b669b6e0f4e694e8c9659907b9f4c03540c6ddfb2280dfab"
+        "value": "8542337094df8ff84a477d40d0a85f5f6cc02fc9632882fcfb86f676e957745d"
       },
-      "path": "specs/xyflow.spec.yaml",
+      "path": "specs/system.spec.yaml",
       "role": "boundary_spec"
     },
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "0d3d4710773cef30e3de1bf6142991bfa6b7d180ac5cf88d53ec3c6db7c1f4a1"
+        "value": "73d5a48851aec64db9c26130e012d0ba9a7112c704333e19ba40bb52034d73a3"
       },
       "path": "validation-report.json",
       "role": "validation_report"
@@ -123,12 +131,12 @@
     "version": "0.1.0",
     "workflow": "draft"
   },
-  "receiptId": "xyflow.core@0.1.0:producer:sha256:1cf519097f5d",
+  "receiptId": "xyflow.core@0.1.0:producer:sha256:33885e01a381",
   "receiptProfile": "generated_spec_package_v0",
   "schemaVersion": 1,
   "subject": {
     "boundarySpecs": [
-      "specs/xyflow.spec.yaml"
+      "specs/system.spec.yaml"
     ],
     "candidateStatus": "review-ready",
     "packageApiVersion": "specpm.dev/v0.1",
@@ -140,7 +148,7 @@
     "errorCount": 0,
     "reportDigest": {
       "algorithm": "sha256",
-      "value": "0d3d4710773cef30e3de1bf6142991bfa6b7d180ac5cf88d53ec3c6db7c1f4a1"
+      "value": "73d5a48851aec64db9c26130e012d0ba9a7112c704333e19ba40bb52034d73a3"
     },
     "reportPath": "validation-report.json",
     "status": "valid",

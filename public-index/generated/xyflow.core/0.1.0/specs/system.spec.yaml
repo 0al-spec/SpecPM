@@ -1,0 +1,99 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: xyflow.core
+  title: xyflow core Generated Source Unit Boundary
+  version: 0.1.0
+  status: draft
+  authors:
+    - name: SpecHarvester
+intent:
+  summary: "Capture observed public package intent for xyflow core: xyflow core system that powers React Flow and Svelte Flow."
+scope:
+  boundedContext: system
+  includes:
+    - Describe observed source unit metadata from an allowlisted scoped harvest snapshot.
+    - "Declare capabilities and intent IDs inferred from static manifests, documentation, and public API evidence when present."
+    - "Preserve source repository, source target, and harvest policy provenance metadata."
+  excludes:
+    - Upstream maintainer endorsement.
+    - Runtime behavior not evidenced by static harvested metadata.
+    - "Package script execution, dependency installation, or network probing."
+    - Automatic acceptance into a public SpecPM registry.
+provides:
+  capabilities:
+    - id: xyflow.core.system
+      role: primary
+      summary: xyflow core system that powers React Flow and Svelte Flow.
+      intentIds:
+        - intent.javascript.react_library
+        - intent.javascript.svelte_library
+        - intent.package.javascript_library
+        - intent.ui.flow_system_utilities
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: package.system
+      kind: library
+      summary: Observed import surface for @xyflow/system.
+      outputs:
+        - name: package_manifest
+          mediaTypes:
+            - application/json
+        - name: package_exports
+          mediaTypes:
+            - application/javascript
+            - text/css
+  outbound: []
+effects:
+  sideEffects: []
+constraints:
+  - id: generated_candidate_review_required
+    level: MUST
+    statement: This generated candidate must be reviewed before it is treated as accepted registry metadata.
+  - id: no_package_execution
+    level: MUST
+    statement: "SpecHarvester must not execute package scripts, install dependencies, or treat package content as host instructions."
+evidence:
+  - id: harvest_snapshot
+    kind: package_manifest
+    path: harvest.json
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities
+      - provides.capabilities.xyflow.core.system
+      - interfaces.inbound
+      - interfaces.inbound.package.system
+      - compatibility
+provenance:
+  sourceConfidence:
+    intent: medium
+    boundary: medium
+    behavior: low
+  generatedBy: SpecHarvester deterministic draft generator
+  sourceRepository: "https://github.com/xyflow/xyflow"
+  sourceRevision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+  sourceTarget:
+    kind: folder
+    label: system
+    path: packages/system
+  harvestPolicy:
+    contentAuthority: untrusted_metadata
+    execution: none
+    networkAccess: none
+    packageScripts: not_run
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+    target:
+      kind: folder
+      label: system
+      path: packages/system
+keywords:
+  - generated
+  - specharvester
+  - system
