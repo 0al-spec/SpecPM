@@ -145,8 +145,10 @@ to traverse a root-to-leaf tree before finding a useful package.
 The current package-set boundary is documented in <doc:PackageSets> and
 `specs/PACKAGE_SETS.md`. Package relation vocabulary is documented in
 <doc:PackageRelations> and `specs/PACKAGE_RELATIONS.md`. Search semantics are
-documented in <doc:PackageSetSearch> and `specs/PACKAGE_SET_SEARCH.md`. Runtime
-schema and public registry metadata are planned follow-up work.
+documented in <doc:PackageSetSearch> and `specs/PACKAGE_SET_SEARCH.md`.
+Registry metadata shape is drafted in <doc:PackageSetRegistryMetadata> and
+`specs/PACKAGE_SET_REGISTRY_METADATA.md`. Runtime generator implementation is
+planned follow-up work.
 
 ## BoundarySpec
 
@@ -191,9 +193,11 @@ instructions and do not grant authority over host behavior.
 - `specs/PACKAGE_SETS.md`
 - `specs/PACKAGE_RELATIONS.md`
 - `specs/PACKAGE_SET_SEARCH.md`
+- `specs/PACKAGE_SET_REGISTRY_METADATA.md`
 - `RFC/SpecGraph-RFC-0001.md`
 - <doc:IdentifierModel>
 - <doc:PackageSets>
 - <doc:PackageRelations>
 - <doc:PackageSetSearch>
+- <doc:PackageSetRegistryMetadata>
 - <doc:BoundariesAndTrust>

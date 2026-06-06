@@ -68,6 +68,7 @@ The canonical source files remain in the repository:
 - `specs/PACKAGE_SETS.md`
 - `specs/PACKAGE_RELATIONS.md`
 - `specs/PACKAGE_SET_SEARCH.md`
+- `specs/PACKAGE_SET_REGISTRY_METADATA.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
 - `RFC/SpecGraph-RFC-0001.md`
@@ -110,6 +111,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:PackageSets>
 - <doc:PackageRelations>
 - <doc:PackageSetSearch>
+- <doc:PackageSetRegistryMetadata>
 - <doc:Deployment>
 - <doc:RegistryOperations>
 - <doc:GitHubActionsMaintenance>

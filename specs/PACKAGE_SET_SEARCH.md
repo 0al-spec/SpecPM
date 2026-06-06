@@ -231,9 +231,10 @@ This search model does not add:
 
 Follow-up tasks should define:
 
-- public `/v0` fields for result scope and relation context;
 - viewer rendering for aggregate and scoped search results;
 - conformance fixtures for package-set search payloads;
 - optional explicit relation-expansion query modes, if needed;
 - SpecHarvester output expectations for aggregate and scoped intent metadata.
 
+Public `/v0` fields for package-set metadata, relation summaries, result scope,
+and relation context are drafted in `specs/PACKAGE_SET_REGISTRY_METADATA.md`.

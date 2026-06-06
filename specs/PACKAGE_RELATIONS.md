@@ -292,10 +292,11 @@ be required for the user to discover `xyflow.react` in the first place.
 Follow-up tasks should define:
 
 - extension-safe relation storage shape;
-- static `/v0` relation metadata;
 - relation rendering in the static viewer;
 - SpecHarvester relation proposal output;
 - multi-package producer bundle intake checks.
 
 Exact search result scope and relation-context search boundaries are defined in
 `specs/PACKAGE_SET_SEARCH.md`.
+Static `/v0` relation metadata is drafted in
+`specs/PACKAGE_SET_REGISTRY_METADATA.md`.

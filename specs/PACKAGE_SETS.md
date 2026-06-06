@@ -247,7 +247,6 @@ may accept a member package without accepting the aggregate set.
 
 Follow-up tasks should define:
 
-- public `/v0` registry metadata shape;
 - SpecHarvester monorepo discovery handoff;
 - multi-package producer bundle intake;
 - an `xyflow` reference fixture.
@@ -255,3 +254,5 @@ Follow-up tasks should define:
 Relation vocabulary and evidence expectations are defined in
 `specs/PACKAGE_RELATIONS.md`.
 Index and exact search result scope are defined in `specs/PACKAGE_SET_SEARCH.md`.
+Public `/v0` registry metadata shape is drafted in
+`specs/PACKAGE_SET_REGISTRY_METADATA.md`.

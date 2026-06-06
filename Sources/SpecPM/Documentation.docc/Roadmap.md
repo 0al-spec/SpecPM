@@ -193,6 +193,9 @@ evidence expectations and non-goals.
 Package-set search semantics are now documented. Exact lookup remains
 index-based and may return aggregate, scoped package, abstract-contract, and
 relation-context results without requiring root-to-leaf traversal.
+Package-set registry metadata shape is now drafted for additive `/v0` fields
+covering package-set subject metadata, members, accepted relations, result
+scope, relation context, and feature signaling.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -230,3 +233,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:PackageSets>
 - <doc:PackageRelations>
 - <doc:PackageSetSearch>
+- <doc:PackageSetRegistryMetadata>
