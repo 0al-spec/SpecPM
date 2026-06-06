@@ -2721,6 +2721,18 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "test -f specpm-static-site/index.html"
         in (static_steps["Validate static host artifact"]["run"])
     )
+    assert (
+        "test -f specpm-static-site/theme-settings.json"
+        in (static_steps["Validate static host artifact"]["run"])
+    )
+    assert (
+        "test -f specpm-static-site/viewer/index.html"
+        in (static_steps["Validate static host artifact"]["run"])
+    )
+    assert (
+        "test -f specpm-static-site/v0/status/index.json"
+        in (static_steps["Validate static host artifact"]["run"])
+    )
     summarize_run = static_steps["Summarize static host artifact"]["run"]
     assert (
         "find specpm-static-site -type f | sort > /tmp/specpm-static-site-files.txt"
@@ -2813,6 +2825,7 @@ def test_render_pages_can_keep_github_pages_root_as_docc_redirect(
     assert (output / "viewer/index.html").is_file()
     assert (output / "viewer/assets/viewer.js").is_file()
     assert (output / "site-metadata.json").is_file()
+    assert json.loads((output / "theme-settings.json").read_text(encoding="utf-8")) == {}
 
 
 def test_deploy_connection_check_uses_trusted_sftp_dry_run() -> None:

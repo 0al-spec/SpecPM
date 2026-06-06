@@ -414,6 +414,19 @@ documentation/specpm/
 v0/
 ```
 
+The same rendering pass also writes root-level static hosting helpers:
+
+```text
+.nojekyll
+site-metadata.json
+theme-settings.json
+```
+
+`theme-settings.json` is the Swift DocC Render site-wide theme customization
+entrypoint. SpecPM publishes an empty JSON object there when no custom theme is
+needed so DocC pages do not produce a root-level 404 while loading optional
+theme settings.
+
 This is still static hosting. The workflow does not accept submissions, publish
 through a remote mutation API, install packages, fetch remote archives as a
 client, or execute package content. Remote accepted manifest entries are source
