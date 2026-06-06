@@ -1,0 +1,44 @@
+{
+  "apiVersion": "specpm.producer/v0",
+  "kind": "SpecHarvesterMonorepoDiscovery",
+  "repository": {
+    "url": "https://github.com/xyflow/xyflow",
+    "revision": "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd"
+  },
+  "workspace": {
+    "root": ".",
+    "manifests": [
+      "pnpm-workspace.yaml",
+      "package.json"
+    ],
+    "patterns": [
+      "packages/*",
+      "examples/*",
+      "tooling/*",
+      "tests/*"
+    ]
+  },
+  "packages": [
+    {
+      "path": "packages/system",
+      "ecosystem": "npm",
+      "name": "@xyflow/system",
+      "proposedPackageId": "xyflow.system",
+      "role": "core_runtime"
+    },
+    {
+      "path": "packages/react",
+      "ecosystem": "npm",
+      "name": "@xyflow/react",
+      "proposedPackageId": "xyflow.react",
+      "role": "react_binding"
+    },
+    {
+      "path": "packages/svelte",
+      "ecosystem": "npm",
+      "name": "@xyflow/svelte",
+      "proposedPackageId": "xyflow.svelte",
+      "role": "svelte_binding"
+    }
+  ]
+}

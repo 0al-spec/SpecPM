@@ -90,6 +90,7 @@ authority.
 - <doc:PackageSetSearch>
 - <doc:PackageSetRegistryMetadata>
 - <doc:SpecHarvesterMonorepoDiscovery>
+- <doc:XyflowPackageSetReference>
 - <doc:PackageModel>
 - <doc:ProducerBundleProposalPolicy>
 - <doc:SpecQualityModel>

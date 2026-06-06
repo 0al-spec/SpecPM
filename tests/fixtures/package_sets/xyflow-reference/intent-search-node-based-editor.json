@@ -1,0 +1,37 @@
+{
+  "intent": "intent.ui.node_based_editor",
+  "results": [
+    {
+      "package": "xyflow.workspace",
+      "version": "0.1.0",
+      "scope": "aggregate",
+      "match": "direct"
+    },
+    {
+      "package": "xyflow.react",
+      "version": "0.1.0",
+      "scope": "package",
+      "match": "direct",
+      "relations": [
+        {
+          "type": "contains",
+          "source": "xyflow.workspace",
+          "target": "xyflow.react"
+        }
+      ]
+    },
+    {
+      "package": "xyflow.svelte",
+      "version": "0.1.0",
+      "scope": "package",
+      "match": "direct",
+      "relations": [
+        {
+          "type": "contains",
+          "source": "xyflow.workspace",
+          "target": "xyflow.svelte"
+        }
+      ]
+    }
+  ]
+}

@@ -80,4 +80,5 @@ resolvers, SpecGraph, ContextBuilder, or human reviewers.
 - <doc:PackageSetRegistryMetadata>
 - <doc:PackageSets>
 - <doc:PackageRelations>
+- <doc:XyflowPackageSetReference>
 - <doc:IdentifierModel>
