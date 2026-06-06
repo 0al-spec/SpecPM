@@ -84,14 +84,15 @@ package shape.
 ### Package Sets and Monorepo Decomposition
 
 Represent multi-package repositories as package sets plus scoped member
-packages. Discovery should remain index-based, not tree-traversal-based, so
-consumers can find aggregate and concrete package subjects without guessing
-whether the useful result lives at a repository root or a member package.
+packages. Package-set discovery should be index-based, not tree-traversal-based,
+so exact `intent.*` lookup can return aggregate and scoped package results with
+explicit scope and consumers do not have to guess whether the useful result
+lives at a repository root or a member package.
 
-This track should define collection entrypoints, package relation vocabulary,
-search and registry metadata semantics, SpecHarvester monorepo discovery
-handoff, multi-package producer intake, and an `xyflow` reference scenario
-before runtime behavior changes.
+This track defines collection entrypoints, relation vocabulary, registry
+metadata, SpecHarvester monorepo discovery handoff, and multi-package producer
+bundle intake without adding inheritance, package execution, dependency solving,
+or resolver authority to SpecPM core.
 
 ## Next Planned Sequence
 
@@ -182,11 +183,10 @@ producer tools.
 External registry acceptance decision records are now documented. They connect
 producer evidence to maintainer review and accepted-source effects while keeping
 producer receipts as `evidence_only` support material.
-The next large design track is package sets and monorepo decomposition. This
-track should define aggregate package-set entrypoints, relation vocabulary,
-index/search semantics that do not require tree traversal, public registry
-metadata for package-set membership, SpecHarvester monorepo discovery handoff,
-and an `xyflow` reference scenario before runtime behavior changes.
+Package-set concept and boundaries are now documented. Package sets are
+collection entrypoints for repositories, workspaces, ecosystems, and product
+families; they preserve aggregate discovery without making member packages
+inherit capabilities, trust, lifecycle state, or acceptance status.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -221,3 +221,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:ProvenanceReceipts>
 - <doc:ProducerReceipts>
 - <doc:ProducerBundleProposalPolicy>
+- <doc:PackageSets>

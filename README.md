@@ -329,6 +329,10 @@ CLI exit code behavior is documented in `specs/CLI_EXIT_CODES.md`. RFC 0001
 implementation coverage is tracked in `specs/RFC_0001_COVERAGE.md`. Spec
 quality review levels and evidence coverage heuristics are documented in
 `specs/SPEC_QUALITY_MODEL.md`.
+Package-set boundaries are documented in `specs/PACKAGE_SETS.md`. Package sets
+represent repository, workspace, ecosystem, or product-family entrypoints
+without making member packages inherit capabilities, trust, lifecycle state, or
+acceptance status.
 
 This repository is also a self-describing SpecPM package. The root
 `specpm.yaml` and `specs/specpm.spec.yaml` describe the implemented public CLI
