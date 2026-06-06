@@ -54,6 +54,7 @@ def main() -> int:
     copy_assets(LANDING_ROOT / "assets", output / "viewer/assets")
     (output / ".nojekyll").touch()
     write_json(output / "site-metadata.json", site_metadata(metadata))
+    write_json(output / "theme-settings.json", {})
 
     custom_domain = args.custom_domain.strip()
     if custom_domain:

@@ -80,7 +80,12 @@ Build the DocC documentation locally:
 make docs-build
 ```
 
-The documentation build writes static output to `.docc-build/`.
+The documentation build writes static output to `.docc-build/`. The render pass
+also writes root hosting helpers such as `.nojekyll`, `site-metadata.json`, and
+`theme-settings.json`. The `theme-settings.json` file is intentionally present
+as an empty DocC Render theme configuration when SpecPM does not customize the
+DocC theme; this keeps hosted DocC pages from producing a root-level 404 while
+loading optional theme settings.
 
 ## Useful Paths
 

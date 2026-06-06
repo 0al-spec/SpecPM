@@ -177,6 +177,7 @@ jobs:
       - name: Validate static host artifact
         run: |
           test -f specpm-static-site/index.html
+          test -f specpm-static-site/theme-settings.json
           test -f specpm-static-site/viewer/index.html
           test -f specpm-static-site/v0/status/index.json
 
