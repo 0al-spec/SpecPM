@@ -346,6 +346,9 @@ SpecHarvester monorepo discovery handoff is documented in
 `specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`; it defines workspace inventory,
 package-set and scoped member candidates, relation proposals, and review
 evidence without making producer output registry authority.
+Multi-package producer bundle intake is documented in
+`specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`; maintainers can accept package sets,
+member packages, and relations independently.
 
 This repository is also a self-describing SpecPM package. The root
 `specpm.yaml` and `specs/specpm.spec.yaml` describe the implemented public CLI

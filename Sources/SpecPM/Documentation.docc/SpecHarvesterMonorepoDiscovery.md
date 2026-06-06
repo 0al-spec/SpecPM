@@ -56,11 +56,12 @@ Maintainers may accept only part of a generated bundle set.
 ## References
 
 - `specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`
+- `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`
 - `specs/PACKAGE_SETS.md`
 - `specs/PACKAGE_RELATIONS.md`
 - `specs/PACKAGE_SET_REGISTRY_METADATA.md`
 - <doc:PackageSets>
 - <doc:PackageRelations>
 - <doc:PackageSetRegistryMetadata>
+- <doc:MultiPackageProducerIntake>
 - <doc:ProducerBundleProposalPolicy>
-
