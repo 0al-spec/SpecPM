@@ -187,6 +187,9 @@ Package-set concept and boundaries are now documented. Package sets are
 collection entrypoints for repositories, workspaces, ecosystems, and product
 families; they preserve aggregate discovery without making member packages
 inherit capabilities, trust, lifecycle state, or acceptance status.
+Package relation vocabulary is now documented for `contains`, `composes`,
+`refines`, `satisfies`, `supersedes`, and `related` metadata claims, including
+evidence expectations and non-goals.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -222,3 +225,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:ProducerReceipts>
 - <doc:ProducerBundleProposalPolicy>
 - <doc:PackageSets>
+- <doc:PackageRelations>

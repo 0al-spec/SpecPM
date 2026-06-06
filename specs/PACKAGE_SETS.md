@@ -247,10 +247,11 @@ may accept a member package without accepting the aggregate set.
 
 Follow-up tasks should define:
 
-- relation vocabulary and evidence expectations;
 - index and exact search result scope;
 - public `/v0` registry metadata shape;
 - SpecHarvester monorepo discovery handoff;
 - multi-package producer bundle intake;
 - an `xyflow` reference fixture.
 
+Relation vocabulary and evidence expectations are defined in
+`specs/PACKAGE_RELATIONS.md`.

@@ -1672,6 +1672,8 @@ Result:
 
 ### P66-T2. Package Relation Vocabulary
 
+Status: Completed.
+
 Motivation:
 
 - Users need navigation between aggregate packages and scoped packages, but
@@ -1689,6 +1691,13 @@ Expected result:
 - Package relations can explain why packages are grouped without implying that
   a child inherits every parent intent, capability, claim, constraint, or
   acceptance status.
+
+Result:
+
+- `specs/PACKAGE_RELATIONS.md` and the DocC Package Relations page define the
+  initial `contains`, `composes`, `refines`, `satisfies`, `supersedes`, and
+  `related` vocabulary with direction, evidence expectations, acceptance rules,
+  search boundaries, and non-goals.
 
 ### P66-T3. Index and Search Semantics for Package Sets
 
