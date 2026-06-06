@@ -1638,9 +1638,11 @@ Acceptance:
 
 ## Phase 66. Package Sets and Monorepo Decomposition
 
-Status: Planned.
+Status: In progress.
 
 ### P66-T1. Package Set Concept and Boundary
+
+Status: Completed.
 
 Motivation:
 
@@ -1660,6 +1662,13 @@ Expected result:
 - SpecPM has a documented collection/profile model that can represent
   `xyflow.workspace` as an aggregate entrypoint while preserving separate scoped
   packages such as `xyflow.system`, `xyflow.react`, and `xyflow.svelte`.
+
+Result:
+
+- `specs/PACKAGE_SETS.md` and the DocC Package Sets page define package sets as
+  collection entrypoints for repositories, workspaces, ecosystems, and product
+  families without adding inheritance, dependency solving, semantic resolver
+  authority, package execution, or automatic acceptance.
 
 ### P66-T2. Package Relation Vocabulary
 

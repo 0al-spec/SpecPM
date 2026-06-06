@@ -65,6 +65,7 @@ The canonical source files remain in the repository:
 - `specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md`
 - `specs/REGISTRY_ACCEPTANCE_DECISIONS.md`
 - `specs/SPEC_QUALITY_MODEL.md`
+- `specs/PACKAGE_SETS.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
 - `RFC/SpecGraph-RFC-0001.md`
@@ -104,6 +105,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:BoundariesAndTrust>
 - <doc:IntentDiscoveryBoundary>
 - <doc:IntentTaxonomyGovernance>
+- <doc:PackageSets>
 - <doc:Deployment>
 - <doc:RegistryOperations>
 - <doc:GitHubActionsMaintenance>

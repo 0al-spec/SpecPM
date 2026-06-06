@@ -114,6 +114,38 @@ It pairs with `examples/email_tools` to show how an abstract contract can
 sit between consumers and a concrete provider package without requiring
 implicit inheritance.
 
+## Package Sets
+
+SpecPM may also describe package sets as collection entrypoints for related
+packages. Package sets are useful for repositories, workspaces, ecosystems, and
+product families where one broad package would overclaim the repository but one
+narrow package would lose important discovery intent.
+
+A package set groups separate package subjects. It does not make member
+packages inherit capabilities, constraints, lifecycle state, acceptance status,
+namespace ownership, or trust.
+
+For example:
+
+```text
+xyflow.workspace
+  contains xyflow.system
+  contains xyflow.react
+  contains xyflow.svelte
+```
+
+The aggregate `xyflow.workspace` package can preserve broad product discovery
+intent, while scoped members such as `xyflow.system` and `xyflow.react` keep
+their own evidence, capabilities, and acceptance decisions.
+
+Package-set discovery should remain index-based. Exact `intent.*` lookup may
+return aggregate and scoped package results directly; consumers should not need
+to traverse a root-to-leaf tree before finding a useful package.
+
+The current package-set boundary is documented in <doc:PackageSets> and
+`specs/PACKAGE_SETS.md`. Runtime schema, relation vocabulary, and public
+registry metadata are planned follow-up work.
+
 ## BoundarySpec
 
 A `BoundarySpec` describes a bounded package contract. Required fields include:
@@ -154,6 +186,8 @@ instructions and do not grant authority over host behavior.
 - `specs/PRD.md`
 - `specs/IDENTIFIER_MODEL.md`
 - `specs/0002_Abstract_SpecPackage_Conformance_Target_Decision.md`
+- `specs/PACKAGE_SETS.md`
 - `RFC/SpecGraph-RFC-0001.md`
 - <doc:IdentifierModel>
+- <doc:PackageSets>
 - <doc:BoundariesAndTrust>
