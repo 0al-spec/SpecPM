@@ -1701,6 +1701,8 @@ Result:
 
 ### P66-T3. Index and Search Semantics for Package Sets
 
+Status: Completed.
+
 Motivation:
 
 - Intent lookup should not require a consumer to know whether the right answer
@@ -1717,6 +1719,13 @@ Expected result:
 - Registry consumers can ask for `intent.ui.node_based_editor` and receive
   reviewable results such as `xyflow.workspace` with `scope: aggregate` and
   `xyflow.react` with `scope: package` instead of manually traversing a tree.
+
+Result:
+
+- `specs/PACKAGE_SET_SEARCH.md` and the DocC Package Set Search page define
+  direct indexed matches, relation context, initial result scopes, capability
+  search, exact `intent.*` search, package lookup, deterministic ordering,
+  ambiguity handling, and non-goals.
 
 ### P66-T4. Public Registry Metadata Shape
 
