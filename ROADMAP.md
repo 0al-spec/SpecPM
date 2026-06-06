@@ -1,7 +1,7 @@
 # SpecPM Roadmap
 
 Status: Public alpha roadmap
-Updated: 2026-05-31
+Updated: 2026-06-06
 
 SpecPM is the package substrate for SpecGraph. It packages, validates, indexes,
 inspects, preserves, and exposes reusable specification intent. It does not own
@@ -217,6 +217,40 @@ Success criteria:
   shape;
 - semantic resolution does not become normative package-manager behavior.
 
+## Milestone 8: Package Sets and Monorepo Decomposition
+
+Goal: let SpecPM and producer tools represent multi-package repositories as
+reviewable package sets plus scoped member packages without forcing discovery
+through a package tree.
+
+Tasks:
+
+- define `SpecPackageSet` or an equivalent collection profile for repository,
+  workspace, ecosystem, and product-family entrypoints;
+- define package relations such as `contains`, `composes`, `refines`,
+  `satisfies`, `supersedes`, and `related` without treating them as implicit
+  inheritance;
+- keep exact intent lookup index-based so a query can return aggregate package
+  sets and concrete member packages without requiring root-to-leaf traversal;
+- define how public registry metadata exposes member packages, relation
+  evidence, aggregate intent summaries, and scoped capability ownership;
+- align SpecHarvester monorepo discovery so workspace manifests can produce a
+  package-set candidate plus scoped package candidates such as
+  `xyflow.workspace`, `xyflow.system`, `xyflow.react`, and `xyflow.svelte`;
+- define review and acceptance rules for multi-package producer bundles before
+  adding registry authority or automatic publication behavior.
+
+Success criteria:
+
+- monorepos can preserve broad product intent and narrow package boundaries at
+  the same time;
+- downstream consumers can search by exact `intent.*` and see whether each
+  result is aggregate, scoped, or related;
+- SpecHarvester can hand SpecPM a reviewable multi-package candidate bundle
+  without making SpecPM execute producer logic;
+- package relations improve navigation and evidence review without becoming a
+  hidden semantic resolver.
+
 ## Explicit Non-Goals For SpecPM Core
 
 SpecPM core does not own:
@@ -349,3 +383,9 @@ producer tools.
 External registry acceptance decision records are now documented. They connect
 producer evidence to maintainer review and accepted-source effects while keeping
 producer receipts as `evidence_only` support material.
+
+The next large design track is package sets and monorepo decomposition. This
+track should define aggregate package-set entrypoints, package relation
+vocabulary, index/search semantics that do not require tree traversal, public
+registry metadata for package-set membership, SpecHarvester monorepo discovery
+handoff, and an `xyflow` reference scenario before changing runtime behavior.

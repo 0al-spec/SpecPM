@@ -81,6 +81,18 @@ RAG, or LLM reranking to propose reviewable candidate `intent.*`,
 `SpecPackage`, `BoundarySpec`, and capability IDs. SpecPM verifies exact IDs and
 package shape.
 
+### Package Sets and Monorepo Decomposition
+
+Represent multi-package repositories as package sets plus scoped member
+packages. Discovery should remain index-based, not tree-traversal-based, so
+consumers can find aggregate and concrete package subjects without guessing
+whether the useful result lives at a repository root or a member package.
+
+This track should define collection entrypoints, package relation vocabulary,
+search and registry metadata semantics, SpecHarvester monorepo discovery
+handoff, multi-package producer intake, and an `xyflow` reference scenario
+before runtime behavior changes.
+
 ## Next Planned Sequence
 
 The Public Index Operator UX baseline is complete. Maintainer tooling can now
@@ -170,6 +182,11 @@ producer tools.
 External registry acceptance decision records are now documented. They connect
 producer evidence to maintainer review and accepted-source effects while keeping
 producer receipts as `evidence_only` support material.
+The next large design track is package sets and monorepo decomposition. This
+track should define aggregate package-set entrypoints, relation vocabulary,
+index/search semantics that do not require tree traversal, public registry
+metadata for package-set membership, SpecHarvester monorepo discovery handoff,
+and an `xyflow` reference scenario before runtime behavior changes.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote

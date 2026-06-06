@@ -1636,6 +1636,158 @@ Acceptance:
 - Future automation can build on explicit dimensions and quality levels instead
   of inventing a separate scoring vocabulary.
 
+## Phase 66. Package Sets and Monorepo Decomposition
+
+Status: Planned.
+
+### P66-T1. Package Set Concept and Boundary
+
+Motivation:
+
+- Monorepos such as `xyflow` have both broad repository-level product intent and
+  narrow package-level implementation boundaries. A single generated
+  `SpecPackage` either overclaims the whole repository or loses useful public
+  meaning when scoped to one package directory.
+
+Goal:
+
+- Define a package-set concept for repository, workspace, ecosystem, and
+  product-family entrypoints without making it inheritance, dependency solving,
+  or semantic package selection.
+
+Expected result:
+
+- SpecPM has a documented collection/profile model that can represent
+  `xyflow.workspace` as an aggregate entrypoint while preserving separate scoped
+  packages such as `xyflow.system`, `xyflow.react`, and `xyflow.svelte`.
+
+### P66-T2. Package Relation Vocabulary
+
+Motivation:
+
+- Users need navigation between aggregate packages and scoped packages, but
+  hard tree traversal is too brittle for intent lookup because intents can
+  apply to roots, leaves, and lateral packages at the same time.
+
+Goal:
+
+- Define a small relation vocabulary such as `contains`, `composes`, `refines`,
+  `satisfies`, `supersedes`, and `related`, including evidence expectations and
+  non-goals for each relation type.
+
+Expected result:
+
+- Package relations can explain why packages are grouped without implying that
+  a child inherits every parent intent, capability, claim, constraint, or
+  acceptance status.
+
+### P66-T3. Index and Search Semantics for Package Sets
+
+Motivation:
+
+- Intent lookup should not require a consumer to know whether the right answer
+  lives at the root of a package tree, a leaf package, or a related peer.
+
+Goal:
+
+- Specify index behavior where exact `intent.*` and capability lookup can
+  return both aggregate package-set entries and concrete member packages with
+  explicit result scope.
+
+Expected result:
+
+- Registry consumers can ask for `intent.ui.node_based_editor` and receive
+  reviewable results such as `xyflow.workspace` with `scope: aggregate` and
+  `xyflow.react` with `scope: package` instead of manually traversing a tree.
+
+### P66-T4. Public Registry Metadata Shape
+
+Motivation:
+
+- Downstream tools and static viewers need a stable way to render package-set
+  membership, relation evidence, aggregate summaries, and scoped package
+  ownership from `/v0` metadata.
+
+Goal:
+
+- Define the static registry JSON additions or extension-safe fields for
+  package sets, members, relations, aggregate intent summaries, and result
+  scope without breaking existing package consumers.
+
+Expected result:
+
+- The public registry can expose package-set navigation as metadata while
+  preserving existing `SpecPackage` lookup and exact search behavior.
+
+### P66-T5. SpecHarvester Monorepo Discovery Contract
+
+Motivation:
+
+- Producer tooling needs a repeatable way to inspect workspace manifests,
+  package manifests, README files, exports, and source evidence before drafting
+  multiple related package candidates.
+
+Goal:
+
+- Define the cross-repository contract for SpecHarvester monorepo discovery:
+  workspace inventory, stable package ID proposal, scoped evidence collection,
+  package-set candidate generation, and member package candidate generation.
+
+Expected result:
+
+- SpecHarvester can produce a reviewable bundle set for repositories like
+  `xyflow` instead of overwriting one package with either a too-broad or
+  too-narrow generated contract.
+
+### P66-T6. Multi-Package Producer Bundle Intake
+
+Motivation:
+
+- SpecPM needs to review generated package-set proposals without executing
+  producer logic or treating producer receipts as registry authority.
+
+Goal:
+
+- Extend the producer bundle intake policy to cover multiple related candidate
+  packages, package-set receipts, relation evidence, validation reports,
+  diagnostics, and maintainer acceptance decisions.
+
+Expected result:
+
+- A producer-backed PR can propose `xyflow.workspace` plus scoped member
+  packages with clear evidence links, separate validation status, and explicit
+  maintainer decisions for each accepted package/version.
+
+### P66-T7. Xyflow Reference Scenario
+
+Motivation:
+
+- The current `xyflow.core` candidate shows the central design tension: scoped
+  generation improves evidence discipline but can lose the broader public
+  product intent that made the package useful to find.
+
+Goal:
+
+- Document and later implement an `xyflow` reference scenario that compares the
+  old monorepo-level package, the scoped `packages/system` package, and the
+  proposed package-set layout.
+
+Expected result:
+
+- Maintainers have a concrete fixture for deciding whether package-set behavior
+  is understandable, useful for discovery, and precise enough for public-index
+  review.
+
+Acceptance:
+
+- The workplan distinguishes concept, relation vocabulary, registry metadata,
+  producer discovery, intake policy, and the `xyflow` reference scenario as
+  separate tasks.
+- The plan explicitly rejects tree-only lookup and implicit inheritance.
+- The SpecPM/SpecHarvester boundary remains explicit: SpecHarvester may produce
+  package-set candidates, while SpecPM validates, indexes, exposes, and
+  maintains acceptance authority.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
@@ -1655,6 +1807,8 @@ Acceptance:
 - Natural-language or semantic capability search.
 - Plain-text intent discovery with LLM, embeddings, vector search, or RAG.
 - Full dependency solving.
+- Package sets and monorepo decomposition for aggregate discovery and scoped
+  package boundaries.
 - Expanded conformance suites for additional post-MVP tracks beyond the
   read-only public and enterprise registry metadata contract.
 - Richer import adapters for CodeSpeak, OpenAPI, GraphQL, protobuf, AsyncAPI,
