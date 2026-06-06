@@ -196,6 +196,9 @@ relation-context results without requiring root-to-leaf traversal.
 Package-set registry metadata shape is now drafted for additive `/v0` fields
 covering package-set subject metadata, members, accepted relations, result
 scope, relation context, and feature signaling.
+SpecHarvester monorepo discovery handoff is now documented for workspace
+inventory, stable package ID proposals, package-set and scoped member
+candidates, relation proposal output, and bundle-set review evidence.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
@@ -234,3 +237,4 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:PackageRelations>
 - <doc:PackageSetSearch>
 - <doc:PackageSetRegistryMetadata>
+- <doc:SpecHarvesterMonorepoDiscovery>

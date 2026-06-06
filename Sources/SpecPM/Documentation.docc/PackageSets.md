@@ -84,10 +84,12 @@ authority.
 - `specs/PACKAGE_RELATIONS.md`
 - `specs/PACKAGE_SET_SEARCH.md`
 - `specs/PACKAGE_SET_REGISTRY_METADATA.md`
+- `specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`
 - `specs/WORKPLAN.md`
 - <doc:PackageRelations>
 - <doc:PackageSetSearch>
 - <doc:PackageSetRegistryMetadata>
+- <doc:SpecHarvesterMonorepoDiscovery>
 - <doc:PackageModel>
 - <doc:ProducerBundleProposalPolicy>
 - <doc:SpecQualityModel>

@@ -1758,6 +1758,8 @@ Result:
 
 ### P66-T5. SpecHarvester Monorepo Discovery Contract
 
+Status: Completed.
+
 Motivation:
 
 - Producer tooling needs a repeatable way to inspect workspace manifests,
@@ -1775,6 +1777,14 @@ Expected result:
 - SpecHarvester can produce a reviewable bundle set for repositories like
   `xyflow` instead of overwriting one package with either a too-broad or
   too-narrow generated contract.
+
+Result:
+
+- `specs/SPECHARVESTER_MONOREPO_DISCOVERY.md` and the DocC SpecHarvester
+  Monorepo Discovery page define the SpecPM-side handoff contract for workspace
+  inventory, package ID proposals, package-set candidate bundles, scoped member
+  package candidates, relation proposals, evidence discipline, review reports,
+  acceptance rules, and non-goals.
 
 ### P66-T6. Multi-Package Producer Bundle Intake
 

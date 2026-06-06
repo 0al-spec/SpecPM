@@ -225,6 +225,8 @@ Follow-up tasks should implement or document:
 - generator output changes;
 - viewer rendering;
 - conformance fixtures;
-- SpecHarvester package-set producer output;
 - multi-package producer bundle intake;
 - `xyflow` reference payloads.
+
+SpecHarvester package-set producer output expectations are defined in
+`specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`.

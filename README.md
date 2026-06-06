@@ -342,6 +342,10 @@ results without requiring tree traversal.
 Package-set registry metadata shape is drafted in
 `specs/PACKAGE_SET_REGISTRY_METADATA.md` as additive `/v0` fields for future
 package-set subjects, members, relations, result scope, and relation context.
+SpecHarvester monorepo discovery handoff is documented in
+`specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`; it defines workspace inventory,
+package-set and scoped member candidates, relation proposals, and review
+evidence without making producer output registry authority.
 
 This repository is also a self-describing SpecPM package. The root
 `specpm.yaml` and `specs/specpm.spec.yaml` describe the implemented public CLI
