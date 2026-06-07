@@ -2825,6 +2825,92 @@ def test_producer_bundle_preflight_rejects_inconsistent_package_set_handoff(
     }.issubset(issue_codes(report["errors"]))
 
 
+def test_producer_bundle_preflight_rejects_missing_required_package_set_evidence(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set)
+    handoff = json.loads(body.read_text(encoding="utf-8"))
+    handoff["evidenceLinks"][0]["status"] = "missing"
+    body.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_producer_bundle(body, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert "package_set_evidence_required_missing" in issue_codes(report["errors"])
+
+
+def test_producer_bundle_preflight_rejects_missing_required_member_evidence(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set)
+    handoff = json.loads(body.read_text(encoding="utf-8"))
+    handoff["members"][0]["evidenceLinks"][0]["status"] = "missing"
+    body.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_producer_bundle(body, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert "package_set_member_evidence_required_missing" in issue_codes(report["errors"])
+
+
+def test_producer_bundle_preflight_falls_back_from_null_package_set_receipt_authority(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set)
+    handoff = json.loads(body.read_text(encoding="utf-8"))
+    handoff["registryAcceptanceDecision"]["producerReceiptAuthority"] = None
+    body.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_producer_bundle(body, root=bundle_set)
+
+    assert report["status"] == "passed"
+    assert "package_set_acceptance_decision_authority_invalid" not in issue_codes(report["errors"])
+
+
+def test_producer_bundle_preflight_skips_relation_acceptance_warning_without_relations(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set)
+    handoff = json.loads(body.read_text(encoding="utf-8"))
+    handoff["packageSet"]["relationCount"] = 0
+    handoff["relations"] = []
+    handoff["preflight"]["relationCount"] = 0
+    handoff["registryAcceptanceDecision"]["requiredFor"] = ["public_index_acceptance"]
+    body.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_producer_bundle(body, root=bundle_set)
+
+    assert report["status"] == "passed"
+    assert "package_set_acceptance_decision_relation_scope_missing" not in issue_codes(
+        report["warnings"]
+    )
+
+
+def test_producer_bundle_preflight_summary_counts_only_valid_package_set_evidence_roles(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set)
+    handoff = json.loads(body.read_text(encoding="utf-8"))
+    handoff["evidenceLinks"].append(
+        {
+            "path": "package-set-draft.json",
+            "pathScope": "bundle_relative",
+            "status": "present",
+        }
+    )
+    body.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_producer_bundle(body, root=bundle_set)
+
+    assert report["summary"]["packageSetHandoff"]["evidenceRoleCount"] == 5
+    assert "package_set_evidence_role_missing" in issue_codes(report["errors"])
+
+
 def test_producer_bundle_preflight_reports_package_set_identity_errors(
     tmp_path: Path,
 ) -> None:

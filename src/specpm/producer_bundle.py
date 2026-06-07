@@ -419,13 +419,19 @@ def validate_package_set_handoff(
     validate_package_set_member_bundle_links(members, evidence_links, errors)
     validate_package_set_member_evidence(members, errors, warnings, root)
     validate_package_set_preflight_record(handoff, len(members), len(relations), errors, warnings)
-    validate_package_set_acceptance_decision(decision, errors, warnings)
+    validate_package_set_acceptance_decision(decision, errors, warnings, len(relations))
 
     return {
         "id": package_set_id,
         "memberCount": len(members),
         "relationCount": len(relations),
-        "evidenceRoleCount": len({link.get("role") for link in evidence_links}),
+        "evidenceRoleCount": len(
+            {
+                role
+                for link in evidence_links
+                if isinstance((role := link.get("role")), str) and role
+            }
+        ),
         "preflightStatus": _mapping_value(handoff.get("preflight")).get("status"),
         "registryAcceptanceStatus": decision.get("status"),
     }
@@ -600,6 +606,16 @@ def validate_package_set_evidence_links(
                 field="packageSetHandoff.evidenceLinks",
             )
         )
+    for role in sorted(REQUIRED_PACKAGE_SET_EVIDENCE_ROLES & set(role_map)):
+        for link in role_map[role]:
+            if link.get("status") == "missing":
+                errors.append(
+                    issue(
+                        "package_set_evidence_required_missing",
+                        f"Required package-set evidence role {role} is marked missing.",
+                        field="packageSetHandoff.evidenceLinks",
+                    )
+                )
 
 
 def validate_package_set_member_evidence(
@@ -611,7 +627,7 @@ def validate_package_set_member_evidence(
     for member_index, member in enumerate(members):
         package_id = member.get("packageId") or f"member[{member_index}]"
         links = _list_of_mappings(member.get("evidenceLinks"))
-        roles = {link.get("role") for link in links}
+        roles = {role for link in links if isinstance((role := link.get("role")), str) and role}
         for role in sorted(REQUIRED_MEMBER_EVIDENCE_ROLES - roles):
             errors.append(
                 issue(
@@ -628,6 +644,15 @@ def validate_package_set_member_evidence(
                 root,
                 f"packageSetHandoff.members[{member_index}].evidenceLinks[{link_index}]",
             )
+            role = link.get("role")
+            if role in REQUIRED_MEMBER_EVIDENCE_ROLES and link.get("status") == "missing":
+                errors.append(
+                    issue(
+                        "package_set_member_evidence_required_missing",
+                        f"Member {package_id} evidence role {role} is marked missing.",
+                        field=f"packageSetHandoff.members[{member_index}].evidenceLinks[{link_index}].status",
+                    )
+                )
 
 
 def validate_package_set_member_bundle_links(
@@ -782,6 +807,7 @@ def validate_package_set_acceptance_decision(
     decision: dict[str, Any],
     errors: list[dict[str, Any]],
     warnings: list[dict[str, Any]],
+    relation_count: int,
 ) -> None:
     status = decision.get("status")
     if status not in VALID_DECISION_STATUSES:
@@ -808,7 +834,7 @@ def validate_package_set_acceptance_decision(
                 field="packageSetHandoff.registryAcceptanceDecision.recordKind",
             )
         )
-    authority = decision.get("producerReceiptAuthority", decision.get("producerAuthority"))
+    authority = decision.get("producerReceiptAuthority") or decision.get("producerAuthority")
     if authority != "evidence_only":
         errors.append(
             issue(
@@ -827,7 +853,11 @@ def validate_package_set_acceptance_decision(
                 field="packageSetHandoff.registryAcceptanceDecision.requiredFor",
             )
         )
-    if isinstance(required_for, list) and "package_relation_acceptance" not in required_for:
+    if (
+        relation_count > 0
+        and isinstance(required_for, list)
+        and "package_relation_acceptance" not in required_for
+    ):
         warnings.append(
             issue(
                 "package_set_acceptance_decision_relation_scope_missing",
