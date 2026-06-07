@@ -218,6 +218,9 @@ provides:
     - id: specpm.specs.producer_bundle_fixture_policy
       role: secondary
       summary: Document shared SpecPM and SpecHarvester fixture ownership and drift-sensitive producer bundle fields.
+    - id: specpm.specs.ai_enrichment_consumer_policy
+      role: secondary
+      summary: Document SpecPM-side review policy for SpecHarvester package-set AI enrichment proposals without treating model output as package truth or registry authority.
     - id: specpm.specs.spec_quality_model
       role: secondary
       summary: Document the review model for SpecPackage validation, evidence coverage, boundary discipline, interface depth, reproducibility, and consumer utility.
@@ -972,6 +975,7 @@ evidence:
     path: specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md
     supports:
       - specpm.specs.producer_bundle_proposal_policy
+      - specpm.specs.ai_enrichment_consumer_policy
       - specpm.registry.package_set_materialization_helper
       - specpm.specs.producer_receipt_contract
       - producer_receipts_not_generation_authority
@@ -1099,6 +1103,7 @@ evidence:
       - specpm.specs.package_sets
       - specpm.specs.package_relations
       - specpm.specs.producer_bundle_proposal_policy
+      - specpm.specs.ai_enrichment_consumer_policy
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
@@ -1379,6 +1384,7 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.specs.producer_bundle_proposal_policy
+      - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.producer_receipt_contract
   - id: docc_producer_bundle_fixture_policy
     kind: documentation
@@ -1477,6 +1483,7 @@ evidence:
       - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.package_sets
       - specpm.specs.package_relations
+      - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.producer_bundle_proposal_policy
   - id: docc_xyflow_package_set_reference
     kind: documentation

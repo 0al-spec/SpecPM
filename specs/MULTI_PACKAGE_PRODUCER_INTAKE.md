@@ -64,6 +64,7 @@ A multi-package proposal should include:
 - diagnostics report for each candidate package;
 - bundle-set preflight report;
 - static preview evidence, when available;
+- package-set AI enrichment proposal, when available;
 - proposed accepted-source diff;
 - maintainer acceptance decision records or review notes.
 
@@ -74,6 +75,13 @@ For SpecHarvester handoff, the expected top-level artifacts are
 They summarize the candidate set for review. They do not replace per-package
 candidate files, receipts, validation reports, diagnostics reports, or the
 accepted-source pull request.
+
+Optional AI enrichment evidence may appear as
+`package-set-ai-enrichment-proposal.json` with
+`kind: SpecHarvesterPackageSetAIEnrichmentProposal`. This artifact can propose
+refined summaries, capabilities, intents, and interfaces for reviewer
+consideration. It does not replace the package-set handoff, per-package
+candidate files, relation proposals, or accepted-source review.
 
 ## Package-Set Handoff Checklist
 
@@ -99,6 +107,31 @@ maintainers should verify:
   not require exposing SpecPM write credentials to untrusted producer code;
 - any generated accepted-source diff is reviewed as a proposed registry input,
   not as producer authority.
+
+## AI Enrichment Checklist
+
+When a package-set proposal includes AI enrichment evidence, maintainers should
+verify:
+
+- `authority` is `proposal_only_not_registry_acceptance`;
+- `privacy.rawPromptsPersisted`, `privacy.rawModelResponsesPersisted`,
+  `privacy.chainOfThoughtPersisted`, and `privacy.secretsIncluded` are `false`;
+- `trustBoundary` states that SpecPM remains the validation, acceptance,
+  relation, and registry authority;
+- proposed `packageId` values match package-set handoff members or separately
+  reviewed accepted package subjects;
+- proposed capabilities and interfaces cite allowlisted `evidencePaths`;
+- unsupported evidence paths are diagnostics and are not treated as accepted
+  facts;
+- `interfaces[].kind` is present when interface suggestions are reviewed;
+- `providerReceipt` records provider receipts as provenance only and does not
+  make model output authoritative.
+
+AI enrichment remains proposal-only even when its status is `completed`. It
+must not auto-accept capabilities, intents, interfaces, summaries, package
+relations, package versions, or accepted-source entries. Maintainers may use it
+as a review aid, then edit or reject each generated claim under ordinary
+package evidence review.
 
 SpecPM package-set intake preflight can check the handoff artifact before
 maintainer review:

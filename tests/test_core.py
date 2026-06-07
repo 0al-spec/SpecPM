@@ -2334,6 +2334,10 @@ def test_producer_receipt_contract_is_documented() -> None:
         "SpecHarvesterPackageSetHandoffProposal",
         "member manifest identity",
         "`contains` relation endpoints",
+        "Package-Set AI Enrichment Evidence",
+        "SpecHarvesterPackageSetAIEnrichmentProposal",
+        "proposal_only_not_registry_acceptance",
+        "automatic capability, intent, interface, or relation acceptance",
     ):
         assert required_text in proposal_policy_flat
 
@@ -2351,6 +2355,10 @@ def test_producer_receipt_contract_is_documented() -> None:
         "<doc:RegistryAcceptanceDecisions>",
         "SpecHarvesterPackageSetHandoffProposal",
         "bundle-set preflight status/counts",
+        "Package-Set AI Enrichment Evidence",
+        "spec-harvester.package-set-ai-enrichment/v0",
+        "proposal_only_not_registry_acceptance",
+        "Provider receipts and usage metadata are provenance only",
     ):
         assert required_text in docc_proposal_policy_flat
 
@@ -2569,11 +2577,13 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "specpm.specs.producer_bundle_proposal_policy" in manifest_capabilities
     assert "specpm.specs.producer_bundle_proposal_automation" in manifest_capabilities
     assert "specpm.specs.producer_bundle_fixture_policy" in manifest_capabilities
+    assert "specpm.specs.ai_enrichment_consumer_policy" in manifest_capabilities
     assert "specpm.registry.acceptance_decision_record" in manifest_capabilities
     assert "specpm.specs.producer_receipt_contract" in boundary_capabilities
     assert "specpm.specs.producer_bundle_proposal_policy" in boundary_capabilities
     assert "specpm.specs.producer_bundle_proposal_automation" in boundary_capabilities
     assert "specpm.specs.producer_bundle_fixture_policy" in boundary_capabilities
+    assert "specpm.specs.ai_enrichment_consumer_policy" in boundary_capabilities
     assert "specpm.registry.acceptance_decision_record" in boundary_capabilities
     assert "producer_receipts_not_generation_authority" in constraint_ids
     assert "specs/PRODUCER_RECEIPTS.md" in evidence_paths
@@ -2646,6 +2656,14 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "specpm producer-bundle materialize-package-set",
         "member manifest IDs",
         "contains",
+        "package-set-ai-enrichment-proposal.json",
+        "SpecHarvesterPackageSetAIEnrichmentProposal",
+        "AI Enrichment Checklist",
+        "proposal_only_not_registry_acceptance",
+        "unsupported evidence paths are diagnostics",
+        "interfaces[].kind",
+        "provider receipts as provenance only",
+        "must not auto-accept capabilities, intents, interfaces, summaries",
     ):
         assert required_text in policy
 
@@ -2663,6 +2681,14 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "specpm producer-bundle materialize-package-set",
         "member manifest IDs",
         "contains",
+        "package-set-ai-enrichment-proposal.json",
+        "SpecHarvesterPackageSetAIEnrichmentProposal",
+        "AI Enrichment Checklist",
+        "proposal_only_not_registry_acceptance",
+        "unsupported evidence paths remain diagnostics",
+        "interfaces[].kind",
+        "provider receipts are provenance only",
+        "must not auto-accept capabilities, intents, interfaces, summaries",
     ):
         assert required_text in docc_policy_flat
 
@@ -2681,6 +2707,10 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "member IDs match manifests",
         "relation endpoints",
         "materialize-package-set",
+        "package-set-ai-enrichment-proposal.json",
+        "semantic review assistance only",
+        "authority: proposal_only_not_registry_acceptance",
+        "provider receipts are provenance, not registry authority",
     ):
         assert required_text in operator_guide_flat
 
@@ -2697,6 +2727,10 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "zero errors and zero warnings",
         "maintainer-selected accepted-source materialization",
         "materialize-package-set",
+        "package-set-ai-enrichment-proposal.json",
+        "proposal-only review evidence",
+        "SpecHarvester-to-SpecPM package-set AI enrichment",
+        "explicit maintainer package/relation selection",
     ):
         assert required_text in roadmap_flat
 
@@ -2713,6 +2747,10 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "zero errors and zero warnings",
         "maintainer-selected accepted-source materialization",
         "materialize-package-set",
+        "package-set-ai-enrichment-proposal.json",
+        "proposal-only review evidence",
+        "SpecHarvester-to-SpecPM package-set AI enrichment",
+        "explicit maintainer package/relation selection",
     ):
         assert required_text in docc_roadmap_flat
 
@@ -2727,6 +2765,10 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "A passing SpecPM preflight remains review evidence only",
         "specpm producer-bundle materialize-package-set",
         "`--apply` copies only selected candidate directories",
+        "P66-T9. Package-Set AI Enrichment Consumer Policy",
+        "`SpecHarvesterPackageSetAIEnrichmentProposal` artifacts",
+        "proposal_only_not_registry_acceptance",
+        "The AI artifact did not alter accepted-source selection",
     ):
         assert required_text in workplan_flat
 
@@ -2737,6 +2779,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "explicit selection of package IDs and relation IDs",
         "automatic registry acceptance",
         "specpm producer-bundle materialize-package-set",
+        "Package-set AI enrichment has also been exercised",
+        "AI artifact remained review evidence",
+        "did not alter accepted-source selection",
     ):
         assert required_text in proposal_policy_flat
         assert required_text in docc_proposal_policy_flat

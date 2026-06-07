@@ -240,6 +240,10 @@ Tasks:
 - recognize SpecHarvester package-set handoff artifacts such as
   `package-set-handoff-proposal.json` and `package-set-handoff-proposal.md` as
   dry-run review evidence, not write-capable registry authority;
+- treat SpecHarvester package-set AI enrichment artifacts such as
+  `package-set-ai-enrichment-proposal.json` as optional proposal-only review
+  evidence, not canonical package truth or automatic capability/intent
+  acceptance;
 - define review and acceptance rules for multi-package producer bundles before
   adding registry authority or automatic publication behavior.
 
@@ -416,6 +420,11 @@ real `xyflow` checkout. The run produced `xyflow.workspace`, `xyflow.react`,
 `xyflow.svelte`, and `xyflow.system` candidates with three `contains` relation
 proposals; SpecPM consumer-side preflight accepted the handoff with zero errors
 and zero warnings.
+SpecHarvester-to-SpecPM package-set AI enrichment has been exercised on the
+same real `xyflow` checkout with a local OpenAI-compatible provider. The run
+produced four proposal-only enrichment records, while SpecPM materialization
+still used only the ordinary package-set handoff and explicit maintainer
+package/relation selection.
 
 The maintainer-selected accepted-source materialization path is now implemented
 through `specpm producer-bundle materialize-package-set`. The helper reads a
