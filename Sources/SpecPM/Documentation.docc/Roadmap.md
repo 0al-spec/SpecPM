@@ -215,10 +215,11 @@ real `xyflow` checkout. The run produced `xyflow.workspace`, `xyflow.react`,
 `xyflow.svelte`, and `xyflow.system` candidates with three `contains` relation
 proposals; SpecPM consumer-side preflight accepted the handoff with zero errors
 and zero warnings.
-The next package-set boundary task is maintainer-selected accepted-source
-materialization: read a package-set handoff plus an explicit maintainer
-selection of package IDs and relation IDs, then produce a proposed
-accepted-source diff for review without auto-accepting producer output.
+The maintainer-selected accepted-source materialization path is now implemented through
+`specpm producer-bundle materialize-package-set`: read a package-set handoff
+plus explicit package and relation selections, then prepare review artifacts or
+copy only selected package candidates into `public-index/generated` with
+`--apply` without auto-accepting producer output.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

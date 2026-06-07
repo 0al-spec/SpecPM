@@ -1870,7 +1870,7 @@ Acceptance:
 
 ### P66-T8. Maintainer-Selected Package-Set Materialization
 
-Status: Planned.
+Status: Completed.
 
 Motivation:
 
@@ -1894,6 +1894,17 @@ Expected result:
 - The helper fails closed when selected packages or relations are missing from
   the handoff, when preflight failed, or when the selection tries to accept
   producer output without an explicit maintainer decision.
+
+Result:
+
+- `specpm producer-bundle materialize-package-set` reads package-set handoff
+  evidence plus explicit `--package` and `--relation` selections.
+- Dry-run mode writes review artifacts without mutating the accepted manifest.
+- `--apply` copies only selected candidate directories into
+  `public-index/generated/<package_id>/<version>` and appends new repo-relative
+  `path:` entries to `public-index/accepted-packages.yml`.
+- The helper rejects missing package IDs, missing relation IDs, failed preflight,
+  and selected relations whose endpoints are not both selected packages.
 
 ## Post-MVP Tracks
 

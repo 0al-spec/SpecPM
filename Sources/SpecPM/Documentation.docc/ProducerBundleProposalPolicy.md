@@ -147,9 +147,10 @@ checkout: SpecHarvester produced the package-set handoff, SpecPM consumed the
 handoff through `specpm producer-bundle preflight`, and the report passed with
 zero errors and zero warnings.
 
-The next package-set implementation step should be maintainer-selected
-accepted-source materialization. The helper should accept an explicit
-selection of package IDs and relation IDs, generate a proposed accepted-source
-diff, and leave final acceptance to maintainer review. It must not treat
-producer output or a passing package-set preflight as automatic registry
-acceptance.
+The package-set implementation path now includes maintainer-selected
+accepted-source materialization through
+`specpm producer-bundle materialize-package-set`. The helper accepts an
+explicit selection of package IDs and relation IDs, generates proposed
+accepted-source review artifacts, and leaves final acceptance to maintainer
+review. It must not treat producer output or a passing package-set preflight as
+automatic registry acceptance.

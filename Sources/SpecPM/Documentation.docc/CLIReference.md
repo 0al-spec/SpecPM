@@ -119,6 +119,17 @@ download archives as a client, or execute package content.
 
 ```bash
 specpm producer-bundle preflight --body <proposal-body.md> [--root <checkout-or-artifact-root>] [--json]
+specpm producer-bundle materialize-package-set \
+  --handoff <package-set-handoff-proposal.json> \
+  --root <package-set-bundle-root> \
+  --package <package-id> [--package <package-id>] \
+  [--relation <relation-id>] \
+  [--output-root public-index/generated] \
+  [--manifest public-index/accepted-packages.yml] \
+  [--json-output package-set-materialization-report.json] \
+  [--manifest-candidate-output accepted-manifest-candidate.yml] \
+  [--pr-body-output package-set-accepted-source-pr.md] \
+  [--apply] [--json]
 ```
 
 The command reads machine-readable `producerEvidenceLinks` and
@@ -137,6 +148,15 @@ external acceptance boundary without requiring single-package
 
 This is a consumer-side review preflight. It does not run SpecHarvester,
 execute package content, or accept a package.
+
+`materialize-package-set` consumes the same package-set handoff only after
+maintainers pass explicit `--package` and optional `--relation` selections. In
+dry-run mode it writes a materialization report, accepted-manifest candidate,
+and draft PR body when output paths are provided. With `--apply`, it copies only
+the selected package candidate directories into `public-index/generated` and
+appends new repo-relative `path:` entries to the accepted manifest. The helper
+fails closed when preflight fails, selected IDs are absent, or a selected
+relation does not connect selected package endpoints.
 
 ## Local Public Index Service
 

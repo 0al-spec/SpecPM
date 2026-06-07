@@ -222,6 +222,28 @@ that maintainers choose to accept. A package-set handoff can propose
 `xyflow.workspace`, `xyflow.system`, `xyflow.react`, and `xyflow.svelte`, but
 the accepted-source diff may accept only a subset.
 
+Maintainers can prepare that subset with explicit package and relation
+selection:
+
+```bash
+specpm producer-bundle materialize-package-set \
+  --handoff package-set-handoff-proposal.json \
+  --root <package-set-bundle-root> \
+  --package xyflow.workspace \
+  --package xyflow.react \
+  --relation xyflow.workspace.contains.xyflow.react \
+  --manifest public-index/accepted-packages.yml \
+  --manifest-candidate-output accepted-manifest-candidate.yml \
+  --pr-body-output package-set-accepted-source-pr.md
+```
+
+Dry-run mode is the default and does not edit
+`public-index/accepted-packages.yml`. Passing `--apply` copies only selected
+package candidates into `public-index/generated/<package_id>/<version>` and
+appends new repo-relative `path:` entries. The helper still does not accept
+packages or relations automatically; it only prepares reviewable accepted-source
+artifacts from an explicit maintainer selection.
+
 ## Accepted Manifest PR
 
 The accepted manifest pull request should add one immutable source record per

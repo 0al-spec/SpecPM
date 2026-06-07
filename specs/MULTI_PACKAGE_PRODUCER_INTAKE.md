@@ -115,6 +115,23 @@ member manifest IDs, bundle-set preflight status/counts, and `contains`
 relation endpoints. It is evidence for review only and does not accept packages,
 accept relations, or write registry input.
 
+After review, maintainers can generate a proposed accepted-source diff from an
+explicit subset:
+
+```bash
+specpm producer-bundle materialize-package-set \
+  --handoff <package-set-handoff-proposal.json> \
+  --root <package-set-bundle-root> \
+  --package <accepted-package-id> \
+  --relation <accepted-relation-id> \
+  --manifest-candidate-output accepted-manifest-candidate.yml \
+  --pr-body-output package-set-accepted-source-pr.md
+```
+
+The materialization helper fails closed when selected package or relation IDs
+are absent, when package-set preflight failed, or when a selected relation does
+not connect selected package endpoints.
+
 Maintainers should copy only the accepted packages and accepted relations into
 the registry input. A rejected or deferred member can remain in the handoff
 evidence without becoming visible in the public index.

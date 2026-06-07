@@ -417,12 +417,13 @@ real `xyflow` checkout. The run produced `xyflow.workspace`, `xyflow.react`,
 proposals; SpecPM consumer-side preflight accepted the handoff with zero errors
 and zero warnings.
 
-The next package-set boundary task is maintainer-selected accepted-source
-materialization. That helper should read a package-set handoff plus an explicit
-maintainer selection of package IDs and relation IDs, then produce a proposed
-accepted-source diff for review. It must not auto-accept all producer output,
-infer acceptance from a passing preflight, or publish registry metadata without
-maintainer review.
+The maintainer-selected accepted-source materialization path is now implemented
+through `specpm producer-bundle materialize-package-set`. The helper reads a
+package-set handoff plus explicit package and relation selections, prepares
+review artifacts in dry-run mode, and can copy only selected package candidates
+into `public-index/generated` with `--apply`. It does not auto-accept all producer
+output, infer acceptance from a passing preflight, or publish registry metadata
+without maintainer review.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote

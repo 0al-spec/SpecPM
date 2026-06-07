@@ -79,6 +79,22 @@ manifest IDs, bundle-set preflight status/counts, and `contains` relation
 endpoints. It remains review evidence only and does not accept packages or
 relations.
 
+After review, maintainers can materialize an explicit subset:
+
+```bash
+specpm producer-bundle materialize-package-set \
+  --handoff <package-set-handoff-proposal.json> \
+  --root <package-set-bundle-root> \
+  --package <accepted-package-id> \
+  --relation <accepted-relation-id> \
+  --manifest-candidate-output accepted-manifest-candidate.yml \
+  --pr-body-output package-set-accepted-source-pr.md
+```
+
+The helper prepares review artifacts only. It fails closed when selected
+packages or relations are absent, package-set preflight failed, or a selected
+relation does not connect selected package endpoints.
+
 ## Partial Acceptance
 
 Maintainers may accept only part of the bundle set:

@@ -3,15 +3,23 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from specpm.index_submission import (
+    append_accepted_manifest_sources,
+    read_accepted_manifest_for_update,
+)
+
 PRODUCER_BUNDLE_PREFLIGHT_KIND = "SpecPMProducerBundlePreflightReport"
 PRODUCER_BUNDLE_PREFLIGHT_SCHEMA_VERSION = 1
 PACKAGE_SET_HANDOFF_API_VERSION = "spec-harvester.package-set-handoff-proposal/v0"
 PACKAGE_SET_HANDOFF_KIND = "SpecHarvesterPackageSetHandoffProposal"
+PACKAGE_SET_MATERIALIZATION_KIND = "SpecPMPackageSetMaterializationReport"
+PACKAGE_SET_MATERIALIZATION_SCHEMA_VERSION = 1
 
 REQUIRED_PRODUCER_EVIDENCE_ROLES = {
     "accepted_source_bundle",
@@ -121,6 +129,358 @@ def preflight_producer_bundle(body_path: Path, root: Path | None = None) -> dict
         "errors": errors,
         "warnings": warnings,
     }
+
+
+def materialize_package_set_handoff(
+    handoff_path: Path,
+    root: Path,
+    *,
+    package_ids: list[str],
+    relation_ids: list[str],
+    output_root: Path,
+    manifest_path: Path,
+    apply_update: bool = False,
+) -> dict[str, Any]:
+    handoff = load_package_set_handoff(handoff_path)
+    preflight = preflight_producer_bundle(handoff_path, root=root)
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+
+    if not handoff:
+        errors.append(
+            issue(
+                "package_set_handoff_missing",
+                "Materialization requires a package-set handoff proposal JSON payload.",
+                field="handoff",
+            )
+        )
+    if preflight.get("status") != "passed":
+        errors.append(
+            issue(
+                "package_set_preflight_not_passed",
+                "Package-set materialization requires a passing SpecPM handoff preflight.",
+                field="preflight.status",
+            )
+        )
+
+    selected_package_ids = ordered_unique(package_ids)
+    selected_relation_ids = ordered_unique(relation_ids)
+    if not selected_package_ids:
+        errors.append(
+            issue(
+                "package_set_materialization_packages_missing",
+                "Maintainer-selected materialization requires at least one package ID.",
+                field="selection.packageIds",
+            )
+        )
+
+    members = _list_of_mappings(handoff.get("members"))
+    relations = _list_of_mappings(handoff.get("relations"))
+    member_by_id = {
+        package_id: member
+        for member in members
+        if isinstance((package_id := member.get("packageId")), str) and package_id
+    }
+    relation_by_id = {
+        relation_id: relation
+        for relation in relations
+        if isinstance((relation_id := relation.get("id")), str) and relation_id
+    }
+
+    for package_id in selected_package_ids:
+        if package_id not in member_by_id:
+            errors.append(
+                issue(
+                    "package_set_materialization_package_unknown",
+                    f"Selected package ID is not present in the handoff: {package_id}.",
+                    field="selection.packageIds",
+                )
+            )
+    for relation_id in selected_relation_ids:
+        if relation_id not in relation_by_id:
+            errors.append(
+                issue(
+                    "package_set_materialization_relation_unknown",
+                    f"Selected relation ID is not present in the handoff: {relation_id}.",
+                    field="selection.relationIds",
+                )
+            )
+
+    package_candidates = [
+        build_package_materialization_candidate(
+            package_id,
+            member_by_id[package_id],
+            root,
+            output_root,
+            errors,
+        )
+        for package_id in selected_package_ids
+        if package_id in member_by_id
+    ]
+    selected_package_set = {candidate["package_id"] for candidate in package_candidates}
+    relation_candidates = [
+        build_relation_materialization_candidate(
+            relation_id,
+            relation_by_id[relation_id],
+            selected_package_set,
+            errors,
+        )
+        for relation_id in selected_relation_ids
+        if relation_id in relation_by_id
+    ]
+
+    manifest = read_accepted_manifest_for_update(manifest_path)
+    errors.extend(manifest["errors"])
+    known_sources = list(manifest["sources"]) + read_local_accepted_manifest_sources(manifest_path)
+    added_sources: list[dict[str, str]] = []
+    skipped_sources: list[dict[str, Any]] = []
+    planned_sources: list[dict[str, str]] = []
+    for candidate in package_candidates:
+        source = candidate.get("source")
+        if not isinstance(source, dict):
+            continue
+        if any(same_materialized_source(source, known) for known in known_sources):
+            candidate["manifestStatus"] = "skipped"
+            skipped_sources.append(
+                {
+                    "reason": "exact_source_already_present",
+                    "package_id": candidate["package_id"],
+                    "version": candidate["version"],
+                    "source": source,
+                }
+            )
+            continue
+        candidate["manifestStatus"] = "planned"
+        known_sources.append(source)
+        planned_sources.append(source)
+        added_sources.append(source)
+
+    if apply_update and not errors:
+        for candidate in package_candidates:
+            if candidate.get("manifestStatus") == "skipped":
+                continue
+            target_dir = Path(candidate["resolvedOutputPath"])
+            if target_dir.exists():
+                errors.append(
+                    issue(
+                        "package_set_materialization_output_exists",
+                        "Accepted-source output already exists: "
+                        f"{candidate['acceptedSourcePath']}.",
+                        field="outputRoot",
+                    )
+                )
+                continue
+
+    if apply_update and not errors:
+        for candidate in package_candidates:
+            if candidate.get("manifestStatus") == "skipped":
+                continue
+            source_dir = Path(candidate["resolvedSourcePath"])
+            target_dir = Path(candidate["resolvedOutputPath"])
+            target_dir.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(source_dir, target_dir)
+            candidate["copyStatus"] = "applied"
+        if not errors and added_sources:
+            append_accepted_manifest_sources(manifest_path, added_sources)
+
+    if errors:
+        status = "invalid"
+    elif apply_update and added_sources:
+        status = "applied"
+    elif not added_sources:
+        status = "unchanged"
+    else:
+        status = "prepared"
+
+    return {
+        "schemaVersion": PACKAGE_SET_MATERIALIZATION_SCHEMA_VERSION,
+        "kind": PACKAGE_SET_MATERIALIZATION_KIND,
+        "status": status,
+        "applied": bool(apply_update and status == "applied"),
+        "handoff": {
+            "path": str(handoff_path),
+            "packageSetId": _mapping_value(handoff.get("packageSet")).get("id"),
+            "preflightStatus": preflight.get("status"),
+        },
+        "selection": {
+            "packageIds": selected_package_ids,
+            "relationIds": selected_relation_ids,
+        },
+        "outputRoot": str(output_root),
+        "manifest": {
+            "path": str(manifest_path),
+            "candidate": {
+                "schemaVersion": 1,
+                "packages": planned_sources,
+            },
+        },
+        "summary": {
+            "selectedPackageCount": len(selected_package_ids),
+            "selectedRelationCount": len(selected_relation_ids),
+            "addedPackageCount": len(added_sources),
+            "skippedPackageCount": len(skipped_sources),
+            "errorCount": len(errors),
+            "warningCount": len(warnings),
+        },
+        "packages": package_candidates,
+        "relations": relation_candidates,
+        "skipped": skipped_sources,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def load_package_set_handoff(path: Path) -> dict[str, Any]:
+    payloads = _extract_json_payloads(path.read_text(encoding="utf-8"))
+    handoff = _find_package_set_handoff_payload(payloads)
+    if handoff is None:
+        return {}
+    return handoff
+
+
+def build_package_materialization_candidate(
+    package_id: str,
+    member: dict[str, Any],
+    root: Path,
+    output_root: Path,
+    errors: list[dict[str, Any]],
+) -> dict[str, Any]:
+    candidate_path = member.get("candidatePath")
+    if not isinstance(candidate_path, str) or not candidate_path:
+        errors.append(
+            issue(
+                "package_set_materialization_candidate_path_missing",
+                f"Selected package {package_id} does not declare candidatePath.",
+                field="packageSetHandoff.members[].candidatePath",
+            )
+        )
+        return {"package_id": package_id, "status": "invalid"}
+    source_path = resolve_package_set_path(root, candidate_path)
+    if source_path is None or not source_path.is_dir():
+        errors.append(
+            issue(
+                "package_set_materialization_candidate_missing",
+                f"Selected package {package_id} candidate directory is missing.",
+                field="packageSetHandoff.members[].candidatePath",
+            )
+        )
+        return {"package_id": package_id, "status": "invalid"}
+
+    manifest_path = source_path / "specpm.yaml"
+    metadata = read_manifest_metadata(manifest_path, errors, package_id)
+    version = metadata.get("version") or "unknown"
+    if metadata.get("package_id") != package_id:
+        errors.append(
+            issue(
+                "package_set_materialization_manifest_id_mismatch",
+                f"Selected package {package_id} manifest identity is {metadata.get('package_id')}.",
+                field="specpm.yaml.metadata.id",
+            )
+        )
+    if version == "unknown":
+        errors.append(
+            issue(
+                "package_set_materialization_manifest_version_missing",
+                f"Selected package {package_id} manifest metadata.version is missing.",
+                field="specpm.yaml.metadata.version",
+            )
+        )
+
+    safe_output = package_output_path(output_root, package_id, version, errors)
+    source = {"path": safe_output.as_posix()}
+    return {
+        "package_id": package_id,
+        "version": version,
+        "sourcePath": candidate_path,
+        "resolvedSourcePath": str(source_path),
+        "acceptedSourcePath": safe_output.as_posix(),
+        "resolvedOutputPath": str(safe_output),
+        "source": source,
+        "copyStatus": "planned",
+        "manifestStatus": "planned",
+    }
+
+
+def build_relation_materialization_candidate(
+    relation_id: str,
+    relation: dict[str, Any],
+    selected_package_ids: set[str],
+    errors: list[dict[str, Any]],
+) -> dict[str, Any]:
+    source_id = _mapping_value(relation.get("source")).get("packageId")
+    target_id = _mapping_value(relation.get("target")).get("packageId")
+    relation_type = relation.get("type")
+    if source_id not in selected_package_ids or target_id not in selected_package_ids:
+        errors.append(
+            issue(
+                "package_set_materialization_relation_endpoint_not_selected",
+                f"Selected relation {relation_id} requires selected source and target packages.",
+                field="selection.relationIds",
+            )
+        )
+    return {
+        "id": relation_id,
+        "type": relation_type,
+        "source": source_id,
+        "target": target_id,
+        "reviewStatus": "selected_for_maintainer_review",
+    }
+
+
+def render_package_set_materialization_manifest_candidate(report: dict[str, Any]) -> str:
+    return yaml.safe_dump(report["manifest"]["candidate"], sort_keys=False)
+
+
+def render_package_set_materialization_pr_body(report: dict[str, Any]) -> str:
+    package_lines = []
+    for item in report.get("packages", []):
+        package_lines.append(
+            "- "
+            f"`{item.get('package_id', 'unknown')}@{item.get('version', 'unknown')}` "
+            f"from `{item.get('sourcePath', 'unknown')}` -> "
+            f"`{item.get('acceptedSourcePath', 'unknown')}`"
+        )
+    if not package_lines:
+        package_lines.append("- No package candidates were selected.")
+
+    relation_lines = []
+    for item in report.get("relations", []):
+        relation_lines.append(
+            "- "
+            f"`{item.get('id', 'unknown')}`: `{item.get('source', 'unknown')}` "
+            f"{item.get('type', 'related')} `{item.get('target', 'unknown')}`"
+        )
+    if not relation_lines:
+        relation_lines.append("- No relation proposals were selected.")
+
+    return (
+        "\n".join(
+            [
+                "## Motivation",
+                "",
+                "Materialize maintainer-selected package-set candidates for "
+                "accepted-source review.",
+                "",
+                f"Handoff: `{report['handoff']['path']}`",
+                f"Helper report status: `{report['status']}`",
+                "",
+                "## Selected Packages",
+                "",
+                *package_lines,
+                "",
+                "## Selected Relations",
+                "",
+                *relation_lines,
+                "",
+                "## Boundaries",
+                "",
+                "- A passing package-set preflight is review evidence, not registry acceptance.",
+                "- Only the selected package IDs and relation IDs are proposed for review.",
+                "- Maintainers must still review the generated accepted-source diff before merge.",
+            ]
+        )
+        + "\n"
+    )
 
 
 def validate_producer_evidence_links(
@@ -928,6 +1288,42 @@ def _list_of_mappings(value: Any) -> list[dict[str, Any]]:
     return [item for item in value if isinstance(item, dict)]
 
 
+def ordered_unique(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+    return result
+
+
+def same_materialized_source(left: dict[str, str], right: dict[str, str]) -> bool:
+    if "path" in left and set(left) == {"path"}:
+        return set(right) == {"path"} and left["path"] == right["path"]
+    return set(left) == set(right) and all(left[key] == right[key] for key in left)
+
+
+def read_local_accepted_manifest_sources(manifest_path: Path) -> list[dict[str, str]]:
+    if not manifest_path.is_file():
+        return []
+    try:
+        loaded = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    except yaml.YAMLError:
+        return []
+    if not isinstance(loaded, dict) or not isinstance(loaded.get("packages"), list):
+        return []
+    sources: list[dict[str, str]] = []
+    for item in loaded["packages"]:
+        if not isinstance(item, dict):
+            continue
+        path = item.get("path")
+        if isinstance(path, str) and path:
+            sources.append({"path": path})
+    return sources
+
+
 def resolve_package_set_path(root: Path, path: str) -> Path | None:
     relative = Path(path)
     if relative.is_absolute() or ".." in relative.parts:
@@ -937,6 +1333,68 @@ def resolve_package_set_path(root: Path, path: str) -> Path | None:
     if not candidate.is_relative_to(root_resolved):
         return None
     return candidate
+
+
+def package_output_path(
+    output_root: Path,
+    package_id: str,
+    version: str,
+    errors: list[dict[str, Any]],
+) -> Path:
+    if any(part in package_id for part in ("/", "\\")) or package_id in {"", ".", ".."}:
+        errors.append(
+            issue(
+                "package_set_materialization_package_id_unsafe",
+                f"Selected package ID cannot be used as an output path component: {package_id}.",
+                field="selection.packageIds",
+            )
+        )
+    if any(part in version for part in ("/", "\\")) or version in {"", ".", ".."}:
+        errors.append(
+            issue(
+                "package_set_materialization_version_unsafe",
+                f"Selected package version cannot be used as an output path component: {version}.",
+                field="specpm.yaml.metadata.version",
+            )
+        )
+    root_resolved = output_root.resolve(strict=False)
+    candidate = (root_resolved / package_id / version).resolve(strict=False)
+    if not candidate.is_relative_to(root_resolved):
+        errors.append(
+            issue(
+                "package_set_materialization_output_escape",
+                "Accepted-source output path escapes outputRoot.",
+                field="outputRoot",
+            )
+        )
+    return output_root / package_id / version
+
+
+def read_manifest_metadata(
+    manifest: Path,
+    errors: list[dict[str, Any]],
+    package_id: str,
+) -> dict[str, str]:
+    try:
+        loaded = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        errors.append(
+            issue(
+                "package_set_materialization_manifest_unreadable",
+                f"Selected package {package_id} manifest could not be read: {exc}.",
+                field="specpm.yaml",
+            )
+        )
+        return {}
+    if not isinstance(loaded, dict) or not isinstance(loaded.get("metadata"), dict):
+        return {}
+    metadata = loaded["metadata"]
+    result: dict[str, str] = {}
+    if isinstance(metadata.get("id"), str):
+        result["package_id"] = metadata["id"]
+    if isinstance(metadata.get("version"), str):
+        result["version"] = metadata["version"]
+    return result
 
 
 def read_manifest_package_id(
