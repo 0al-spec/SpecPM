@@ -1586,6 +1586,9 @@ Acceptance:
 - [x] Align SpecHarvester-to-SpecPM proposal automation so proposal pull
   requests explicitly include or link producer receipt, validation report,
   diagnostics report, preflight report, and static viewer evidence.
+- [x] Document the SpecPM-side package-set handoff intake checklist for
+  SpecHarvester `package-set-handoff-proposal.json` and
+  `package-set-handoff-proposal.md` dry-run evidence.
 - [x] Add an optional SpecPM CI preflight gate for producer-backed proposals,
   starting as policy/reporting evidence before becoming a strict gate.
 - [x] Define a shared cross-repository fixture policy so SpecPM contract

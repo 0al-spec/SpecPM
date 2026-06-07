@@ -28,6 +28,8 @@ versions, and relations are accepted.
 A proposal should include:
 
 - workspace inventory report;
+- package-set handoff proposal JSON;
+- package-set handoff proposal Markdown summary;
 - package-set candidate bundle;
 - scoped member package candidate bundles;
 - relation proposal report;
@@ -37,6 +39,30 @@ A proposal should include:
 - bundle-set preflight evidence;
 - proposed accepted-source diff;
 - maintainer decision records or review notes.
+
+For SpecHarvester handoff, the expected top-level artifacts are
+`package-set-handoff-proposal.json` and `package-set-handoff-proposal.md`.
+They summarize the candidate set for review, but they do not replace
+per-package candidate files, receipts, validation reports, diagnostics reports,
+or accepted-source review.
+
+## Handoff Checklist
+
+Before turning a package-set handoff into registry input, maintainers should
+verify:
+
+- the handoff records producer revision and harvested source revision;
+- aggregate/package-set intent is separated from scoped member package intent;
+- selected member candidates link their candidate bundles, manifests, specs,
+  receipts, validation reports, and diagnostics reports;
+- `producerEvidenceLinks` cover package-set handoff, workspace inventory,
+  relation proposals, bundle-set preflight, static viewer evidence when
+  available, and per-package candidate evidence;
+- `registryAcceptanceDecision.status` remains non-approved until maintainer
+  review records acceptance;
+- `producerReceiptAuthority` remains `evidence_only`;
+- dry-run handoff artifacts do not require exposing SpecPM write credentials to
+  untrusted producer code.
 
 ## Partial Acceptance
 
@@ -50,6 +76,10 @@ Maintainers may accept only part of the bundle set:
 Accepting a package set does not accept all members. Accepting a member does not
 accept the package set. Accepting a relation does not grant trust or selection
 authority.
+
+Maintainers should copy only accepted packages and accepted relations into
+registry input. Rejected or deferred members may remain in evidence without
+becoming visible in the public index.
 
 ## Boundary
 
@@ -65,4 +95,3 @@ package selection, package execution, or trust propagation.
 - <doc:ProducerBundleProposalPolicy>
 - <doc:SpecHarvesterMonorepoDiscovery>
 - <doc:PackageSets>
-

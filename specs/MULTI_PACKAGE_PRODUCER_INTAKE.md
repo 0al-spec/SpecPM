@@ -1,7 +1,7 @@
 # Multi-Package Producer Bundle Intake
 
 Status: Draft
-Updated: 2026-06-06
+Updated: 2026-06-07
 Scope: SpecPM review policy for producer-backed package-set and multi-package
 candidate proposals
 
@@ -54,6 +54,8 @@ producer bundle set -> automatic package family acceptance
 A multi-package proposal should include:
 
 - workspace inventory report;
+- package-set handoff proposal JSON;
+- package-set handoff proposal Markdown summary;
 - package-set candidate bundle;
 - scoped member package candidate bundles;
 - relation proposal report;
@@ -66,6 +68,41 @@ A multi-package proposal should include:
 - maintainer acceptance decision records or review notes.
 
 Each candidate package remains independently reviewable.
+
+For SpecHarvester handoff, the expected top-level artifacts are
+`package-set-handoff-proposal.json` and `package-set-handoff-proposal.md`.
+They summarize the candidate set for review. They do not replace per-package
+candidate files, receipts, validation reports, diagnostics reports, or the
+accepted-source pull request.
+
+## Package-Set Handoff Checklist
+
+Before turning a producer handoff into an accepted-source pull request,
+maintainers should verify:
+
+- the handoff declares the producer, producer revision, source repository, and
+  harvested source revision;
+- the handoff uses a package-set subject such as `xyflow.workspace` for the
+  aggregate entrypoint and scoped member subjects such as `xyflow.system`,
+  `xyflow.react`, and `xyflow.svelte`;
+- aggregate/package-set intent is separated from scoped member package intent;
+- every selected member candidate has a path to its candidate bundle,
+  `specpm.yaml`, `specs/*.spec.yaml`, receipt, validation report, and
+  diagnostics report;
+- `producerEvidenceLinks` cover the package-set handoff proposal, workspace
+  inventory, package-set metadata, relation proposals, bundle-set preflight,
+  static viewer evidence when available, and per-package candidate evidence;
+- `registryAcceptanceDecision.status` is `external_required`, `pending`,
+  or another non-approved review state until a maintainer records acceptance;
+- `registryAcceptanceDecision.producerReceiptAuthority` is `evidence_only`;
+- the handoff came from a trusted workflow boundary or dry-run artifact and did
+  not require exposing SpecPM write credentials to untrusted producer code;
+- any generated accepted-source diff is reviewed as a proposed registry input,
+  not as producer authority.
+
+Maintainers should copy only the accepted packages and accepted relations into
+the registry input. A rejected or deferred member can remain in the handoff
+evidence without becoming visible in the public index.
 
 ## Bundle-Set Checklist
 
@@ -131,14 +168,23 @@ supporting evidence.
 
 ## CI Preflight Expectations
 
-Future CI preflight may check:
+Current single-package producer preflight can inspect machine-readable
+`producerEvidenceLinks` and `registryAcceptanceDecision` blocks in a proposal
+body. For package-set proposals, CI should still be treated as evidence-only
+unless a future bundle-set preflight explicitly makes a check required.
+
+Future package-set CI preflight may check:
 
 - required evidence roles are present for each candidate package;
+- package-set handoff proposal JSON and Markdown summary are present;
 - candidate package IDs are unique within the bundle set;
 - receipts do not hash themselves;
 - output digests match package files;
 - relation proposal source and target package IDs exist in the bundle set or
   current registry metadata;
+- package-set and member subject scopes do not collapse into a single package;
+- dry-run handoff evidence does not require `SPECPM_PROPOSAL_TOKEN` or other
+  write credentials;
 - acceptance decision records do not treat producer receipts as authority.
 
 Preflight should remain evidence until maintainers choose to make a specific
@@ -154,6 +200,10 @@ Reject or request regeneration when:
   re-export profile;
 - relation types are vague or unsupported;
 - relation evidence does not support the relation;
+- `package-set-handoff-proposal.json` disagrees with candidate bundles,
+  relation proposals, or receipts;
+- a dry-run handoff claims that it created, approved, or merged a SpecPM
+  accepted-source pull request;
 - output digests do not match;
 - diagnostics status is `failed`;
 - privacy status indicates secrets or confidential local paths;
@@ -190,4 +240,3 @@ Future implementation may add:
 - acceptance decision records that cover relation decisions;
 - static viewer support for package-set review;
 - `xyflow` reference proposal fixtures.
-

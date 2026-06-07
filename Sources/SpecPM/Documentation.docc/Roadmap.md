@@ -202,6 +202,11 @@ candidates, relation proposal output, and bundle-set review evidence.
 Multi-package producer bundle intake is now documented so maintainers can
 review package-set proposals, scoped member candidates, and relation proposals
 with partial acceptance and explicit accepted-source effects.
+SpecPM package-set intake now recognizes SpecHarvester
+`package-set-handoff-proposal.json` and `package-set-handoff-proposal.md`
+artifacts as dry-run review evidence while keeping accepted-source pull
+requests, relation acceptance, and maintainer decisions as the registry
+authority.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.
