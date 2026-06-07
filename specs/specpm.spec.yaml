@@ -1472,7 +1472,6 @@ evidence:
       - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.package_sets
       - specpm.specs.package_relations
-      - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.package_set_registry_metadata
       - specpm.specs.producer_bundle_proposal_policy
   - id: docc_multi_package_producer_intake
@@ -1484,6 +1483,7 @@ evidence:
       - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.package_sets
       - specpm.specs.package_relations
+      - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.producer_bundle_proposal_policy
   - id: docc_xyflow_package_set_reference
     kind: documentation
