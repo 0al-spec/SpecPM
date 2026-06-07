@@ -210,6 +210,15 @@ authority.
 `specpm producer-bundle preflight` can also verify package-set handoff identity,
 member manifest IDs, evidence digests, bundle-set preflight counts, and
 `contains` relation endpoints without executing producer tools.
+SpecHarvester-to-SpecPM package-set dry-run validation has been exercised on a
+real `xyflow` checkout. The run produced `xyflow.workspace`, `xyflow.react`,
+`xyflow.svelte`, and `xyflow.system` candidates with three `contains` relation
+proposals; SpecPM consumer-side preflight accepted the handoff with zero errors
+and zero warnings.
+The next package-set boundary task is maintainer-selected accepted-source
+materialization: read a package-set handoff plus an explicit maintainer
+selection of package IDs and relation IDs, then produce a proposed
+accepted-source diff for review without auto-accepting producer output.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

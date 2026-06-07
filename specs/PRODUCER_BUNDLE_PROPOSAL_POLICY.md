@@ -206,7 +206,18 @@ Multi-package producer bundle intake for package-set proposals is defined in
 
 The remaining SpecPM/SpecHarvester boundary work is implementation follow-up:
 wire producer automation and maintainer tooling to the documented contracts.
+Package-set handoff preflight has been exercised end-to-end on a real `xyflow`
+checkout: SpecHarvester produced the package-set handoff, SpecPM consumed the
+handoff through `specpm producer-bundle preflight`, and the report passed with
+zero errors and zero warnings.
 
 These follow-ups should be incremental. The first SpecPM step is policy and
 review vocabulary; runtime enforcement can follow only after the review policy
 is stable.
+
+The next package-set implementation step should be maintainer-selected
+accepted-source materialization. The helper should accept an explicit
+selection of package IDs and relation IDs, generate a proposed accepted-source
+diff, and leave final acceptance to maintainer review. It must not treat
+producer output or a passing package-set preflight as automatic registry
+acceptance.

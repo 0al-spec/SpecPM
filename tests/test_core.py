@@ -2482,6 +2482,12 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "SpecHarvester-to-SpecPM proposal automation contract is now documented" in docc_roadmap
     assert "External registry acceptance decision records are now documented" in roadmap
     assert "External registry acceptance decision records are now documented" in docc_roadmap
+    assert "SpecHarvester-to-SpecPM package-set dry-run validation" in roadmap
+    assert "SpecHarvester-to-SpecPM package-set dry-run validation" in docc_roadmap
+    assert "real `xyflow` checkout" in roadmap
+    assert "real `xyflow` checkout" in docc_roadmap
+    assert "maintainer-selected accepted-source materialization" in roadmap_flat
+    assert "maintainer-selected accepted-source materialization" in docc_roadmap_flat
 
     assert receipt_fixture["apiVersion"] == "specpm.receipts/v0"
     assert receipt_fixture["kind"] == "SpecPMProducerReceipt"
@@ -2600,6 +2606,12 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
     policy = MULTI_PACKAGE_PRODUCER_INTAKE_DOC.read_text(encoding="utf-8")
     docc_policy = DOCC_MULTI_PACKAGE_PRODUCER_INTAKE_PAGE.read_text(encoding="utf-8")
     operator_guide = PUBLIC_INDEX_OPERATOR_GUIDE.read_text(encoding="utf-8")
+    proposal_policy = (ROOT / "specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md").read_text(
+        encoding="utf-8"
+    )
+    docc_proposal_policy = (
+        ROOT / "Sources/SpecPM/Documentation.docc/ProducerBundleProposalPolicy.md"
+    ).read_text(encoding="utf-8")
     roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
     docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
     workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
@@ -2608,6 +2620,8 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
     roadmap_flat = re.sub(r"\s+", " ", roadmap)
     docc_roadmap_flat = re.sub(r"\s+", " ", docc_roadmap)
     workplan_flat = re.sub(r"\s+", " ", workplan)
+    proposal_policy_flat = re.sub(r"\s+", " ", proposal_policy)
+    docc_proposal_policy_flat = re.sub(r"\s+", " ", docc_proposal_policy)
 
     for required_text in (
         "package-set-handoff-proposal.json",
@@ -2670,6 +2684,10 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "SpecPM write credentials",
         "consumer-side package-set handoff preflight",
         "evidence digests",
+        "SpecHarvester-to-SpecPM package-set dry-run validation",
+        "real `xyflow` checkout",
+        "zero errors and zero warnings",
+        "maintainer-selected accepted-source materialization",
     ):
         assert required_text in roadmap_flat
 
@@ -2681,6 +2699,10 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "maintainer decisions as the registry authority",
         "producer-bundle preflight",
         "evidence digests",
+        "SpecHarvester-to-SpecPM package-set dry-run validation",
+        "real `xyflow` checkout",
+        "zero errors and zero warnings",
+        "maintainer-selected accepted-source materialization",
     ):
         assert required_text in docc_roadmap_flat
 
@@ -2690,8 +2712,21 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "`package-set-handoff-proposal.md` dry-run evidence",
         "`SpecHarvesterPackageSetHandoffProposal` JSON artifact",
         "`contains` relation endpoints",
+        "P66-T8. Maintainer-Selected Package-Set Materialization",
+        "explicit maintainer selection of package IDs and relation IDs",
+        "A passing SpecPM preflight remains review evidence only",
     ):
         assert required_text in workplan_flat
+
+    for required_text in (
+        "Package-set handoff preflight has been exercised end-to-end on a real `xyflow`",
+        "zero errors and zero warnings",
+        "maintainer-selected accepted-source materialization",
+        "explicit selection of package IDs and relation IDs",
+        "automatic registry acceptance",
+    ):
+        assert required_text in proposal_policy_flat
+        assert required_text in docc_proposal_policy_flat
 
 
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:

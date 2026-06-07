@@ -257,6 +257,8 @@ Success criteria:
 - SpecPM can run consumer-side package-set handoff preflight to verify member
   manifest IDs, evidence digests, bundle-set preflight counts, and `contains`
   relation endpoints before maintainer acceptance;
+- a real SpecHarvester `xyflow` package-set dry run can pass through SpecPM
+  consumer-side preflight without giving producer output registry authority;
 - package relations improve navigation and evidence review without becoming a
   hidden semantic resolver.
 
@@ -409,6 +411,18 @@ scope, relation context, and feature signaling.
 SpecHarvester monorepo discovery handoff is now documented for workspace
 inventory, stable package ID proposals, package-set and scoped member
 candidates, relation proposal output, and bundle-set review evidence.
+SpecHarvester-to-SpecPM package-set dry-run validation has been exercised on a
+real `xyflow` checkout. The run produced `xyflow.workspace`, `xyflow.react`,
+`xyflow.svelte`, and `xyflow.system` candidates with three `contains` relation
+proposals; SpecPM consumer-side preflight accepted the handoff with zero errors
+and zero warnings.
+
+The next package-set boundary task is maintainer-selected accepted-source
+materialization. That helper should read a package-set handoff plus an explicit
+maintainer selection of package IDs and relation IDs, then produce a proposed
+accepted-source diff for review. It must not auto-accept all producer output,
+infer acceptance from a passing preflight, or publish registry metadata without
+maintainer review.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
