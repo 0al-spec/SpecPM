@@ -30,7 +30,12 @@ from specpm.core import (
     validate_package,
     yank_index_package,
 )
-from specpm.producer_bundle import preflight_producer_bundle
+from specpm.producer_bundle import (
+    materialize_package_set_handoff,
+    preflight_producer_bundle,
+    render_package_set_materialization_manifest_candidate,
+    render_package_set_materialization_pr_body,
+)
 from specpm.public_index import generate_public_index_from_inputs
 
 
@@ -295,6 +300,58 @@ def build_parser() -> argparse.ArgumentParser:
     )
     producer_bundle_preflight.add_argument("--json", action="store_true", help="Emit stable JSON.")
     producer_bundle_preflight.set_defaults(handler=handle_producer_bundle_preflight)
+
+    package_set_materialize = producer_bundle_subparsers.add_parser(
+        "materialize-package-set",
+        help="Prepare maintainer-selected accepted-source artifacts from a package-set handoff.",
+    )
+    package_set_materialize.add_argument(
+        "--handoff",
+        required=True,
+        help="Path to package-set-handoff-proposal.json or Markdown containing it.",
+    )
+    package_set_materialize.add_argument(
+        "--root",
+        required=True,
+        help="Package-set bundle root used to verify and copy selected candidate packages.",
+    )
+    package_set_materialize.add_argument(
+        "--package",
+        dest="packages",
+        action="append",
+        default=[],
+        help="Maintainer-selected package ID to materialize. May be passed more than once.",
+    )
+    package_set_materialize.add_argument(
+        "--relation",
+        dest="relations",
+        action="append",
+        default=[],
+        help="Maintainer-selected relation ID to include in review evidence.",
+    )
+    package_set_materialize.add_argument(
+        "--output-root",
+        default="public-index/generated",
+        help="Repo-relative accepted-source output root for selected package candidates.",
+    )
+    package_set_materialize.add_argument(
+        "--manifest",
+        default="public-index/accepted-packages.yml",
+        help="Accepted package manifest to inspect or update.",
+    )
+    package_set_materialize.add_argument(
+        "--apply",
+        action="store_true",
+        help="Copy selected package candidates and append new manifest entries.",
+    )
+    package_set_materialize.add_argument("--json", action="store_true", help="Emit stable JSON.")
+    package_set_materialize.add_argument("--json-output", help="Write machine-readable report.")
+    package_set_materialize.add_argument(
+        "--manifest-candidate-output",
+        help="Write accepted-packages.yml candidate entries for selected packages.",
+    )
+    package_set_materialize.add_argument("--pr-body-output", help="Write draft PR body Markdown.")
+    package_set_materialize.set_defaults(handler=handle_package_set_materialize)
 
     return parser
 
@@ -600,6 +657,35 @@ def handle_producer_bundle_preflight(args: argparse.Namespace) -> int:
     return 1 if report["status"] == "failed" else 0
 
 
+def handle_package_set_materialize(args: argparse.Namespace) -> int:
+    report = materialize_package_set_handoff(
+        Path(args.handoff),
+        Path(args.root),
+        package_ids=args.packages,
+        relation_ids=args.relations,
+        output_root=Path(args.output_root),
+        manifest_path=Path(args.manifest),
+        apply_update=args.apply,
+    )
+    if args.json_output:
+        write_cli_output(Path(args.json_output), json.dumps(report, indent=2, sort_keys=True))
+    if args.manifest_candidate_output:
+        write_cli_output(
+            Path(args.manifest_candidate_output),
+            render_package_set_materialization_manifest_candidate(report),
+        )
+    if args.pr_body_output:
+        write_cli_output(
+            Path(args.pr_body_output),
+            render_package_set_materialization_pr_body(report),
+        )
+    if args.json:
+        print_json(report)
+    else:
+        print_package_set_materialization(report)
+    return 0 if report["status"] in {"prepared", "applied", "unchanged"} else 1
+
+
 def emit_remote_registry_report(report: dict[str, Any], json_output: bool) -> int:
     if json_output:
         print_json(report)
@@ -622,6 +708,24 @@ def print_producer_bundle_preflight(report: dict[str, Any]) -> None:
         print(f"error {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
     for issue_payload in report["warnings"]:
         print(f"warning {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+
+
+def print_package_set_materialization(report: dict[str, Any]) -> None:
+    summary = report["summary"]
+    print(
+        f"{report['status']}: package-set materialization "
+        f"({summary['selectedPackageCount']} packages, "
+        f"{summary['selectedRelationCount']} relations)"
+    )
+    for issue_payload in report["errors"]:
+        print(f"error {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+    for issue_payload in report["warnings"]:
+        print(f"warning {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+
+
+def write_cli_output(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
 
 
 def print_remote_registry(report: dict[str, Any]) -> None:

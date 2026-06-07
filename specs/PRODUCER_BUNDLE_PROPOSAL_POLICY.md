@@ -215,9 +215,10 @@ These follow-ups should be incremental. The first SpecPM step is policy and
 review vocabulary; runtime enforcement can follow only after the review policy
 is stable.
 
-The next package-set implementation step should be maintainer-selected
-accepted-source materialization. The helper should accept an explicit
-selection of package IDs and relation IDs, generate a proposed accepted-source
-diff, and leave final acceptance to maintainer review. It must not treat
-producer output or a passing package-set preflight as automatic registry
-acceptance.
+The package-set implementation path now includes maintainer-selected
+accepted-source materialization through
+`specpm producer-bundle materialize-package-set`. The helper accepts an
+explicit selection of package IDs and relation IDs, generates proposed
+accepted-source review artifacts, and leaves final acceptance to maintainer
+review. It must not treat producer output or a passing package-set preflight as
+automatic registry acceptance.

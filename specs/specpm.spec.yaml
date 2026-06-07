@@ -158,6 +158,9 @@ provides:
     - id: specpm.registry.accepted_manifest_pr_helper
       role: secondary
       summary: Prepare reviewed accepted-manifest pull request inputs from valid package-submission reports without deciding acceptance.
+    - id: specpm.registry.package_set_materialization_helper
+      role: secondary
+      summary: Prepare maintainer-selected package-set accepted-source review artifacts from handoff evidence without auto-accepting producer output.
     - id: specpm.registry.index_removal_request_flow
       role: secondary
       summary: Collect maintainer-reviewed public index removal requests without mutating registry state.
@@ -430,9 +433,13 @@ interfaces:
             - text/plain
     - id: cli_producer-bundle
       kind: cli
-      summary: specpm producer-bundle preflight for consumer-side review of producerEvidenceLinks, registryAcceptanceDecision, and package-set handoff proposal evidence.
+      summary: specpm producer-bundle preflight and materialize-package-set for consumer-side review of producer evidence and maintainer-selected package-set accepted-source artifacts.
       outputs:
         - name: producer_bundle_preflight_report
+          mediaTypes:
+            - application/json
+            - text/plain
+        - name: package_set_materialization_report
           mediaTypes:
             - application/json
             - text/plain
@@ -791,12 +798,19 @@ evidence:
     path: .github/workflows/producer-bundle-preflight.yml
     supports:
       - specpm.specs.producer_bundle_proposal_policy
+  - id: producer_bundle_source
+    kind: source
+    path: src/specpm/producer_bundle.py
+    supports:
+      - specpm.specs.producer_bundle_proposal_policy
+      - specpm.registry.package_set_materialization_helper
   - id: index_submission_validator_source
     kind: source
     path: src/specpm/index_submission.py
     supports:
       - specpm.registry.index_submission_flow
       - specpm.registry.accepted_manifest_pr_helper
+      - specpm.registry.package_set_materialization_helper
   - id: accepted_manifest_pr_helper_script
     kind: source
     path: scripts/prepare_accepted_manifest_pr.py
@@ -958,6 +972,7 @@ evidence:
     path: specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md
     supports:
       - specpm.specs.producer_bundle_proposal_policy
+      - specpm.registry.package_set_materialization_helper
       - specpm.specs.producer_receipt_contract
       - producer_receipts_not_generation_authority
       - provenance_receipts_evidence_not_authority
