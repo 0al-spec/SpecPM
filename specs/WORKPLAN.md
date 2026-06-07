@@ -1822,6 +1822,11 @@ Result:
   handoff identity, member manifest IDs, linked evidence digests, bundle-set
   preflight counts, `contains` relation endpoints, and the external acceptance
   boundary without executing producer tools.
+- A practical SpecHarvester-to-SpecPM dry run against a real `xyflow` checkout
+  produced `xyflow.workspace`, `xyflow.react`, `xyflow.svelte`, and
+  `xyflow.system` candidates with three `contains` relation proposals; both
+  Harvester bundle-set preflight and SpecPM consumer-side handoff preflight
+  passed with zero errors and zero warnings.
 
 ### P66-T7. Xyflow Reference Scenario
 
@@ -1862,6 +1867,33 @@ Acceptance:
 - The SpecPM/SpecHarvester boundary remains explicit: SpecHarvester may produce
   package-set candidates, while SpecPM validates, indexes, exposes, and
   maintains acceptance authority.
+
+### P66-T8. Maintainer-Selected Package-Set Materialization
+
+Status: Planned.
+
+Motivation:
+
+- After package-set handoff preflight passes, maintainers still need a safe way
+  to turn only the accepted subset of package-set candidates and relation
+  proposals into an accepted-source diff.
+
+Goal:
+
+- Define and implement a SpecPM-side materialization helper that reads a
+  package-set handoff plus an explicit maintainer selection of package IDs and
+  relation IDs, then generates a proposed accepted-source diff for review.
+
+Expected result:
+
+- Maintainers can select `xyflow.workspace`, selected scoped member packages,
+  and selected `contains` relations without accepting every producer-generated
+  candidate.
+- A passing SpecPM preflight remains review evidence only; it does not imply
+  package acceptance, relation acceptance, or registry publication.
+- The helper fails closed when selected packages or relations are missing from
+  the handoff, when preflight failed, or when the selection tries to accept
+  producer output without an explicit maintainer decision.
 
 ## Post-MVP Tracks
 
