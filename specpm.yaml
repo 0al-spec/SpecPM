@@ -49,6 +49,7 @@ index:
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.producer_bundle_proposal_automation
       - specpm.specs.producer_bundle_fixture_policy
+      - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.spec_quality_model
       - specpm.specs.package_sets
       - specpm.specs.package_relations

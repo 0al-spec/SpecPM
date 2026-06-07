@@ -207,6 +207,11 @@ SpecPM package-set intake now recognizes SpecHarvester
 artifacts as dry-run review evidence while keeping accepted-source pull
 requests, relation acceptance, and maintainer decisions as the registry
 authority.
+SpecPM package-set intake now also treats
+`package-set-ai-enrichment-proposal.json` as optional proposal-only review
+evidence. AI-suggested capabilities, intents, interfaces, and summaries require
+ordinary evidence review and explicit maintainer acceptance before they can
+become package claims.
 `specpm producer-bundle preflight` can also verify package-set handoff identity,
 member manifest IDs, evidence digests, bundle-set preflight counts, and
 `contains` relation endpoints without executing producer tools.
@@ -215,6 +220,11 @@ real `xyflow` checkout. The run produced `xyflow.workspace`, `xyflow.react`,
 `xyflow.svelte`, and `xyflow.system` candidates with three `contains` relation
 proposals; SpecPM consumer-side preflight accepted the handoff with zero errors
 and zero warnings.
+SpecHarvester-to-SpecPM package-set AI enrichment has been exercised on the
+same real `xyflow` checkout with a local OpenAI-compatible provider. The run
+produced four proposal-only enrichment records, while SpecPM materialization
+still used only the ordinary package-set handoff and explicit maintainer
+package/relation selection.
 The maintainer-selected accepted-source materialization path is now implemented through
 `specpm producer-bundle materialize-package-set`: read a package-set handoff
 plus explicit package and relation selections, then prepare review artifacts or

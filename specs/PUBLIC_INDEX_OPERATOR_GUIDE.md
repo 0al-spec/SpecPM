@@ -210,6 +210,26 @@ maintainers should verify:
 - partial acceptance is recorded explicitly, including deferred or rejected
   members and relations.
 
+If the producer also provides `package-set-ai-enrichment-proposal.json`,
+operators should treat it as semantic review assistance only. It may suggest
+refined package summaries, capabilities, intents, interfaces, or evidence gaps,
+but it must not change the accepted manifest, public index, package metadata,
+relations, or materialization selection by itself.
+
+Before using AI enrichment during review, operators should verify:
+
+- `kind: SpecHarvesterPackageSetAIEnrichmentProposal`;
+- `authority: proposal_only_not_registry_acceptance`;
+- privacy flags show no raw prompts, raw model responses, chain-of-thought, or
+  secrets were persisted;
+- proposed `packageId` values correspond to reviewed handoff members;
+- proposed capabilities and interfaces cite allowlisted evidence paths;
+- unsupported evidence paths appear only as diagnostics;
+- provider receipts are provenance, not registry authority.
+
+Accepting an AI-suggested capability, intent, interface, or summary requires the
+same explicit maintainer review as any manually authored package claim.
+
 When the package-set handoff artifact is available locally, maintainers should
 run `specpm producer-bundle preflight` against it before reviewing an
 accepted-source diff. A passing package-set preflight proves only internal

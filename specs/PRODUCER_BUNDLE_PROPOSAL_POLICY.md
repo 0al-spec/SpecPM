@@ -162,6 +162,53 @@ external registry acceptance boundary. Package-set preflight does not require
 single-package `producerEvidenceLinks`; member evidence is checked through the
 handoff `members[].evidenceLinks` records.
 
+## Package-Set AI Enrichment Evidence
+
+SpecHarvester may also attach
+`SpecHarvesterPackageSetAIEnrichmentProposal` artifacts produced by
+`package-set-ai-enrichment-proposal`. SpecPM treats this artifact as optional
+review evidence only. It is not package truth, registry authority, an
+acceptance decision, or input to `materialize-package-set`.
+
+The stable boundary is:
+
+```text
+AI enrichment proposal -> reviewer considers suggestions -> maintainer edits or accepts package claims explicitly
+```
+
+not:
+
+```text
+AI enrichment proposal -> automatic capability, intent, interface, or relation acceptance
+```
+
+Reviewers should verify:
+
+- `apiVersion` is `spec-harvester.package-set-ai-enrichment/v0`;
+- `kind` is `SpecHarvesterPackageSetAIEnrichmentProposal`;
+- `authority` is `proposal_only_not_registry_acceptance`;
+- `status` is `completed` or `warning`; `failed` blocks use as review
+  evidence until regenerated;
+- `privacy.rawPromptsPersisted`, `privacy.rawModelResponsesPersisted`,
+  `privacy.chainOfThoughtPersisted`, and `privacy.secretsIncluded` are
+  `false`;
+- `trustBoundary` keeps SpecPM as the validation, acceptance, relation, and
+  registry authority;
+- every `proposals[].packageId` matches a package-set handoff member or a
+  reviewed accepted package subject;
+- every proposed capability, interface, or summary is backed by allowlisted
+  `evidencePaths`;
+- unsupported evidence paths appear only as diagnostics and must not be treated
+  as accepted facts;
+- `interfaces[].kind` is preserved for reviewer interpretation;
+- `providerReceipt` and provider usage metadata are provenance only and do not
+  establish semantic truth.
+
+Maintainers may copy, edit, or reject AI-suggested capabilities, intents,
+interfaces, and summaries during human review. They must not import those
+claims into accepted package sources without ordinary package evidence review
+and an explicit maintainer decision.
+
 When `--root` is provided, the preflight also checks linked files and SHA-256
 digests under that root. It never executes producer tools, package scripts,
 analyzers, prompts, or package content.
@@ -210,6 +257,14 @@ Package-set handoff preflight has been exercised end-to-end on a real `xyflow`
 checkout: SpecHarvester produced the package-set handoff, SpecPM consumed the
 handoff through `specpm producer-bundle preflight`, and the report passed with
 zero errors and zero warnings.
+
+Package-set AI enrichment has also been exercised on the same real `xyflow`
+checkout through a local OpenAI-compatible provider. The run produced four
+proposal-only enrichment records, then SpecPM consumed the ordinary package-set
+handoff and prepared maintainer-selected materialization with zero errors. The
+AI artifact remained review evidence and did not alter accepted-source
+selection, registry metadata, package capabilities, intents, interfaces, or
+relations automatically.
 
 These follow-ups should be incremental. The first SpecPM step is policy and
 review vocabulary; runtime enforcement can follow only after the review policy

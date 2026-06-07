@@ -37,6 +37,7 @@ A proposal should include:
 - validation reports;
 - diagnostics reports;
 - bundle-set preflight evidence;
+- package-set AI enrichment proposal, when available;
 - proposed accepted-source diff;
 - maintainer decision records or review notes.
 
@@ -45,6 +46,13 @@ For SpecHarvester handoff, the expected top-level artifacts are
 They summarize the candidate set for review, but they do not replace
 per-package candidate files, receipts, validation reports, diagnostics reports,
 or accepted-source review.
+
+Optional AI enrichment evidence may appear as
+`package-set-ai-enrichment-proposal.json` with
+`kind: SpecHarvesterPackageSetAIEnrichmentProposal`. It can propose refined
+summaries, capabilities, intents, interfaces, or evidence gaps for reviewer
+consideration. It does not replace the package-set handoff, per-package
+candidate files, relation proposals, or accepted-source review.
 
 ## Handoff Checklist
 
@@ -94,6 +102,21 @@ specpm producer-bundle materialize-package-set \
 The helper prepares review artifacts only. It fails closed when selected
 packages or relations are absent, package-set preflight failed, or a selected
 relation does not connect selected package endpoints.
+
+## AI Enrichment Checklist
+
+When a package-set proposal includes AI enrichment evidence, maintainers should
+verify `authority: proposal_only_not_registry_acceptance`, privacy flags for
+raw prompts, raw responses, chain-of-thought, and secrets are false, the
+`trustBoundary` keeps SpecPM as validation and registry authority, proposed
+`packageId` values match reviewed handoff members, proposed capabilities and
+interfaces cite allowlisted `evidencePaths`, unsupported evidence paths remain
+diagnostics, `interfaces[].kind` is present for interface suggestions, and
+provider receipts are provenance only.
+
+AI enrichment remains proposal-only even when its status is `completed`. It
+must not auto-accept capabilities, intents, interfaces, summaries, package
+relations, package versions, or accepted-source entries.
 
 ## Partial Acceptance
 

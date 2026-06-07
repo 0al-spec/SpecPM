@@ -1906,6 +1906,42 @@ Result:
 - The helper rejects missing package IDs, missing relation IDs, failed preflight,
   and selected relations whose endpoints are not both selected packages.
 
+### P66-T9. Package-Set AI Enrichment Consumer Policy
+
+Status: Completed.
+
+Motivation:
+
+- SpecHarvester can now produce package-set AI enrichment proposals, but SpecPM
+  needs an explicit consumer-side policy so model output remains review
+  evidence instead of becoming registry truth.
+
+Goal:
+
+- Document how maintainers should review
+  `SpecHarvesterPackageSetAIEnrichmentProposal` artifacts alongside package-set
+  handoffs without auto-accepting generated capabilities, intents, interfaces,
+  summaries, package relations, package versions, or accepted-source entries.
+
+Expected result:
+
+- Maintainers can use AI enrichment as a review aid for real package-set
+  proposals while keeping SpecPM validation, accepted-source review, relation
+  acceptance, and registry publication under explicit maintainer authority.
+
+Result:
+
+- SpecPM policy recognizes `package-set-ai-enrichment-proposal.json` as
+  optional proposal-only evidence.
+- Reviewer checklists cover artifact identity, `authority:
+  proposal_only_not_registry_acceptance`, privacy flags, trust boundary,
+  package ID alignment, allowlisted evidence paths, `interfaces[].kind`, and
+  provider receipts as provenance only.
+- A real `xyflow` run verified the practical sequence:
+  package-set draft, AI enrichment proposal, package-set handoff, SpecPM
+  preflight, and `materialize-package-set` dry run. The AI artifact did not
+  alter accepted-source selection or registry metadata automatically.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
