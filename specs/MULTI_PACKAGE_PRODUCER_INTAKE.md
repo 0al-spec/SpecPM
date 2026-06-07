@@ -100,6 +100,21 @@ maintainers should verify:
 - any generated accepted-source diff is reviewed as a proposed registry input,
   not as producer authority.
 
+SpecPM package-set intake preflight can check the handoff artifact before
+maintainer review:
+
+```bash
+specpm producer-bundle preflight \
+  --body <package-set-handoff-proposal.json> \
+  --root <package-set-bundle-root> \
+  --json
+```
+
+The preflight verifies package-set handoff identity, linked evidence digests,
+member manifest IDs, bundle-set preflight status/counts, and `contains`
+relation endpoints. It is evidence for review only and does not accept packages,
+accept relations, or write registry input.
+
 Maintainers should copy only the accepted packages and accepted relations into
 the registry input. A rejected or deferred member can remain in the handoff
 evidence without becoming visible in the public index.

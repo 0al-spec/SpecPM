@@ -153,6 +153,15 @@ that optional static viewer and producer preflight evidence are reported when
 available, and that the registry acceptance decision keeps producer receipts as
 `evidence_only`.
 
+The same command also accepts a machine-readable
+`SpecHarvesterPackageSetHandoffProposal` JSON body. In that mode, SpecPM
+verifies package-set handoff identity, member package IDs, member manifest
+identity, package-set evidence links, SHA-256 digests under `--root`,
+bundle-set preflight status/counts, `contains` relation endpoints, and the
+external registry acceptance boundary. Package-set preflight does not require
+single-package `producerEvidenceLinks`; member evidence is checked through the
+handoff `members[].evidenceLinks` records.
+
 When `--root` is provided, the preflight also checks linked files and SHA-256
 digests under that root. It never executes producer tools, package scripts,
 analyzers, prompts, or package content.

@@ -166,6 +166,16 @@ CI may run:
 specpm producer-bundle preflight --body <proposal-body.md> [--root <checkout-or-artifact-root>] --json
 ```
 
+For package-set dry-run evidence, the same command can preflight the
+`package-set-handoff-proposal.json` artifact directly:
+
+```bash
+specpm producer-bundle preflight \
+  --body <package-set-handoff-proposal.json> \
+  --root <package-set-bundle-root> \
+  --json
+```
+
 This is a consumer-side preflight of proposal evidence only. It does not run
 SpecHarvester, does not execute package content, and does not replace the final
 maintainer decision.
@@ -199,6 +209,13 @@ maintainers should verify:
   or other SpecPM write credentials in producer-controlled execution;
 - partial acceptance is recorded explicitly, including deferred or rejected
   members and relations.
+
+When the package-set handoff artifact is available locally, maintainers should
+run `specpm producer-bundle preflight` against it before reviewing an
+accepted-source diff. A passing package-set preflight proves only internal
+handoff consistency: member IDs match manifests, linked evidence digests match
+available files, relation endpoints refer to declared members, and bundle-set
+preflight status/counts are consistent.
 
 Accepted-source pull requests should include only the packages and relations
 that maintainers choose to accept. A package-set handoff can propose

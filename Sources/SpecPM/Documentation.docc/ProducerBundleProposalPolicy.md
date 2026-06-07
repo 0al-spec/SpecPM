@@ -67,6 +67,12 @@ The public-index operator intake checklist is maintained in
 `specs/PUBLIC_INDEX_OPERATOR_GUIDE.md` so accepted-manifest pull requests and
 producer-backed proposals use the same evidence requirements.
 
+For package-set dry-run evidence, `specpm producer-bundle preflight` can read a
+`SpecHarvesterPackageSetHandoffProposal` JSON body directly. It verifies
+package-set handoff identity, member IDs, manifest identity, linked evidence
+digests, bundle-set preflight status/counts, `contains` relation endpoints, and
+the external acceptance boundary without running producer tools.
+
 ## Reject And Warning Signals
 
 Reject or request regeneration when required files are missing, receipt identity

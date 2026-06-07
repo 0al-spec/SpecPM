@@ -254,6 +254,9 @@ Success criteria:
 - package-set handoff evidence can be reviewed without exposing SpecPM write
   credentials or other registry write credentials to untrusted producer
   execution;
+- SpecPM can run consumer-side package-set handoff preflight to verify member
+  manifest IDs, evidence digests, bundle-set preflight counts, and `contains`
+  relation endpoints before maintainer acceptance;
 - package relations improve navigation and evidence review without becoming a
   hidden semantic resolver.
 

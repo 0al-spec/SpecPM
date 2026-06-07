@@ -128,6 +128,13 @@ It verifies required evidence roles, explicit `pathScope` values, required
 receipt boundary. With `--root`, it also verifies linked evidence file
 existence and SHA-256 digests under that root.
 
+The same command can preflight a
+`SpecHarvesterPackageSetHandoffProposal` JSON body. In package-set mode it
+checks member package IDs, member manifest identity, linked evidence digests,
+bundle-set preflight status/counts, `contains` relation endpoints, and the
+external acceptance boundary without requiring single-package
+`producerEvidenceLinks`.
+
 This is a consumer-side review preflight. It does not run SpecHarvester,
 execute package content, or accept a package.
 

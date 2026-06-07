@@ -207,6 +207,9 @@ SpecPM package-set intake now recognizes SpecHarvester
 artifacts as dry-run review evidence while keeping accepted-source pull
 requests, relation acceptance, and maintainer decisions as the registry
 authority.
+`specpm producer-bundle preflight` can also verify package-set handoff identity,
+member manifest IDs, evidence digests, bundle-set preflight counts, and
+`contains` relation endpoints without executing producer tools.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.
