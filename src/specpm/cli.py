@@ -679,7 +679,7 @@ def handle_package_set_materialize(args: argparse.Namespace) -> int:
             Path(args.pr_body_output),
             render_package_set_materialization_pr_body(report),
         )
-    if args.json or not (args.json_output or args.manifest_candidate_output or args.pr_body_output):
+    if args.json:
         print_json(report)
     else:
         print_package_set_materialization(report)

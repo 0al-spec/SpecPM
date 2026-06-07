@@ -63,7 +63,39 @@ JSON_FENCE_PATTERN = re.compile(r"```json\s*(.*?)```", re.DOTALL | re.IGNORECASE
 
 
 def preflight_producer_bundle(body_path: Path, root: Path | None = None) -> dict[str, Any]:
-    body = body_path.read_text(encoding="utf-8")
+    try:
+        body = body_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        errors = [
+            issue(
+                "producer_bundle_body_unreadable",
+                f"Proposal body could not be read: {exc}.",
+                field="body",
+            )
+        ]
+        return {
+            "kind": PRODUCER_BUNDLE_PREFLIGHT_KIND,
+            "schemaVersion": PRODUCER_BUNDLE_PREFLIGHT_SCHEMA_VERSION,
+            "status": "failed",
+            "body": str(body_path),
+            "root": str(root) if root else None,
+            "summary": {
+                "producerEvidenceRoleCount": 0,
+                "packageSetHandoff": None,
+                "errorCount": len(errors),
+                "warningCount": 0,
+            },
+            "producerEvidenceRoles": [],
+            "packageSetHandoff": None,
+            "registryAcceptanceDecision": {
+                "status": None,
+                "recordKind": None,
+                "producerReceiptAuthority": None,
+                "producerAuthority": None,
+            },
+            "errors": errors,
+            "warnings": [],
+        }
     payloads = _extract_json_payloads(body)
     package_set_handoff = _find_package_set_handoff_payload(payloads)
     producer_links = _find_list_payload(payloads, "producerEvidenceLinks")
@@ -331,7 +363,11 @@ def materialize_package_set_handoff(
 
 
 def load_package_set_handoff(path: Path) -> dict[str, Any]:
-    payloads = _extract_json_payloads(path.read_text(encoding="utf-8"))
+    try:
+        body = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    payloads = _extract_json_payloads(body)
     handoff = _find_package_set_handoff_payload(payloads)
     if handoff is None:
         return {}
@@ -365,6 +401,14 @@ def build_package_materialization_candidate(
             )
         )
         return {"package_id": package_id, "status": "invalid"}
+    if candidate_tree_contains_symlink(source_path):
+        errors.append(
+            issue(
+                "package_set_materialization_candidate_symlink",
+                f"Selected package {package_id} candidate directory contains a symlink.",
+                field="packageSetHandoff.members[].candidatePath",
+            )
+        )
 
     manifest_path = source_path / "specpm.yaml"
     metadata = read_manifest_metadata(manifest_path, errors, package_id)
@@ -1328,11 +1372,17 @@ def resolve_package_set_path(root: Path, path: str) -> Path | None:
     relative = Path(path)
     if relative.is_absolute() or ".." in relative.parts:
         return None
-    root_resolved = root.resolve()
+    root_resolved = root.resolve(strict=False)
     candidate = (root_resolved / relative).resolve(strict=False)
     if not candidate.is_relative_to(root_resolved):
         return None
     return candidate
+
+
+def candidate_tree_contains_symlink(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    return any(item.is_symlink() for item in path.rglob("*"))
 
 
 def package_output_path(
@@ -1341,6 +1391,14 @@ def package_output_path(
     version: str,
     errors: list[dict[str, Any]],
 ) -> Path:
+    if output_root.is_absolute() or ".." in output_root.parts:
+        errors.append(
+            issue(
+                "package_set_materialization_output_root_invalid",
+                "Accepted-source outputRoot must be a repo-relative path without '..'.",
+                field="outputRoot",
+            )
+        )
     if any(part in package_id for part in ("/", "\\")) or package_id in {"", ".", ".."}:
         errors.append(
             issue(

@@ -3080,6 +3080,77 @@ def test_package_set_materialization_apply_rejects_existing_output_before_copyin
     assert manifest_payload["packages"] == []
 
 
+def test_package_set_materialization_rejects_candidate_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    outside = tmp_path / "outside.txt"
+    outside.write_text("outside\n", encoding="utf-8")
+    (bundle_set / "workspace" / "external-link").symlink_to(outside)
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text("schemaVersion: 1\npackages: []\n", encoding="utf-8")
+
+    report = materialize_package_set_handoff(
+        handoff,
+        bundle_set,
+        package_ids=["example.workspace"],
+        relation_ids=[],
+        output_root=Path("public-index/generated"),
+        manifest_path=manifest,
+        apply_update=True,
+    )
+
+    assert report["status"] == "invalid"
+    assert "package_set_materialization_candidate_symlink" in issue_codes(report["errors"])
+    assert not (tmp_path / "public-index/generated/example.workspace/0.1.0").exists()
+
+
+def test_package_set_materialization_rejects_absolute_output_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text("schemaVersion: 1\npackages: []\n", encoding="utf-8")
+
+    report = materialize_package_set_handoff(
+        handoff,
+        bundle_set,
+        package_ids=["example.workspace"],
+        relation_ids=[],
+        output_root=tmp_path / "outside-generated",
+        manifest_path=manifest,
+    )
+
+    assert report["status"] == "invalid"
+    assert "package_set_materialization_output_root_invalid" in issue_codes(report["errors"])
+
+
+def test_package_set_materialization_rejects_parent_output_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text("schemaVersion: 1\npackages: []\n", encoding="utf-8")
+
+    report = materialize_package_set_handoff(
+        handoff,
+        bundle_set,
+        package_ids=["example.workspace"],
+        relation_ids=[],
+        output_root=Path("../generated"),
+        manifest_path=manifest,
+    )
+
+    assert report["status"] == "invalid"
+    assert "package_set_materialization_output_root_invalid" in issue_codes(report["errors"])
+
+
 def test_package_set_materialization_rejects_unknown_selection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -3154,6 +3225,54 @@ def test_package_set_materialization_requires_passing_preflight(
     assert "package_set_preflight_not_passed" in issue_codes(report["errors"])
 
 
+def test_package_set_materialization_returns_invalid_for_missing_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text("schemaVersion: 1\npackages: []\n", encoding="utf-8")
+
+    report = materialize_package_set_handoff(
+        tmp_path / "missing-handoff.json",
+        tmp_path,
+        package_ids=["example.workspace"],
+        relation_ids=[],
+        output_root=Path("public-index/generated"),
+        manifest_path=manifest,
+    )
+
+    assert report["status"] == "invalid"
+    assert {
+        "package_set_handoff_missing",
+        "package_set_preflight_not_passed",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_package_set_materialization_returns_invalid_for_missing_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text("schemaVersion: 1\npackages: []\n", encoding="utf-8")
+
+    report = materialize_package_set_handoff(
+        handoff,
+        tmp_path / "missing-root",
+        package_ids=["example.workspace"],
+        relation_ids=[],
+        output_root=Path("public-index/generated"),
+        manifest_path=manifest,
+    )
+
+    assert report["status"] == "invalid"
+    assert {
+        "package_set_preflight_not_passed",
+        "package_set_materialization_candidate_missing",
+    }.issubset(issue_codes(report["errors"]))
+
+
 def test_cli_package_set_materialization_writes_review_outputs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -3195,6 +3314,38 @@ def test_cli_package_set_materialization_writes_review_outputs(
     assert report["status"] == "prepared"
     assert candidate["packages"] == [{"path": "public-index/generated/example.workspace/0.1.0"}]
     assert "Selected Packages" in pr_body.read_text(encoding="utf-8")
+
+
+def test_cli_package_set_materialization_defaults_to_human_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text("schemaVersion: 1\npackages: []\n", encoding="utf-8")
+
+    exit_code = main(
+        [
+            "producer-bundle",
+            "materialize-package-set",
+            "--handoff",
+            str(handoff),
+            "--root",
+            str(bundle_set),
+            "--manifest",
+            str(manifest),
+            "--output-root",
+            "public-index/generated",
+            "--package",
+            "example.workspace",
+        ]
+    )
+
+    stdout = capsys.readouterr().out
+    assert exit_code == 0
+    assert stdout.startswith("prepared: package-set materialization")
+    assert not stdout.lstrip().startswith("{")
 
 
 def test_producer_bundle_preflight_rejects_missing_registry_decision(tmp_path: Path) -> None:
