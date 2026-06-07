@@ -2452,7 +2452,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "Package-Set Handoff Checklist",
         "producerEvidenceLinks",
         "registryAcceptanceDecision.status",
-        "registryAcceptanceDecision.producerEvidence.producerReceiptAuthority",
+        "registryAcceptanceDecision.producerReceiptAuthority",
         "evidence_only",
         "trusted workflow boundary or dry-run artifact",
         "SPECPM_PROPOSAL_TOKEN",

@@ -191,7 +191,9 @@ maintainers should verify:
   already accepted registry metadata;
 - per-package receipts, validation reports, diagnostics reports, and candidate
   files are linked for every accepted member;
-- `registryAcceptanceDecision.status` is not producer-approved;
+- `registryAcceptanceDecision.status` remains `external_required`, `pending`,
+  or another non-approved value, and must not be `approved` until maintainer
+  review records acceptance;
 - `producerReceiptAuthority` remains `evidence_only`;
 - the dry-run handoff did not require `SPECPM_PROPOSAL_TOKEN`, deploy tokens,
   or other SpecPM write credentials in producer-controlled execution;

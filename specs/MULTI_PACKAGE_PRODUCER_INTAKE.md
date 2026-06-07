@@ -94,8 +94,7 @@ maintainers should verify:
   static viewer evidence when available, and per-package candidate evidence;
 - `registryAcceptanceDecision.status` is `external_required`, `pending`,
   or another non-approved review state until a maintainer records acceptance;
-- `registryAcceptanceDecision.producerEvidence.producerReceiptAuthority` is
-  `evidence_only`;
+- `registryAcceptanceDecision.producerReceiptAuthority` is `evidence_only`;
 - the handoff came from a trusted workflow boundary or dry-run artifact and did
   not require exposing SpecPM write credentials to untrusted producer code;
 - any generated accepted-source diff is reviewed as a proposed registry input,
