@@ -1825,7 +1825,7 @@ Result:
 - A practical SpecHarvester-to-SpecPM dry run against a real `xyflow` checkout
   produced `xyflow.workspace`, `xyflow.react`, `xyflow.svelte`, and
   `xyflow.system` candidates with three `contains` relation proposals; both
-  Harvester bundle-set preflight and SpecPM consumer-side handoff preflight
+  SpecHarvester bundle-set preflight and SpecPM consumer-side handoff preflight
   passed with zero errors and zero warnings.
 
 ### P66-T7. Xyflow Reference Scenario
