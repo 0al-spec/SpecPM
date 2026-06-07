@@ -361,6 +361,161 @@ def write_producer_bundle_pr_body(
     )
 
 
+def write_package_set_handoff_fixture(root: Path, *, bad_relation: bool = False) -> Path:
+    root.mkdir(parents=True)
+    members = [
+        ("example.workspace", "workspace", "workspace", "main.spec.yaml"),
+        ("example.member", "library", "member", "member.spec.yaml"),
+    ]
+    for package_id, _role, dirname, spec_name in members:
+        package = root / dirname
+        specs_dir = package / "specs"
+        specs_dir.mkdir(parents=True)
+        manifest_id = (
+            "example.other" if bad_relation and package_id == "example.member" else package_id
+        )
+        (package / "specpm.yaml").write_text(
+            f"schemaVersion: 1\nmetadata:\n  id: {manifest_id}\n  version: 0.1.0\n",
+            encoding="utf-8",
+        )
+        (specs_dir / spec_name).write_text("apiVersion: specpm.dev/v0.1\n", encoding="utf-8")
+        (package / "producer-receipt.json").write_text("{}\n", encoding="utf-8")
+        (package / "validation-report.json").write_text('{"status":"valid"}\n', encoding="utf-8")
+        (package / "diagnostics.json").write_text('{"status":"clean"}\n', encoding="utf-8")
+
+    (root / "package-set-draft.json").write_text(
+        '{"kind":"SpecHarvesterPackageSetDraft"}\n', encoding="utf-8"
+    )
+    (root / "package-relation-proposals.json").write_text(
+        '{"kind":"SpecHarvesterPackageRelationProposals"}\n', encoding="utf-8"
+    )
+    (root / "bundle-set-preflight.json").write_text(
+        json.dumps(
+            {
+                "status": "passed",
+                "summary": {"candidateCount": 2, "relationCount": 1, "errorCount": 0},
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    relation_target = "example.missing" if bad_relation else "example.member"
+    handoff = {
+        "apiVersion": "spec-harvester.package-set-handoff-proposal/v0",
+        "kind": "SpecHarvesterPackageSetHandoffProposal",
+        "schemaVersion": 1,
+        "status": "ok",
+        "packageSet": {
+            "id": "example.workspace",
+            "candidateCount": 2,
+            "relationCount": 1,
+            "authority": "producer_observed_review_evidence",
+        },
+        "members": [
+            {
+                "packageId": "example.workspace",
+                "role": "workspace",
+                "candidatePath": "workspace",
+                "manifestPath": "workspace/specpm.yaml",
+                "producerReceiptPath": "workspace/producer-receipt.json",
+                "validationReportPath": "workspace/validation-report.json",
+                "diagnosticsReportPath": "workspace/diagnostics.json",
+                "status": "ok",
+                "evidenceLinks": member_handoff_links(root, "workspace", "main.spec.yaml"),
+            },
+            {
+                "packageId": "example.member",
+                "role": "library",
+                "candidatePath": "member",
+                "manifestPath": "member/specpm.yaml",
+                "producerReceiptPath": "member/producer-receipt.json",
+                "validationReportPath": "member/validation-report.json",
+                "diagnosticsReportPath": "member/diagnostics.json",
+                "status": "ok",
+                "evidenceLinks": member_handoff_links(root, "member", "member.spec.yaml"),
+            },
+        ],
+        "relations": [
+            {
+                "id": "example.workspace.contains.example.member",
+                "type": "contains",
+                "source": {"packageId": "example.workspace"},
+                "target": {"packageId": relation_target},
+                "reviewStatus": "producer_observed",
+                "authority": "producer_observed_review_evidence",
+            }
+        ],
+        "evidenceLinks": [
+            handoff_link(root, "package_set_draft", "package-set-draft.json"),
+            handoff_link(root, "package_relation_proposals", "package-relation-proposals.json"),
+            handoff_link(root, "bundle_set_preflight", "bundle-set-preflight.json"),
+            {
+                "role": "package_relation_summary",
+                "path": "package-relation-proposals.json",
+                "pathScope": "bundle_relative",
+                "status": "present",
+                "relationCount": 1,
+                "containsCount": 1,
+            },
+            {
+                "role": "member_candidate_bundle",
+                "path": "workspace",
+                "pathScope": "bundle_relative",
+                "status": "present",
+                "packageId": "example.workspace",
+            },
+            {
+                "role": "member_candidate_bundle",
+                "path": "member",
+                "pathScope": "bundle_relative",
+                "status": "present",
+                "packageId": "example.member",
+            },
+        ],
+        "preflight": {
+            "status": "passed",
+            "path": "bundle-set-preflight.json",
+            "candidateCount": 2,
+            "relationCount": 1,
+            "errorCount": 0,
+            "warningCount": 0,
+        },
+        "registryAcceptanceDecision": {
+            "status": "external_required",
+            "requiredFor": ["public_index_acceptance", "package_relation_acceptance"],
+            "recordKind": "SpecPMRegistryAcceptanceDecision",
+            "producerAuthority": "evidence_only",
+            "acceptanceAuthority": "SpecPM maintainer review",
+        },
+        "nonGoals": ["specpm_acceptance", "relation_acceptance", "registry_publication"],
+    }
+    handoff_path = root / "package-set-handoff-proposal.json"
+    handoff_path.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return handoff_path
+
+
+def member_handoff_links(root: Path, dirname: str, spec_name: str) -> list[dict[str, str]]:
+    return [
+        handoff_link(root, "member_manifest", f"{dirname}/specpm.yaml"),
+        handoff_link(root, "member_boundary_spec", f"{dirname}/specs/{spec_name}"),
+        handoff_link(root, "member_producer_receipt", f"{dirname}/producer-receipt.json"),
+        handoff_link(root, "member_validation_report", f"{dirname}/validation-report.json"),
+        handoff_link(root, "member_diagnostics", f"{dirname}/diagnostics.json"),
+    ]
+
+
+def handoff_link(root: Path, role: str, path: str) -> dict[str, str]:
+    return {
+        "role": role,
+        "path": path,
+        "pathScope": "bundle_relative",
+        "status": "present",
+        "digest": f"sha256:{sha256_path(root / path)}",
+    }
+
+
 def load_conformance_suite() -> dict[str, Any]:
     suite = json.loads(CONFORMANCE_SUITE.read_text(encoding="utf-8"))
     assert suite["schemaVersion"] == 1
@@ -2097,7 +2252,9 @@ def test_producer_receipt_contract_is_documented() -> None:
     )
     roadmap_flat = roadmap.replace("\n", " ")
     docc_roadmap_flat = docc_roadmap.replace("\n", " ")
+    proposal_policy_flat = proposal_policy.replace("\n", " ")
     docc_proposal_automation_flat = docc_proposal_automation.replace("\n", " ")
+    docc_proposal_policy_flat = docc_proposal_policy.replace("\n", " ")
     docc_fixture_policy_flat = docc_fixture_policy.replace("\n", " ")
     docc_acceptance_decisions_flat = docc_acceptance_decisions.replace("\n", " ")
     manifest = load_yaml_file(ROOT / "specpm.yaml")
@@ -2172,8 +2329,11 @@ def test_producer_receipt_contract_is_documented() -> None:
         "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md",
         "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md",
         "specs/REGISTRY_ACCEPTANCE_DECISIONS.md",
+        "SpecHarvesterPackageSetHandoffProposal",
+        "member manifest identity",
+        "`contains` relation endpoints",
     ):
-        assert required_text in proposal_policy
+        assert required_text in proposal_policy_flat
 
     for required_text in (
         "Producer Bundle Proposal Policy",
@@ -2187,8 +2347,10 @@ def test_producer_receipt_contract_is_documented() -> None:
         "<doc:ProducerBundleFixturePolicy>",
         "<doc:ProducerBundleProposalAutomation>",
         "<doc:RegistryAcceptanceDecisions>",
+        "SpecHarvesterPackageSetHandoffProposal",
+        "bundle-set preflight status/counts",
     ):
-        assert required_text in docc_proposal_policy
+        assert required_text in docc_proposal_policy_flat
 
     for required_text in (
         "Producer Bundle Proposal Automation Contract",
@@ -2442,6 +2604,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
     docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
     workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
     operator_guide_flat = re.sub(r"\s+", " ", operator_guide)
+    docc_policy_flat = re.sub(r"\s+", " ", docc_policy)
     roadmap_flat = re.sub(r"\s+", " ", roadmap)
     docc_roadmap_flat = re.sub(r"\s+", " ", docc_roadmap)
     workplan_flat = re.sub(r"\s+", " ", workplan)
@@ -2460,6 +2623,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "relation proposals",
         "accepted relations",
         "dry-run handoff claims that it created, approved, or merged",
+        "specpm producer-bundle preflight",
+        "member manifest IDs",
+        "contains",
     ):
         assert required_text in policy
 
@@ -2473,8 +2639,11 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "evidence_only",
         "SpecPM write credentials",
         "Rejected or deferred members",
+        "specpm producer-bundle preflight",
+        "member manifest IDs",
+        "contains",
     ):
-        assert required_text in docc_policy
+        assert required_text in docc_policy_flat
 
     for required_text in (
         "Package-Set Producer Handoff Intake",
@@ -2487,6 +2656,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "SPECPM_PROPOSAL_TOKEN",
         "partial acceptance",
         "xyflow.workspace",
+        "specpm producer-bundle preflight",
+        "member IDs match manifests",
+        "relation endpoints",
     ):
         assert required_text in operator_guide_flat
 
@@ -2496,6 +2668,8 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "package-set-handoff-proposal.md",
         "dry-run review evidence",
         "SpecPM write credentials",
+        "consumer-side package-set handoff preflight",
+        "evidence digests",
     ):
         assert required_text in roadmap_flat
 
@@ -2505,6 +2679,8 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "package-set-handoff-proposal.md",
         "dry-run review evidence",
         "maintainer decisions as the registry authority",
+        "producer-bundle preflight",
+        "evidence digests",
     ):
         assert required_text in docc_roadmap_flat
 
@@ -2512,6 +2688,8 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "Document the SpecPM-side package-set handoff intake checklist",
         "SpecHarvester `package-set-handoff-proposal.json`",
         "`package-set-handoff-proposal.md` dry-run evidence",
+        "`SpecHarvesterPackageSetHandoffProposal` JSON artifact",
+        "`contains` relation endpoints",
     ):
         assert required_text in workplan_flat
 
@@ -2536,6 +2714,7 @@ def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path
     assert report["status"] == "warning"
     assert report["summary"] == {
         "producerEvidenceRoleCount": 9,
+        "packageSetHandoff": None,
         "errorCount": 0,
         "warningCount": 2,
     }
@@ -2551,6 +2730,7 @@ def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path
         "validation_report",
     }
     assert report["registryAcceptanceDecision"] == {
+        "producerAuthority": None,
         "producerReceiptAuthority": "evidence_only",
         "recordKind": "SpecPMRegistryAcceptanceDecision",
         "status": "external_required",
@@ -2584,6 +2764,81 @@ def test_cli_producer_bundle_preflight_emits_json(
     assert report["status"] == "warning"
     assert report["summary"]["errorCount"] == 0
     assert report["registryAcceptanceDecision"]["status"] == "external_required"
+
+
+def test_producer_bundle_preflight_accepts_package_set_handoff(tmp_path: Path) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set)
+
+    report = preflight_producer_bundle(body, root=bundle_set)
+
+    assert report["status"] == "passed"
+    assert report["summary"]["producerEvidenceRoleCount"] == 0
+    assert report["summary"]["packageSetHandoff"] == {
+        "id": "example.workspace",
+        "memberCount": 2,
+        "relationCount": 1,
+        "evidenceRoleCount": 5,
+        "preflightStatus": "passed",
+        "registryAcceptanceStatus": "external_required",
+    }
+    assert report["packageSetHandoff"] == report["summary"]["packageSetHandoff"]
+    assert report["registryAcceptanceDecision"] == {
+        "producerAuthority": "evidence_only",
+        "producerReceiptAuthority": None,
+        "recordKind": "SpecPMRegistryAcceptanceDecision",
+        "status": "external_required",
+    }
+
+
+def test_cli_producer_bundle_preflight_accepts_package_set_handoff_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set)
+
+    exit_code = main(
+        ["producer-bundle", "preflight", "--body", str(body), "--root", str(bundle_set), "--json"]
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+    assert exit_code == 0
+    assert report["status"] == "passed"
+    assert report["packageSetHandoff"]["id"] == "example.workspace"
+    assert report["packageSetHandoff"]["memberCount"] == 2
+    assert report["packageSetHandoff"]["relationCount"] == 1
+
+
+def test_producer_bundle_preflight_rejects_inconsistent_package_set_handoff(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set, bad_relation=True)
+
+    report = preflight_producer_bundle(body, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert {
+        "package_set_member_manifest_id_mismatch",
+        "package_set_relation_target_missing",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_producer_bundle_preflight_reports_package_set_identity_errors(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    body = write_package_set_handoff_fixture(bundle_set)
+    handoff = json.loads(body.read_text(encoding="utf-8"))
+    handoff["apiVersion"] = "spec-harvester.package-set-handoff-proposal/v9"
+    body.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_producer_bundle(body, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert "package_set_handoff_api_version_invalid" in issue_codes(report["errors"])
+    assert "producer_evidence_links_missing" not in issue_codes(report["errors"])
 
 
 def test_producer_bundle_preflight_rejects_missing_registry_decision(tmp_path: Path) -> None:

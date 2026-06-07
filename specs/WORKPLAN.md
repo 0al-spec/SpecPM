@@ -1817,6 +1817,11 @@ Result:
   acceptance, relation acceptance, accepted-source effects, CI preflight
   expectations, failure/warning signals, and non-goals for package-set producer
   proposals.
+- `specpm producer-bundle preflight` can now read a
+  `SpecHarvesterPackageSetHandoffProposal` JSON artifact and verify package-set
+  handoff identity, member manifest IDs, linked evidence digests, bundle-set
+  preflight counts, `contains` relation endpoints, and the external acceptance
+  boundary without executing producer tools.
 
 ### P66-T7. Xyflow Reference Scenario
 

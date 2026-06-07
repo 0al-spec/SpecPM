@@ -64,6 +64,21 @@ verify:
 - dry-run handoff artifacts do not require exposing SpecPM write credentials to
   untrusted producer code.
 
+Maintainers can run consumer-side package-set preflight against the handoff
+artifact before accepted-source review:
+
+```bash
+specpm producer-bundle preflight \
+  --body <package-set-handoff-proposal.json> \
+  --root <package-set-bundle-root> \
+  --json
+```
+
+This checks package-set handoff identity, linked evidence digests, member
+manifest IDs, bundle-set preflight status/counts, and `contains` relation
+endpoints. It remains review evidence only and does not accept packages or
+relations.
+
 ## Partial Acceptance
 
 Maintainers may accept only part of the bundle set:

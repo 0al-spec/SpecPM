@@ -430,7 +430,7 @@ interfaces:
             - text/plain
     - id: cli_producer-bundle
       kind: cli
-      summary: specpm producer-bundle preflight for consumer-side review of producerEvidenceLinks and registryAcceptanceDecision proposal evidence.
+      summary: specpm producer-bundle preflight for consumer-side review of producerEvidenceLinks, registryAcceptanceDecision, and package-set handoff proposal evidence.
       outputs:
         - name: producer_bundle_preflight_report
           mediaTypes:
