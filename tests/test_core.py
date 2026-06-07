@@ -104,6 +104,7 @@ PROVENANCE_RECEIPT_FIXTURE = (
 PRODUCER_RECEIPTS_DOC = ROOT / "specs/PRODUCER_RECEIPTS.md"
 PRODUCER_BUNDLE_PROPOSAL_AUTOMATION_DOC = ROOT / "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md"
 PRODUCER_BUNDLE_FIXTURE_POLICY_DOC = ROOT / "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md"
+MULTI_PACKAGE_PRODUCER_INTAKE_DOC = ROOT / "specs/MULTI_PACKAGE_PRODUCER_INTAKE.md"
 PRODUCER_RECEIPT_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
 )
@@ -141,6 +142,9 @@ DOCC_PRODUCER_BUNDLE_PROPOSAL_AUTOMATION_PAGE = (
 )
 DOCC_PRODUCER_BUNDLE_FIXTURE_POLICY_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/ProducerBundleFixturePolicy.md"
+)
+DOCC_MULTI_PACKAGE_PRODUCER_INTAKE_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/MultiPackageProducerIntake.md"
 )
 DOCC_REGISTRY_ACCEPTANCE_DECISIONS_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/RegistryAcceptanceDecisions.md"
@@ -2428,6 +2432,88 @@ def test_producer_receipt_contract_is_documented() -> None:
         "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
         in evidence_paths
     )
+
+
+def test_multi_package_producer_intake_checklist_is_documented() -> None:
+    policy = MULTI_PACKAGE_PRODUCER_INTAKE_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_MULTI_PACKAGE_PRODUCER_INTAKE_PAGE.read_text(encoding="utf-8")
+    operator_guide = PUBLIC_INDEX_OPERATOR_GUIDE.read_text(encoding="utf-8")
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    operator_guide_flat = re.sub(r"\s+", " ", operator_guide)
+    roadmap_flat = re.sub(r"\s+", " ", roadmap)
+    docc_roadmap_flat = re.sub(r"\s+", " ", docc_roadmap)
+    workplan_flat = re.sub(r"\s+", " ", workplan)
+
+    for required_text in (
+        "package-set-handoff-proposal.json",
+        "package-set-handoff-proposal.md",
+        "Package-Set Handoff Checklist",
+        "producerEvidenceLinks",
+        "registryAcceptanceDecision.status",
+        "registryAcceptanceDecision.producerEvidence.producerReceiptAuthority",
+        "evidence_only",
+        "trusted workflow boundary or dry-run artifact",
+        "SPECPM_PROPOSAL_TOKEN",
+        "Partial Acceptance",
+        "relation proposals",
+        "accepted relations",
+        "dry-run handoff claims that it created, approved, or merged",
+    ):
+        assert required_text in policy
+
+    for required_text in (
+        "package-set-handoff-proposal.json",
+        "package-set-handoff-proposal.md",
+        "Handoff Checklist",
+        "producerEvidenceLinks",
+        "registryAcceptanceDecision.status",
+        "producerReceiptAuthority",
+        "evidence_only",
+        "SpecPM write credentials",
+        "Rejected or deferred members",
+    ):
+        assert required_text in docc_policy
+
+    for required_text in (
+        "Package-Set Producer Handoff Intake",
+        "package-set-handoff-proposal.json",
+        "package-set-handoff-proposal.md",
+        "dry-run package-set automation",
+        "registryAcceptanceDecision.status",
+        "producerReceiptAuthority",
+        "evidence_only",
+        "SPECPM_PROPOSAL_TOKEN",
+        "partial acceptance",
+        "xyflow.workspace",
+    ):
+        assert required_text in operator_guide_flat
+
+    for required_text in (
+        "recognize SpecHarvester package-set handoff artifacts",
+        "package-set-handoff-proposal.json",
+        "package-set-handoff-proposal.md",
+        "dry-run review evidence",
+        "SpecPM write credentials",
+    ):
+        assert required_text in roadmap_flat
+
+    for required_text in (
+        "SpecPM package-set intake now recognizes SpecHarvester",
+        "package-set-handoff-proposal.json",
+        "package-set-handoff-proposal.md",
+        "dry-run review evidence",
+        "maintainer decisions as the registry authority",
+    ):
+        assert required_text in docc_roadmap_flat
+
+    for required_text in (
+        "Document the SpecPM-side package-set handoff intake checklist",
+        "SpecHarvester `package-set-handoff-proposal.json`",
+        "`package-set-handoff-proposal.md` dry-run evidence",
+    ):
+        assert required_text in workplan_flat
 
 
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:

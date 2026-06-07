@@ -170,6 +170,39 @@ This is a consumer-side preflight of proposal evidence only. It does not run
 SpecHarvester, does not execute package content, and does not replace the final
 maintainer decision.
 
+## Package-Set Producer Handoff Intake
+
+When SpecHarvester or another producer submits a package-set handoff, the
+proposal may include `package-set-handoff-proposal.json` and
+`package-set-handoff-proposal.md` instead of immediately creating a SpecPM
+accepted-source pull request. This is the expected boundary for dry-run
+package-set automation: the handoff is review evidence, not a write-capable
+publication path.
+
+Before converting a package-set handoff into accepted-source changes,
+maintainers should verify:
+
+- the handoff identifies the package-set candidate and each selected member
+  candidate separately;
+- package-set subjects and member package subjects have distinct package IDs;
+- aggregate intent and member intent are reviewed separately;
+- relation proposals use documented relation types such as `contains`;
+- relation proposal source and target package IDs exist in the handoff or
+  already accepted registry metadata;
+- per-package receipts, validation reports, diagnostics reports, and candidate
+  files are linked for every accepted member;
+- `registryAcceptanceDecision.status` is not producer-approved;
+- `producerReceiptAuthority` remains `evidence_only`;
+- the dry-run handoff did not require `SPECPM_PROPOSAL_TOKEN`, deploy tokens,
+  or other SpecPM write credentials in producer-controlled execution;
+- partial acceptance is recorded explicitly, including deferred or rejected
+  members and relations.
+
+Accepted-source pull requests should include only the packages and relations
+that maintainers choose to accept. A package-set handoff can propose
+`xyflow.workspace`, `xyflow.system`, `xyflow.react`, and `xyflow.svelte`, but
+the accepted-source diff may accept only a subset.
+
 ## Accepted Manifest PR
 
 The accepted manifest pull request should add one immutable source record per

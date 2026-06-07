@@ -237,6 +237,9 @@ Tasks:
 - align SpecHarvester monorepo discovery so workspace manifests can produce a
   package-set candidate plus scoped package candidates such as
   `xyflow.workspace`, `xyflow.system`, `xyflow.react`, and `xyflow.svelte`;
+- recognize SpecHarvester package-set handoff artifacts such as
+  `package-set-handoff-proposal.json` and `package-set-handoff-proposal.md` as
+  dry-run review evidence, not write-capable registry authority;
 - define review and acceptance rules for multi-package producer bundles before
   adding registry authority or automatic publication behavior.
 
@@ -248,6 +251,9 @@ Success criteria:
   result is aggregate, scoped, or related;
 - SpecHarvester can hand SpecPM a reviewable multi-package candidate bundle
   without making SpecPM execute producer logic;
+- package-set handoff evidence can be reviewed without exposing SpecPM write
+  credentials or other registry write credentials to untrusted producer
+  execution;
 - package relations improve navigation and evidence review without becoming a
   hidden semantic resolver.
 
