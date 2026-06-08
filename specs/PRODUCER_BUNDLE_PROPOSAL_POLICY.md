@@ -204,6 +204,21 @@ Reviewers should verify:
 - `providerReceipt` and provider usage metadata are provenance only and do not
   establish semantic truth.
 
+SpecPM can enforce the machine-checkable part of that checklist with:
+
+```bash
+specpm producer-bundle preflight-ai-enrichment \
+  --body <package-set-ai-enrichment-proposal.json> \
+  --root <package-set-bundle-root> \
+  --handoff <package-set-handoff-proposal.json> \
+  --json
+```
+
+The preflight verifies identity, proposal-only authority, privacy flags,
+trust-boundary wording, non-goals, provider provenance, package ID alignment,
+allowlisted evidence paths, and `interfaces[].kind`. It fails if the artifact
+contains registry acceptance decision fields.
+
 Maintainers may copy, edit, or reject AI-suggested capabilities, intents,
 interfaces, and summaries during human review. They must not import those
 claims into accepted package sources without ordinary package evidence review

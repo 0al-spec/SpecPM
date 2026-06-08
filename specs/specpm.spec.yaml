@@ -221,6 +221,9 @@ provides:
     - id: specpm.specs.ai_enrichment_consumer_policy
       role: secondary
       summary: Document SpecPM-side review policy for SpecHarvester package-set AI enrichment proposals without treating model output as package truth or registry authority.
+    - id: specpm.specs.ai_enrichment_preflight
+      role: secondary
+      summary: Provide a consumer-side preflight for SpecHarvester package-set AI enrichment proposals that verifies proposal-only authority, privacy flags, package alignment, allowlisted evidence paths, and provider provenance.
     - id: specpm.specs.spec_quality_model
       role: secondary
       summary: Document the review model for SpecPackage validation, evidence coverage, boundary discipline, interface depth, reproducibility, and consumer utility.
@@ -807,6 +810,7 @@ evidence:
     supports:
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.registry.package_set_materialization_helper
+      - specpm.specs.ai_enrichment_preflight
   - id: index_submission_validator_source
     kind: source
     path: src/specpm/index_submission.py
@@ -976,6 +980,7 @@ evidence:
     supports:
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.ai_enrichment_consumer_policy
+      - specpm.specs.ai_enrichment_preflight
       - specpm.registry.package_set_materialization_helper
       - specpm.specs.producer_receipt_contract
       - producer_receipts_not_generation_authority
@@ -1104,6 +1109,7 @@ evidence:
       - specpm.specs.package_relations
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.ai_enrichment_consumer_policy
+      - specpm.specs.ai_enrichment_preflight
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
@@ -1201,6 +1207,7 @@ evidence:
       - specpm.registry.public_observation_report
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
+      - specpm.specs.ai_enrichment_preflight
   - id: derived_boundary
     kind: adr
     path: specs/0001_Derived_Artifact_Profile_Decision.md
@@ -1385,6 +1392,7 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.ai_enrichment_consumer_policy
+      - specpm.specs.ai_enrichment_preflight
       - specpm.specs.producer_receipt_contract
   - id: docc_producer_bundle_fixture_policy
     kind: documentation
@@ -1484,6 +1492,7 @@ evidence:
       - specpm.specs.package_sets
       - specpm.specs.package_relations
       - specpm.specs.ai_enrichment_consumer_policy
+      - specpm.specs.ai_enrichment_preflight
       - specpm.specs.producer_bundle_proposal_policy
   - id: docc_xyflow_package_set_reference
     kind: documentation

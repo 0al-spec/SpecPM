@@ -118,6 +118,20 @@ AI enrichment remains proposal-only even when its status is `completed`. It
 must not auto-accept capabilities, intents, interfaces, summaries, package
 relations, package versions, or accepted-source entries.
 
+SpecPM can run a consumer-side AI enrichment preflight before using the
+artifact during review:
+
+```bash
+specpm producer-bundle preflight-ai-enrichment \
+  --body <package-set-ai-enrichment-proposal.json> \
+  --root <package-set-bundle-root> \
+  --handoff <package-set-handoff-proposal.json> \
+  --json
+```
+
+This checks the machine-readable proposal boundary. It does not accept model
+suggestions or alter package-set materialization.
+
 ## Partial Acceptance
 
 Maintainers may accept only part of the bundle set:

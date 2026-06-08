@@ -20,6 +20,10 @@ PACKAGE_SET_HANDOFF_API_VERSION = "spec-harvester.package-set-handoff-proposal/v
 PACKAGE_SET_HANDOFF_KIND = "SpecHarvesterPackageSetHandoffProposal"
 PACKAGE_SET_MATERIALIZATION_KIND = "SpecPMPackageSetMaterializationReport"
 PACKAGE_SET_MATERIALIZATION_SCHEMA_VERSION = 1
+PACKAGE_SET_AI_ENRICHMENT_API_VERSION = "spec-harvester.package-set-ai-enrichment/v0"
+PACKAGE_SET_AI_ENRICHMENT_KIND = "SpecHarvesterPackageSetAIEnrichmentProposal"
+PACKAGE_SET_AI_ENRICHMENT_PREFLIGHT_KIND = "SpecPMPackageSetAIEnrichmentPreflightReport"
+PACKAGE_SET_AI_ENRICHMENT_PREFLIGHT_SCHEMA_VERSION = 1
 
 REQUIRED_PRODUCER_EVIDENCE_ROLES = {
     "accepted_source_bundle",
@@ -58,6 +62,20 @@ VALID_DECISION_STATUSES = {
     "override",
     "withdrawn",
 }
+AI_ENRICHMENT_REQUIRED_PRIVACY_FLAGS = {
+    "rawPromptsPersisted",
+    "rawModelResponsesPersisted",
+    "chainOfThoughtPersisted",
+    "secretsIncluded",
+}
+AI_ENRICHMENT_REQUIRED_NON_GOALS = {
+    "specpm_acceptance",
+    "package_acceptance",
+    "relation_acceptance",
+    "registry_publication",
+}
+AI_ENRICHMENT_ALLOWED_ARTIFACT_STATUSES = {"completed", "warning"}
+AI_ENRICHMENT_PROPOSAL_STATUSES = {"proposed", "missing_model_output"}
 
 JSON_FENCE_PATTERN = re.compile(r"```json\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 
@@ -357,6 +375,164 @@ def materialize_package_set_handoff(
         "packages": package_candidates,
         "relations": relation_candidates,
         "skipped": skipped_sources,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def preflight_package_set_ai_enrichment(
+    body_path: Path,
+    *,
+    root: Path | None = None,
+    handoff_path: Path | None = None,
+) -> dict[str, Any]:
+    try:
+        body = body_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        errors = [
+            issue(
+                "ai_enrichment_body_unreadable",
+                f"AI enrichment proposal could not be read: {exc}.",
+                field="body",
+            )
+        ]
+        return package_set_ai_enrichment_report(
+            body_path,
+            root,
+            handoff_path,
+            None,
+            errors,
+            [],
+            None,
+            "not_loaded",
+        )
+
+    payloads = _extract_json_payloads(body)
+    enrichment = _find_package_set_ai_enrichment_payload(payloads)
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+
+    if enrichment is None:
+        errors.append(
+            issue(
+                "ai_enrichment_payload_missing",
+                "Preflight requires a SpecHarvesterPackageSetAIEnrichmentProposal JSON payload.",
+                field="body",
+            )
+        )
+        return package_set_ai_enrichment_report(
+            body_path,
+            root,
+            handoff_path,
+            None,
+            errors,
+            warnings,
+            None,
+            "not_loaded",
+        )
+
+    handoff = load_package_set_handoff(handoff_path) if handoff_path is not None else {}
+    handoff_member_ids = package_set_handoff_member_ids(handoff)
+    package_alignment = "not_provided"
+    if handoff_path is not None:
+        if not handoff:
+            errors.append(
+                issue(
+                    "ai_enrichment_handoff_missing",
+                    "AI enrichment preflight could not read package-set handoff members.",
+                    field="handoff",
+                )
+            )
+            package_alignment = "failed"
+        elif not handoff_member_ids:
+            errors.append(
+                issue(
+                    "ai_enrichment_handoff_members_missing",
+                    "AI enrichment preflight could not extract package IDs from "
+                    "package-set handoff members.",
+                    field="handoff.members",
+                )
+            )
+            package_alignment = "failed"
+        else:
+            package_alignment = "verified"
+
+    validate_package_set_ai_enrichment(
+        enrichment,
+        errors,
+        warnings,
+        root,
+        handoff,
+        handoff_member_ids,
+    )
+    if not handoff_member_ids and handoff_path is None:
+        warnings.append(
+            issue(
+                "ai_enrichment_handoff_not_provided",
+                "Package ID alignment against package-set handoff members was not verified.",
+                field="handoff",
+            )
+        )
+
+    return package_set_ai_enrichment_report(
+        body_path,
+        root,
+        handoff_path,
+        enrichment,
+        errors,
+        warnings,
+        handoff_member_ids or None,
+        package_alignment,
+    )
+
+
+def package_set_ai_enrichment_report(
+    body_path: Path,
+    root: Path | None,
+    handoff_path: Path | None,
+    enrichment: dict[str, Any] | None,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    handoff_member_ids: set[str] | None,
+    package_alignment: str,
+) -> dict[str, Any]:
+    proposals = _list_of_mappings(enrichment.get("proposals")) if enrichment else []
+    inputs = _list_of_mappings(enrichment.get("inputs")) if enrichment else []
+    allowed_paths = ai_enrichment_allowed_evidence_paths(enrichment or {})
+    provider_receipt_count = sum(
+        1 for proposal in proposals if isinstance(proposal.get("providerReceipt"), dict)
+    )
+    status = "failed" if errors else ("warning" if warnings else "passed")
+    package_set = _mapping_value(enrichment.get("packageSet")) if enrichment else {}
+    return {
+        "kind": PACKAGE_SET_AI_ENRICHMENT_PREFLIGHT_KIND,
+        "schemaVersion": PACKAGE_SET_AI_ENRICHMENT_PREFLIGHT_SCHEMA_VERSION,
+        "status": status,
+        "body": str(body_path),
+        "root": str(root) if root else None,
+        "handoff": str(handoff_path) if handoff_path else None,
+        "packageSetAIEnrichment": (
+            {
+                "id": package_set.get("id"),
+                "artifactStatus": enrichment.get("status"),
+                "authority": enrichment.get("authority"),
+                "proposalCount": len(proposals),
+                "providerReceiptCount": provider_receipt_count,
+                "packageAlignment": package_alignment,
+                "handoffMemberCount": len(handoff_member_ids or set()),
+            }
+            if enrichment
+            else None
+        ),
+        "summary": {
+            "packageSetId": package_set.get("id"),
+            "proposalCount": len(proposals),
+            "inputCount": len(inputs),
+            "allowedEvidencePathCount": len(allowed_paths),
+            "providerReceiptCount": provider_receipt_count,
+            "errorCount": len(errors),
+            "warningCount": len(warnings),
+        },
         "errors": errors,
         "warnings": warnings,
     }
@@ -1272,6 +1448,609 @@ def validate_package_set_acceptance_decision(
         )
 
 
+def validate_package_set_ai_enrichment(
+    enrichment: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    root: Path | None,
+    handoff: dict[str, Any],
+    handoff_member_ids: set[str],
+) -> None:
+    if enrichment.get("apiVersion") != PACKAGE_SET_AI_ENRICHMENT_API_VERSION:
+        errors.append(
+            issue(
+                "ai_enrichment_api_version_invalid",
+                f"AI enrichment apiVersion must be {PACKAGE_SET_AI_ENRICHMENT_API_VERSION}.",
+                field="aiEnrichment.apiVersion",
+            )
+        )
+    if enrichment.get("kind") != PACKAGE_SET_AI_ENRICHMENT_KIND:
+        errors.append(
+            issue(
+                "ai_enrichment_kind_invalid",
+                f"AI enrichment kind must be {PACKAGE_SET_AI_ENRICHMENT_KIND}.",
+                field="aiEnrichment.kind",
+            )
+        )
+    if enrichment.get("schemaVersion") != 1:
+        errors.append(
+            issue(
+                "ai_enrichment_schema_version_invalid",
+                "AI enrichment schemaVersion must be 1.",
+                field="aiEnrichment.schemaVersion",
+            )
+        )
+    artifact_status = enrichment.get("status")
+    if artifact_status == "failed":
+        errors.append(
+            issue(
+                "ai_enrichment_status_failed",
+                "Failed AI enrichment artifacts cannot pass SpecPM preflight.",
+                field="aiEnrichment.status",
+            )
+        )
+    elif artifact_status not in AI_ENRICHMENT_ALLOWED_ARTIFACT_STATUSES:
+        errors.append(
+            issue(
+                "ai_enrichment_status_invalid",
+                "AI enrichment status must be completed or warning.",
+                field="aiEnrichment.status",
+            )
+        )
+    elif artifact_status == "warning":
+        warnings.append(
+            issue(
+                "ai_enrichment_artifact_warning",
+                "AI enrichment artifact completed with producer-side warnings.",
+                field="aiEnrichment.status",
+            )
+        )
+    if enrichment.get("authority") != "proposal_only_not_registry_acceptance":
+        errors.append(
+            issue(
+                "ai_enrichment_authority_invalid",
+                "AI enrichment authority must remain proposal_only_not_registry_acceptance.",
+                field="aiEnrichment.authority",
+            )
+        )
+
+    validate_ai_enrichment_no_acceptance_decision(enrichment, errors)
+    validate_ai_enrichment_privacy(_mapping_value(enrichment.get("privacy")), errors)
+    validate_ai_enrichment_trust_boundary(enrichment, errors)
+    validate_ai_enrichment_non_goals(enrichment, errors)
+    validate_ai_enrichment_provider(_mapping_value(enrichment.get("provider")), errors)
+    validate_ai_enrichment_inputs(enrichment, errors, root)
+
+    proposals = _list_of_mappings(enrichment.get("proposals"))
+    package_set = _mapping_value(enrichment.get("packageSet"))
+    package_set_id = package_set.get("id")
+    if not isinstance(package_set_id, str) or not package_set_id:
+        errors.append(
+            issue(
+                "ai_enrichment_package_set_id_missing",
+                "AI enrichment packageSet.id must be present.",
+                field="aiEnrichment.packageSet.id",
+            )
+        )
+    handoff_package_set_id = _mapping_value(handoff.get("packageSet")).get("id")
+    if (
+        isinstance(package_set_id, str)
+        and isinstance(handoff_package_set_id, str)
+        and package_set_id != handoff_package_set_id
+    ):
+        errors.append(
+            issue(
+                "ai_enrichment_package_set_id_mismatch",
+                "AI enrichment packageSet.id must match the package-set handoff id.",
+                field="aiEnrichment.packageSet.id",
+            )
+        )
+    if package_set.get("candidateCount") != len(proposals):
+        errors.append(
+            issue(
+                "ai_enrichment_candidate_count_mismatch",
+                "AI enrichment packageSet.candidateCount must match proposals length.",
+                field="aiEnrichment.packageSet.candidateCount",
+            )
+        )
+    summary = _mapping_value(enrichment.get("summary"))
+    if summary.get("proposalCount") != len(proposals):
+        errors.append(
+            issue(
+                "ai_enrichment_summary_proposal_count_mismatch",
+                "AI enrichment summary.proposalCount must match proposals length.",
+                field="aiEnrichment.summary.proposalCount",
+            )
+        )
+    if summary.get("errorCount") not in (0, None):
+        errors.append(
+            issue(
+                "ai_enrichment_summary_errors_present",
+                "AI enrichment summary.errorCount must be zero before SpecPM review use.",
+                field="aiEnrichment.summary.errorCount",
+            )
+        )
+
+    allowed_paths = ai_enrichment_allowed_evidence_paths(enrichment)
+    if not allowed_paths:
+        errors.append(
+            issue(
+                "ai_enrichment_allowed_evidence_missing",
+                "AI enrichment inputs must include compact_model_input evidencePaths.",
+                field="aiEnrichment.inputs",
+            )
+        )
+    validate_ai_enrichment_proposals(
+        proposals,
+        errors,
+        warnings,
+        allowed_paths,
+        handoff,
+        handoff_member_ids,
+    )
+    validate_ai_enrichment_diagnostics(enrichment, errors, warnings)
+
+
+def validate_ai_enrichment_no_acceptance_decision(
+    enrichment: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    for key in ("registryAcceptanceDecision", "acceptanceDecision"):
+        if key in enrichment:
+            errors.append(
+                issue(
+                    "ai_enrichment_acceptance_decision_not_allowed",
+                    "AI enrichment artifacts must not carry registry acceptance decisions.",
+                    field=f"aiEnrichment.{key}",
+                )
+            )
+
+
+def validate_ai_enrichment_privacy(
+    privacy: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    for key in sorted(AI_ENRICHMENT_REQUIRED_PRIVACY_FLAGS):
+        if privacy.get(key) is not False:
+            errors.append(
+                issue(
+                    "ai_enrichment_privacy_flag_invalid",
+                    f"AI enrichment privacy.{key} must be false.",
+                    field=f"aiEnrichment.privacy.{key}",
+                )
+            )
+
+
+def validate_ai_enrichment_trust_boundary(
+    enrichment: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    notes = [item for item in list_value(enrichment.get("trustBoundary")) if isinstance(item, str)]
+    joined = "\n".join(notes).lower()
+    if "proposal evidence only" not in joined or "specpm remains" not in joined:
+        errors.append(
+            issue(
+                "ai_enrichment_trust_boundary_invalid",
+                "AI enrichment trustBoundary must keep output proposal-only "
+                "and SpecPM authoritative.",
+                field="aiEnrichment.trustBoundary",
+            )
+        )
+
+
+def validate_ai_enrichment_non_goals(
+    enrichment: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    non_goals = {item for item in list_value(enrichment.get("nonGoals")) if isinstance(item, str)}
+    missing = sorted(AI_ENRICHMENT_REQUIRED_NON_GOALS - non_goals)
+    if missing:
+        errors.append(
+            issue(
+                "ai_enrichment_non_goals_missing",
+                "AI enrichment nonGoals must exclude acceptance and registry publication: "
+                + ", ".join(missing),
+                field="aiEnrichment.nonGoals",
+            )
+        )
+
+
+def validate_ai_enrichment_provider(
+    provider: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if not isinstance(provider.get("kind"), str) or not provider["kind"]:
+        errors.append(
+            issue(
+                "ai_enrichment_provider_kind_missing",
+                "AI enrichment provider.kind must be present for provenance.",
+                field="aiEnrichment.provider.kind",
+            )
+        )
+    if provider.get("execution") not in {"operator_opt_in_local", "not_run_by_spec_harvester"}:
+        errors.append(
+            issue(
+                "ai_enrichment_provider_execution_invalid",
+                "AI enrichment provider.execution must describe local opt-in or external output.",
+                field="aiEnrichment.provider.execution",
+            )
+        )
+
+
+def validate_ai_enrichment_inputs(
+    enrichment: dict[str, Any],
+    errors: list[dict[str, Any]],
+    root: Path | None,
+) -> None:
+    for index, item in enumerate(_list_of_mappings(enrichment.get("inputs"))):
+        field = f"aiEnrichment.inputs[{index}]"
+        role = item.get("role")
+        if not isinstance(role, str) or not role:
+            errors.append(
+                issue(
+                    "ai_enrichment_input_role_missing",
+                    "AI enrichment input record must include role.",
+                    field=f"{field}.role",
+                )
+            )
+        path = item.get("path")
+        path_scope = item.get("pathScope")
+        if path is None:
+            continue
+        if not isinstance(path, str) or not path:
+            errors.append(
+                issue(
+                    "ai_enrichment_input_path_invalid",
+                    "AI enrichment input path must be a non-empty string.",
+                    field=f"{field}.path",
+                )
+            )
+            continue
+        if path_scope not in KNOWN_PACKAGE_SET_EVIDENCE_PATH_SCOPES:
+            errors.append(
+                issue(
+                    "ai_enrichment_input_path_scope_invalid",
+                    "AI enrichment input path must use a known pathScope.",
+                    field=f"{field}.pathScope",
+                )
+            )
+        if path_scope == "bundle_relative" and root is not None:
+            validate_ai_enrichment_input_file(root, item, errors, field)
+        if role == "compact_model_input":
+            for evidence_index, evidence_path in enumerate(list_value(item.get("evidencePaths"))):
+                if not isinstance(evidence_path, str) or not evidence_path:
+                    errors.append(
+                        issue(
+                            "ai_enrichment_allowed_evidence_path_invalid",
+                            "AI enrichment compact_model_input evidencePaths must be "
+                            "non-empty strings.",
+                            field=f"{field}.evidencePaths[{evidence_index}]",
+                        )
+                    )
+                elif not is_safe_relative_path(evidence_path):
+                    errors.append(
+                        issue(
+                            "ai_enrichment_allowed_evidence_path_unsafe",
+                            "AI enrichment compact_model_input evidencePaths must be "
+                            "safe relative paths.",
+                            field=f"{field}.evidencePaths[{evidence_index}]",
+                        )
+                    )
+
+
+def validate_ai_enrichment_input_file(
+    root: Path,
+    item: dict[str, Any],
+    errors: list[dict[str, Any]],
+    field: str,
+) -> None:
+    path = item.get("path")
+    if not isinstance(path, str):
+        return
+    resolved = resolve_package_set_path(root, path)
+    if resolved is None:
+        errors.append(
+            issue(
+                "ai_enrichment_input_path_escape",
+                "AI enrichment bundle-relative input path escapes the preflight root.",
+                field=f"{field}.path",
+            )
+        )
+        return
+    if not resolved.is_file():
+        errors.append(
+            issue(
+                "ai_enrichment_input_file_missing",
+                f"AI enrichment input file is missing: {path}.",
+                field=f"{field}.path",
+            )
+        )
+        return
+    digest = item.get("digest")
+    expected = digest_value(digest)
+    if expected is not None:
+        actual = f"sha256:{sha256_file(resolved)}"
+        if expected != actual:
+            errors.append(
+                issue(
+                    "ai_enrichment_input_digest_mismatch",
+                    "AI enrichment input digest does not match file bytes.",
+                    field=f"{field}.digest",
+                )
+            )
+
+
+def validate_ai_enrichment_proposals(
+    proposals: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    allowed_paths: set[str],
+    handoff: dict[str, Any],
+    handoff_member_ids: set[str],
+) -> None:
+    ids: set[str] = set()
+    if not proposals:
+        errors.append(
+            issue(
+                "ai_enrichment_proposals_missing",
+                "AI enrichment artifact must include at least one proposal.",
+                field="aiEnrichment.proposals",
+            )
+        )
+    for index, proposal in enumerate(proposals):
+        field = f"aiEnrichment.proposals[{index}]"
+        package_id = proposal.get("packageId")
+        if not isinstance(package_id, str) or not package_id:
+            errors.append(
+                issue(
+                    "ai_enrichment_proposal_package_id_missing",
+                    "AI enrichment proposal must include packageId.",
+                    field=f"{field}.packageId",
+                )
+            )
+            continue
+        if package_id in ids:
+            errors.append(
+                issue(
+                    "ai_enrichment_proposal_package_id_duplicate",
+                    f"Duplicate AI enrichment proposal packageId: {package_id}.",
+                    field=f"{field}.packageId",
+                )
+            )
+        ids.add(package_id)
+        if handoff_member_ids and package_id not in handoff_member_ids:
+            errors.append(
+                issue(
+                    "ai_enrichment_package_id_not_in_handoff",
+                    "AI enrichment proposal packageId is not present in handoff members: "
+                    f"{package_id}.",
+                    field=f"{field}.packageId",
+                )
+            )
+        status = proposal.get("status")
+        if status not in AI_ENRICHMENT_PROPOSAL_STATUSES:
+            errors.append(
+                issue(
+                    "ai_enrichment_proposal_status_invalid",
+                    "AI enrichment proposal status must be proposed or missing_model_output.",
+                    field=f"{field}.status",
+                )
+            )
+        if status == "missing_model_output":
+            errors.append(
+                issue(
+                    "ai_enrichment_model_output_missing",
+                    f"AI enrichment proposal for {package_id} is missing model output.",
+                    field=f"{field}.status",
+                )
+            )
+        validate_ai_enrichment_records(
+            package_id,
+            _list_of_mappings(proposal.get("capabilities")),
+            errors,
+            warnings,
+            allowed_paths,
+            f"{field}.capabilities",
+            require_interface_kind=False,
+        )
+        validate_ai_enrichment_records(
+            package_id,
+            _list_of_mappings(proposal.get("interfaces")),
+            errors,
+            warnings,
+            allowed_paths,
+            f"{field}.interfaces",
+            require_interface_kind=True,
+        )
+        validate_ai_enrichment_provider_receipt(
+            package_id,
+            _mapping_value(proposal.get("providerReceipt")),
+            errors,
+            field,
+        )
+    if handoff_member_ids and ids != handoff_member_ids:
+        missing = sorted(handoff_member_ids - ids)
+        extra = sorted(ids - handoff_member_ids)
+        errors.append(
+            issue(
+                "ai_enrichment_handoff_package_set_mismatch",
+                "AI enrichment proposal package IDs must match handoff member IDs. "
+                f"Missing: {', '.join(missing) or 'none'}; extra: {', '.join(extra) or 'none'}.",
+                field="aiEnrichment.proposals",
+            )
+        )
+
+
+def validate_ai_enrichment_records(
+    package_id: str,
+    records: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    allowed_paths: set[str],
+    field: str,
+    *,
+    require_interface_kind: bool,
+) -> None:
+    for index, record in enumerate(records):
+        record_field = f"{field}[{index}]"
+        if not isinstance(record.get("id"), str) or not record["id"]:
+            errors.append(
+                issue(
+                    "ai_enrichment_record_id_missing",
+                    f"AI enrichment record for {package_id} must include id.",
+                    field=f"{record_field}.id",
+                )
+            )
+        if not isinstance(record.get("summary"), str) or not record["summary"]:
+            warnings.append(
+                issue(
+                    "ai_enrichment_record_summary_missing",
+                    f"AI enrichment record for {package_id} should include summary.",
+                    field=f"{record_field}.summary",
+                )
+            )
+        if require_interface_kind and (
+            not isinstance(record.get("kind"), str) or not record["kind"]
+        ):
+            errors.append(
+                issue(
+                    "ai_enrichment_interface_kind_missing",
+                    f"AI enrichment interface proposal for {package_id} must preserve kind.",
+                    field=f"{record_field}.kind",
+                )
+            )
+        evidence_paths = [
+            path
+            for path in list_value(record.get("evidencePaths"))
+            if isinstance(path, str) and path
+        ]
+        if not evidence_paths:
+            warnings.append(
+                issue(
+                    "ai_enrichment_record_evidence_missing",
+                    f"AI enrichment record for {package_id} should cite evidencePaths.",
+                    field=f"{record_field}.evidencePaths",
+                )
+            )
+        for path in evidence_paths:
+            if not is_safe_relative_path(path):
+                errors.append(
+                    issue(
+                        "ai_enrichment_evidence_path_unsafe",
+                        "AI enrichment evidencePaths must be safe relative paths.",
+                        field=f"{record_field}.evidencePaths",
+                    )
+                )
+            elif path not in allowed_paths:
+                errors.append(
+                    issue(
+                        "ai_enrichment_evidence_path_not_allowlisted",
+                        "AI enrichment evidencePath is not present in compact_model_input "
+                        "allowlist.",
+                        field=f"{record_field}.evidencePaths",
+                    )
+                )
+
+
+def validate_ai_enrichment_provider_receipt(
+    package_id: str,
+    receipt: dict[str, Any],
+    errors: list[dict[str, Any]],
+    field: str,
+) -> None:
+    if not receipt:
+        errors.append(
+            issue(
+                "ai_enrichment_provider_receipt_missing",
+                f"AI enrichment proposal for {package_id} must include providerReceipt provenance.",
+                field=f"{field}.providerReceipt",
+            )
+        )
+        return
+    for key in ("rawPromptPersisted", "rawResponsePersisted", "chainOfThoughtPersisted"):
+        if key in receipt and receipt[key] is not False:
+            errors.append(
+                issue(
+                    "ai_enrichment_provider_receipt_privacy_invalid",
+                    f"AI enrichment providerReceipt.{key} must be false when present.",
+                    field=f"{field}.providerReceipt.{key}",
+                )
+            )
+    if receipt.get("authority") in {"accepted", "registry_authority", "truth"}:
+        errors.append(
+            issue(
+                "ai_enrichment_provider_receipt_authority_invalid",
+                "AI enrichment providerReceipt is provenance only, not semantic authority.",
+                field=f"{field}.providerReceipt.authority",
+            )
+        )
+
+
+def validate_ai_enrichment_diagnostics(
+    enrichment: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> None:
+    diagnostics = _list_of_mappings(enrichment.get("diagnostics"))
+    severity_counts = {"error": 0, "warning": 0}
+    for index, diagnostic in enumerate(diagnostics):
+        severity = diagnostic.get("severity")
+        if severity == "error":
+            severity_counts["error"] += 1
+            errors.append(
+                issue(
+                    "ai_enrichment_diagnostic_error",
+                    "AI enrichment producer diagnostics include an error.",
+                    field=f"aiEnrichment.diagnostics[{index}]",
+                )
+            )
+        elif severity == "warning":
+            severity_counts["warning"] += 1
+            warnings.append(
+                issue(
+                    "ai_enrichment_diagnostic_warning",
+                    "AI enrichment producer diagnostics include a warning.",
+                    field=f"aiEnrichment.diagnostics[{index}]",
+                )
+            )
+        elif severity is not None:
+            warnings.append(
+                issue(
+                    "ai_enrichment_diagnostic_severity_unknown",
+                    "AI enrichment diagnostic severity is not recognized.",
+                    field=f"aiEnrichment.diagnostics[{index}].severity",
+                )
+            )
+    summary = _mapping_value(enrichment.get("summary"))
+    if summary.get("warningCount") not in (None, severity_counts["warning"]):
+        warnings.append(
+            issue(
+                "ai_enrichment_summary_warning_count_mismatch",
+                "AI enrichment summary.warningCount does not match diagnostics.",
+                field="aiEnrichment.summary.warningCount",
+            )
+        )
+
+
+def ai_enrichment_allowed_evidence_paths(enrichment: dict[str, Any]) -> set[str]:
+    allowed: set[str] = set()
+    for item in _list_of_mappings(enrichment.get("inputs")):
+        if item.get("role") != "compact_model_input":
+            continue
+        for path in list_value(item.get("evidencePaths")):
+            if isinstance(path, str) and path:
+                allowed.add(path)
+    return allowed
+
+
+def package_set_handoff_member_ids(handoff: dict[str, Any]) -> set[str]:
+    return {
+        package_id
+        for member in _list_of_mappings(handoff.get("members"))
+        if isinstance((package_id := member.get("packageId")), str) and package_id
+    }
+
+
 def _extract_json_payloads(body: str) -> list[Any]:
     payloads: list[Any] = []
     for match in JSON_FENCE_PATTERN.finditer(body):
@@ -1315,6 +2094,21 @@ def _find_package_set_handoff_payload(payloads: list[Any]) -> dict[str, Any] | N
     return None
 
 
+def _find_package_set_ai_enrichment_payload(payloads: list[Any]) -> dict[str, Any] | None:
+    for payload in payloads:
+        if isinstance(payload, dict) and (
+            payload.get("kind") == PACKAGE_SET_AI_ENRICHMENT_KIND
+            or payload.get("apiVersion") == PACKAGE_SET_AI_ENRICHMENT_API_VERSION
+            or (
+                isinstance(payload.get("packageSet"), dict)
+                and isinstance(payload.get("proposals"), list)
+                and payload.get("authority") == "proposal_only_not_registry_acceptance"
+            )
+        ):
+            return payload
+    return None
+
+
 def _find_mapping_payload(payloads: list[Any], key: str) -> dict[str, Any] | None:
     for payload in payloads:
         if isinstance(payload, dict) and isinstance(payload.get(key), dict):
@@ -1330,6 +2124,10 @@ def _list_of_mappings(value: Any) -> list[dict[str, Any]]:
     if not isinstance(value, list):
         return []
     return [item for item in value if isinstance(item, dict)]
+
+
+def list_value(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
 
 
 def ordered_unique(values: list[str]) -> list[str]:
@@ -1383,6 +2181,22 @@ def candidate_tree_contains_symlink(path: Path) -> bool:
     if path.is_symlink():
         return True
     return any(item.is_symlink() for item in path.rglob("*"))
+
+
+def digest_value(digest: Any) -> str | None:
+    if isinstance(digest, str) and digest.startswith("sha256:"):
+        return digest
+    if isinstance(digest, dict):
+        algorithm = digest.get("algorithm")
+        value = digest.get("value")
+        if algorithm == "sha256" and isinstance(value, str) and value:
+            return f"sha256:{value}"
+    return None
+
+
+def is_safe_relative_path(path: str) -> bool:
+    relative = Path(path)
+    return not relative.is_absolute() and ".." not in relative.parts and "\\" not in path
 
 
 def package_output_path(

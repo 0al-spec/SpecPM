@@ -225,6 +225,10 @@ same real `xyflow` checkout with a local OpenAI-compatible provider. The run
 produced four proposal-only enrichment records, while SpecPM materialization
 still used only the ordinary package-set handoff and explicit maintainer
 package/relation selection.
+SpecPM now provides `specpm producer-bundle preflight-ai-enrichment` for the
+machine-checkable AI enrichment review boundary: artifact identity,
+proposal-only authority, privacy flags, package alignment, allowlisted evidence
+paths, `interfaces[].kind`, and provider provenance.
 The maintainer-selected accepted-source materialization path is now implemented through
 `specpm producer-bundle materialize-package-set`: read a package-set handoff
 plus explicit package and relation selections, then prepare review artifacts or

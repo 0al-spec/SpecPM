@@ -94,6 +94,22 @@ allowlisted `evidencePaths` and undergo human review. Unsupported evidence
 paths are diagnostics, not accepted facts. Provider receipts and usage metadata
 are provenance only and do not make model output authoritative.
 
+SpecPM can check those machine-readable boundaries with:
+
+```bash
+specpm producer-bundle preflight-ai-enrichment \
+  --body <package-set-ai-enrichment-proposal.json> \
+  --root <package-set-bundle-root> \
+  --handoff <package-set-handoff-proposal.json> \
+  --json
+```
+
+The command verifies identity, proposal-only authority, privacy flags,
+trust-boundary wording, non-goals, provider provenance, package ID alignment,
+allowlisted evidence paths, and `interfaces[].kind`. It rejects artifacts that
+carry registry acceptance decision fields. A passing report is still review
+evidence only.
+
 ## Reject And Warning Signals
 
 Reject or request regeneration when required files are missing, receipt identity
