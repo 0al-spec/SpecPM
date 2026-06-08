@@ -444,6 +444,16 @@ def preflight_package_set_ai_enrichment(
                 )
             )
             package_alignment = "failed"
+        elif not handoff_member_ids:
+            errors.append(
+                issue(
+                    "ai_enrichment_handoff_members_missing",
+                    "AI enrichment preflight could not extract package IDs from "
+                    "package-set handoff members.",
+                    field="handoff.members",
+                )
+            )
+            package_alignment = "failed"
         else:
             package_alignment = "verified"
 
@@ -1696,6 +1706,14 @@ def validate_ai_enrichment_inputs(
                 )
             )
             continue
+        if path_scope not in KNOWN_PACKAGE_SET_EVIDENCE_PATH_SCOPES:
+            errors.append(
+                issue(
+                    "ai_enrichment_input_path_scope_invalid",
+                    "AI enrichment input path must use a known pathScope.",
+                    field=f"{field}.pathScope",
+                )
+            )
         if path_scope == "bundle_relative" and root is not None:
             validate_ai_enrichment_input_file(root, item, errors, field)
         if role == "compact_model_input":

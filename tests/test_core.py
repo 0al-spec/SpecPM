@@ -3223,6 +3223,27 @@ def test_ai_enrichment_preflight_warns_without_handoff_alignment(
     assert "ai_enrichment_handoff_not_provided" in issue_codes(report["warnings"])
 
 
+def test_ai_enrichment_preflight_rejects_handoff_without_member_ids(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    ai_proposal = write_ai_enrichment_fixture(bundle_set)
+    payload = json.loads(handoff.read_text(encoding="utf-8"))
+    payload["members"] = [{"role": "workspace"}]
+    handoff.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_enrichment(
+        ai_proposal,
+        root=bundle_set,
+        handoff_path=handoff,
+    )
+
+    assert report["status"] == "failed"
+    assert report["packageSetAIEnrichment"]["packageAlignment"] == "failed"
+    assert "ai_enrichment_handoff_members_missing" in issue_codes(report["errors"])
+
+
 def test_cli_ai_enrichment_preflight_emits_json(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -3248,6 +3269,26 @@ def test_cli_ai_enrichment_preflight_emits_json(
     assert exit_code == 0
     assert report["status"] == "passed"
     assert report["packageSetAIEnrichment"]["packageAlignment"] == "verified"
+
+
+def test_ai_enrichment_preflight_rejects_unknown_input_path_scope(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    ai_proposal = write_ai_enrichment_fixture(bundle_set)
+    payload = json.loads(ai_proposal.read_text(encoding="utf-8"))
+    payload["inputs"][0]["pathScope"] = "unexpected_scope"
+    ai_proposal.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_enrichment(
+        ai_proposal,
+        root=bundle_set,
+        handoff_path=handoff,
+    )
+
+    assert report["status"] == "failed"
+    assert "ai_enrichment_input_path_scope_invalid" in issue_codes(report["errors"])
 
 
 def test_ai_enrichment_preflight_rejects_authority_privacy_and_acceptance(
