@@ -1942,6 +1942,38 @@ Result:
   preflight, and `materialize-package-set` dry run. The AI artifact did not
   alter accepted-source selection or registry metadata automatically.
 
+### P66-T10. Package-Set AI Enrichment Consumer Preflight
+
+Status: Completed.
+
+Motivation:
+
+- Policy alone leaves AI enrichment review dependent on manual checklist
+  discipline. SpecPM needs a consumer-side gate that can reject malformed or
+  authority-confused `SpecHarvesterPackageSetAIEnrichmentProposal` artifacts
+  before maintainers use them as review evidence.
+
+Goal:
+
+- Add a read-only `specpm producer-bundle preflight-ai-enrichment` command that
+  verifies proposal identity, proposal-only authority, privacy flags, provider
+  provenance, package ID alignment with handoff members, allowlisted evidence
+  paths, `interfaces[].kind`, and the absence of registry acceptance decisions.
+
+Expected result:
+
+- Maintainers can run a deterministic SpecPM-side preflight over optional AI
+  enrichment artifacts without executing SpecHarvester, package code, prompts,
+  analyzers, or package managers.
+
+Result:
+
+- `preflight-ai-enrichment` emits a stable
+  `SpecPMPackageSetAIEnrichmentPreflightReport`.
+- Passing preflight remains review evidence only. It does not accept
+  AI-suggested capabilities, intents, interfaces, summaries, package relations,
+  package versions, or accepted-source entries.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

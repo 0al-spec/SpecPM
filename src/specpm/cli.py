@@ -32,6 +32,7 @@ from specpm.core import (
 )
 from specpm.producer_bundle import (
     materialize_package_set_handoff,
+    preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
     render_package_set_materialization_manifest_candidate,
     render_package_set_materialization_pr_body,
@@ -300,6 +301,26 @@ def build_parser() -> argparse.ArgumentParser:
     )
     producer_bundle_preflight.add_argument("--json", action="store_true", help="Emit stable JSON.")
     producer_bundle_preflight.set_defaults(handler=handle_producer_bundle_preflight)
+
+    ai_enrichment_preflight = producer_bundle_subparsers.add_parser(
+        "preflight-ai-enrichment",
+        help="Preflight SpecHarvester package-set AI enrichment proposal evidence.",
+    )
+    ai_enrichment_preflight.add_argument(
+        "--body",
+        required=True,
+        help="JSON or Markdown file containing SpecHarvesterPackageSetAIEnrichmentProposal.",
+    )
+    ai_enrichment_preflight.add_argument(
+        "--root",
+        help="Optional package-set bundle root used to verify linked input files and digests.",
+    )
+    ai_enrichment_preflight.add_argument(
+        "--handoff",
+        help="Optional package-set handoff JSON used to verify proposal package ID alignment.",
+    )
+    ai_enrichment_preflight.add_argument("--json", action="store_true", help="Emit stable JSON.")
+    ai_enrichment_preflight.set_defaults(handler=handle_ai_enrichment_preflight)
 
     package_set_materialize = producer_bundle_subparsers.add_parser(
         "materialize-package-set",
@@ -657,6 +678,19 @@ def handle_producer_bundle_preflight(args: argparse.Namespace) -> int:
     return 1 if report["status"] == "failed" else 0
 
 
+def handle_ai_enrichment_preflight(args: argparse.Namespace) -> int:
+    report = preflight_package_set_ai_enrichment(
+        Path(args.body),
+        root=Path(args.root) if args.root else None,
+        handoff_path=Path(args.handoff) if args.handoff else None,
+    )
+    if args.json:
+        print_json(report)
+    else:
+        print_ai_enrichment_preflight(report)
+    return 1 if report["status"] == "failed" else 0
+
+
 def handle_package_set_materialize(args: argparse.Namespace) -> int:
     report = materialize_package_set_handoff(
         Path(args.handoff),
@@ -703,6 +737,19 @@ def print_producer_bundle_preflight(report: dict[str, Any]) -> None:
     print(
         f"{report['status']}: producer bundle preflight "
         f"({summary['errorCount']} errors, {summary['warningCount']} warnings)"
+    )
+    for issue_payload in report["errors"]:
+        print(f"error {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+    for issue_payload in report["warnings"]:
+        print(f"warning {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+
+
+def print_ai_enrichment_preflight(report: dict[str, Any]) -> None:
+    summary = report["summary"]
+    print(
+        f"{report['status']}: package-set AI enrichment preflight "
+        f"({summary['proposalCount']} proposals, "
+        f"{summary['errorCount']} errors, {summary['warningCount']} warnings)"
     )
     for issue_payload in report["errors"]:
         print(f"error {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)

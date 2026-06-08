@@ -227,6 +227,19 @@ Before using AI enrichment during review, operators should verify:
 - unsupported evidence paths appear only as diagnostics;
 - provider receipts are provenance, not registry authority.
 
+When local artifacts are available, operators should run:
+
+```bash
+specpm producer-bundle preflight-ai-enrichment \
+  --body <package-set-ai-enrichment-proposal.json> \
+  --root <package-set-bundle-root> \
+  --handoff <package-set-handoff-proposal.json> \
+  --json
+```
+
+The report is a review gate only. It must not be treated as approval to copy
+AI-suggested claims into accepted package sources.
+
 Accepting an AI-suggested capability, intent, interface, or summary requires the
 same explicit maintainer review as any manually authored package claim.
 

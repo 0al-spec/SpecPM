@@ -53,7 +53,11 @@ from specpm.index_submission import (
     render_submission_report_markdown,
     validate_submission_body,
 )
-from specpm.producer_bundle import materialize_package_set_handoff, preflight_producer_bundle
+from specpm.producer_bundle import (
+    materialize_package_set_handoff,
+    preflight_package_set_ai_enrichment,
+    preflight_producer_bundle,
+)
 from specpm.public_index import (
     generate_public_index,
     generate_public_index_from_inputs,
@@ -514,6 +518,135 @@ def handoff_link(root: Path, role: str, path: str) -> dict[str, str]:
         "status": "present",
         "digest": f"sha256:{sha256_path(root / path)}",
     }
+
+
+def write_ai_enrichment_fixture(root: Path) -> Path:
+    payload = {
+        "apiVersion": "spec-harvester.package-set-ai-enrichment/v0",
+        "kind": "SpecHarvesterPackageSetAIEnrichmentProposal",
+        "schemaVersion": 1,
+        "status": "completed",
+        "authority": "proposal_only_not_registry_acceptance",
+        "packageSet": {
+            "id": "example.workspace",
+            "candidateCount": 2,
+            "relationCount": 1,
+        },
+        "provider": {
+            "kind": "external_model_output",
+            "name": "external",
+            "model": None,
+            "baseUrl": None,
+            "execution": "not_run_by_spec_harvester",
+        },
+        "inputs": [
+            {
+                "role": "package_set_draft",
+                "path": "package-set-draft.json",
+                "pathScope": "bundle_relative",
+                "digest": f"sha256:{sha256_path(root / 'package-set-draft.json')}",
+            },
+            {
+                "role": "package_relation_proposals",
+                "path": "package-relation-proposals.json",
+                "pathScope": "bundle_relative",
+                "digest": f"sha256:{sha256_path(root / 'package-relation-proposals.json')}",
+            },
+            {
+                "role": "compact_model_input",
+                "packageCount": 2,
+                "evidencePathCount": 4,
+                "evidencePaths": [
+                    "workspace/specpm.yaml",
+                    "workspace/specs/main.spec.yaml",
+                    "member/specpm.yaml",
+                    "member/specs/member.spec.yaml",
+                ],
+            },
+        ],
+        "proposals": [
+            {
+                "packageId": "example.workspace",
+                "status": "proposed",
+                "refinedSummary": "Workspace package-set entrypoint.",
+                "capabilities": [
+                    {
+                        "id": "example.workspace.aggregate",
+                        "summary": "Coordinate member packages.",
+                        "intentIds": ["intent.repository.package_workspace"],
+                        "evidencePaths": ["workspace/specpm.yaml"],
+                        "confidence": "high",
+                    }
+                ],
+                "interfaces": [
+                    {
+                        "id": "example.workspace.manifest",
+                        "kind": "manifest",
+                        "summary": "Workspace manifest evidence.",
+                        "evidencePaths": ["workspace/specs/main.spec.yaml"],
+                        "confidence": "medium",
+                    }
+                ],
+                "evidenceGaps": [],
+                "overallConfidence": "medium",
+                "providerReceipt": {"source": "ai-model-output.json", "execution": "external"},
+            },
+            {
+                "packageId": "example.member",
+                "status": "proposed",
+                "refinedSummary": "Member package proposal.",
+                "capabilities": [
+                    {
+                        "id": "example.member.library",
+                        "summary": "Provide member package behavior.",
+                        "intentIds": ["intent.package.library"],
+                        "evidencePaths": ["member/specpm.yaml"],
+                        "confidence": "medium",
+                    }
+                ],
+                "interfaces": [
+                    {
+                        "id": "example.member.spec",
+                        "kind": "spec",
+                        "summary": "Member spec evidence.",
+                        "evidencePaths": ["member/specs/member.spec.yaml"],
+                        "confidence": "medium",
+                    }
+                ],
+                "evidenceGaps": [],
+                "overallConfidence": "medium",
+                "providerReceipt": {"source": "ai-model-output.json", "execution": "external"},
+            },
+        ],
+        "diagnostics": [],
+        "summary": {
+            "proposalCount": 2,
+            "errorCount": 0,
+            "warningCount": 0,
+            "providerTotalTokens": 0,
+            "providerPromptTokens": 0,
+            "providerCompletionTokens": 0,
+        },
+        "privacy": {
+            "rawPromptsPersisted": False,
+            "rawModelResponsesPersisted": False,
+            "chainOfThoughtPersisted": False,
+            "secretsIncluded": False,
+        },
+        "trustBoundary": [
+            "AI enrichment output is proposal evidence only.",
+            "SpecPM remains the validation, acceptance, relation, and registry authority.",
+        ],
+        "nonGoals": [
+            "specpm_acceptance",
+            "package_acceptance",
+            "relation_acceptance",
+            "registry_publication",
+        ],
+    }
+    path = root / "package-set-ai-enrichment-proposal.json"
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
 
 
 def load_conformance_suite() -> dict[str, Any]:
@@ -2578,12 +2711,14 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "specpm.specs.producer_bundle_proposal_automation" in manifest_capabilities
     assert "specpm.specs.producer_bundle_fixture_policy" in manifest_capabilities
     assert "specpm.specs.ai_enrichment_consumer_policy" in manifest_capabilities
+    assert "specpm.specs.ai_enrichment_preflight" in manifest_capabilities
     assert "specpm.registry.acceptance_decision_record" in manifest_capabilities
     assert "specpm.specs.producer_receipt_contract" in boundary_capabilities
     assert "specpm.specs.producer_bundle_proposal_policy" in boundary_capabilities
     assert "specpm.specs.producer_bundle_proposal_automation" in boundary_capabilities
     assert "specpm.specs.producer_bundle_fixture_policy" in boundary_capabilities
     assert "specpm.specs.ai_enrichment_consumer_policy" in boundary_capabilities
+    assert "specpm.specs.ai_enrichment_preflight" in boundary_capabilities
     assert "specpm.registry.acceptance_decision_record" in boundary_capabilities
     assert "producer_receipts_not_generation_authority" in constraint_ids
     assert "specs/PRODUCER_RECEIPTS.md" in evidence_paths
@@ -2608,6 +2743,8 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "producerEvidenceLinks" in docc_proposal_policy
     assert "registryAcceptanceDecision" in docc_proposal_policy
     assert "evidence_only" in docc_proposal_policy
+    assert "specpm producer-bundle preflight-ai-enrichment" in proposal_policy
+    assert "specpm producer-bundle preflight-ai-enrichment" in docc_proposal_policy
     assert (
         "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
         in evidence_paths
@@ -2653,6 +2790,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "accepted relations",
         "dry-run handoff claims that it created, approved, or merged",
         "specpm producer-bundle preflight",
+        "specpm producer-bundle preflight-ai-enrichment",
         "specpm producer-bundle materialize-package-set",
         "member manifest IDs",
         "contains",
@@ -2678,6 +2816,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "SpecPM write credentials",
         "Rejected or deferred members",
         "specpm producer-bundle preflight",
+        "specpm producer-bundle preflight-ai-enrichment",
         "specpm producer-bundle materialize-package-set",
         "member manifest IDs",
         "contains",
@@ -2704,6 +2843,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "partial acceptance",
         "xyflow.workspace",
         "specpm producer-bundle preflight",
+        "specpm producer-bundle preflight-ai-enrichment",
         "member IDs match manifests",
         "relation endpoints",
         "materialize-package-set",
@@ -2731,6 +2871,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "proposal-only review evidence",
         "SpecHarvester-to-SpecPM package-set AI enrichment",
         "explicit maintainer package/relation selection",
+        "machine-checkable AI enrichment review boundary",
     ):
         assert required_text in roadmap_flat
 
@@ -2751,6 +2892,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "proposal-only review evidence",
         "SpecHarvester-to-SpecPM package-set AI enrichment",
         "explicit maintainer package/relation selection",
+        "machine-checkable AI enrichment review boundary",
     ):
         assert required_text in docc_roadmap_flat
 
@@ -2769,6 +2911,8 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "`SpecHarvesterPackageSetAIEnrichmentProposal` artifacts",
         "proposal_only_not_registry_acceptance",
         "The AI artifact did not alter accepted-source selection",
+        "P66-T10. Package-Set AI Enrichment Consumer Preflight",
+        "`specpm producer-bundle preflight-ai-enrichment`",
     ):
         assert required_text in workplan_flat
 
@@ -2780,6 +2924,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "automatic registry acceptance",
         "specpm producer-bundle materialize-package-set",
         "Package-set AI enrichment has also been exercised",
+        "preflight-ai-enrichment",
         "AI artifact remained review evidence",
         "did not alter accepted-source selection",
     ):
@@ -3028,6 +3173,154 @@ def test_producer_bundle_preflight_reports_package_set_identity_errors(
     assert report["status"] == "failed"
     assert "package_set_handoff_api_version_invalid" in issue_codes(report["errors"])
     assert "producer_evidence_links_missing" not in issue_codes(report["errors"])
+
+
+def test_ai_enrichment_preflight_accepts_review_only_proposal_with_handoff(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    ai_proposal = write_ai_enrichment_fixture(bundle_set)
+
+    report = preflight_package_set_ai_enrichment(
+        ai_proposal,
+        root=bundle_set,
+        handoff_path=handoff,
+    )
+
+    assert report["kind"] == "SpecPMPackageSetAIEnrichmentPreflightReport"
+    assert report["status"] == "passed"
+    assert report["summary"] == {
+        "packageSetId": "example.workspace",
+        "proposalCount": 2,
+        "inputCount": 3,
+        "allowedEvidencePathCount": 4,
+        "providerReceiptCount": 2,
+        "errorCount": 0,
+        "warningCount": 0,
+    }
+    assert report["packageSetAIEnrichment"] == {
+        "id": "example.workspace",
+        "artifactStatus": "completed",
+        "authority": "proposal_only_not_registry_acceptance",
+        "proposalCount": 2,
+        "providerReceiptCount": 2,
+        "packageAlignment": "verified",
+        "handoffMemberCount": 2,
+    }
+
+
+def test_ai_enrichment_preflight_warns_without_handoff_alignment(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    write_package_set_handoff_fixture(bundle_set)
+    ai_proposal = write_ai_enrichment_fixture(bundle_set)
+
+    report = preflight_package_set_ai_enrichment(ai_proposal, root=bundle_set)
+
+    assert report["status"] == "warning"
+    assert "ai_enrichment_handoff_not_provided" in issue_codes(report["warnings"])
+
+
+def test_cli_ai_enrichment_preflight_emits_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    ai_proposal = write_ai_enrichment_fixture(bundle_set)
+
+    exit_code = main(
+        [
+            "producer-bundle",
+            "preflight-ai-enrichment",
+            "--body",
+            str(ai_proposal),
+            "--root",
+            str(bundle_set),
+            "--handoff",
+            str(handoff),
+            "--json",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["status"] == "passed"
+    assert report["packageSetAIEnrichment"]["packageAlignment"] == "verified"
+
+
+def test_ai_enrichment_preflight_rejects_authority_privacy_and_acceptance(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    ai_proposal = write_ai_enrichment_fixture(bundle_set)
+    payload = json.loads(ai_proposal.read_text(encoding="utf-8"))
+    payload["authority"] = "accepted"
+    payload["privacy"]["rawPromptsPersisted"] = True
+    payload["registryAcceptanceDecision"] = {"status": "approved"}
+    ai_proposal.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_enrichment(
+        ai_proposal,
+        root=bundle_set,
+        handoff_path=handoff,
+    )
+
+    assert report["status"] == "failed"
+    assert {
+        "ai_enrichment_authority_invalid",
+        "ai_enrichment_privacy_flag_invalid",
+        "ai_enrichment_acceptance_decision_not_allowed",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_ai_enrichment_preflight_rejects_unallowlisted_evidence_and_missing_kind(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    ai_proposal = write_ai_enrichment_fixture(bundle_set)
+    payload = json.loads(ai_proposal.read_text(encoding="utf-8"))
+    payload["proposals"][0]["capabilities"][0]["evidencePaths"] = ["../private-notes.md"]
+    payload["proposals"][0]["interfaces"][0].pop("kind")
+    ai_proposal.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_enrichment(
+        ai_proposal,
+        root=bundle_set,
+        handoff_path=handoff,
+    )
+
+    assert report["status"] == "failed"
+    assert {
+        "ai_enrichment_evidence_path_unsafe",
+        "ai_enrichment_interface_kind_missing",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_ai_enrichment_preflight_rejects_handoff_package_mismatch(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    handoff = write_package_set_handoff_fixture(bundle_set)
+    ai_proposal = write_ai_enrichment_fixture(bundle_set)
+    payload = json.loads(ai_proposal.read_text(encoding="utf-8"))
+    payload["proposals"][1]["packageId"] = "example.extra"
+    ai_proposal.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_enrichment(
+        ai_proposal,
+        root=bundle_set,
+        handoff_path=handoff,
+    )
+
+    assert report["status"] == "failed"
+    assert {
+        "ai_enrichment_package_id_not_in_handoff",
+        "ai_enrichment_handoff_package_set_mismatch",
+    }.issubset(issue_codes(report["errors"]))
 
 
 def test_package_set_materialization_prepares_selected_accepted_source_entries(

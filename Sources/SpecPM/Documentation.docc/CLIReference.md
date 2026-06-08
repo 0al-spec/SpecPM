@@ -119,6 +119,11 @@ download archives as a client, or execute package content.
 
 ```bash
 specpm producer-bundle preflight --body <proposal-body.md> [--root <checkout-or-artifact-root>] [--json]
+specpm producer-bundle preflight-ai-enrichment \
+  --body <package-set-ai-enrichment-proposal.json> \
+  [--root <package-set-bundle-root>] \
+  [--handoff <package-set-handoff-proposal.json>] \
+  [--json]
 specpm producer-bundle materialize-package-set \
   --handoff <package-set-handoff-proposal.json> \
   --root <package-set-bundle-root> \
@@ -148,6 +153,14 @@ external acceptance boundary without requiring single-package
 
 This is a consumer-side review preflight. It does not run SpecHarvester,
 execute package content, or accept a package.
+
+`preflight-ai-enrichment` checks optional
+`SpecHarvesterPackageSetAIEnrichmentProposal` artifacts as review evidence. It
+verifies artifact identity, proposal-only authority, privacy flags, trust
+boundary, non-goals, provider provenance, package ID alignment when `--handoff`
+is provided, allowlisted evidence paths, and `interfaces[].kind`. It rejects
+acceptance-decision fields and does not feed AI output into package-set
+materialization.
 
 `materialize-package-set` consumes the same package-set handoff only after
 maintainers pass explicit `--package` and optional `--relation` selections. In
