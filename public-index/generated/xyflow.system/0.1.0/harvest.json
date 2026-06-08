@@ -146,7 +146,7 @@
       },
       "path": "packages/system/package.json",
       "sha256": "4ab83b02596c8a60f884ec08d4a9f1930932717b81cb80a7dbb3716f2c0c30a3",
-      "size": 0
+      "size": 1995
     }
   ],
   "kind": "SpecHarvesterEvidenceSnapshot",

@@ -146,7 +146,7 @@
       },
       "path": "packages/react/package.json",
       "sha256": "62dec991957847e98c7d18e01b4561cff5bccc1ec106998c0f5eccead4b1463b",
-      "size": 0
+      "size": 2668
     }
   ],
   "kind": "SpecHarvesterEvidenceSnapshot",

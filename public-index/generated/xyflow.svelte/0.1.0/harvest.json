@@ -146,7 +146,7 @@
       },
       "path": "packages/svelte/package.json",
       "sha256": "a5bcaff6a9ab5255705054e72e762791a5986c366074db6256bd4a6b8f3d5e1e",
-      "size": 0
+      "size": 2933
     }
   ],
   "kind": "SpecHarvesterEvidenceSnapshot",

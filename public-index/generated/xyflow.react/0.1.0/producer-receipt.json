@@ -69,7 +69,7 @@
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "76a0dc2d86b8219b260217e7b4a0937b8008328fb4fb258d5016bdf408b37599"
+        "value": "a76a1b3ab73d7ea33a02e5f4c90a6ace4f0f39c92594357c036f817fc1b80545"
       },
       "kind": "harvested_evidence",
       "location": "bundle",
@@ -77,7 +77,7 @@
       "redaction": "none"
     }
   ],
-  "issuedAt": "2026-06-08T21:53:05Z",
+  "issuedAt": "2026-06-08T22:27:05Z",
   "kind": "SpecPMProducerReceipt",
   "outputs": [
     {
@@ -91,7 +91,7 @@
     {
       "digest": {
         "algorithm": "sha256",
-        "value": "76a0dc2d86b8219b260217e7b4a0937b8008328fb4fb258d5016bdf408b37599"
+        "value": "a76a1b3ab73d7ea33a02e5f4c90a6ace4f0f39c92594357c036f817fc1b80545"
       },
       "path": "harvest.json",
       "role": "evidence"
@@ -131,7 +131,7 @@
     "version": "0.1.0",
     "workflow": "draft"
   },
-  "receiptId": "xyflow.react@0.1.0:producer:sha256:ce93c4a24293",
+  "receiptId": "xyflow.react@0.1.0:producer:sha256:bd905c458ae9",
   "receiptProfile": "generated_spec_package_v0",
   "schemaVersion": 1,
   "subject": {
