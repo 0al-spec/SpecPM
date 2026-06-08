@@ -1,0 +1,48 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: xyflow.system
+  name: Xyflow System
+  version: 0.1.0
+  summary: "Xyflow System public package boundary: xyflow core system that powers React Flow and Svelte Flow."
+  license: MIT
+  licenseEvidence:
+    source: manifest
+    confidence: high
+    paths:
+      - packages/system/package.json
+  authors:
+    - name: SpecHarvester
+preview_only: true
+specs:
+  - path: specs/system.spec.yaml
+index:
+  provides:
+    capabilities:
+      - xyflow.system.flow_system_utilities
+    intents:
+      - intent.javascript.react_library
+      - intent.javascript.svelte_library
+      - intent.package.javascript_library
+      - intent.ui.flow_system_utilities
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - web
+    - node
+  languages:
+    - javascript
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+    target:
+      kind: folder
+      label: system
+      path: packages/system
+keywords:
+  - generated
+  - specharvester
+  - system

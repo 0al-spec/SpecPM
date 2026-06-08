@@ -1,0 +1,49 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: xyflow.workspace
+  name: Xyflow Workspace
+  version: 0.1.0
+  summary: "Xyflow Workspace public package boundary: A highly customizable React library for building node-based editors and interactive flow charts"
+  license: MIT
+  licenseEvidence:
+    source: manifest
+    confidence: high
+    paths:
+      - package.json
+  authors:
+    - name: SpecHarvester
+preview_only: true
+specs:
+  - path: specs/xyflow.spec.yaml
+index:
+  provides:
+    capabilities:
+      - xyflow.workspace.workspace
+    intents:
+      - intent.javascript.react_library
+      - intent.package.javascript_library
+      - intent.repository.package_workspace
+      - intent.ui.flow_diagramming
+      - intent.ui.node_based_editor
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - web
+    - node
+  languages:
+    - javascript
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+    target:
+      kind: repository
+      label: workspace
+      path: "."
+keywords:
+  - generated
+  - specharvester
+  - xyflow

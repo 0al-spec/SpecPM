@@ -1,0 +1,42 @@
+{
+  "entries": [
+    {
+      "code": "privacy_public_handoff",
+      "message": "Generated diagnostics are path, digest, and summary metadata only; raw private source, private prompts, tokens, and credentials are excluded.",
+      "severity": "info"
+    },
+    {
+      "code": "human_review_required",
+      "message": "Generated candidates require maintainer review before public index acceptance.",
+      "severity": "info"
+    },
+    {
+      "code": "producer_receipt_is_evidence",
+      "message": "Producer receipts are evidence and do not imply SpecPM acceptance.",
+      "severity": "info"
+    }
+  ],
+  "kind": "SpecHarvesterProducerDiagnosticsReport",
+  "privacy": {
+    "privatePromptsIncluded": false,
+    "rawSourceIncluded": false,
+    "secretsIncluded": false
+  },
+  "producer": {
+    "name": "SpecHarvester",
+    "version": "0.1.0"
+  },
+  "review": {
+    "acceptanceAuthority": "maintainer_review",
+    "requiredFor": [
+      "public_index_acceptance"
+    ]
+  },
+  "schemaVersion": 1,
+  "status": "clean",
+  "subject": {
+    "packageId": "xyflow.react",
+    "packageRoot": ".",
+    "packageVersion": "0.1.0"
+  }
+}

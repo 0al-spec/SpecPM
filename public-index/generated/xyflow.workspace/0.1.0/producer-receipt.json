@@ -1,0 +1,157 @@
+{
+  "apiVersion": "specpm.receipts/v0",
+  "audit": {
+    "evidence": [
+      {
+        "kind": "producer_receipt_contract",
+        "path": "docs/PRODUCER_CANDIDATE_BUNDLE.md",
+        "retention": "repository"
+      }
+    ]
+  },
+  "configuration": {
+    "deterministic": true,
+    "digest": {
+      "algorithm": "sha256",
+      "value": "51b77a84222cd0f628f7ec27eb44a46b4d5cea6f170f84a01c6390a9509d3d4d"
+    },
+    "mode": "deterministic_draft",
+    "normalizedSummary": "SpecHarvester deterministic draft generation",
+    "templates": [
+      {
+        "name": "specpm-package-boundary",
+        "version": "0.1.0"
+      }
+    ]
+  },
+  "diagnostics": {
+    "digest": {
+      "algorithm": "sha256",
+      "value": "cf9bf7b972acd966b534ed001c8fd4f3d794dea61aa70c0ed444c9fb322fcb70"
+    },
+    "entries": [
+      {
+        "code": "privacy_public_handoff",
+        "message": "Generated diagnostics are path, digest, and summary metadata only; raw private source, private prompts, tokens, and credentials are excluded.",
+        "severity": "info"
+      },
+      {
+        "code": "human_review_required",
+        "message": "Generated candidates require maintainer review before public index acceptance.",
+        "severity": "info"
+      },
+      {
+        "code": "producer_receipt_is_evidence",
+        "message": "Producer receipts are evidence and do not imply SpecPM acceptance.",
+        "severity": "info"
+      }
+    ],
+    "path": "diagnostics.json",
+    "status": "clean"
+  },
+  "humanReview": {
+    "handoff": "pull_request",
+    "requiredFor": [
+      "public_index_acceptance"
+    ],
+    "status": "required"
+  },
+  "inputs": [
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "51b77a84222cd0f628f7ec27eb44a46b4d5cea6f170f84a01c6390a9509d3d4d"
+      },
+      "kind": "config",
+      "path": "spec_harvester.draft.configuration",
+      "redaction": "none"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "1a926003e1ce1a53ae3d5c9c9a59b0cca9d7a2ea816396906cedc0699563461f"
+      },
+      "kind": "harvested_evidence",
+      "location": "bundle",
+      "path": "harvest.json",
+      "redaction": "none"
+    }
+  ],
+  "issuedAt": "2026-06-08T22:27:05Z",
+  "kind": "SpecPMProducerReceipt",
+  "outputs": [
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "cf9bf7b972acd966b534ed001c8fd4f3d794dea61aa70c0ed444c9fb322fcb70"
+      },
+      "path": "diagnostics.json",
+      "role": "diagnostics"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "1a926003e1ce1a53ae3d5c9c9a59b0cca9d7a2ea816396906cedc0699563461f"
+      },
+      "path": "harvest.json",
+      "role": "evidence"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "6fb6dcfecbfe64904e4ca168af05fc564c114508aed96b87271f34c9124f4a85"
+      },
+      "path": "specpm.yaml",
+      "role": "manifest"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "b6b57d81613d90fc7e7ab18887d2e145c6f284ca42eb67bc3728d39a0e90f458"
+      },
+      "path": "specs/xyflow.spec.yaml",
+      "role": "boundary_spec"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "8019258699830aa80074ff6f262dbfcbd30c53ef27b9e9eea0c39d7a26fefc5d"
+      },
+      "path": "validation-report.json",
+      "role": "validation_report"
+    }
+  ],
+  "privacy": {
+    "redactions": [],
+    "secretsIncluded": false
+  },
+  "producer": {
+    "name": "SpecHarvester",
+    "repository": "https://github.com/0al-spec/SpecHarvester",
+    "version": "0.1.0",
+    "workflow": "draft"
+  },
+  "receiptId": "xyflow.workspace@0.1.0:producer:sha256:fbde65ce5832",
+  "receiptProfile": "generated_spec_package_v0",
+  "schemaVersion": 1,
+  "subject": {
+    "boundarySpecs": [
+      "specs/xyflow.spec.yaml"
+    ],
+    "candidateStatus": "review-ready",
+    "packageApiVersion": "specpm.dev/v0.1",
+    "packageId": "xyflow.workspace",
+    "packageRoot": ".",
+    "packageVersion": "0.1.0"
+  },
+  "validation": {
+    "errorCount": 0,
+    "reportDigest": {
+      "algorithm": "sha256",
+      "value": "8019258699830aa80074ff6f262dbfcbd30c53ef27b9e9eea0c39d7a26fefc5d"
+    },
+    "reportPath": "validation-report.json",
+    "status": "valid",
+    "warningCount": 0
+  }
+}

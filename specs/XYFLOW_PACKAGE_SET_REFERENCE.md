@@ -216,28 +216,37 @@ current public `/v0` payloads.
 ## Acceptance Boundary
 
 The current public index already contains a generated `xyflow.core@0.1.0`
-candidate. A future `xyflow` package-set acceptance should treat that package
-as previous single-package review evidence, not as an automatic conflict and not
-as the canonical long-term model by itself.
+candidate. The package-set materialization treats that package as previous
+single-package review evidence, not as an automatic conflict and not as the
+canonical long-term model by itself.
 
-For the package-set transition, maintainers should review the replacement shape
+For the package-set transition, maintainers reviewed the replacement shape
 explicitly:
 
 - `xyflow.workspace` is the aggregate discovery entrypoint for the repository;
 - `xyflow.system`, `xyflow.react`, and `xyflow.svelte` are scoped member
   package candidates;
-- `xyflow.workspace contains <member>` relations are accepted only when both
-  endpoints are selected;
-- `xyflow.core` should be left unchanged, superseded, removed, or kept as a
-  compatibility package only through a separate maintainer decision recorded in
-  the accepted-source PR.
+- `xyflow.workspace contains <member>` relation IDs are selected as
+  maintainer-review evidence only when both endpoints are selected;
+- `xyflow.core` is left unchanged as previous single-package review evidence.
 
-Maintainers may accept:
+The accepted-source materialization adds:
 
-- only `xyflow.workspace`;
-- one or more scoped member packages;
-- selected `contains` relations;
-- none of the generated candidates.
+- `public-index/generated/xyflow.workspace/0.1.0`;
+- `public-index/generated/xyflow.react/0.1.0`;
+- `public-index/generated/xyflow.svelte/0.1.0`;
+- `public-index/generated/xyflow.system/0.1.0`.
+
+The generated package-set manifests intentionally keep `preview_only: true`.
+This means they are visible accepted-source preview candidates, not final
+non-preview claims. Removing `preview_only` remains a later maintainer decision
+over package subject, evidence, claims, version, selected relations, and
+`xyflow.core` coexistence or supersession effect.
+
+Stable `/v0` relation metadata remains out of scope for this materialization
+PR. The three selected `contains` relation IDs are carried in materialization
+review evidence and PR notes until the drafted package-set relation metadata
+shape is implemented.
 
 Accepting the package set does not accept all members. Accepting a member does
 not accept the package set. Accepting a relation does not grant trust or

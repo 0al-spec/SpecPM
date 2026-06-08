@@ -16,3 +16,7 @@ packages:
     revision: 2ad889ed413370f79710f235a08b43aaaaecf81e
     path: .
   - path: public-index/generated/xyflow.core/0.1.0
+  - path: public-index/generated/xyflow.workspace/0.1.0
+  - path: public-index/generated/xyflow.react/0.1.0
+  - path: public-index/generated/xyflow.svelte/0.1.0
+  - path: public-index/generated/xyflow.system/0.1.0
