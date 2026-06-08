@@ -1974,6 +1974,43 @@ Result:
   AI-suggested capabilities, intents, interfaces, summaries, package relations,
   package versions, or accepted-source entries.
 
+### P66-T11. Xyflow Package-Set Acceptance Policy
+
+Status: Completed.
+
+Motivation:
+
+- The real `xyflow` package-set pipeline can now pass producer, SpecPM handoff,
+  AI enrichment, and materialization dry-run checks, but the public index
+  already contains `xyflow.core@0.1.0`.
+- Without an explicit transition policy, a future accepted-source PR could
+  silently replace or duplicate `xyflow.core`, or remove `preview_only` from
+  generated package-set candidates just because preflight checks are green.
+
+Goal:
+
+- Document how maintainers should review the package-set transition from the
+  existing `xyflow.core` candidate to `xyflow.workspace`, `xyflow.system`,
+  `xyflow.react`, and `xyflow.svelte` without treating producer output,
+  preflight success, AI enrichment, or materialization dry run as registry
+  acceptance.
+
+Expected result:
+
+- A future `xyflow` package-set accepted-source PR must explicitly decide
+  whether `xyflow.core` remains unchanged, is superseded by the package-set
+  layout, is kept as compatibility metadata, or is removed in a later review.
+- Removing `preview_only` from generated package-set candidates is tied to
+  explicit maintainer review of package claims, evidence, selected relations,
+  versioning, and legacy `xyflow.core` coexistence.
+
+Result:
+
+- The `xyflow` reference scenario, public index operator guide, DocC reference,
+  roadmap, and regression assertions document the transition policy.
+- No accepted-source package, relation, registry metadata, or `xyflow.core`
+  entry is changed by this task.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

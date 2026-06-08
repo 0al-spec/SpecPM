@@ -2851,6 +2851,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "semantic review assistance only",
         "authority: proposal_only_not_registry_acceptance",
         "provider receipts are provenance, not registry authority",
+        "`xyflow.core@0.1.0` accepted-source entry",
+        "should not silently replace `xyflow.core`",
+        "`preview_only` as a maintainer acceptance boundary",
     ):
         assert required_text in operator_guide_flat
 
@@ -2872,6 +2875,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "SpecHarvester-to-SpecPM package-set AI enrichment",
         "explicit maintainer package/relation selection",
         "machine-checkable AI enrichment review boundary",
+        "`xyflow` package-set acceptance policy",
+        "`xyflow.core@0.1.0` candidate",
+        "Removing `preview_only`",
     ):
         assert required_text in roadmap_flat
 
@@ -2893,6 +2899,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "SpecHarvester-to-SpecPM package-set AI enrichment",
         "explicit maintainer package/relation selection",
         "machine-checkable AI enrichment review boundary",
+        "`xyflow` package-set acceptance policy",
+        "`xyflow.core@0.1.0` candidate",
+        "Removing `preview_only`",
     ):
         assert required_text in docc_roadmap_flat
 
@@ -2913,6 +2922,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "The AI artifact did not alter accepted-source selection",
         "P66-T10. Package-Set AI Enrichment Consumer Preflight",
         "`specpm producer-bundle preflight-ai-enrichment`",
+        "P66-T11. Xyflow Package-Set Acceptance Policy",
+        "`xyflow.core@0.1.0`",
+        "Removing `preview_only`",
     ):
         assert required_text in workplan_flat
 
