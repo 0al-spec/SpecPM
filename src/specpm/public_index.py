@@ -33,6 +33,7 @@ PUBLIC_INDEX_MANIFEST_FILE_SCHEMA_VERSION = 1
 PUBLIC_INDEX_MANIFEST_REPORT_SCHEMA_VERSION = 1
 GIT_REVISION_PATTERN = re.compile(r"^[0-9a-fA-F]{40}$")
 GIT_REF_PATTERN = re.compile(r"^[A-Za-z0-9._/-]+$")
+PUBLIC_INDEX_RELATION_TYPES = {"contains"}
 
 
 def generate_public_index_from_inputs(
@@ -66,6 +67,7 @@ def generate_public_index_from_inputs(
                 output_dir,
                 registry_url,
                 source_contexts=public_index_source_contexts(manifest["sources"]),
+                accepted_relations=manifest["relations"],
                 build_metadata=build_metadata,
             )
     return generate_public_index(
@@ -93,6 +95,7 @@ def load_public_index_manifest(
             resolved_root,
             [],
             [],
+            [],
             [
                 public_index_error(
                     "public_index_manifest_missing",
@@ -111,6 +114,7 @@ def load_public_index_manifest(
             resolved_root,
             [],
             [],
+            [],
             [issue.to_dict() for issue in exc.issues],
         )
 
@@ -123,10 +127,10 @@ def load_public_index_manifest(
             )
         )
         return public_index_manifest_report(
-            "invalid", resolved_manifest, resolved_root, [], [], errors
+            "invalid", resolved_manifest, resolved_root, [], [], [], errors
         )
 
-    unknown_top_level_fields = sorted(set(loaded) - {"schemaVersion", "packages"})
+    unknown_top_level_fields = sorted(set(loaded) - {"schemaVersion", "packages", "relations"})
     if unknown_top_level_fields:
         errors.append(
             public_index_error(
@@ -155,7 +159,7 @@ def load_public_index_manifest(
             )
         )
         return public_index_manifest_report(
-            "invalid", resolved_manifest, resolved_root, [], [], errors
+            "invalid", resolved_manifest, resolved_root, [], [], [], errors
         )
 
     package_dirs: list[Path] = []
@@ -239,6 +243,8 @@ def load_public_index_manifest(
             }
         )
 
+    relations = parse_public_index_manifest_relations(loaded.get("relations"), errors)
+
     status = "invalid" if errors else "ok"
     return public_index_manifest_report(
         status,
@@ -246,8 +252,247 @@ def load_public_index_manifest(
         resolved_root,
         package_dirs if status == "ok" else [],
         sources if status == "ok" else [],
+        relations if status == "ok" else [],
         errors,
     )
+
+
+def parse_public_index_manifest_relations(
+    loaded_relations: Any,
+    errors: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if loaded_relations is None:
+        return []
+    if not isinstance(loaded_relations, list):
+        errors.append(
+            public_index_error(
+                "public_index_manifest_relations_invalid",
+                "Public index accepted relations must be an array.",
+                field="relations",
+            )
+        )
+        return []
+
+    relations: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, item in enumerate(loaded_relations):
+        field = f"relations[{index}]"
+        if not isinstance(item, dict):
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_invalid",
+                    "Public index accepted relation entries must be mappings.",
+                    field=field,
+                )
+            )
+            continue
+
+        unknown_fields = sorted(
+            set(item) - {"id", "type", "source", "target", "reviewStatus", "evidence"}
+        )
+        if unknown_fields:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_field_unknown",
+                    "Public index accepted relation entry contains unknown fields.",
+                    field=field,
+                    detail={"fields": unknown_fields},
+                )
+            )
+            continue
+
+        relation_id = item.get("id")
+        relation_type = item.get("type")
+        review_status = item.get("reviewStatus")
+        source = parse_public_index_relation_endpoint(item.get("source"), f"{field}.source", errors)
+        target = parse_public_index_relation_endpoint(item.get("target"), f"{field}.target", errors)
+        evidence = parse_public_index_relation_evidence(
+            item.get("evidence"),
+            f"{field}.evidence",
+            errors,
+        )
+
+        if not isinstance(relation_id, str) or not relation_id.strip():
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_id_invalid",
+                    "Public index accepted relation id must be a non-empty string.",
+                    field=f"{field}.id",
+                )
+            )
+        elif relation_id in seen_ids:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_id_duplicate",
+                    "Public index accepted relation id must be unique.",
+                    field=f"{field}.id",
+                )
+            )
+        else:
+            seen_ids.add(relation_id)
+
+        if relation_type not in PUBLIC_INDEX_RELATION_TYPES:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_type_invalid",
+                    "Public index accepted relation type is not supported.",
+                    field=f"{field}.type",
+                    detail={"allowed": sorted(PUBLIC_INDEX_RELATION_TYPES)},
+                )
+            )
+
+        if review_status != "accepted":
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_review_status_invalid",
+                    "Public index accepted relation reviewStatus must be accepted.",
+                    field=f"{field}.reviewStatus",
+                )
+            )
+
+        if (
+            isinstance(relation_id, str)
+            and relation_id.strip()
+            and relation_type in PUBLIC_INDEX_RELATION_TYPES
+            and review_status == "accepted"
+            and source is not None
+            and target is not None
+            and evidence is not None
+        ):
+            relations.append(
+                {
+                    "id": relation_id,
+                    "type": relation_type,
+                    "source": source,
+                    "target": target,
+                    "reviewStatus": review_status,
+                    "evidence": evidence,
+                }
+            )
+    return relations
+
+
+def parse_public_index_relation_endpoint(
+    value: Any,
+    field: str,
+    errors: list[dict[str, Any]],
+) -> dict[str, str] | None:
+    if not isinstance(value, dict):
+        errors.append(
+            public_index_error(
+                "public_index_manifest_relation_endpoint_invalid",
+                "Public index accepted relation endpoint must be a mapping.",
+                field=field,
+            )
+        )
+        return None
+    unknown_fields = sorted(set(value) - {"package_id", "version"})
+    if unknown_fields:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_relation_endpoint_field_unknown",
+                "Public index accepted relation endpoint contains unknown fields.",
+                field=field,
+                detail={"fields": unknown_fields},
+            )
+        )
+        return None
+    package_id = value.get("package_id")
+    version = value.get("version")
+    endpoint: dict[str, str] = {}
+    if not isinstance(package_id, str) or not package_id.strip():
+        errors.append(
+            public_index_error(
+                "public_index_manifest_relation_endpoint_package_id_invalid",
+                "Public index accepted relation endpoint package_id must be a non-empty string.",
+                field=f"{field}.package_id",
+            )
+        )
+    else:
+        endpoint["package_id"] = package_id
+    if not isinstance(version, str) or not version.strip():
+        errors.append(
+            public_index_error(
+                "public_index_manifest_relation_endpoint_version_invalid",
+                "Public index accepted relation endpoint version must be a non-empty string.",
+                field=f"{field}.version",
+            )
+        )
+    else:
+        endpoint["version"] = version
+    return endpoint if set(endpoint) == {"package_id", "version"} else None
+
+
+def parse_public_index_relation_evidence(
+    value: Any,
+    field: str,
+    errors: list[dict[str, Any]],
+) -> list[dict[str, str]] | None:
+    if not isinstance(value, list) or not value:
+        errors.append(
+            public_index_error(
+                "public_index_manifest_relation_evidence_invalid",
+                "Public index accepted relation evidence must be a non-empty array.",
+                field=field,
+            )
+        )
+        return None
+
+    evidence: list[dict[str, str]] = []
+    for index, item in enumerate(value):
+        item_field = f"{field}[{index}]"
+        if not isinstance(item, dict):
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_evidence_item_invalid",
+                    "Public index accepted relation evidence entries must be mappings.",
+                    field=item_field,
+                )
+            )
+            continue
+        unknown_fields = sorted(set(item) - {"kind", "path"})
+        if unknown_fields:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_evidence_field_unknown",
+                    "Public index accepted relation evidence entry contains unknown fields.",
+                    field=item_field,
+                    detail={"fields": unknown_fields},
+                )
+            )
+            continue
+        kind = item.get("kind")
+        path = item.get("path")
+        if not isinstance(kind, str) or not kind.strip():
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_evidence_kind_invalid",
+                    "Public index accepted relation evidence kind must be a non-empty string.",
+                    field=f"{item_field}.kind",
+                )
+            )
+            continue
+        if not isinstance(path, str) or not path.strip() or Path(path).is_absolute():
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_evidence_path_invalid",
+                    "Public index accepted relation evidence path must be a relative string.",
+                    field=f"{item_field}.path",
+                )
+            )
+            continue
+        if any(part == ".." for part in Path(path).parts):
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_evidence_path_escape",
+                    "Public index accepted relation evidence path must not contain "
+                    "parent segments.",
+                    field=f"{item_field}.path",
+                )
+            )
+            continue
+        evidence.append({"kind": kind, "path": path})
+    return evidence if evidence else None
 
 
 def resolve_remote_manifest_package(
@@ -345,12 +590,75 @@ def add_public_index_source_context(
     return contextual
 
 
+def prepare_public_index_relations(
+    accepted_relations: list[dict[str, Any]],
+    packages: list[dict[str, Any]],
+) -> dict[str, Any]:
+    errors: list[dict[str, Any]] = []
+    package_by_identity = {
+        (package["package_id"], package["version"]): package for package in packages
+    }
+    normalized: list[dict[str, Any]] = []
+
+    for index, relation in enumerate(accepted_relations):
+        field = f"relations[{index}]"
+        source = relation["source"]
+        target = relation["target"]
+        source_key = (source["package_id"], source["version"])
+        target_key = (target["package_id"], target["version"])
+        if source_key not in package_by_identity:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_source_missing",
+                    "Public index accepted relation source must reference an accepted "
+                    "package version.",
+                    field=f"{field}.source",
+                    detail={"package_id": source_key[0], "version": source_key[1]},
+                )
+            )
+        if target_key not in package_by_identity:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_target_missing",
+                    "Public index accepted relation target must reference an accepted "
+                    "package version.",
+                    field=f"{field}.target",
+                    detail={"package_id": target_key[0], "version": target_key[1]},
+                )
+            )
+        if source_key == target_key:
+            errors.append(
+                public_index_error(
+                    "public_index_manifest_relation_self_reference",
+                    "Public index accepted relation source and target must differ.",
+                    field=field,
+                )
+            )
+        if source_key in package_by_identity and target_key in package_by_identity:
+            normalized.append(
+                remote_package_relation_summary(
+                    relation,
+                    source_package=package_by_identity[source_key],
+                    target_package=package_by_identity[target_key],
+                )
+            )
+
+    if errors:
+        return {"status": "invalid", "relations": [], "errors": errors}
+    return {
+        "status": "ok",
+        "relations": sorted(normalized, key=lambda item: item["id"]),
+        "errors": [],
+    }
+
+
 def generate_public_index(
     package_dirs: list[Path],
     output_dir: Path,
     registry_url: str,
     *,
     source_contexts: dict[str, dict[str, Any]] | None = None,
+    accepted_relations: list[dict[str, Any]] | None = None,
     build_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     resolved_output = output_dir.resolve()
@@ -414,6 +722,17 @@ def generate_public_index(
         if errors:
             return public_index_report("invalid", resolved_output, registry_url, [], errors)
 
+        relations_result = prepare_public_index_relations(accepted_relations or [], packages)
+        if relations_result["status"] != "ok":
+            return public_index_report(
+                "invalid",
+                resolved_output,
+                registry_url,
+                [],
+                relations_result["errors"],
+            )
+        relations = relations_result["relations"]
+
         receipt_files = write_public_index_provenance_receipts(
             staging_output,
             packages,
@@ -422,6 +741,7 @@ def generate_public_index(
         )
         payloads = build_public_index_payloads(
             packages,
+            relations=relations,
             build_metadata=build_metadata,
         )
         payload_errors = validate_public_index_payloads(payloads)
@@ -733,23 +1053,29 @@ def public_index_receipt_review(source: Any) -> dict[str, Any]:
 def build_public_index_payloads(
     packages: list[dict[str, Any]],
     *,
+    relations: list[dict[str, Any]] | None = None,
     build_metadata: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     packages = sorted(packages, key=public_index_package_sort_key)
+    relations = sorted(relations or [], key=lambda item: item["id"])
     implementation = public_index_implementation_metadata(build_metadata)
     intent_matches = observed_intent_matches(packages)
     payloads: list[dict[str, Any]] = [
         {
             "path": registry_root_payload_path(),
-            "payload": remote_registry_root_payload(packages, implementation),
+            "payload": remote_registry_root_payload(packages, relations, implementation),
         },
         {
             "path": registry_status_payload_path(),
-            "payload": remote_registry_status_payload(packages, implementation),
+            "payload": remote_registry_status_payload(packages, relations, implementation),
         },
         {
             "path": package_index_payload_path(),
-            "payload": remote_package_index_payload(packages),
+            "payload": remote_package_index_payload(packages, relations),
+        },
+        {
+            "path": relations_index_payload_path(),
+            "payload": remote_package_relations_payload(relations),
         },
         {
             "path": intent_index_payload_path(),
@@ -764,7 +1090,7 @@ def build_public_index_payloads(
         payloads.append(
             {
                 "path": version_payload_path(package),
-                "payload": remote_package_version_payload(package),
+                "payload": remote_package_version_payload(package, relations),
             }
         )
         for capability_id in package["provided_capabilities"]:
@@ -774,7 +1100,7 @@ def build_public_index_payloads(
         payloads.append(
             {
                 "path": package_payload_path(package_id),
-                "payload": remote_package_payload(versions),
+                "payload": remote_package_payload(versions, relations),
             }
         )
 
@@ -782,7 +1108,7 @@ def build_public_index_payloads(
         payloads.append(
             {
                 "path": capability_payload_path(capability_id),
-                "payload": remote_capability_search_payload(capability_id, matches),
+                "payload": remote_capability_search_payload(capability_id, matches, relations),
             }
         )
 
@@ -790,7 +1116,7 @@ def build_public_index_payloads(
         payloads.append(
             {
                 "path": intent_payload_path(intent_id),
-                "payload": remote_intent_search_payload(intent_id, matches),
+                "payload": remote_intent_search_payload(intent_id, matches, relations),
             }
         )
         payloads.append(
@@ -814,6 +1140,7 @@ def observed_intent_matches(packages: list[dict[str, Any]]) -> dict[str, list[di
 
 def remote_registry_status_payload(
     packages: list[dict[str, Any]],
+    relations: list[dict[str, Any]],
     implementation: dict[str, Any],
 ) -> dict[str, Any]:
     return {
@@ -821,12 +1148,13 @@ def remote_registry_status_payload(
         "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
         "kind": "RemoteRegistryStatus",
         "status": "ok",
-        "registry": remote_registry_summary(packages, implementation),
+        "registry": remote_registry_summary(packages, relations, implementation),
     }
 
 
 def remote_registry_root_payload(
     packages: list[dict[str, Any]],
+    relations: list[dict[str, Any]],
     implementation: dict[str, Any],
 ) -> dict[str, Any]:
     return {
@@ -834,10 +1162,11 @@ def remote_registry_root_payload(
         "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
         "kind": "RemoteRegistryRoot",
         "status": "ok",
-        "registry": remote_registry_summary(packages, implementation),
+        "registry": remote_registry_summary(packages, relations, implementation),
         "endpoints": {
             "status": registry_status_payload_path(),
             "packages": package_index_payload_path(),
+            "relations": relations_index_payload_path(),
             "intents": intent_index_payload_path(),
         },
     }
@@ -845,6 +1174,7 @@ def remote_registry_root_payload(
 
 def remote_registry_summary(
     packages: list[dict[str, Any]],
+    relations: list[dict[str, Any]],
     implementation: dict[str, Any],
 ) -> dict[str, Any]:
     package_ids = {package["package_id"] for package in packages}
@@ -869,6 +1199,12 @@ def remote_registry_summary(
         "version_count": len(packages),
         "capability_count": len(capabilities),
         "intent_count": len(intents),
+        "relation_count": len(relations),
+        "supportedFeatures": [
+            "package_sets",
+            "package_relations",
+            "search_result_scope",
+        ],
         "provenance_receipt_count": sum(
             1 for package in packages if isinstance(package.get("provenance_receipt"), dict)
         ),
@@ -901,13 +1237,16 @@ def public_index_implementation_metadata(
     return implementation
 
 
-def remote_package_index_payload(packages: list[dict[str, Any]]) -> dict[str, Any]:
+def remote_package_index_payload(
+    packages: list[dict[str, Any]],
+    relations: list[dict[str, Any]],
+) -> dict[str, Any]:
     packages_by_id: dict[str, list[dict[str, Any]]] = {}
     for package in sorted(packages, key=public_index_package_sort_key):
         packages_by_id.setdefault(package["package_id"], []).append(package)
 
     package_summaries = [
-        remote_package_payload(versions)["package"]
+        remote_package_payload(versions, relations)["package"]
         for _, versions in sorted(packages_by_id.items())
     ]
     return {
@@ -921,7 +1260,10 @@ def remote_package_index_payload(packages: list[dict[str, Any]]) -> dict[str, An
     }
 
 
-def remote_package_payload(versions: list[dict[str, Any]]) -> dict[str, Any]:
+def remote_package_payload(
+    versions: list[dict[str, Any]],
+    relations: list[dict[str, Any]],
+) -> dict[str, Any]:
     versions = sorted(versions, key=public_index_package_sort_key)
     latest = max(versions, key=public_index_latest_key)
     capabilities = sorted(
@@ -940,7 +1282,7 @@ def remote_package_payload(versions: list[dict[str, Any]]) -> dict[str, Any]:
             if isinstance(intent, str)
         }
     )
-    return {
+    package_payload = {
         "apiVersion": REMOTE_REGISTRY_API_VERSION,
         "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
         "kind": "RemotePackage",
@@ -964,10 +1306,17 @@ def remote_package_payload(versions: list[dict[str, Any]]) -> dict[str, Any]:
             ],
         },
     }
+    package_payload["package"].update(
+        package_relation_fields(latest, relations, include_members=True)
+    )
+    return package_payload
 
 
-def remote_package_version_payload(package: dict[str, Any]) -> dict[str, Any]:
-    return {
+def remote_package_version_payload(
+    package: dict[str, Any],
+    relations: list[dict[str, Any]],
+) -> dict[str, Any]:
+    payload = {
         "apiVersion": REMOTE_REGISTRY_API_VERSION,
         "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
         "kind": "RemotePackageVersion",
@@ -988,6 +1337,113 @@ def remote_package_version_payload(package: dict[str, Any]) -> dict[str, Any]:
             "provenance_receipt": package.get("provenance_receipt"),
         },
     }
+    payload["package"].update(package_relation_fields(package, relations, include_members=True))
+    return payload
+
+
+def remote_package_relations_payload(relations: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "apiVersion": REMOTE_REGISTRY_API_VERSION,
+        "schemaVersion": REMOTE_REGISTRY_SCHEMA_VERSION,
+        "kind": "RemotePackageRelations",
+        "status": "ok",
+        "relation_count": len(relations),
+        "relations": relations,
+    }
+
+
+def remote_package_relation_summary(
+    relation: dict[str, Any],
+    *,
+    source_package: dict[str, Any],
+    target_package: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "id": relation["id"],
+        "type": relation["type"],
+        "source": source_package["package_id"],
+        "target": target_package["package_id"],
+        "versionScope": {
+            "sourceVersion": source_package["version"],
+            "targetVersion": target_package["version"],
+        },
+        "reviewStatus": relation["reviewStatus"],
+        "evidence": relation["evidence"],
+    }
+
+
+def package_relation_fields(
+    package: dict[str, Any],
+    relations: list[dict[str, Any]],
+    *,
+    include_members: bool,
+) -> dict[str, Any]:
+    outgoing = package_outgoing_relations(package, relations)
+    context = package_relation_context(package, relations)
+    subject_scope = "aggregate" if outgoing else "package"
+    fields: dict[str, Any] = {
+        "subject": {
+            "kind": "package_set" if outgoing else "package",
+            "scope": subject_scope,
+        },
+        "scope": subject_scope,
+        "match": "direct",
+    }
+    if context:
+        fields["relationContext"] = context
+    if include_members and outgoing:
+        fields["packageSet"] = {
+            "profile": "specpm.package_set/v0",
+            "setType": "workspace",
+            "members": [
+                {
+                    "package_id": relation["target"],
+                    "version": relation["versionScope"]["targetVersion"],
+                    "type": relation["type"],
+                    "relation_id": relation["id"],
+                }
+                for relation in outgoing
+            ],
+        }
+    return fields
+
+
+def package_relation_context(
+    package: dict[str, Any],
+    relations: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    package_id = package["package_id"]
+    version = package["version"]
+    context = [
+        relation
+        for relation in relations
+        if (
+            relation["source"] == package_id
+            and relation["versionScope"]["sourceVersion"] == version
+        )
+        or (
+            relation["target"] == package_id
+            and relation["versionScope"]["targetVersion"] == version
+        )
+    ]
+    return sorted(context, key=lambda item: item["id"])
+
+
+def package_outgoing_relations(
+    package: dict[str, Any],
+    relations: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    package_id = package["package_id"]
+    version = package["version"]
+    return sorted(
+        [
+            relation
+            for relation in relations
+            if relation["source"] == package_id
+            and relation["versionScope"]["sourceVersion"] == version
+        ],
+        key=lambda item: item["id"],
+    )
 
 
 def remote_intent_index_payload(
@@ -1072,6 +1528,7 @@ def observed_intent_summary(intent_id: str, packages: list[dict[str, Any]]) -> d
 def remote_capability_search_payload(
     capability_id: str,
     packages: list[dict[str, Any]],
+    relations: list[dict[str, Any]],
 ) -> dict[str, Any]:
     packages = sorted(packages, key=public_index_package_sort_key)
     return {
@@ -1098,6 +1555,7 @@ def remote_capability_search_payload(
                 "yanked": package["state"]["yanked"],
                 "deprecated": package["state"]["deprecated"],
                 "source": package["source"],
+                **package_relation_fields(package, relations, include_members=False),
             }
             for package in packages
         ],
@@ -1107,6 +1565,7 @@ def remote_capability_search_payload(
 def remote_intent_search_payload(
     intent_id: str,
     packages: list[dict[str, Any]],
+    relations: list[dict[str, Any]],
 ) -> dict[str, Any]:
     packages = sorted(packages, key=public_index_package_sort_key)
     return {
@@ -1134,6 +1593,7 @@ def remote_intent_search_payload(
                 "yanked": package["state"]["yanked"],
                 "deprecated": package["state"]["deprecated"],
                 "source": package["source"],
+                **package_relation_fields(package, relations, include_members=False),
             }
             for package in packages
         ],
@@ -1227,6 +1687,10 @@ def package_index_payload_path() -> str:
     return "v0/packages/index.json"
 
 
+def relations_index_payload_path() -> str:
+    return "v0/relations/index.json"
+
+
 def registry_status_payload_path() -> str:
     return "v0/status/index.json"
 
@@ -1308,6 +1772,7 @@ def public_index_manifest_report(
     root: Path,
     package_dirs: list[Path],
     sources: list[dict[str, Any]],
+    relations: list[dict[str, Any]],
     errors: list[dict[str, Any]],
 ) -> dict[str, Any]:
     return {
@@ -1317,6 +1782,7 @@ def public_index_manifest_report(
         "root": str(root),
         "package_dirs": [str(package_dir) for package_dir in package_dirs],
         "sources": sources,
+        "relations": relations,
         "errors": errors,
     }
 

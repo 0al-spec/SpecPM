@@ -264,6 +264,23 @@ Response kind:
 RemotePackageVersion
 ```
 
+### Package Relations
+
+```text
+GET /v0/relations
+```
+
+Returns maintainer-reviewed package relation metadata, including package-set
+membership relations such as `contains`. Relations are read-only registry
+metadata. They do not imply dependency solving, trust propagation, lifecycle
+inheritance, namespace ownership, or automatic package selection.
+
+Response kind:
+
+```text
+RemotePackageRelations
+```
+
 ### Exact Capability Search
 
 ```text

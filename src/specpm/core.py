@@ -116,6 +116,7 @@ REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteIntentSearch",
     "RemotePackage",
     "RemotePackageIndex",
+    "RemotePackageRelations",
     "RemotePackageVersion",
     "RemoteRegistryRoot",
     "RemoteRegistryStatus",
@@ -2063,6 +2064,8 @@ def validate_remote_registry_payload(payload: Any) -> list[Issue]:
         validate_remote_package_payload(payload, errors)
     elif kind == "RemotePackageIndex":
         validate_remote_package_index_payload(payload, errors)
+    elif kind == "RemotePackageRelations":
+        validate_remote_package_relations_payload(payload, errors)
     elif kind == "RemotePackageVersion":
         validate_remote_package_version_payload(payload, errors)
     elif kind == "RemoteIntentIndex":
@@ -2138,6 +2141,73 @@ def validate_remote_package_index_payload(
             computed_version_count += len(versions)
     if version_count is not None and version_count != computed_version_count:
         errors.append(remote_field_invalid("version_count", "must match listed package versions"))
+
+
+def validate_remote_package_relations_payload(
+    payload: dict[str, Any],
+    errors: list[Issue],
+) -> None:
+    relation_count = require_remote_int(payload, "relation_count", errors, "relation_count")
+    relations = require_remote_list(payload, "relations", errors, "relations")
+    if relations is None:
+        return
+    if relation_count is not None and relation_count != len(relations):
+        errors.append(remote_field_invalid("relation_count", "must match relations length"))
+    seen_ids: set[str] = set()
+    for index, relation in enumerate(relations):
+        field = f"relations.{index}"
+        if not isinstance(relation, dict):
+            errors.append(remote_field_invalid(field, "must be an object"))
+            continue
+        relation_id = require_remote_string(relation, "id", errors, f"{field}.id")
+        if relation_id is not None:
+            if relation_id in seen_ids:
+                errors.append(remote_field_invalid(f"{field}.id", "must be unique"))
+            seen_ids.add(relation_id)
+        relation_type = require_remote_string(relation, "type", errors, f"{field}.type")
+        if relation_type is not None and relation_type != "contains":
+            errors.append(remote_field_invalid(f"{field}.type", "must be contains"))
+        require_remote_string(relation, "source", errors, f"{field}.source")
+        require_remote_string(relation, "target", errors, f"{field}.target")
+        version_scope = require_remote_mapping(
+            relation,
+            "versionScope",
+            errors,
+            f"{field}.versionScope",
+        )
+        if version_scope is not None:
+            require_remote_string(
+                version_scope,
+                "sourceVersion",
+                errors,
+                f"{field}.versionScope.sourceVersion",
+            )
+            require_remote_string(
+                version_scope,
+                "targetVersion",
+                errors,
+                f"{field}.versionScope.targetVersion",
+            )
+        review_status = require_remote_string(
+            relation,
+            "reviewStatus",
+            errors,
+            f"{field}.reviewStatus",
+        )
+        if review_status is not None and review_status != "accepted":
+            errors.append(remote_field_invalid(f"{field}.reviewStatus", "must be accepted"))
+        evidence = require_remote_list(relation, "evidence", errors, f"{field}.evidence")
+        if evidence is None:
+            continue
+        if not evidence:
+            errors.append(remote_field_invalid(f"{field}.evidence", "must not be empty"))
+        for evidence_index, evidence_item in enumerate(evidence):
+            evidence_field = f"{field}.evidence.{evidence_index}"
+            if not isinstance(evidence_item, dict):
+                errors.append(remote_field_invalid(evidence_field, "must be an object"))
+                continue
+            require_remote_string(evidence_item, "kind", errors, f"{evidence_field}.kind")
+            require_remote_string(evidence_item, "path", errors, f"{evidence_field}.path")
 
 
 def validate_remote_intent_index_payload(
@@ -2470,6 +2540,16 @@ def validate_remote_registry_summary(
         value = require_remote_int(registry, "intent_count", errors, f"{field}.intent_count")
         if value is not None and value < 0:
             errors.append(remote_field_invalid(f"{field}.intent_count", "must not be negative"))
+    if "relation_count" in registry:
+        value = require_remote_int(registry, "relation_count", errors, f"{field}.relation_count")
+        if value is not None and value < 0:
+            errors.append(remote_field_invalid(f"{field}.relation_count", "must not be negative"))
+    validate_optional_remote_string_list(
+        registry,
+        "supportedFeatures",
+        errors,
+        f"{field}.supportedFeatures",
+    )
     if "implementation" in registry:
         implementation = require_remote_mapping(
             registry,

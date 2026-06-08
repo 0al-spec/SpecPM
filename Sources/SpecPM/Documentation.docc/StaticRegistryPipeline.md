@@ -81,6 +81,7 @@ GET /v0/packages
 GET /v0/packages/{package_id}
 GET /v0/packages/{package_id}/versions/{version}
 GET /v0/packages/{package_id}/versions/{version}/provenance-receipt
+GET /v0/relations
 GET /v0/capabilities/{capability_id}/packages
 GET /v0/intents
 GET /v0/intents/{intent_id}

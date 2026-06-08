@@ -62,6 +62,7 @@ Use these endpoint classes when writing downstream tests or review reports:
 | Package catalog | `GET /v0/packages` | Visible package IDs and high-level package list checks. |
 | Package metadata | `GET /v0/packages/{package_id}` | Retained versions and package-level metadata for one exact package ID. |
 | Version metadata | `GET /v0/packages/{package_id}/versions/{version}` | Exact version state, digest, archive URL, lifecycle flags, and declared capabilities. |
+| Package relations | `GET /v0/relations` | Accepted package-set and package-to-package relation metadata. |
 | Capability lookup | `GET /v0/capabilities/{capability_id}/packages` | Exact capability membership evidence. |
 | Intent catalog | `GET /v0/intents` | Observed intent catalog overview for discovery and duplicate detection. |
 | Intent metadata | `GET /v0/intents/{intent_id}` | Observed intent summary plus exact package mappings for one declared intent ID. |
@@ -71,7 +72,9 @@ Use these endpoint classes when writing downstream tests or review reports:
 endpoint classes are required only when the downstream claim depends on that
 subject. For example, a capability visibility claim needs status plus exact
 capability lookup; an exact package-version claim needs status plus package and
-version metadata.
+version metadata. A package-set membership claim needs status plus
+`GET /v0/relations` and the exact package payloads for the aggregate and member
+packages.
 
 ## Minimum Evidence Envelope
 
@@ -172,6 +175,8 @@ Useful checks:
 
 - `specpm.core@0.2.0` is visible at an exact version endpoint.
 - Required capability IDs are present in exact capability search results.
+- Accepted package-set relations are present in `/v0/relations` and cited as
+  registry metadata, not inferred graph authority.
 - Observed `intent.*` IDs are treated as observations, not canonical graph
   authority.
 - Registry drift findings cite both expected and observed values, plus the

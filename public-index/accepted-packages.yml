@@ -20,3 +20,46 @@ packages:
   - path: public-index/generated/xyflow.react/0.1.0
   - path: public-index/generated/xyflow.svelte/0.1.0
   - path: public-index/generated/xyflow.system/0.1.0
+relations:
+  - id: xyflow.workspace.contains.xyflow.react
+    type: contains
+    source:
+      package_id: xyflow.workspace
+      version: 0.1.0
+    target:
+      package_id: xyflow.react
+      version: 0.1.0
+    reviewStatus: accepted
+    evidence:
+      - kind: source_file
+        path: pnpm-workspace.yaml
+      - kind: source_file
+        path: packages/react/package.json
+  - id: xyflow.workspace.contains.xyflow.svelte
+    type: contains
+    source:
+      package_id: xyflow.workspace
+      version: 0.1.0
+    target:
+      package_id: xyflow.svelte
+      version: 0.1.0
+    reviewStatus: accepted
+    evidence:
+      - kind: source_file
+        path: pnpm-workspace.yaml
+      - kind: source_file
+        path: packages/svelte/package.json
+  - id: xyflow.workspace.contains.xyflow.system
+    type: contains
+    source:
+      package_id: xyflow.workspace
+      version: 0.1.0
+    target:
+      package_id: xyflow.system
+      version: 0.1.0
+    reviewStatus: accepted
+    evidence:
+      - kind: source_file
+        path: pnpm-workspace.yaml
+      - kind: source_file
+        path: packages/system/package.json
