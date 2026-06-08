@@ -234,6 +234,13 @@ The maintainer-selected accepted-source materialization path is now implemented 
 plus explicit package and relation selections, then prepare review artifacts or
 copy only selected package candidates into `public-index/generated` with
 `--apply` without auto-accepting producer output.
+The `xyflow` package-set acceptance policy is now documented as a transition
+rule for the existing `xyflow.core@0.1.0` candidate. A future package-set PR
+must decide explicitly whether `xyflow.core` remains unchanged, is superseded by
+`xyflow.workspace` plus scoped members, is kept as compatibility metadata, or is
+removed later. Removing `preview_only` from generated package-set candidates is
+also an explicit maintainer acceptance decision, not a consequence of green
+producer or SpecPM preflight checks.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

@@ -215,6 +215,23 @@ current public `/v0` payloads.
 
 ## Acceptance Boundary
 
+The current public index already contains a generated `xyflow.core@0.1.0`
+candidate. A future `xyflow` package-set acceptance should treat that package
+as previous single-package review evidence, not as an automatic conflict and not
+as the canonical long-term model by itself.
+
+For the package-set transition, maintainers should review the replacement shape
+explicitly:
+
+- `xyflow.workspace` is the aggregate discovery entrypoint for the repository;
+- `xyflow.system`, `xyflow.react`, and `xyflow.svelte` are scoped member
+  package candidates;
+- `xyflow.workspace contains <member>` relations are accepted only when both
+  endpoints are selected;
+- `xyflow.core` should be left unchanged, superseded, removed, or kept as a
+  compatibility package only through a separate maintainer decision recorded in
+  the accepted-source PR.
+
 Maintainers may accept:
 
 - only `xyflow.workspace`;
@@ -225,3 +242,11 @@ Maintainers may accept:
 Accepting the package set does not accept all members. Accepting a member does
 not accept the package set. Accepting a relation does not grant trust or
 selection authority.
+
+Generated candidates may remain `preview_only` while they are producer drafts.
+Removing `preview_only` is an acceptance decision: it requires maintainer review
+of the package subject, evidence, claims, version, selected relations, and any
+legacy `xyflow.core` coexistence or supersession effect. Passing SpecHarvester
+preflight, SpecPM handoff preflight, SpecPM AI enrichment preflight, or
+`materialize-package-set` dry run is necessary review evidence, but it is not
+approval to remove `preview_only`.

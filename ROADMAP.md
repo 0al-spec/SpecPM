@@ -439,6 +439,14 @@ into `public-index/generated` with `--apply`. It does not auto-accept all produc
 output, infer acceptance from a passing preflight, or publish registry metadata
 without maintainer review.
 
+The `xyflow` package-set acceptance policy is now documented as a transition
+rule for the existing `xyflow.core@0.1.0` candidate. A future package-set PR
+must decide explicitly whether `xyflow.core` remains unchanged, is superseded by
+`xyflow.workspace` plus scoped members, is kept as compatibility metadata, or is
+removed later. Removing `preview_only` from generated package-set candidates is
+also an explicit maintainer acceptance decision, not a consequence of green
+producer or SpecPM preflight checks.
+
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
 archive acquisition to SpecPM core.
