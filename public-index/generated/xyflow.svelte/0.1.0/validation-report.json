@@ -1,0 +1,44 @@
+{
+  "authority": "producer_side_shape_check",
+  "checks": [
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "6f104495b9fd79437e99458bbfe297d8bd757f3b3676d7f539953ee1ea2e40c2"
+      },
+      "id": "required_manifest_specpm_yaml",
+      "path": "specpm.yaml",
+      "role": "manifest",
+      "status": "passed"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "d24e1ea473fb5f1b38ab873b56949cbb60ac0c65245c7139ce86a2acfb60dcb8"
+      },
+      "id": "required_boundary_spec_specs_svelte_spec_yaml",
+      "path": "specs/svelte.spec.yaml",
+      "role": "boundary_spec",
+      "status": "passed"
+    }
+  ],
+  "errorCount": 0,
+  "kind": "SpecHarvesterProducerValidationReport",
+  "notes": [
+    "This report records producer-side candidate shape checks only.",
+    "SpecPM validation and maintainer review remain separate authority boundaries."
+  ],
+  "producer": {
+    "name": "SpecHarvester",
+    "version": "0.1.0"
+  },
+  "schemaVersion": 1,
+  "status": "valid",
+  "subject": {
+    "packageApiVersion": "specpm.dev/v0.1",
+    "packageId": "xyflow.svelte",
+    "packageRoot": ".",
+    "packageVersion": "0.1.0"
+  },
+  "warningCount": 0
+}

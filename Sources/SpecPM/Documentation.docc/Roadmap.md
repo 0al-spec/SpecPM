@@ -241,6 +241,14 @@ must decide explicitly whether `xyflow.core` remains unchanged, is superseded by
 removed later. Removing `preview_only` from generated package-set candidates is
 also an explicit maintainer acceptance decision, not a consequence of green
 producer or SpecPM preflight checks.
+The `xyflow` package-set accepted-source materialization is now proposed from a
+fresh real checkout run using current SpecHarvester and SpecPM `main`. The
+selected accepted-source inputs are `xyflow.workspace`, `xyflow.react`,
+`xyflow.svelte`, and `xyflow.system`, with three selected `contains` relations
+kept as maintainer-review evidence. `xyflow.core@0.1.0` remains unchanged as
+previous single-package review evidence, generated package-set entries remain
+`preview_only`, and AI enrichment remains proposal-only evidence rather than
+registry truth.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

@@ -62,27 +62,28 @@ intent search result scope examples. They are not current public `/v0` payloads.
 ## Acceptance Policy
 
 The current public index contains a generated `xyflow.core@0.1.0` candidate.
-Package-set acceptance should treat that package as previous single-package
+Package-set materialization treats that package as previous single-package
 review evidence. It should not silently replace it.
 
-A package-set accepted-source PR should decide explicitly whether
-`xyflow.core` remains unchanged, is superseded by `xyflow.workspace` plus scoped
-member packages, is kept as a compatibility package, or is removed in a later
-review.
+The package-set accepted-source PR leaves `xyflow.core` unchanged and adds
+`xyflow.workspace`, `xyflow.react`, `xyflow.svelte`, and `xyflow.system` as
+separate generated preview candidates.
 
 The expected package-set transition is:
 
 - `xyflow.workspace` as the aggregate discovery entrypoint;
 - `xyflow.system`, `xyflow.react`, and `xyflow.svelte` as scoped member package
   candidates;
-- selected `contains` relations accepted only when both endpoints are selected.
+- selected `contains` relation IDs carried as maintainer-review evidence only
+  when both endpoints are selected.
 
-Generated candidates may remain `preview_only` while they are producer drafts.
-Removing `preview_only` requires explicit maintainer review of package subject,
-evidence, claims, version, selected relations, and any `xyflow.core`
-coexistence or supersession effect. Passing handoff preflight, AI enrichment
-preflight, or `materialize-package-set` dry run is review evidence, not
-acceptance.
+Generated package-set entries remain `preview_only` in the accepted-source
+materialization. Removing `preview_only` requires explicit maintainer review of
+package subject, evidence, claims, version, selected relations, and any
+`xyflow.core` coexistence or supersession effect. Passing handoff preflight, AI
+enrichment preflight, or `materialize-package-set` dry run is review evidence,
+not final non-preview acceptance. Stable `/v0` relation metadata remains out of
+scope until the drafted relation metadata shape is implemented.
 
 ## References
 

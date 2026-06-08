@@ -1,0 +1,219 @@
+{
+  "analyzerPolicy": {
+    "allowedConfidence": [
+      "high",
+      "medium",
+      "low"
+    ],
+    "allowedExecutions": [
+      "none"
+    ],
+    "inputAuthority": "untrusted_repository_content",
+    "networkAccess": "none",
+    "outputAuthority": "untrusted_analyzer_metadata",
+    "packageScripts": "not_run",
+    "requiresAnalyzerId": true,
+    "requiresAnalyzerVersion": true,
+    "requiresSourceDigests": true,
+    "requiresSourceRevision": true,
+    "schemaVersion": 1
+  },
+  "classifierPolicy": {
+    "adapterContract": {
+      "allowedObservationKinds": [
+        "language",
+        "vendored_file",
+        "generated_file",
+        "package",
+        "license",
+        "symbol",
+        "syntax_node"
+      ],
+      "mergeRule": "External classifier observations can enrich review evidence but must not override manifest-first ProjectProfile evidence.",
+      "requiredFields": [
+        "classifierId",
+        "classifierVersion",
+        "sourceRevision",
+        "sourceDigest",
+        "outputDigest",
+        "observations"
+      ]
+    },
+    "allowedExecutions": [
+      "none"
+    ],
+    "defaultMode": "disabled",
+    "inputAuthority": "untrusted_repository_content",
+    "manifestEvidencePrecedence": "manifest_first",
+    "networkAccess": "none",
+    "outputAuthority": "advisory_untrusted_metadata",
+    "packageScripts": "not_run",
+    "registry": {
+      "schemaVersion": 1,
+      "statusValues": [
+        "approved_optional",
+        "deferred",
+        "rejected"
+      ],
+      "tools": [
+        {
+          "categories": [
+            "language_classification",
+            "vendored_filtering",
+            "generated_filtering"
+          ],
+          "fallback": "Use manifest-first ProjectProfile evidence when unavailable.",
+          "id": "github-linguist",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "approved_optional"
+        },
+        {
+          "categories": [
+            "language_classification",
+            "vendored_filtering",
+            "generated_filtering"
+          ],
+          "fallback": "Use manifest-first ProjectProfile evidence when unavailable.",
+          "id": "go-enry",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "approved_optional"
+        },
+        {
+          "categories": [
+            "package_cataloging",
+            "sbom_generation",
+            "declared_dependency_evidence"
+          ],
+          "fallback": "Skip SBOM enrichment and keep collected manifests as primary evidence.",
+          "id": "syft",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "approved_optional"
+        },
+        {
+          "categories": [
+            "license_detection",
+            "copyright_detection",
+            "package_metadata",
+            "provenance_evidence"
+          ],
+          "fallback": "Use LICENSE file hints and manifest license fields already collected.",
+          "id": "scancode-toolkit",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "deferred"
+        },
+        {
+          "categories": [
+            "symbol_extraction",
+            "public_interface_indexing"
+          ],
+          "fallback": "Use language-specific static analyzers or manifest-only analyzer plan.",
+          "id": "universal-ctags",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "deferred"
+        },
+        {
+          "categories": [
+            "syntax_indexing",
+            "ast_extraction",
+            "public_interface_indexing"
+          ],
+          "fallback": "Use existing Python ast and JS/TS export analyzers where available.",
+          "id": "tree-sitter",
+          "outputAuthority": "advisory_untrusted_metadata",
+          "status": "deferred"
+        }
+      ]
+    },
+    "registrySchemaVersion": 1,
+    "requiresClassifierId": true,
+    "requiresClassifierVersion": true,
+    "requiresPinnedToolVersion": true,
+    "requiresSourceDigests": true,
+    "requiresSourceRevision": true,
+    "schemaVersion": 1
+  },
+  "files": [
+    {
+      "kind": "package_manifest",
+      "package": {
+        "capabilityLabel": "workspace",
+        "description": "A highly customizable React library for building node-based editors and interactive flow charts",
+        "ecosystem": "npm",
+        "license": "MIT",
+        "name": "@xyflow/monorepo",
+        "packageManager": "npm",
+        "version": "0.0.0"
+      },
+      "path": "package.json",
+      "sha256": "5ce8c826877d3028c31729daa27d76aff8e28d1f087115052c289104938332f9",
+      "size": 0
+    }
+  ],
+  "kind": "SpecHarvesterEvidenceSnapshot",
+  "policy": {
+    "contentAuthority": "untrusted_metadata",
+    "execution": "none",
+    "networkAccess": "none",
+    "packageScripts": "not_run"
+  },
+  "projectProfile": {
+    "analyzerPlan": [],
+    "diagnostics": [],
+    "ecosystems": [
+      {
+        "confidence": "high",
+        "evidencePaths": [
+          "package.json"
+        ],
+        "id": "npm",
+        "language": "javascript",
+        "packageManager": "npm",
+        "reason": "Workspace inventory package manifest evidence."
+      }
+    ],
+    "languages": [
+      {
+        "confidence": "high",
+        "evidencePaths": [
+          "package.json"
+        ],
+        "id": "javascript",
+        "reason": "Workspace inventory package manifest evidence."
+      }
+    ],
+    "manifests": [
+      {
+        "confidence": "high",
+        "ecosystem": "npm",
+        "kind": "package_manifest",
+        "language": "javascript",
+        "packageManager": "npm",
+        "parser": "spec_harvester.workspace_inventory",
+        "path": "package.json",
+        "reason": "Workspace inventory package manifest evidence.",
+        "sha256": "5ce8c826877d3028c31729daa27d76aff8e28d1f087115052c289104938332f9"
+      }
+    ],
+    "schemaVersion": 1
+  },
+  "schemaVersion": 1,
+  "skippedFiles": [],
+  "source": {
+    "kind": "workspace_inventory",
+    "label": "workspace",
+    "repository": "https://github.com/xyflow/xyflow",
+    "revision": "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd",
+    "target": {
+      "kind": "repository",
+      "label": "workspace",
+      "path": "."
+    }
+  },
+  "summary": {
+    "fileCount": 1,
+    "licenseFileCount": 0,
+    "packageManifestCount": 1,
+    "skippedFileCount": 0,
+    "targetKind": "repository"
+  }
+}

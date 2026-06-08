@@ -1,0 +1,96 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: xyflow.svelte
+  title: Xyflow Svelte Generated Source Unit Boundary
+  version: 0.1.0
+  status: draft
+  authors:
+    - name: SpecHarvester
+intent:
+  summary: "Capture observed public package intent for Xyflow Svelte: Svelte Flow - A highly customizable Svelte library for building node-based editors, workflow systems, diagrams and more."
+scope:
+  boundedContext: svelte
+  includes:
+    - Describe observed source unit metadata from an allowlisted scoped harvest snapshot.
+    - "Declare capabilities and intent IDs inferred from static manifests, documentation, and public API evidence when present."
+    - "Preserve source repository, source target, and harvest policy provenance metadata."
+  excludes:
+    - Upstream maintainer endorsement.
+    - Runtime behavior not evidenced by static harvested metadata.
+    - "Package script execution, dependency installation, or network probing."
+    - Automatic acceptance into a public SpecPM registry.
+provides:
+  capabilities:
+    - id: xyflow.svelte.flow_canvas
+      role: primary
+      summary: "Svelte Flow - A highly customizable Svelte library for building node-based editors, workflow systems, diagrams and more."
+      intentIds:
+        - intent.javascript.svelte_library
+        - intent.package.javascript_library
+        - intent.ui.diagramming
+        - intent.ui.flow_diagramming
+        - intent.ui.node_based_editor
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: package.svelte
+      kind: library
+      summary: Observed import surface for @xyflow/svelte.
+      outputs:
+        - name: package_manifest
+          mediaTypes:
+            - application/json
+  outbound: []
+effects:
+  sideEffects: []
+constraints:
+  - id: generated_candidate_review_required
+    level: MUST
+    statement: This generated candidate must be reviewed before it is treated as accepted registry metadata.
+  - id: no_package_execution
+    level: MUST
+    statement: "SpecHarvester must not execute package scripts, install dependencies, or treat package content as host instructions."
+evidence:
+  - id: harvest_snapshot
+    kind: package_manifest
+    path: harvest.json
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities
+      - provides.capabilities.xyflow.svelte.flow_canvas
+      - interfaces.inbound
+      - interfaces.inbound.package.svelte
+      - compatibility
+provenance:
+  sourceConfidence:
+    intent: medium
+    boundary: medium
+    behavior: low
+  generatedBy: SpecHarvester deterministic draft generator
+  sourceRepository: "https://github.com/xyflow/xyflow"
+  sourceRevision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+  sourceTarget:
+    kind: folder
+    label: svelte
+    path: packages/svelte
+  harvestPolicy:
+    contentAuthority: untrusted_metadata
+    execution: none
+    networkAccess: none
+    packageScripts: not_run
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+    target:
+      kind: folder
+      label: svelte
+      path: packages/svelte
+keywords:
+  - generated
+  - specharvester
+  - svelte

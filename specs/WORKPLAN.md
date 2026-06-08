@@ -2011,6 +2011,51 @@ Result:
 - No accepted-source package, relation, registry metadata, or `xyflow.core`
   entry is changed by this task.
 
+### P66-T12. Xyflow Package-Set Accepted-Source Materialization
+
+Status: Completed.
+
+Motivation:
+
+- The `xyflow` package-set policy is documented and the fresh
+  SpecHarvester-to-SpecPM pipeline can pass handoff preflight, AI enrichment
+  preflight, and maintainer-selected materialization checks from current
+  `main` branches.
+- The public index still needs an accepted-source PR that adds the reviewed
+  package-set subjects without silently mutating `xyflow.core@0.1.0` or
+  treating AI enrichment as registry authority.
+
+Goal:
+
+- Materialize selected `xyflow.workspace`, `xyflow.react`, `xyflow.svelte`, and
+  `xyflow.system` generated candidate packages into public-index accepted
+  sources from a fresh package-set handoff.
+- Select the three `contains` relation IDs as maintainer-reviewed PR evidence
+  while keeping stable `/v0` relation metadata out of scope until the drafted
+  relation metadata shape is implemented.
+
+Expected result:
+
+- `public-index/accepted-packages.yml` includes the four new generated
+  package-set candidate directories.
+- `xyflow.core@0.1.0` remains present as previous single-package review
+  evidence; this PR does not remove or rewrite it.
+- Generated package-set manifests keep `preview_only: true` until a later
+  maintainer review explicitly promotes individual claims beyond preview
+  status.
+- AI enrichment remains proposal-only review evidence and is not copied into
+  accepted-source packages or registry metadata.
+
+Result:
+
+- A fresh real `xyflow` run from current SpecHarvester and SpecPM `main`
+  produced 4 package candidates and 3 selected `contains` relations.
+- SpecPM handoff preflight and AI enrichment preflight both passed with zero
+  errors and zero warnings.
+- `specpm producer-bundle materialize-package-set --apply` copied only the
+  selected package candidates into `public-index/generated` and appended their
+  accepted-source paths to `public-index/accepted-packages.yml`.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

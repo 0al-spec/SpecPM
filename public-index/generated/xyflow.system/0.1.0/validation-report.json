@@ -1,0 +1,44 @@
+{
+  "authority": "producer_side_shape_check",
+  "checks": [
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "2b99f46f5c41bf10eeb0d949ec47702cce7e5f2fe69c5abaea85d6eb38ff1828"
+      },
+      "id": "required_manifest_specpm_yaml",
+      "path": "specpm.yaml",
+      "role": "manifest",
+      "status": "passed"
+    },
+    {
+      "digest": {
+        "algorithm": "sha256",
+        "value": "ece18b95477a9044cbc97321053aa4d86e477e4fe392a961419c4967428ae226"
+      },
+      "id": "required_boundary_spec_specs_system_spec_yaml",
+      "path": "specs/system.spec.yaml",
+      "role": "boundary_spec",
+      "status": "passed"
+    }
+  ],
+  "errorCount": 0,
+  "kind": "SpecHarvesterProducerValidationReport",
+  "notes": [
+    "This report records producer-side candidate shape checks only.",
+    "SpecPM validation and maintainer review remain separate authority boundaries."
+  ],
+  "producer": {
+    "name": "SpecHarvester",
+    "version": "0.1.0"
+  },
+  "schemaVersion": 1,
+  "status": "valid",
+  "subject": {
+    "packageApiVersion": "specpm.dev/v0.1",
+    "packageId": "xyflow.system",
+    "packageRoot": ".",
+    "packageVersion": "0.1.0"
+  },
+  "warningCount": 0
+}

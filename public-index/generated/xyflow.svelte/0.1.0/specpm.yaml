@@ -1,0 +1,49 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: xyflow.svelte
+  name: Xyflow Svelte
+  version: 0.1.0
+  summary: "Xyflow Svelte public package boundary: Svelte Flow - A highly customizable Svelte library for building node-based editors, workflow systems, diagrams and more."
+  license: MIT
+  licenseEvidence:
+    source: manifest
+    confidence: high
+    paths:
+      - packages/svelte/package.json
+  authors:
+    - name: SpecHarvester
+preview_only: true
+specs:
+  - path: specs/svelte.spec.yaml
+index:
+  provides:
+    capabilities:
+      - xyflow.svelte.flow_canvas
+    intents:
+      - intent.javascript.svelte_library
+      - intent.package.javascript_library
+      - intent.ui.diagramming
+      - intent.ui.flow_diagramming
+      - intent.ui.node_based_editor
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - web
+    - node
+  languages:
+    - javascript
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+    target:
+      kind: folder
+      label: svelte
+      path: packages/svelte
+keywords:
+  - generated
+  - specharvester
+  - svelte
