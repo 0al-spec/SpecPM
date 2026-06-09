@@ -65,25 +65,27 @@ The current public index contains a generated `xyflow.core@0.1.0` candidate.
 Package-set materialization treats that package as previous single-package
 review evidence. It should not silently replace it.
 
-The package-set accepted-source PR leaves `xyflow.core` unchanged and adds
-`xyflow.workspace`, `xyflow.react`, `xyflow.svelte`, and `xyflow.system` as
-separate generated preview candidates.
+The package-set accepted-source flow leaves `xyflow.core` unchanged as previous
+single-package review evidence and accepts `xyflow.workspace`, `xyflow.react`,
+`xyflow.svelte`, and `xyflow.system` through maintainer-curated artifacts under
+`public-index/curated`.
 
 The expected package-set transition is:
 
 - `xyflow.workspace` as the aggregate discovery entrypoint;
 - `xyflow.system`, `xyflow.react`, and `xyflow.svelte` as scoped member package
-  candidates;
-- selected `contains` relation IDs carried as maintainer-review evidence only
-  when both endpoints are selected.
+  entries;
+- selected `contains` relation IDs are accepted in
+  `public-index/accepted-packages.yml` only after both endpoints are accepted;
+- generated SpecHarvester candidates, receipts, validation reports, and
+  diagnostics remain producer evidence referenced from the curated artifacts.
 
-Generated package-set entries remain `preview_only` in the accepted-source
-materialization. Removing `preview_only` requires explicit maintainer review of
-package subject, evidence, claims, version, selected relations, and any
-`xyflow.core` coexistence or supersession effect. Passing handoff preflight, AI
-enrichment preflight, or `materialize-package-set` dry run is review evidence,
-not final non-preview acceptance. Stable `/v0` relation metadata remains out of
-scope until the drafted relation metadata shape is implemented.
+Curated package-set entries do not keep `preview_only`, because the accepted
+registry metadata is authored by maintainer review rather than copied as direct
+producer output. This does not make the producer receipt an authority document:
+passing handoff preflight, AI enrichment preflight, or `materialize-package-set`
+dry run remains review evidence only. AI enrichment remains proposal-only and
+does not alter accepted claims without explicit maintainer editing.
 
 ## References
 

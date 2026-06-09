@@ -1,0 +1,102 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: xyflow.svelte
+  title: Xyflow Svelte Flow Boundary
+  version: 0.1.0
+  status: accepted
+  authors:
+    - name: SpecPM Maintainers
+intent:
+  summary: Describe Svelte Flow as the xyflow Svelte package for building node-based editors, workflow systems, and diagrams.
+scope:
+  boundedContext: xyflow-svelte
+  includes:
+    - Identify the Svelte package boundary from the xyflow workspace.
+    - Describe the public Svelte library intent evidenced by package metadata and documentation.
+    - Preserve producer-generated evidence without treating it as registry authority.
+  excludes:
+    - Upstream maintainer endorsement.
+    - Runtime behavior beyond statically reviewed package metadata and documentation.
+    - Automatic acceptance of AI-enriched summaries, capabilities, or interface claims.
+provides:
+  capabilities:
+    - id: xyflow.svelte.flow_canvas
+      role: primary
+      summary: Svelte library surface for rendering and editing node-based flow canvases.
+      intentIds:
+        - intent.javascript.svelte_library
+        - intent.package.javascript_library
+        - intent.ui.diagramming
+        - intent.ui.flow_diagramming
+        - intent.ui.node_based_editor
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: package.svelte
+      kind: library
+      summary: Public package surface for @xyflow/svelte.
+      outputs:
+        - name: package_manifest
+          mediaTypes:
+            - application/json
+        - name: package_exports
+          mediaTypes:
+            - application/javascript
+            - text/css
+  outbound: []
+effects:
+  sideEffects: []
+constraints:
+  - id: maintainer_curated_acceptance
+    level: MUST
+    statement: This package is accepted as maintainer-curated registry metadata, not as direct producer output.
+  - id: producer_output_not_authority
+    level: MUST
+    statement: SpecHarvester receipts and generated candidates are evidence only and do not grant registry acceptance by themselves.
+evidence:
+  - id: maintainer_review
+    kind: manual_assertion
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities
+      - provides.capabilities.xyflow.svelte.flow_canvas
+      - interfaces.inbound
+      - interfaces.inbound.package.svelte
+      - constraints
+  - id: producer_candidate
+    kind: foreign_spec
+    supports:
+      - foreignArtifacts
+      - provenance
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: high
+    behavior: low
+  curatedBy: SpecPM maintainer review
+  basedOnProducerCandidate: "repo:public-index/generated/xyflow.svelte/0.1.0"
+  sourceRepository: "https://github.com/xyflow/xyflow"
+  sourceRevision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+  sourceTarget:
+    kind: folder
+    label: svelte
+    path: packages/svelte
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+  - id: specharvester_candidate
+    role: documentation
+    uri: "repo:public-index/generated/xyflow.svelte/0.1.0/specpm.yaml"
+  - id: specharvester_producer_receipt
+    role: documentation
+    uri: "repo:public-index/generated/xyflow.svelte/0.1.0/producer-receipt.json"
+keywords:
+  - curated
+  - svelte
+  - svelte flow
+  - xyflow

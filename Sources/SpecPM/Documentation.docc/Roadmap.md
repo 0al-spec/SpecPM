@@ -246,9 +246,8 @@ fresh real checkout run using current SpecHarvester and SpecPM `main`. The
 selected accepted-source inputs are `xyflow.workspace`, `xyflow.react`,
 `xyflow.svelte`, and `xyflow.system`, with three selected `contains` relations
 kept as maintainer-review evidence. `xyflow.core@0.1.0` remains unchanged as
-previous single-package review evidence, generated package-set entries remain
-`preview_only`, and AI enrichment remains proposal-only evidence rather than
-registry truth.
+previous single-package review evidence, and AI enrichment remains
+proposal-only evidence rather than registry truth.
 Registry-visible package-set relations are now implemented as additive `/v0`
 metadata. Maintainer-reviewed `relations[]` entries in
 `public-index/accepted-packages.yml` generate `/v0/relations`, advertise
@@ -256,6 +255,12 @@ metadata. Maintainer-reviewed `relations[]` entries in
 aggregate package payloads, and add `relationContext` to member package and
 exact search payloads. Producer-observed relations remain non-authoritative
 until explicitly accepted in the manifest.
+The accepted `xyflow` package-set members now come from maintainer-curated
+artifacts under `public-index/curated/xyflow.*`. Generated SpecHarvester output
+remains under `public-index/generated/xyflow.*` as producer evidence; curated
+manifests reference generated candidates, receipts, and validation reports
+without changing producer receipt hashes or pretending maintainer text was
+producer output.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

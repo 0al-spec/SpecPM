@@ -16,10 +16,10 @@ packages:
     revision: 2ad889ed413370f79710f235a08b43aaaaecf81e
     path: .
   - path: public-index/generated/xyflow.core/0.1.0
-  - path: public-index/generated/xyflow.workspace/0.1.0
-  - path: public-index/generated/xyflow.react/0.1.0
-  - path: public-index/generated/xyflow.svelte/0.1.0
-  - path: public-index/generated/xyflow.system/0.1.0
+  - path: public-index/curated/xyflow.workspace/0.1.0
+  - path: public-index/curated/xyflow.react/0.1.0
+  - path: public-index/curated/xyflow.svelte/0.1.0
+  - path: public-index/curated/xyflow.system/0.1.0
 relations:
   - id: xyflow.workspace.contains.xyflow.react
     type: contains

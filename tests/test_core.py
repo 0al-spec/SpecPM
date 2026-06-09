@@ -6397,6 +6397,56 @@ def test_public_index_generate_writes_accepted_package_relations(tmp_path: Path)
     )
 
 
+def test_xyflow_package_set_accepted_sources_are_maintainer_curated() -> None:
+    accepted_manifest = load_yaml_file(PUBLIC_INDEX_ACCEPTED_MANIFEST)
+    accepted_paths = {entry["path"] for entry in accepted_manifest["packages"]}
+
+    package_ids = {
+        "xyflow.workspace",
+        "xyflow.react",
+        "xyflow.svelte",
+        "xyflow.system",
+    }
+
+    for package_id in package_ids:
+        curated_path = f"public-index/curated/{package_id}/0.1.0"
+        generated_path = f"public-index/generated/{package_id}/0.1.0"
+
+        assert curated_path in accepted_paths
+        assert generated_path not in accepted_paths
+
+        curated_root = ROOT / curated_path
+        generated_root = ROOT / generated_path
+        assert validate_package(curated_root)["status"] == "valid"
+        assert (generated_root / "producer-receipt.json").is_file()
+
+        curated_manifest = load_yaml_file(curated_root / "specpm.yaml")
+        generated_manifest = load_yaml_file(generated_root / "specpm.yaml")
+
+        assert curated_manifest["metadata"]["id"] == package_id
+        assert curated_manifest["metadata"]["authors"] == [{"name": "SpecPM Maintainers"}]
+        assert curated_manifest.get("preview_only") is None
+        assert generated_manifest["preview_only"] is True
+
+        artifact_uris = {
+            artifact["uri"]
+            for artifact in curated_manifest["foreignArtifacts"]
+            if isinstance(artifact, dict) and isinstance(artifact.get("uri"), str)
+        }
+        assert f"repo:{generated_path}/specpm.yaml" in artifact_uris
+        assert f"repo:{generated_path}/producer-receipt.json" in artifact_uris
+
+        spec_rel = curated_manifest["specs"][0]["path"]
+        spec = load_yaml_file(curated_root / spec_rel)
+        assert spec["metadata"]["status"] == "accepted"
+        assert spec["provenance"]["curatedBy"] == "SpecPM maintainer review"
+        assert spec["provenance"]["basedOnProducerCandidate"] == f"repo:{generated_path}"
+        assert "producer_candidate" in {entry["id"] for entry in spec["evidence"]}
+        assert "producer_output_not_authority" in {
+            constraint["id"] for constraint in spec["constraints"]
+        }
+
+
 def test_public_index_generate_rejects_relation_with_missing_endpoint(tmp_path: Path) -> None:
     workspace = copy_email_package(tmp_path, "workspace")
     update_email_package(
@@ -6778,14 +6828,19 @@ def test_public_index_accepted_manifest_resolves_alpha_packages(
     alpha_len = len(expected_alpha_sources)
     assert report["package_dirs"][:alpha_len] == expected_alpha_package_dirs
     assert report["sources"][:alpha_len] == expected_alpha_sources
-    generated_root = (ROOT / "public-index/generated").resolve()
-    generated_sources = report["sources"][alpha_len:]
-    generated_package_dirs = report["package_dirs"][alpha_len:]
-    assert len(generated_package_dirs) == len(generated_sources)
-    for source, package_dir in zip(generated_sources, generated_package_dirs, strict=True):
+    public_index_source_roots = (
+        (ROOT / "public-index/generated").resolve(),
+        (ROOT / "public-index/curated").resolve(),
+    )
+    public_index_sources = report["sources"][alpha_len:]
+    public_index_package_dirs = report["package_dirs"][alpha_len:]
+    assert len(public_index_package_dirs) == len(public_index_sources)
+    for source, package_dir in zip(public_index_sources, public_index_package_dirs, strict=True):
         assert source["kind"] == "local"
         source_path = (ROOT / source["path"]).resolve()
-        source_path.relative_to(generated_root)
+        assert any(
+            source_path.is_relative_to(source_root) for source_root in public_index_source_roots
+        )
         assert source["package_dir"] == package_dir
         assert package_dir == str(source_path)
     assert report["errors"] == []
