@@ -576,7 +576,7 @@ function renderRelationsDetail() {
           </span>
           <span class="catalog-row-meta">
             <button class="token" data-action="package" data-id="${escapeAttr(relation.source || "")}">${escapeHtml(relation.source || "")}</button>
-            contains
+            ${escapeHtml(relationTypeLabel(relation))}
             <button class="token" data-action="package" data-id="${escapeAttr(relation.target || "")}">${escapeHtml(relation.target || "")}</button>
           </span>
           <span class="catalog-row-meta">${escapeHtml(relationEvidenceLabel(relation))}</span>
@@ -863,7 +863,7 @@ function renderRelationContextRow(relation) {
       </span>
       <span class="catalog-row-meta">
         <button class="token" data-action="package" data-id="${escapeAttr(relation.source || "")}">${escapeHtml(relation.source || "")}</button>
-        contains
+        ${escapeHtml(relationTypeLabel(relation))}
         <button class="token" data-action="package" data-id="${escapeAttr(relation.target || "")}">${escapeHtml(relation.target || "")}</button>
       </span>
       <span class="catalog-row-meta">${escapeHtml(relationEvidenceLabel(relation))}</span>
@@ -881,6 +881,10 @@ function packageScopeLabel(pkg) {
 function relationEvidenceLabel(relation) {
   const paths = (relation.evidence || []).map((item) => item.path).filter(Boolean);
   return paths.length ? `evidence: ${paths.join(", ")}` : "accepted relation metadata";
+}
+
+function relationTypeLabel(relation) {
+  return relation?.type || "relates to";
 }
 
 function renderJson() {

@@ -2519,7 +2519,7 @@ def validate_remote_registry_root_payload(
     endpoints = require_remote_mapping(payload, "endpoints", errors, "endpoints")
     if endpoints is None:
         return
-    for key in ("status", "packages", "intents"):
+    for key in ("status", "packages", "relations", "intents"):
         require_remote_string(endpoints, key, errors, f"endpoints.{key}")
 
 

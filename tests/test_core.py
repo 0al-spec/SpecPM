@@ -5719,6 +5719,46 @@ def test_remote_registry_payload_validator_rejects_incomplete_source() -> None:
     )
 
 
+@pytest.mark.parametrize("relations_endpoint", [None, 123])
+def test_remote_registry_root_validator_requires_relations_endpoint(
+    relations_endpoint: object,
+) -> None:
+    payload = {
+        "apiVersion": "specpm.registry/v0",
+        "schemaVersion": 1,
+        "kind": "RemoteRegistryRoot",
+        "status": "ok",
+        "registry": {
+            "profile": "public_static_index",
+            "api_version": "v0",
+            "read_only": True,
+            "authority": "metadata_only",
+            "package_count": 0,
+            "version_count": 0,
+            "capability_count": 0,
+            "intent_count": 0,
+            "relation_count": 0,
+        },
+        "endpoints": {
+            "status": "v0/status/index.json",
+            "packages": "v0/packages/index.json",
+            "relations": "v0/relations/index.json",
+            "intents": "v0/intents/index.json",
+        },
+    }
+    if relations_endpoint is None:
+        del payload["endpoints"]["relations"]
+    else:
+        payload["endpoints"]["relations"] = relations_endpoint
+
+    errors = validate_remote_registry_payload(payload)
+
+    assert any(
+        issue.code == "remote_registry_field_invalid" and issue.field == "endpoints.relations"
+        for issue in errors
+    )
+
+
 def test_remote_registry_payload_validator_rejects_non_string_result_lists() -> None:
     payload = load_remote_registry_fixture("intent-search.json")
     payload["results"][0]["matched_capabilities"] = ["document_conversion.email_to_markdown", 123]
