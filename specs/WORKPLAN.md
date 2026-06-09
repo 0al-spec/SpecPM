@@ -2098,6 +2098,48 @@ Result:
   propagation, lifecycle inheritance, namespace ownership, and automatic
   package selection.
 
+### P66-T14. Maintainer-Curated Xyflow Accepted Artifacts
+
+Status: Completed.
+
+Motivation:
+
+- The `xyflow` package-set accepted-source entries were initially copied from
+  SpecHarvester-generated candidates. That is useful for plumbing, but it makes
+  human quality edits risky: changing generated `specpm.yaml` or BoundarySpec
+  files in place would invalidate the producer receipt boundary.
+- Maintainers need a way to polish summaries, capabilities, constraints, and
+  acceptance posture while keeping generated receipts as evidence, not as the
+  authority document for maintainer-authored text.
+
+Goal:
+
+- Create separate maintainer-curated accepted artifacts for
+  `xyflow.workspace`, `xyflow.react`, `xyflow.svelte`, and `xyflow.system`.
+- Keep the generated SpecHarvester outputs under `public-index/generated` as
+  producer evidence referenced by the curated artifacts.
+- Switch `public-index/accepted-packages.yml` to accept curated paths for the
+  package-set members without mutating `xyflow.core@0.1.0`.
+
+Expected result:
+
+- Curated package-set entries can omit `preview_only` because they are
+  explicitly accepted maintainer-authored registry metadata.
+- Producer receipts, validation reports, and generated manifests remain
+  referenced evidence and their hashes are not rewritten by maintainer polish.
+- The public `/v0` registry still exposes `xyflow.workspace`,
+  `xyflow.react`, `xyflow.svelte`, `xyflow.system`, and the accepted
+  `contains` relations.
+
+Result:
+
+- `public-index/curated/xyflow.*` contains maintainer-authored SpecPackages and
+  BoundarySpecs.
+- Curated manifests cite `public-index/generated/xyflow.*` candidates,
+  `producer-receipt.json`, and validation reports through `foreignArtifacts`.
+- `public-index/accepted-packages.yml` now accepts the curated package-set
+  members while leaving generated outputs as evidence.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

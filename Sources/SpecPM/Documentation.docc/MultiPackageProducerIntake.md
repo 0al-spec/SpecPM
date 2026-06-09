@@ -149,6 +149,20 @@ Maintainers should copy only accepted packages and accepted relations into
 registry input. Rejected or deferred members may remain in evidence without
 becoming visible in the public index.
 
+## Curated Accepted Artifacts
+
+When maintainers improve generated package-set candidates, they should create a
+separate maintainer-curated accepted artifact instead of editing producer output
+in place. The curated artifact may reference the generated candidate,
+`producer-receipt.json`, validation report, diagnostics report, handoff, and AI
+enrichment proposal as evidence, but the curated manifest and BoundarySpec are
+authored by SpecPM maintainer review.
+
+This allows maintainers to remove `preview_only` from accepted registry
+metadata without making the producer receipt an authority document. The receipt
+continues to describe what the producer emitted; the curated artifact describes
+what maintainers accepted.
+
 ## Boundary
 
 This policy does not add automatic bundle-set acceptance, automatic relation

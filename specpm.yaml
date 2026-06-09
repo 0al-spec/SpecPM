@@ -30,6 +30,7 @@ index:
       - specpm.registry.index_submission_flow
       - specpm.registry.accepted_manifest_pr_helper
       - specpm.registry.package_set_materialization_helper
+      - specpm.registry.curated_accepted_artifacts
       - specpm.registry.index_removal_request_flow
       - specpm.registry.namespace_claim_request_flow
       - specpm.registry.namespace_claim_policy

@@ -183,6 +183,33 @@ Maintainers should copy only the accepted packages and accepted relations into
 the registry input. A rejected or deferred member can remain in the handoff
 evidence without becoming visible in the public index.
 
+## Maintainer-Curated Accepted Artifacts
+
+Producer materialization can copy generated candidates into a review branch,
+but maintainers should not polish those generated files in place and still
+pretend the producer receipt describes them. When accepted registry metadata
+needs human wording, tighter capabilities, or non-preview acceptance posture,
+create a separate maintainer-curated package directory.
+
+The curated artifact may reference producer output as evidence:
+
+- generated `specpm.yaml`;
+- `producer-receipt.json`;
+- `validation-report.json`;
+- `diagnostics.json`;
+- package-set handoff and AI enrichment proposal, when relevant.
+
+Those references should be evidence or `foreignArtifacts`, not a replacement
+authority chain. The producer receipt describes what the producer emitted. The
+curated artifact describes what maintainers accepted.
+
+For the `xyflow` package-set, the accepted registry source is the curated
+directory under `public-index/curated/xyflow.*`, while the generated
+SpecHarvester output remains under `public-index/generated/xyflow.*` as
+evidence. This lets maintainers remove `preview_only` from the curated entry
+without changing producer receipt hashes or making producer output
+authoritative.
+
 ## Bundle-Set Checklist
 
 Before accepting any part of a multi-package proposal, maintainers should verify:

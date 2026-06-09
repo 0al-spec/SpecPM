@@ -1,7 +1,7 @@
 # Xyflow Package Set Reference Scenario
 
-Status: Draft
-Updated: 2026-06-06
+Status: Accepted reference scenario
+Updated: 2026-06-09
 Scope: reference scenario for package sets, monorepo discovery, and scoped
 package candidates
 
@@ -10,8 +10,9 @@ package candidates
 This reference scenario shows how a multi-package repository can preserve broad
 product discovery intent without overclaiming one scoped package.
 
-It is a non-normative reference. It does not publish `xyflow` packages, change
-the public registry, or accept generated packages automatically.
+It is a reference for the accepted public index package-set shape. It does not
+make SpecHarvester output registry authority: generated candidates remain
+producer evidence, and maintainer-curated artifacts are the accepted sources.
 
 ## Source Context
 
@@ -52,7 +53,7 @@ xyflow.react      scoped React package
 xyflow.svelte     scoped Svelte package
 ```
 
-## Proposed Package Subjects
+## Accepted Package Subjects
 
 ### `xyflow.workspace`
 
@@ -147,7 +148,7 @@ Expected search scope:
 scope=package
 ```
 
-## Proposed Relations
+## Accepted Relations
 
 ```text
 xyflow.workspace contains xyflow.system
@@ -163,6 +164,37 @@ Evidence:
 
 The `contains` relation does not make members inherit aggregate capabilities,
 trust, lifecycle state, namespace ownership, or acceptance status.
+
+## Maintainer-Curated Accepted Artifacts
+
+The public index accepts the package-set members from:
+
+```text
+public-index/curated/xyflow.workspace/0.1.0
+public-index/curated/xyflow.react/0.1.0
+public-index/curated/xyflow.svelte/0.1.0
+public-index/curated/xyflow.system/0.1.0
+```
+
+The corresponding SpecHarvester outputs remain in:
+
+```text
+public-index/generated/xyflow.workspace/0.1.0
+public-index/generated/xyflow.react/0.1.0
+public-index/generated/xyflow.svelte/0.1.0
+public-index/generated/xyflow.system/0.1.0
+```
+
+Curated manifests reference generated `specpm.yaml`, `producer-receipt.json`,
+and validation reports as `foreignArtifacts` using repository URIs. They do not
+edit generated files, update producer receipt hashes, or pretend that
+maintainer-authored text was emitted by SpecHarvester.
+
+The curated entries omit `preview_only` because they are accepted registry
+metadata after maintainer review. This acceptance is scoped to the curated
+claims and accepted `contains` relations; it does not grant upstream
+endorsement, dependency-solving semantics, trust propagation, or automatic
+acceptance of future producer output.
 
 ## Search Expectations
 

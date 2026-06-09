@@ -1,0 +1,52 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: xyflow.workspace
+  name: Xyflow Workspace
+  version: 0.1.0
+  summary: Maintainer-curated package-set entrypoint for the xyflow monorepo, grouping the React Flow, Svelte Flow, and shared system packages.
+  license: MIT
+  licenseEvidence:
+    source: manifest
+    confidence: high
+    paths:
+      - package.json
+  authors:
+    - name: SpecPM Maintainers
+specs:
+  - path: specs/workspace.spec.yaml
+index:
+  provides:
+    capabilities:
+      - xyflow.workspace.package_set
+    intents:
+      - intent.repository.package_workspace
+      - intent.ui.flow_diagramming
+      - intent.ui.node_based_editor
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - web
+    - node
+  languages:
+    - javascript
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: "https://github.com/xyflow/xyflow"
+    revision: a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd
+  - id: specharvester_candidate
+    role: documentation
+    uri: "repo:public-index/generated/xyflow.workspace/0.1.0/specpm.yaml"
+  - id: specharvester_producer_receipt
+    role: documentation
+    uri: "repo:public-index/generated/xyflow.workspace/0.1.0/producer-receipt.json"
+  - id: specharvester_validation_report
+    role: documentation
+    uri: "repo:public-index/generated/xyflow.workspace/0.1.0/validation-report.json"
+keywords:
+  - curated
+  - package set
+  - xyflow
+  - workspace
