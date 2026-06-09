@@ -261,6 +261,12 @@ remains under `public-index/generated/xyflow.*` as producer evidence; curated
 manifests reference generated candidates, receipts, and validation reports
 without changing producer receipt hashes or pretending maintainer text was
 producer output.
+The curated accepted artifact lifecycle is now documented as standard policy:
+generated candidates remain immutable evidence, curated artifacts own
+maintainer-authored accepted metadata, new harvests update curated artifacts
+only through review diffs, `foreignArtifacts` preserve evidence chains,
+removing `preview_only` is a maintainer acceptance act, and accepted relations
+remain explicit `relations[]` manifest entries.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

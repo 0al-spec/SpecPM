@@ -210,6 +210,17 @@ evidence. This lets maintainers remove `preview_only` from the curated entry
 without changing producer receipt hashes or making producer output
 authoritative.
 
+The full curated artifact lifecycle is documented in
+`specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md`. In short:
+
+- generated candidates are immutable producer evidence;
+- curated artifacts own maintainer-authored accepted metadata;
+- new harvests update curated artifacts only through review diffs;
+- curated artifacts preserve `foreignArtifacts` evidence chains;
+- removing `preview_only` is a maintainer acceptance act;
+- package relation acceptance is recorded separately in
+  `public-index/accepted-packages.yml` `relations[]`.
+
 ## Bundle-Set Checklist
 
 Before accepting any part of a multi-package proposal, maintainers should verify:

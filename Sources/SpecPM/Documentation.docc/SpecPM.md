@@ -71,6 +71,7 @@ The canonical source files remain in the repository:
 - `specs/PACKAGE_SET_REGISTRY_METADATA.md`
 - `specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`
 - `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`
+- `specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md`
 - `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
@@ -117,6 +118,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:PackageSetRegistryMetadata>
 - <doc:SpecHarvesterMonorepoDiscovery>
 - <doc:MultiPackageProducerIntake>
+- <doc:CuratedAcceptedArtifactLifecycle>
 - <doc:XyflowPackageSetReference>
 - <doc:Deployment>
 - <doc:RegistryOperations>

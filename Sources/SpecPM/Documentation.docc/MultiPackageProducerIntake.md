@@ -163,6 +163,14 @@ metadata without making the producer receipt an authority document. The receipt
 continues to describe what the producer emitted; the curated artifact describes
 what maintainers accepted.
 
+The full lifecycle is covered by <doc:CuratedAcceptedArtifactLifecycle>. The
+key boundaries are: generated candidates are immutable producer evidence; curated
+artifacts own maintainer-authored accepted metadata; new harvests update
+curated artifacts only through review diffs; curated artifacts preserve
+`foreignArtifacts` evidence chains; removing `preview_only` is a maintainer
+acceptance act; and package relation acceptance is recorded separately in
+`public-index/accepted-packages.yml` `relations[]`.
+
 ## Boundary
 
 This policy does not add automatic bundle-set acceptance, automatic relation
@@ -173,6 +181,7 @@ package selection, package execution, or trust propagation.
 
 - `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`
 - `specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md`
+- <doc:CuratedAcceptedArtifactLifecycle>
 - `specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`
 - <doc:ProducerBundleProposalPolicy>
 - <doc:SpecHarvesterMonorepoDiscovery>

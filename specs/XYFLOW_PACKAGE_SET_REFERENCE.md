@@ -262,23 +262,25 @@ explicitly:
   maintainer-review evidence only when both endpoints are selected;
 - `xyflow.core` is left unchanged as previous single-package review evidence.
 
-The accepted-source materialization adds:
+The accepted-source materialization now accepts maintainer-curated artifacts:
 
-- `public-index/generated/xyflow.workspace/0.1.0`;
-- `public-index/generated/xyflow.react/0.1.0`;
-- `public-index/generated/xyflow.svelte/0.1.0`;
-- `public-index/generated/xyflow.system/0.1.0`.
+- `public-index/curated/xyflow.workspace/0.1.0`;
+- `public-index/curated/xyflow.react/0.1.0`;
+- `public-index/curated/xyflow.svelte/0.1.0`;
+- `public-index/curated/xyflow.system/0.1.0`.
 
-The generated package-set manifests intentionally keep `preview_only: true`.
-This means they are visible accepted-source preview candidates, not final
-non-preview claims. Removing `preview_only` remains a later maintainer decision
-over package subject, evidence, claims, version, selected relations, and
-`xyflow.core` coexistence or supersession effect.
+Those generated candidates are immutable evidence. The registry source is the
+curated `public-index/curated/xyflow.*` artifact set, which owns the
+maintainer-authored accepted metadata.
 
-Stable `/v0` relation metadata remains out of scope for this materialization
-PR. The three selected `contains` relation IDs are carried in materialization
-review evidence and PR notes until the drafted package-set relation metadata
-shape is implemented.
+The generated package-set manifests may keep `preview_only: true` while they
+remain producer drafts. The curated package-set entries omit `preview_only`
+because maintainers reviewed the package subjects, evidence, claims, versions,
+selected relations, and `xyflow.core` coexistence.
+
+Stable `/v0` relation metadata is published only from explicit
+`public-index/accepted-packages.yml` `relations[]` entries. Producer relation
+proposals remain evidence until selected by maintainers.
 
 Accepting the package set does not accept all members. Accepting a member does
 not accept the package set. Accepting a relation does not grant trust or
@@ -291,3 +293,11 @@ legacy `xyflow.core` coexistence or supersession effect. Passing SpecHarvester
 preflight, SpecPM handoff preflight, SpecPM AI enrichment preflight, or
 `materialize-package-set` dry run is necessary review evidence, but it is not
 approval to remove `preview_only`.
+
+The broader lifecycle is documented in
+`specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md`: generated candidates are
+immutable evidence, curated artifacts own maintainer-authored accepted
+metadata, new harvests update curated artifacts only through review diffs,
+evidence chains are preserved through `foreignArtifacts`, `preview_only`
+removal is a maintainer acceptance act, and relation acceptance remains
+separate from package acceptance.

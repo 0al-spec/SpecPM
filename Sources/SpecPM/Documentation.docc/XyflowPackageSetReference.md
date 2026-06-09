@@ -87,6 +87,14 @@ passing handoff preflight, AI enrichment preflight, or `materialize-package-set`
 dry run remains review evidence only. AI enrichment remains proposal-only and
 does not alter accepted claims without explicit maintainer editing.
 
+The broader lifecycle is documented in
+<doc:CuratedAcceptedArtifactLifecycle>: generated candidates are immutable
+evidence, curated artifacts own maintainer-authored accepted metadata, new
+harvests update curated artifacts only through review diffs, evidence chains
+are preserved through `foreignArtifacts`, `preview_only` removal is a
+maintainer acceptance act, and relation acceptance remains separate from
+package acceptance.
+
 ## References
 
 - `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`
@@ -96,3 +104,4 @@ does not alter accepted claims without explicit maintainer editing.
 - <doc:PackageSetRegistryMetadata>
 - <doc:SpecHarvesterMonorepoDiscovery>
 - <doc:MultiPackageProducerIntake>
+- <doc:CuratedAcceptedArtifactLifecycle>

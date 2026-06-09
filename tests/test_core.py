@@ -109,6 +109,7 @@ PRODUCER_RECEIPTS_DOC = ROOT / "specs/PRODUCER_RECEIPTS.md"
 PRODUCER_BUNDLE_PROPOSAL_AUTOMATION_DOC = ROOT / "specs/PRODUCER_BUNDLE_PROPOSAL_AUTOMATION.md"
 PRODUCER_BUNDLE_FIXTURE_POLICY_DOC = ROOT / "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md"
 MULTI_PACKAGE_PRODUCER_INTAKE_DOC = ROOT / "specs/MULTI_PACKAGE_PRODUCER_INTAKE.md"
+CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_DOC = ROOT / "specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md"
 PRODUCER_RECEIPT_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
 )
@@ -149,6 +150,9 @@ DOCC_PRODUCER_BUNDLE_FIXTURE_POLICY_PAGE = (
 )
 DOCC_MULTI_PACKAGE_PRODUCER_INTAKE_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/MultiPackageProducerIntake.md"
+)
+DOCC_CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/CuratedAcceptedArtifactLifecycle.md"
 )
 DOCC_REGISTRY_ACCEPTANCE_DECISIONS_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/RegistryAcceptanceDecisions.md"
@@ -2961,6 +2965,119 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "fails closed",
     ):
         assert required_text in docc_cli_reference
+
+
+def test_curated_accepted_artifact_lifecycle_is_documented() -> None:
+    lifecycle = CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_DOC.read_text(encoding="utf-8")
+    docc_lifecycle = DOCC_CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_PAGE.read_text(encoding="utf-8")
+    intake = MULTI_PACKAGE_PRODUCER_INTAKE_DOC.read_text(encoding="utf-8")
+    docc_intake = DOCC_MULTI_PACKAGE_PRODUCER_INTAKE_PAGE.read_text(encoding="utf-8")
+    operator_guide = PUBLIC_INDEX_OPERATOR_GUIDE.read_text(encoding="utf-8")
+    xyflow_reference = (ROOT / "specs/XYFLOW_PACKAGE_SET_REFERENCE.md").read_text(encoding="utf-8")
+    docc_xyflow_reference = (
+        ROOT / "Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md"
+    ).read_text(encoding="utf-8")
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    self_spec = (ROOT / "specs/specpm.spec.yaml").read_text(encoding="utf-8")
+
+    lifecycle_flat = re.sub(r"\s+", " ", lifecycle)
+    docc_lifecycle_flat = re.sub(r"\s+", " ", docc_lifecycle)
+    intake_flat = re.sub(r"\s+", " ", intake)
+    docc_intake_flat = re.sub(r"\s+", " ", docc_intake)
+    operator_guide_flat = re.sub(r"\s+", " ", operator_guide)
+    xyflow_reference_flat = re.sub(r"\s+", " ", xyflow_reference)
+    docc_xyflow_reference_flat = re.sub(r"\s+", " ", docc_xyflow_reference)
+    roadmap_flat = re.sub(r"\s+", " ", roadmap)
+    docc_roadmap_flat = re.sub(r"\s+", " ", docc_roadmap)
+    workplan_flat = re.sub(r"\s+", " ", workplan)
+
+    for required_text in (
+        "generated candidate -> review evidence",
+        "curated accepted artifact -> registry source",
+        "Generated Candidate Immutability",
+        "Curated Artifact Ownership",
+        "New Harvest Update Flow",
+        "Evidence Chain Through `foreignArtifacts`",
+        "`preview_only` Removal Rule",
+        "Relation Acceptance Boundary",
+        "Generated candidates should remain `preview_only`",
+        "`public-index/accepted-packages.yml` `relations[]`",
+        "Accepting a package does not automatically accept its proposed relations",
+    ):
+        assert required_text in lifecycle_flat
+
+    for required_text in (
+        "generated candidate -> review evidence",
+        "curated accepted artifact -> registry source",
+        "Generated Candidate Immutability",
+        "Curated Artifact Ownership",
+        "New Harvest Update Flow",
+        "`producer-receipt.json`",
+        "`preview_only` is a maintainer acceptance act",
+        "`public-index/accepted-packages.yml` `relations[]`",
+        "Accepting a package does not automatically accept its proposed relations",
+    ):
+        assert required_text in docc_lifecycle_flat
+
+    for required_text in (
+        "generated candidates are immutable producer evidence",
+        "curated artifacts own maintainer-authored accepted metadata",
+        "new harvests update curated artifacts only through review diffs",
+        "curated artifacts preserve `foreignArtifacts` evidence chains",
+        "removing `preview_only` is a maintainer acceptance act",
+        "`public-index/accepted-packages.yml` `relations[]`",
+    ):
+        assert required_text in intake_flat
+        assert required_text in docc_intake_flat
+
+    for required_text in (
+        "Generated candidates are immutable producer evidence",
+        "Curated artifacts own maintainer-authored summaries",
+        "New harvests update curated artifacts only through a reviewed diff",
+        "Removing `preview_only` is a maintainer acceptance act",
+        "Accepted package relations live in `public-index/accepted-packages.yml` `relations[]`",
+    ):
+        assert required_text in operator_guide_flat
+
+    for required_text in (
+        "generated candidates are immutable evidence",
+        "curated artifacts own maintainer-authored accepted metadata",
+        "new harvests update curated artifacts only through review diffs",
+        "evidence chains are preserved through `foreignArtifacts`",
+        "`preview_only` removal is a maintainer acceptance act",
+        "relation acceptance remains separate from package acceptance",
+    ):
+        assert required_text in xyflow_reference_flat
+        assert required_text in docc_xyflow_reference_flat
+
+    for required_text in (
+        "curated accepted artifact lifecycle",
+        "generated candidates remain immutable evidence",
+        "curated artifacts own maintainer-authored accepted metadata",
+        "new harvests update curated artifacts only through review diffs",
+        "`foreignArtifacts` preserve evidence chains",
+        "removing `preview_only` is a maintainer acceptance act",
+        "accepted relations remain explicit `relations[]` manifest entries",
+    ):
+        assert required_text in roadmap_flat
+        assert required_text in docc_roadmap_flat
+
+    for required_text in (
+        "P66-T15. Curated Accepted Artifact Lifecycle Policy",
+        "generated candidate immutability",
+        "curated artifact ownership",
+        "new harvest update review",
+        "`foreignArtifacts` evidence chains",
+        "`preview_only` removal",
+        "relation acceptance boundaries",
+    ):
+        assert required_text in workplan_flat
+
+    assert "specpm.registry.curated_artifact_lifecycle" in self_spec
+    assert "specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md" in self_spec
+    assert "Sources/SpecPM/Documentation.docc/CuratedAcceptedArtifactLifecycle.md" in self_spec
 
 
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:
