@@ -64,7 +64,7 @@ scope:
     - Document package-set boundaries for repository, workspace, ecosystem, and product-family entrypoints without adding inheritance, dependency solving, or automatic acceptance.
     - Document package relation vocabulary, evidence expectations, and non-goals for package-set and package-to-package navigation.
     - Document package-set exact index and search semantics with explicit result scopes and relation context boundaries.
-    - Document future public registry metadata shape for package sets, members, relations, result scopes, and relation context.
+    - Generate additive public `/v0` registry metadata for maintainer-reviewed package-set relations, package-set members, relation context, and result scopes.
     - Document SpecHarvester monorepo discovery handoff for package-set and scoped member package candidates without making producer output authoritative.
     - Document multi-package producer bundle intake for package-set proposals, partial acceptance, relation review, and accepted-source effects.
     - Document the xyflow package-set reference scenario with non-normative package-set, relation, discovery, and intent search fixtures.
@@ -90,10 +90,10 @@ scope:
     - Package-set runtime schema, relation enforcement, dependency solving, inherited package claims, and automatic package-set acceptance.
     - Automatic package relation inference, relation path traversal as a required search mechanism, relation-based trust inheritance, and relation-based package selection.
     - Package-set search runtime implementation, relation expansion query modes, automatic result ranking authority, and semantic package selection.
-    - Package-set registry generator implementation, public `/v0` payload migration, viewer implementation, and package-set conformance fixtures.
+    - Automatic package-set registry migration, relation inference, relation expansion query modes, and package-set conformance fixtures beyond the implemented additive `/v0` relation metadata.
     - SpecHarvester monorepo discovery implementation, producer execution from SpecPM, automatic bundle-set acceptance, and producer-owned registry publication.
     - Automatic multi-package proposal acceptance, automatic relation acceptance, and producer-controlled accepted-source effects.
-    - Publishing xyflow package-set fixtures as current public `/v0` registry payloads or accepting xyflow packages through fixtures alone.
+    - Accepting xyflow package-set claims through fixtures alone or removing `preview_only` without explicit maintainer review.
     - Namespace governance.
     - Natural-language, fuzzy, or semantic search as normative resolution.
     - LLM, embedding, vector search, or RAG-based intent resolution.
@@ -161,6 +161,9 @@ provides:
     - id: specpm.registry.package_set_materialization_helper
       role: secondary
       summary: Prepare maintainer-selected package-set accepted-source review artifacts from handoff evidence without auto-accepting producer output.
+    - id: specpm.registry.package_set_relation_metadata
+      role: secondary
+      summary: Publish maintainer-reviewed package-set relation metadata through additive `/v0` payloads and the static viewer without inferring relations from producer output.
     - id: specpm.registry.index_removal_request_flow
       role: secondary
       summary: Collect maintainer-reviewed public index removal requests without mutating registry state.

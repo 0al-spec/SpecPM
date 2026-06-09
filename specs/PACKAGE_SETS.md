@@ -142,7 +142,8 @@ model:
 
 - `specpm.yaml` still declares package identity and indexable metadata;
 - `specs/*.spec.yaml` still describes a reviewable boundary;
-- relation data must be explicit;
+- relation data must be explicit and, when accepted, published through
+  maintainer-owned `/v0/relations` metadata;
 - unknown extension fields must remain non-executable package data;
 - package-set status must not grant authority to member packages.
 

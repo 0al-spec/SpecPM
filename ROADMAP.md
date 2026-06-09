@@ -456,6 +456,14 @@ previous single-package review evidence, generated package-set entries remain
 `preview_only`, and AI enrichment remains proposal-only evidence rather than
 registry truth.
 
+Registry-visible package-set relations are now implemented as additive `/v0`
+metadata. Maintainer-reviewed `relations[]` entries in
+`public-index/accepted-packages.yml` generate `/v0/relations`, advertise
+`package_relations` support in `/v0/status`, add `packageSet.members` to
+aggregate package payloads, and add `relationContext` to member package and
+exact search payloads. Producer-observed relations remain non-authoritative
+until explicitly accepted in the manifest.
+
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote
 archive acquisition to SpecPM core.

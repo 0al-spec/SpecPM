@@ -204,6 +204,7 @@ REMOTE_REGISTRY_PAYLOAD_KINDS = {
     "RemoteIntentSearch",
     "RemotePackage",
     "RemotePackageIndex",
+    "RemotePackageRelations",
     "RemotePackageVersion",
     "RemoteRegistryRoot",
     "RemoteRegistryStatus",
@@ -879,7 +880,15 @@ def assert_remote_registry_payload_shape(payload: dict[str, Any]) -> None:
             assert isinstance(payload["endpoints"], dict)
             assert isinstance(payload["endpoints"]["status"], str)
             assert isinstance(payload["endpoints"]["packages"], str)
+            assert isinstance(payload["endpoints"].get("relations", ""), str)
             assert isinstance(payload["endpoints"]["intents"], str)
+        return
+
+    if payload["kind"] == "RemotePackageRelations":
+        assert payload["status"] == "ok"
+        assert isinstance(payload["relation_count"], int)
+        assert isinstance(payload["relations"], list)
+        assert payload["relation_count"] == len(payload["relations"])
         return
 
     assert payload["kind"] == "RemoteRegistryError"
@@ -5710,6 +5719,46 @@ def test_remote_registry_payload_validator_rejects_incomplete_source() -> None:
     )
 
 
+@pytest.mark.parametrize("relations_endpoint", [None, 123])
+def test_remote_registry_root_validator_requires_relations_endpoint(
+    relations_endpoint: object,
+) -> None:
+    payload = {
+        "apiVersion": "specpm.registry/v0",
+        "schemaVersion": 1,
+        "kind": "RemoteRegistryRoot",
+        "status": "ok",
+        "registry": {
+            "profile": "public_static_index",
+            "api_version": "v0",
+            "read_only": True,
+            "authority": "metadata_only",
+            "package_count": 0,
+            "version_count": 0,
+            "capability_count": 0,
+            "intent_count": 0,
+            "relation_count": 0,
+        },
+        "endpoints": {
+            "status": "v0/status/index.json",
+            "packages": "v0/packages/index.json",
+            "relations": "v0/relations/index.json",
+            "intents": "v0/intents/index.json",
+        },
+    }
+    if relations_endpoint is None:
+        del payload["endpoints"]["relations"]
+    else:
+        payload["endpoints"]["relations"] = relations_endpoint
+
+    errors = validate_remote_registry_payload(payload)
+
+    assert any(
+        issue.code == "remote_registry_field_invalid" and issue.field == "endpoints.relations"
+        for issue in errors
+    )
+
+
 def test_remote_registry_payload_validator_rejects_non_string_result_lists() -> None:
     payload = load_remote_registry_fixture("intent-search.json")
     payload["results"][0]["matched_capabilities"] = ["document_conversion.email_to_markdown", 123]
@@ -6150,6 +6199,7 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     assert root_payload["endpoints"] == {
         "status": "v0/status/index.json",
         "packages": "v0/packages/index.json",
+        "relations": "v0/relations/index.json",
         "intents": "v0/intents/index.json",
     }
     assert status_payload["registry"] == {
@@ -6161,6 +6211,12 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
         "version_count": 1,
         "capability_count": 1,
         "intent_count": 1,
+        "relation_count": 0,
+        "supportedFeatures": [
+            "package_sets",
+            "package_relations",
+            "search_result_scope",
+        ],
         "provenance_receipt_count": 1,
         "implementation": {
             "name": "SpecPM",
@@ -6241,6 +6297,206 @@ def test_public_index_generate_writes_static_remote_registry_payloads(tmp_path: 
     assert receipt_payload["lifecycle"]["state"] == "visible"
     assert receipt_payload["audit"]["evidence"]
     assert sorted(report["written_files"]) == report["written_files"]
+
+
+def test_public_index_generate_writes_accepted_package_relations(tmp_path: Path) -> None:
+    workspace = copy_email_package(tmp_path, "workspace")
+    member = copy_email_package(tmp_path, "member")
+    update_email_package(
+        workspace,
+        package_id="example.workspace",
+        package_name="Example Workspace",
+        capability_id="example.workspace",
+    )
+    update_email_package(
+        member,
+        package_id="example.member",
+        package_name="Example Member",
+        capability_id="example.member",
+    )
+    output = tmp_path / "site"
+
+    report = generate_public_index(
+        [workspace, member],
+        output,
+        "https://registry.example.invalid",
+        accepted_relations=[
+            {
+                "id": "example.workspace.contains.example.member",
+                "type": "contains",
+                "source": {"package_id": "example.workspace", "version": "0.1.0"},
+                "target": {"package_id": "example.member", "version": "0.1.0"},
+                "reviewStatus": "accepted",
+                "evidence": [{"kind": "source_file", "path": "workspace.yaml"}],
+            }
+        ],
+    )
+
+    assert report["status"] == "ok"
+    assert "v0/relations/index.json" in report["written_files"]
+    root_payload = json.loads((output / "v0/index.json").read_text(encoding="utf-8"))
+    status_payload = json.loads((output / "v0/status/index.json").read_text(encoding="utf-8"))
+    relations_payload = json.loads((output / "v0/relations/index.json").read_text(encoding="utf-8"))
+    workspace_payload = json.loads(
+        (output / "v0/packages/example.workspace/index.json").read_text(encoding="utf-8")
+    )
+    member_payload = json.loads(
+        (output / "v0/packages/example.member/index.json").read_text(encoding="utf-8")
+    )
+    capability_payload = json.loads(
+        (output / "v0/capabilities/example.member/packages/index.json").read_text(encoding="utf-8")
+    )
+
+    for payload in (
+        root_payload,
+        status_payload,
+        relations_payload,
+        workspace_payload,
+        member_payload,
+        capability_payload,
+    ):
+        assert validate_remote_registry_payload(payload) == []
+        assert_remote_registry_payload_shape(payload)
+
+    assert root_payload["endpoints"]["relations"] == "v0/relations/index.json"
+    assert status_payload["registry"]["relation_count"] == 1
+    assert "package_relations" in status_payload["registry"]["supportedFeatures"]
+    assert relations_payload["kind"] == "RemotePackageRelations"
+    assert relations_payload["relations"] == [
+        {
+            "id": "example.workspace.contains.example.member",
+            "type": "contains",
+            "source": "example.workspace",
+            "target": "example.member",
+            "versionScope": {
+                "sourceVersion": "0.1.0",
+                "targetVersion": "0.1.0",
+            },
+            "reviewStatus": "accepted",
+            "evidence": [{"kind": "source_file", "path": "workspace.yaml"}],
+        }
+    ]
+    assert workspace_payload["package"]["subject"] == {
+        "kind": "package_set",
+        "scope": "aggregate",
+    }
+    assert workspace_payload["package"]["packageSet"]["members"] == [
+        {
+            "package_id": "example.member",
+            "version": "0.1.0",
+            "type": "contains",
+            "relation_id": "example.workspace.contains.example.member",
+        }
+    ]
+    assert member_payload["package"]["subject"] == {"kind": "package", "scope": "package"}
+    assert member_payload["package"]["relationContext"][0]["source"] == "example.workspace"
+    assert capability_payload["results"][0]["match"] == "direct"
+    assert capability_payload["results"][0]["scope"] == "package"
+    assert capability_payload["results"][0]["relationContext"][0]["id"] == (
+        "example.workspace.contains.example.member"
+    )
+
+
+def test_public_index_generate_rejects_relation_with_missing_endpoint(tmp_path: Path) -> None:
+    workspace = copy_email_package(tmp_path, "workspace")
+    update_email_package(
+        workspace,
+        package_id="example.workspace",
+        package_name="Example Workspace",
+        capability_id="example.workspace",
+    )
+
+    report = generate_public_index(
+        [workspace],
+        tmp_path / "site",
+        "https://registry.example.invalid",
+        accepted_relations=[
+            {
+                "id": "example.workspace.contains.example.member",
+                "type": "contains",
+                "source": {"package_id": "example.workspace", "version": "0.1.0"},
+                "target": {"package_id": "example.member", "version": "0.1.0"},
+                "reviewStatus": "accepted",
+                "evidence": [{"kind": "source_file", "path": "workspace.yaml"}],
+            }
+        ],
+    )
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"public_index_manifest_relation_target_missing"}
+
+
+def test_public_index_manifest_rejects_unaccepted_relation_status(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "package")
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        yaml.safe_dump(
+            {
+                "schemaVersion": 1,
+                "packages": [{"path": str(package.relative_to(tmp_path))}],
+                "relations": [
+                    {
+                        "id": "example.workspace.contains.example.member",
+                        "type": "contains",
+                        "source": {"package_id": "example.workspace", "version": "0.1.0"},
+                        "target": {"package_id": "example.member", "version": "0.1.0"},
+                        "reviewStatus": "producer_observed",
+                        "evidence": [{"kind": "source_file", "path": "workspace.yaml"}],
+                    }
+                ],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    report = load_public_index_manifest(manifest, root=tmp_path)
+
+    assert report["status"] == "invalid"
+    assert issue_codes(report["errors"]) == {"public_index_manifest_relation_review_status_invalid"}
+
+
+@pytest.mark.parametrize(
+    ("relation_update", "expected_code"),
+    [
+        ({"type": "depends_on"}, "public_index_manifest_relation_type_invalid"),
+        ({"id": "duplicate"}, "public_index_manifest_relation_id_duplicate"),
+    ],
+)
+def test_public_index_manifest_rejects_invalid_relation_metadata(
+    tmp_path: Path,
+    relation_update: dict[str, Any],
+    expected_code: str,
+) -> None:
+    package = copy_email_package(tmp_path, "package")
+    relation = {
+        "id": "example.workspace.contains.example.member",
+        "type": "contains",
+        "source": {"package_id": "example.workspace", "version": "0.1.0"},
+        "target": {"package_id": "example.member", "version": "0.1.0"},
+        "reviewStatus": "accepted",
+        "evidence": [{"kind": "source_file", "path": "workspace.yaml"}],
+    }
+    relations = [json.loads(json.dumps(relation | relation_update))]
+    if expected_code == "public_index_manifest_relation_id_duplicate":
+        relations.append(json.loads(json.dumps(relation | relation_update)))
+    manifest = tmp_path / "accepted-packages.yml"
+    manifest.write_text(
+        yaml.safe_dump(
+            {
+                "schemaVersion": 1,
+                "packages": [{"path": str(package.relative_to(tmp_path))}],
+                "relations": relations,
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    report = load_public_index_manifest(manifest, root=tmp_path)
+
+    assert report["status"] == "invalid"
+    assert expected_code in issue_codes(report["errors"])
 
 
 def test_public_index_provenance_receipt_reports_warning_validation_status() -> None:
@@ -6873,7 +7129,7 @@ def test_cli_public_index_generate_json(tmp_path: Path, capsys) -> None:  # type
     payload = json.loads(captured.out)
     assert exit_code == 0
     assert payload["status"] == "ok"
-    assert payload["written_count"] == 21
+    assert payload["written_count"] == 23
     receipt_payload = json.loads(
         (
             tmp_path

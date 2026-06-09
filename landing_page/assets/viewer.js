@@ -3,6 +3,7 @@ const state = {
   root: null,
   status: null,
   packages: null,
+  relations: null,
   intents: null,
   capabilities: [],
   catalogItems: [],
@@ -32,6 +33,12 @@ const endpointGroups = [
       { id: "packages", title: "GET /v0/packages", path: "packages/index.json", description: "Browse package index" },
       { id: "package-template", title: "GET /v0/packages/{package_id}", description: "Select a package from catalog search" },
       { id: "version-template", title: "GET /v0/packages/{package_id}/versions/{version}", description: "Select a package version" }
+    ]
+  },
+  {
+    title: "Relations",
+    items: [
+      { id: "relations", title: "GET /v0/relations", path: "relations/index.json", description: "Browse accepted package relation metadata" }
     ]
   },
   {
@@ -167,16 +174,18 @@ async function loadRegistry() {
   setLoadStatus("loading", "Loading static registry metadata...");
   renderAll();
   try {
-    const [root, status, packages, intents] = await Promise.all([
+    const [root, status, packages, relations, intents] = await Promise.all([
       fetchOptional("index.json"),
       fetchRequired("status/index.json"),
       fetchRequired("packages/index.json"),
+      fetchOptional("relations/index.json"),
       fetchOptional("intents/index.json")
     ]);
 
     state.root = root;
     state.status = status;
     state.packages = packages;
+    state.relations = relations || emptyRelationIndex();
     state.intents = intents || emptyIntentIndex();
     state.capabilities = collectCapabilities(state.packages);
     state.catalogItems = buildCatalogItems();
@@ -211,6 +220,7 @@ function clearLoadedRegistryState() {
   state.root = null;
   state.status = null;
   state.packages = null;
+  state.relations = null;
   state.intents = null;
   state.capabilities = [];
   state.catalogItems = [];
@@ -263,6 +273,17 @@ function emptyIntentIndex() {
   };
 }
 
+function emptyRelationIndex() {
+  return {
+    apiVersion: "specpm.registry/v0",
+    schemaVersion: 1,
+    kind: "RemotePackageRelations",
+    status: "ok",
+    relation_count: 0,
+    relations: []
+  };
+}
+
 function collectCapabilities(packageIndex) {
   const seen = new Map();
   for (const pkg of packageIndex?.packages || []) {
@@ -299,7 +320,8 @@ function renderSummary() {
     ["Packages", registry.package_count ?? packageItems().length],
     ["Versions", registry.version_count ?? 0],
     ["Capabilities", registry.capability_count ?? state.capabilities.length],
-    ["Observed intents", registry.intent_count ?? intentItems().length]
+    ["Observed intents", registry.intent_count ?? intentItems().length],
+    ["Relations", registry.relation_count ?? relationItems().length]
   ];
   document.querySelector("#summary-grid").innerHTML = cards.map(([label, value]) => `
     <article class="summary-card">
@@ -374,7 +396,11 @@ function renderEndpointTree() {
 function renderCatalog() {
   const filter = catalogFilter.value.trim().toLowerCase();
   const results = state.catalogItems.filter((item) => {
-    if (state.catalogMode !== "all" && item.type !== state.catalogMode) {
+    if (
+      state.catalogMode !== "all"
+      && item.type !== state.catalogMode
+      && !(state.catalogMode === "package" && item.type === "package-set")
+    ) {
       return false;
     }
     return matchesCatalogFilter(item, filter);
@@ -480,6 +506,10 @@ function renderDetail() {
     renderIntentPackagesDetail();
     return;
   }
+  if (state.activeKind === "relations") {
+    renderRelationsDetail();
+    return;
+  }
   if (state.activeKind === "packages") {
     renderPackageIndexDetail();
     return;
@@ -517,6 +547,46 @@ function renderEndpointDetail() {
   `;
 }
 
+function renderRelationsDetail() {
+  const relations = relationItems();
+  const visible = relations.slice(0, catalogVisibleLimit);
+  detailPanel.innerHTML = `
+    <div class="detail-head">
+      <div class="detail-title">
+        <span class="pill live">Package Relations</span>
+        <h2>Browse accepted relations</h2>
+        <p>Read-only relation metadata accepted by maintainers. Relations do not imply inherited capabilities, trust, lifecycle state, or dependency solving.</p>
+      </div>
+      <div class="actions">
+        <a class="btn small" href="${escapeAttr(resourceUrl(state.activePath))}" target="_blank" rel="noopener">Open Raw</a>
+      </div>
+    </div>
+    <div class="facts">
+      <div class="fact"><span>Relations</span><strong>${escapeHtml(String(relations.length))}</strong></div>
+      <div class="fact"><span>Rendered</span><strong>${escapeHtml(String(visible.length))}</strong></div>
+      <div class="fact"><span>Endpoint</span><strong>GET /v0/relations</strong></div>
+      <div class="fact"><span>Authority</span><strong>accepted metadata</strong></div>
+    </div>
+    <div class="catalog-grid">
+      ${visible.map((relation) => `
+        <div class="catalog-row static">
+          <span class="catalog-row-head">
+            <span class="list-type">${escapeHtml(relation.type || "relation")}</span>
+            <span class="catalog-row-id">${escapeHtml(relation.id || "")}</span>
+          </span>
+          <span class="catalog-row-meta">
+            <button class="token" data-action="package" data-id="${escapeAttr(relation.source || "")}">${escapeHtml(relation.source || "")}</button>
+            ${escapeHtml(relationTypeLabel(relation))}
+            <button class="token" data-action="package" data-id="${escapeAttr(relation.target || "")}">${escapeHtml(relation.target || "")}</button>
+          </span>
+          <span class="catalog-row-meta">${escapeHtml(relationEvidenceLabel(relation))}</span>
+        </div>
+      `).join("") || `<div class="empty">No accepted package relations are published in this registry.</div>`}
+    </div>
+    ${relations.length > visible.length ? `<div class="list-note">Showing ${escapeHtml(String(visible.length))} of ${escapeHtml(String(relations.length))}. Use raw JSON for the complete relation set.</div>` : ""}
+  `;
+}
+
 function renderPackageIndexDetail() {
   const packages = packageItems();
   const visible = packages.slice(0, catalogVisibleLimit);
@@ -541,7 +611,7 @@ function renderPackageIndexDetail() {
       ${visible.map((pkg) => `
         <button class="catalog-row" data-action="package" data-id="${escapeAttr(pkg.package_id)}">
           <span class="catalog-row-head">
-            <span class="list-type">package</span>
+            <span class="list-type">${escapeHtml(packageScopeLabel(pkg))}</span>
             <span class="catalog-row-id">${escapeHtml(pkg.package_id)}</span>
           </span>
           <span class="catalog-row-meta">${escapeHtml(pkg.name || "")} - ${escapeHtml(pkg.summary || "")}</span>
@@ -593,10 +663,11 @@ function renderIntentIndexDetail() {
 function renderPackageDetail() {
   const pkg = state.payload?.package || state.payload;
   const versions = pkg?.versions || [];
+  const subject = pkg?.subject || {};
   detailPanel.innerHTML = `
     <div class="detail-head">
       <div class="detail-title">
-        <span class="pill live">Package</span>
+        <span class="pill live">${escapeHtml(packageScopeLabel(pkg))}</span>
         <h2>${escapeHtml(pkg?.package_id || state.activeId || "Package")}</h2>
         <p>${escapeHtml(pkg?.summary || "")}</p>
       </div>
@@ -609,7 +680,10 @@ function renderPackageDetail() {
       <div class="fact"><span>Latest</span><strong>${escapeHtml(pkg?.latest_version || "")}</strong></div>
       <div class="fact"><span>License</span><strong>${escapeHtml(pkg?.license || "")}</strong></div>
       <div class="fact"><span>Versions</span><strong>${escapeHtml(String(versions.length))}</strong></div>
+      <div class="fact"><span>Scope</span><strong>${escapeHtml(subject.scope || "package")}</strong></div>
     </div>
+    ${renderPackageSetMembers(pkg)}
+    ${renderRelationContext(pkg)}
     <h3>Versions</h3>
     <div class="token-list">
       ${versions.map((version) => `<button class="token" data-action="version" data-package="${escapeAttr(pkg.package_id)}" data-version="${escapeAttr(version.version)}">${escapeHtml(version.version)}</button>`).join("")}
@@ -644,6 +718,8 @@ function renderVersionDetail() {
       <div class="fact"><span>Yanked</span><strong>${escapeHtml(String(pkg.state?.yanked ?? false))}</strong></div>
       <div class="fact"><span>Deprecated</span><strong>${escapeHtml(String(pkg.state?.deprecated ?? false))}</strong></div>
     </div>
+    ${renderPackageSetMembers(pkg)}
+    ${renderRelationContext(pkg)}
     <div class="actions">
       <a class="btn small" href="${escapeAttr(pkg.source?.url || "#")}" target="_blank" rel="noopener">Archive</a>
       <button class="btn small" data-action="package" data-id="${escapeAttr(pkg.package_id || "")}">Back to package</button>
@@ -671,6 +747,7 @@ function renderCapabilityDetail() {
     <div class="token-list">
       ${results.map((result) => `<button class="token" data-action="package" data-id="${escapeAttr(result.package_id)}">${escapeHtml(result.package_id)}@${escapeHtml(result.version)}</button>`).join("") || `<span class="empty">No package matches.</span>`}
     </div>
+    ${renderSearchRelationContext(results)}
   `;
 }
 
@@ -721,7 +798,93 @@ function renderIntentPackagesDetail() {
     <div class="token-list">
       ${results.map((result) => `<button class="token" data-action="package" data-id="${escapeAttr(result.package_id)}">${escapeHtml(result.package_id)}@${escapeHtml(result.version)}</button>`).join("") || `<span class="empty">No package matches.</span>`}
     </div>
+    ${renderSearchRelationContext(results)}
   `;
+}
+
+function renderPackageSetMembers(pkg) {
+  const members = pkg?.packageSet?.members || [];
+  if (!members.length) {
+    return "";
+  }
+  return `
+    <h3 style="margin-top: 24px;">Package Set Members</h3>
+    <div class="token-list">
+      ${members.map((member) => `
+        <button class="token" data-action="package" data-id="${escapeAttr(member.package_id || "")}">
+          ${escapeHtml(member.package_id || "")}@${escapeHtml(member.version || "")}
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderRelationContext(pkg) {
+  const relations = pkg?.relationContext || [];
+  if (!relations.length) {
+    return "";
+  }
+  return `
+    <h3 style="margin-top: 24px;">Relation Context</h3>
+    <div class="catalog-grid">
+      ${relations.map((relation) => renderRelationContextRow(relation)).join("")}
+    </div>
+  `;
+}
+
+function renderSearchRelationContext(results) {
+  const relations = [];
+  const seen = new Set();
+  for (const result of results || []) {
+    for (const relation of result.relationContext || []) {
+      if (!seen.has(relation.id)) {
+        seen.add(relation.id);
+        relations.push(relation);
+      }
+    }
+  }
+  if (!relations.length) {
+    return "";
+  }
+  return `
+    <h3 style="margin-top: 24px;">Relation Context</h3>
+    <div class="catalog-grid">
+      ${relations.map((relation) => renderRelationContextRow(relation)).join("")}
+    </div>
+  `;
+}
+
+function renderRelationContextRow(relation) {
+  return `
+    <div class="catalog-row static">
+      <span class="catalog-row-head">
+        <span class="list-type">${escapeHtml(relation.type || "relation")}</span>
+        <span class="catalog-row-id">${escapeHtml(relation.id || "")}</span>
+      </span>
+      <span class="catalog-row-meta">
+        <button class="token" data-action="package" data-id="${escapeAttr(relation.source || "")}">${escapeHtml(relation.source || "")}</button>
+        ${escapeHtml(relationTypeLabel(relation))}
+        <button class="token" data-action="package" data-id="${escapeAttr(relation.target || "")}">${escapeHtml(relation.target || "")}</button>
+      </span>
+      <span class="catalog-row-meta">${escapeHtml(relationEvidenceLabel(relation))}</span>
+    </div>
+  `;
+}
+
+function packageScopeLabel(pkg) {
+  if (pkg?.subject?.kind === "package_set") {
+    return "package-set";
+  }
+  return pkg?.subject?.scope || "package";
+}
+
+function relationEvidenceLabel(relation) {
+  const paths = (relation.evidence || []).map((item) => item.path).filter(Boolean);
+  return paths.length ? `evidence: ${paths.join(", ")}` : "accepted relation metadata";
+}
+
+function relationTypeLabel(relation) {
+  return relation?.type || "relates to";
 }
 
 function renderJson() {
@@ -848,6 +1011,8 @@ async function showEndpoint(kind, path, options = {}) {
     state.payload = state.status;
   } else if (kind === "packages") {
     state.payload = state.packages;
+  } else if (kind === "relations") {
+    state.payload = state.relations;
   } else if (kind === "intents") {
     state.payload = state.intents;
   } else {
@@ -1044,7 +1209,7 @@ function routeToHash(route) {
 
 function buildCatalogItems() {
   const packages = packageItems().map((pkg) => ({
-    type: "package",
+    type: packageScopeLabel(pkg),
     action: "package",
     id: pkg.package_id,
     meta: `${pkg.name || ""} - ${pkg.summary || ""}`,
@@ -1090,7 +1255,7 @@ function buildCatalogItems() {
 }
 
 function typeRank(type) {
-  return { package: 0, intent: 1, capability: 2 }[type] ?? 9;
+  return { "package-set": 0, package: 1, intent: 2, capability: 3 }[type] ?? 9;
 }
 
 function isCatalogItemActive(item) {
@@ -1128,6 +1293,10 @@ function packageItems() {
 
 function intentItems() {
   return state.intents?.intents || [];
+}
+
+function relationItems() {
+  return state.relations?.relations || [];
 }
 
 function segment(value) {

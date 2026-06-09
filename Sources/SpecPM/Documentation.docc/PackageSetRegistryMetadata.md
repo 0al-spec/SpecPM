@@ -1,15 +1,14 @@
 # Package Set Registry Metadata
 
-Draft public `/v0` metadata shape for package sets and relation-aware search
-results.
+Public `/v0` metadata shape for package sets and relation-aware search results.
 
 ## Overview
 
-Package-set registry metadata should be additive. Existing consumers should be
+Package-set registry metadata is additive. Existing consumers should be
 able to ignore package-set fields and still read ordinary package metadata,
 version metadata, capability search, and exact `intent.*` search results.
 
-Future package metadata may expose:
+Package metadata may expose:
 
 - `subject.kind`: `package` or `package_set`;
 - `subject.scope`: `package`, `aggregate`, or `abstract_contract`;
@@ -17,9 +16,14 @@ Future package metadata may expose:
 - `packageSet.members[].package_id`: existing `/v0` package identifier field;
 - `packageSet.members[].type`: accepted relation type connecting the set to the
   member;
-- `relations[]`: accepted relation summaries with evidence;
+- `packageSet.members[].relation_id`: accepted relation identifier;
+- `relationContext[]`: accepted relation summaries with evidence;
 - search result `scope` and `match` fields;
-- optional `relationContext[]` for explaining connected results.
+- `GET /v0/relations`: `RemotePackageRelations` relation index.
+
+Relations are accepted only from maintainer-reviewed
+`public-index/accepted-packages.yml` `relations[]` entries. Producer-observed
+relations remain review evidence until a maintainer accepts them.
 
 ## Boundary
 
@@ -55,6 +59,12 @@ may explain a result after discovery:
 ```
 
 Consumers that ignore `relationContext` should still see the direct result.
+
+## Viewer
+
+The static viewer displays package-set badges, member links, accepted relation
+context, and the `/v0/relations` endpoint. It keeps package lists flat: member
+packages are not hidden under aggregate package-set entries.
 
 ## References
 

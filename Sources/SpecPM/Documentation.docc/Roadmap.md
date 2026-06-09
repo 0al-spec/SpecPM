@@ -249,6 +249,13 @@ kept as maintainer-review evidence. `xyflow.core@0.1.0` remains unchanged as
 previous single-package review evidence, generated package-set entries remain
 `preview_only`, and AI enrichment remains proposal-only evidence rather than
 registry truth.
+Registry-visible package-set relations are now implemented as additive `/v0`
+metadata. Maintainer-reviewed `relations[]` entries in
+`public-index/accepted-packages.yml` generate `/v0/relations`, advertise
+`package_relations` support in `/v0/status`, add `packageSet.members` to
+aggregate package payloads, and add `relationContext` to member package and
+exact search payloads. Producer-observed relations remain non-authoritative
+until explicitly accepted in the manifest.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

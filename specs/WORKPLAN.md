@@ -2056,6 +2056,48 @@ Result:
   selected package candidates into `public-index/generated` and appended their
   accepted-source paths to `public-index/accepted-packages.yml`.
 
+### P66-T13. Registry-Visible Package-Set Relations
+
+Status: Completed.
+
+Motivation:
+
+- After `xyflow` package-set materialization, `/v0` exposed
+  `xyflow.workspace`, `xyflow.react`, `xyflow.svelte`, and `xyflow.system` as
+  separate packages, but did not publish the accepted `contains` structure.
+- Viewer and downstream consumers could not reconstruct package-set membership
+  without reading producer handoff evidence, which is not registry authority.
+
+Goal:
+
+- Make maintainer-reviewed package-set relations visible as additive read-only
+  registry metadata.
+- Keep relation acceptance in `public-index/accepted-packages.yml`, not in
+  producer receipts, handoff files, generated package manifests, or AI
+  enrichment output.
+
+Expected result:
+
+- `public-index/accepted-packages.yml` can declare accepted `relations[]`.
+- `specpm public-index generate` validates relation IDs, type, review status,
+  evidence, and source/target package versions.
+- `/v0/relations` publishes `RemotePackageRelations`.
+- `/v0/status` advertises relation support and relation count.
+- Aggregate package payloads expose `packageSet.members`; member package and
+  exact search payloads expose `relationContext`.
+- The static viewer renders package-set badges, member links, relation context,
+  and the relation endpoint.
+
+Result:
+
+- The public index manifest now accepts only explicit maintainer-reviewed
+  `contains` relations with `reviewStatus: accepted`.
+- The `xyflow.workspace contains xyflow.react/svelte/system` relations are
+  accepted registry metadata.
+- Relation metadata remains non-authoritative for dependency solving, trust
+  propagation, lifecycle inheritance, namespace ownership, and automatic
+  package selection.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

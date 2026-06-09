@@ -16,6 +16,8 @@ evidence surface:
 - `GET /v0/packages` and package lookup endpoints record package visibility.
 - `GET /v0/packages/{package_id}/versions/{version}` records exact version
   lifecycle, digest, archive URL, and declared capabilities.
+- `GET /v0/relations` records accepted package-set and package-to-package
+  relation metadata.
 - `GET /v0/capabilities/{capability_id}/packages` records exact capability
   membership.
 - `GET /v0/intents`, `GET /v0/intents/{intent_id}`, and
@@ -38,8 +40,8 @@ typed-job readiness check, or lab deploy.
 ## Boundaries
 
 Registry consumption does not add `specpm publish`, request-time mutation,
-package installation, archive acquisition, package execution, semantic search,
-or graph authority to SpecPM.
+package installation, archive acquisition, package execution, relation
+inference, semantic search, or graph authority to SpecPM.
 
 SpecPM owns the `/v0` metadata shape. Downstream consumers own policy, candidate
 selection, graph interpretation, artifact generation, job execution, and

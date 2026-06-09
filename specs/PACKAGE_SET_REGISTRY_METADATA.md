@@ -1,16 +1,16 @@
 # Package Set Registry Metadata Shape
 
-Status: Draft
-Updated: 2026-06-06
-Scope: future public `/v0` metadata shape for package sets, package relations,
-and scoped search results
+Status: Implemented additive `/v0` metadata
+Updated: 2026-06-09
+Scope: public `/v0` metadata shape for package sets, accepted package
+relations, and scoped search results
 
 ## Purpose
 
-This document defines the draft public registry metadata shape for package sets.
+This document defines the public registry metadata shape for package sets.
 
-It is a design contract for future `/v0` evolution. It does not change the
-current generator, static registry payloads, viewer, or client commands.
+The static public-index generator publishes these fields from maintainer-owned
+accepted-source metadata. It does not infer relations from producer output.
 
 ## Compatibility Boundary
 
@@ -18,8 +18,8 @@ Existing `/v0` consumers must remain able to read ordinary package metadata,
 version metadata, capability search, and exact `intent.*` search without knowing
 about package sets.
 
-Package-set metadata should be introduced through additive fields and
-extension-safe defaults:
+Package-set metadata is introduced through additive fields and extension-safe
+defaults:
 
 - missing package-set fields mean "ordinary package metadata";
 - unknown relation fields must not grant authority;
@@ -29,7 +29,7 @@ extension-safe defaults:
 
 ## Package Metadata Additions
 
-A package metadata record may eventually expose:
+A package metadata record may expose:
 
 ```json
 {
@@ -46,25 +46,26 @@ A package metadata record may eventually expose:
     "members": [
       {
         "package_id": "xyflow.system",
-        "role": "core_runtime",
-        "type": "contains"
+        "version": "0.1.0",
+        "type": "contains",
+        "relation_id": "xyflow.workspace.contains.xyflow.system"
       },
       {
         "package_id": "xyflow.react",
-        "role": "react_binding",
-        "type": "contains"
+        "version": "0.1.0",
+        "type": "contains",
+        "relation_id": "xyflow.workspace.contains.xyflow.react"
       },
       {
         "package_id": "xyflow.svelte",
-        "role": "svelte_binding",
-        "type": "contains"
+        "version": "0.1.0",
+        "type": "contains",
+        "relation_id": "xyflow.workspace.contains.xyflow.svelte"
       }
     ]
   }
 }
 ```
-
-Draft fields:
 
 - `subject.kind`: `package` or `package_set`.
 - `subject.scope`: display scope such as `package`, `aggregate`, or
@@ -76,20 +77,33 @@ Draft fields:
   metadata.
 - `packageSet.members[].package_id`: existing `/v0` package identifier field
   for the member package.
+- `packageSet.members[].version`: member package version scoped by the accepted
+  relation.
 - `packageSet.members[].type`: relation type from the accepted relation
   vocabulary that connects the package set to the member.
+- `packageSet.members[].relation_id`: accepted relation identifier.
 
 Member summaries should not replace package lookup. Consumers that need member
 metadata should query the member package directly.
 
 ## Relation Metadata
 
-Package metadata may expose accepted relation summaries:
+The public index also publishes accepted relations at:
+
+```text
+GET /v0/relations
+```
+
+The payload kind is `RemotePackageRelations`.
+
+Package metadata may expose the same accepted relation summaries as
+`relationContext[]`:
 
 ```json
 {
   "relations": [
     {
+      "id": "xyflow.workspace.contains.xyflow.react",
       "type": "contains",
       "source": "xyflow.workspace",
       "target": "xyflow.react",
@@ -108,6 +122,10 @@ Package metadata may expose accepted relation summaries:
   ]
 }
 ```
+
+Relation metadata is accepted only from `public-index/accepted-packages.yml`
+`relations[]` entries. Producer statuses such as `producer_observed` are not
+accepted registry metadata.
 
 Relation metadata must remain explicit. It must not imply:
 
@@ -138,8 +156,6 @@ Exact capability and intent search results may expose direct match scope:
 }
 ```
 
-Draft fields:
-
 - `scope`: `package`, `aggregate`, `abstract_contract`, or `related`.
 - `match`: `direct` or `relation_context`.
 - `relationContext[]`: optional accepted relation summaries that explain the
@@ -166,7 +182,7 @@ These counts are discovery metadata. They are not canonical taxonomy decisions.
 
 ## Status Payload Additions
 
-The registry status payload may eventually advertise package-set support:
+The registry status payload advertises package-set support:
 
 ```json
 {
@@ -183,7 +199,7 @@ not registry failure.
 
 ## Viewer Expectations
 
-A static viewer should render:
+The static viewer renders:
 
 - package-set badge for aggregate entrypoints;
 - member list as links to exact package lookup;
@@ -196,7 +212,7 @@ results should remain flat and scannable.
 
 ## Validation and Conformance
 
-Future conformance fixtures should cover:
+Regression tests cover:
 
 - ordinary package payloads without package-set fields;
 - package-set metadata with members;
@@ -208,7 +224,6 @@ Future conformance fixtures should cover:
 
 This metadata shape does not add:
 
-- runtime generator implementation;
 - registry mutation APIs;
 - package-set acceptance automation;
 - relation inference;
