@@ -269,9 +269,9 @@ The accepted-source materialization now accepts maintainer-curated artifacts:
 - `public-index/curated/xyflow.svelte/0.1.0`;
 - `public-index/curated/xyflow.system/0.1.0`.
 
-Those generated candidates are immutable evidence. The registry source is the
-curated `public-index/curated/xyflow.*` artifact set, which owns the
-maintainer-authored accepted metadata.
+These curated artifacts are the registry source and own the
+maintainer-authored accepted metadata. The corresponding generated candidates
+under `public-index/generated/xyflow.*` remain immutable producer evidence.
 
 The generated package-set manifests may keep `preview_only: true` while they
 remain producer drafts. The curated package-set entries omit `preview_only`
