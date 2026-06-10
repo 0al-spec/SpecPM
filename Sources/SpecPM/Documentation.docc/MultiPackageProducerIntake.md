@@ -37,6 +37,7 @@ A proposal should include:
 - validation reports;
 - diagnostics reports;
 - bundle-set preflight evidence;
+- package-set AI draft proposal, when available;
 - package-set AI enrichment proposal, when available;
 - proposed accepted-source diff;
 - maintainer decision records or review notes.
@@ -53,6 +54,14 @@ Optional AI enrichment evidence may appear as
 summaries, capabilities, intents, interfaces, or evidence gaps for reviewer
 consideration. It does not replace the package-set handoff, per-package
 candidate files, relation proposals, or accepted-source review.
+
+Optional AI draft evidence may appear earlier as
+`package-set-ai-draft-proposal.json` with
+`kind: SpecHarvesterPackageSetAIDraftProposal`. It can propose aggregate
+members, exclusions, and `contains` relations from workspace inventory evidence.
+It does not replace deterministic workspace inventory, package-set handoff,
+bundle-set preflight, AI enrichment, relation acceptance, or accepted-source
+review.
 
 ## Handoff Checklist
 
@@ -131,6 +140,27 @@ specpm producer-bundle preflight-ai-enrichment \
 
 This checks the machine-readable proposal boundary. It does not accept model
 suggestions or alter package-set materialization.
+
+## AI Draft Preflight Plan
+
+SpecPM should add a consumer-side AI draft preflight before maintainers use
+`SpecHarvesterPackageSetAIDraftProposal` as review evidence:
+
+```bash
+specpm producer-bundle preflight-ai-draft \
+  --body <package-set-ai-draft-proposal.json> \
+  --root <package-set-bundle-root> \
+  --json
+```
+
+The planned preflight should verify artifact identity, proposal-only authority,
+privacy flags, provider receipts, workspace inventory input, package ID
+alignment, inventory-derived `sourceTargetPath` values, allowlisted evidence
+paths, selected/excluded package consistency, and `contains` relation endpoints.
+It should reject registry acceptance decision fields and remain review evidence
+only. A passing report must not create a handoff, accept package members, accept
+relations, mutate generated specs, materialize accepted sources, or publish
+registry metadata.
 
 ## Partial Acceptance
 

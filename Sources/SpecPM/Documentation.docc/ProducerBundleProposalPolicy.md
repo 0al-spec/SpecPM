@@ -73,6 +73,33 @@ package-set handoff identity, member IDs, manifest identity, linked evidence
 digests, bundle-set preflight status/counts, `contains` relation endpoints, and
 the external acceptance boundary without running producer tools.
 
+## Package-Set AI Draft Evidence
+
+SpecHarvester may produce a `SpecHarvesterPackageSetAIDraftProposal` before the
+package-set handoff exists. This artifact proposes aggregate membership,
+exclusions, and `contains` relations from deterministic workspace inventory
+evidence. It is not a package-set handoff, AI enrichment evidence, relation
+acceptance, or materialization input.
+
+The planned SpecPM consumer preflight should verify `apiVersion:
+spec-harvester.package-set-ai-draft/v0`, `kind:
+SpecHarvesterPackageSetAIDraftProposal`, `authority:
+proposal_only_not_registry_acceptance`, privacy flags, provider receipts,
+workspace inventory input, package ID alignment, inventory-derived
+`sourceTargetPath` values, allowlisted evidence paths, selected/excluded package
+consistency, and `contains` relation endpoints.
+
+```bash
+specpm producer-bundle preflight-ai-draft \
+  --body <package-set-ai-draft-proposal.json> \
+  --root <package-set-bundle-root> \
+  --json
+```
+
+Passing AI draft preflight remains review evidence only. It must not create a
+handoff, accept package members, accept relations, mutate generated specs,
+materialize accepted sources, or publish registry metadata.
+
 ## Package-Set AI Enrichment Evidence
 
 SpecHarvester may attach a

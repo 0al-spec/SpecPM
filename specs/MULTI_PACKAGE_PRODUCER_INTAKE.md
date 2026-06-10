@@ -64,6 +64,7 @@ A multi-package proposal should include:
 - diagnostics report for each candidate package;
 - bundle-set preflight report;
 - static preview evidence, when available;
+- package-set AI draft proposal, when available;
 - package-set AI enrichment proposal, when available;
 - proposed accepted-source diff;
 - maintainer acceptance decision records or review notes.
@@ -82,6 +83,14 @@ Optional AI enrichment evidence may appear as
 refined summaries, capabilities, intents, and interfaces for reviewer
 consideration. It does not replace the package-set handoff, per-package
 candidate files, relation proposals, or accepted-source review.
+
+Optional AI draft evidence may appear earlier as
+`package-set-ai-draft-proposal.json` with
+`kind: SpecHarvesterPackageSetAIDraftProposal`. This artifact can propose which
+workspace inventory packages should become aggregate members, which packages
+should be excluded, and which `contains` relations should be drafted. It does
+not replace deterministic workspace inventory, package-set handoff, bundle-set
+preflight, AI enrichment, relation acceptance, or accepted-source review.
 
 ## Package-Set Handoff Checklist
 
@@ -146,6 +155,28 @@ specpm producer-bundle preflight-ai-enrichment \
 
 This checks the machine-readable proposal boundary. It does not accept model
 suggestions or alter package-set materialization.
+
+## AI Draft Preflight Plan
+
+When a package-set proposal includes AI draft evidence, SpecPM should gain a
+consumer-side preflight that checks the machine-readable drafting boundary before
+maintainers use it to guide producer-side package-set generation:
+
+```bash
+specpm producer-bundle preflight-ai-draft \
+  --body <package-set-ai-draft-proposal.json> \
+  --root <package-set-bundle-root> \
+  --json
+```
+
+The planned preflight should verify artifact identity, proposal-only authority,
+privacy flags, provider receipts, workspace inventory input, package ID
+alignment, inventory-derived `sourceTargetPath` values, allowlisted evidence
+paths, selected/excluded package consistency, and `contains` relation endpoints.
+It should reject registry acceptance decision fields and remain review evidence
+only. A passing report must not create a handoff, accept package members, accept
+relations, mutate generated specs, materialize accepted sources, or publish
+registry metadata.
 
 SpecPM package-set intake preflight can check the handoff artifact before
 maintainer review:

@@ -162,6 +162,45 @@ external registry acceptance boundary. Package-set preflight does not require
 single-package `producerEvidenceLinks`; member evidence is checked through the
 handoff `members[].evidenceLinks` records.
 
+## Package-Set AI Draft Evidence
+
+SpecHarvester may produce a `SpecHarvesterPackageSetAIDraftProposal` before the
+package-set handoff exists. This artifact belongs to the drafting stage: it
+proposes aggregate membership, exclusions, and `contains` relations from a
+deterministic `workspace-inventory.json` request. It is not a package-set
+handoff, AI enrichment evidence, relation acceptance, or materialization input.
+
+The planned SpecPM consumer preflight for this artifact should verify:
+
+```bash
+specpm producer-bundle preflight-ai-draft \
+  --body <package-set-ai-draft-proposal.json> \
+  --root <package-set-bundle-root> \
+  --json
+```
+
+- `apiVersion` is `spec-harvester.package-set-ai-draft/v0`;
+- `kind` is `SpecHarvesterPackageSetAIDraftProposal`;
+- `authority` is `proposal_only_not_registry_acceptance`;
+- privacy flags show no raw prompts, raw model responses, chain-of-thought, or
+  secrets persisted;
+- `inputs[]` references the workspace inventory with explicit path scope and, when
+  available under `--root`, a matching digest;
+- `packageSet.packageId` matches the inventory-derived aggregate id;
+- `selectedMembers[]` and `excludedPackages[]` use package IDs from the workspace
+  inventory;
+- selected member `sourceTargetPath` values are inventory-derived, not
+  model-authored path claims;
+- `relations[]` use only `type: contains` from the aggregate package set to
+  selected members;
+- all evidence paths are allowlisted request/inventory paths;
+- provider receipts are provenance only and do not make model output
+  authoritative.
+
+Passing AI draft preflight should remain review evidence only. It must not create
+a handoff, accept package members, accept relations, mutate generated specs,
+materialize accepted sources, or publish registry metadata.
+
 ## Package-Set AI Enrichment Evidence
 
 SpecHarvester may also attach

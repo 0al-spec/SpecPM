@@ -37,8 +37,8 @@ SpecPM is usable today for:
 - maintainer-curated `xyflow` accepted artifacts with generated SpecHarvester
   output preserved as producer evidence;
 - SpecHarvester producer-bundle intake policy, handoff preflight, AI enrichment
-  preflight, maintainer-selected materialization, and curated accepted artifact
-  lifecycle policy;
+  preflight, maintainer-selected materialization, curated accepted artifact
+  lifecycle policy, and planned AI draft proposal preflight;
 - GitHub Actions runtime-major maintenance policy for official `actions/*`
   workflow references;
 - GitHub Actions permissions and secret-boundary policy for repository
@@ -300,6 +300,11 @@ maintainer-authored accepted metadata, new harvests update curated artifacts
 only through review diffs, `foreignArtifacts` preserve evidence chains,
 removing `preview_only` is a maintainer acceptance act, and accepted relations
 remain explicit `relations[]` manifest entries.
+The next package-set producer boundary is planned for
+`SpecHarvesterPackageSetAIDraftProposal`: SpecPM should verify AI-proposed
+member selection, exclusions, and `contains` relations against deterministic
+workspace inventory evidence while keeping the artifact proposal-only and
+outside registry acceptance or materialization authority.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

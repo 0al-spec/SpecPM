@@ -2176,6 +2176,43 @@ Result:
   roadmap, and self-spec link the lifecycle.
 - Regression tests keep the lifecycle terms present in policy and DocC.
 
+### P66-T16. Package-Set AI Draft Proposal Consumer Preflight
+
+Status: Planned.
+
+Motivation:
+
+- SpecHarvester now emits `SpecHarvesterPackageSetAIDraftProposal` artifacts that
+  return to the original `LLM + schema` idea: deterministic workspace inventory
+  remains evidence, while the model proposes package-set membership, exclusions,
+  and `contains` relations.
+- Without a SpecPM-side preflight plan, maintainers could confuse this early
+  structural proposal with package-set handoff evidence, AI enrichment evidence,
+  accepted relations, or materialization input.
+
+Goal:
+
+- Add a future read-only `specpm producer-bundle preflight-ai-draft` command that
+  verifies `SpecHarvesterPackageSetAIDraftProposal` identity, proposal-only
+  authority, privacy flags, provider receipts, workspace inventory input,
+  package ID alignment, inventory-derived `sourceTargetPath` values, allowlisted
+  evidence paths, selected/excluded package consistency, and `contains` relation
+  endpoints.
+- Keep AI draft output separate from package-set handoff, AI enrichment,
+  accepted-source materialization, relation acceptance, and registry publication.
+
+Expected result:
+
+- Maintainers can reject malformed or authority-confused AI draft artifacts
+  before using them to guide producer-side package-set drafting.
+- Passing preflight remains review evidence only. It does not create a
+  package-set handoff, select packages, accept relations, mutate generated specs,
+  materialize accepted sources, or publish registry metadata.
+- The implementation PR should include fixture coverage for mismatched
+  package-set IDs, model-overridden paths, non-`contains` relation types,
+  unsafe/unsupported evidence paths, privacy/authority failures, and missing or
+  inconsistent workspace inventory links.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
