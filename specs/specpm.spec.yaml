@@ -233,6 +233,9 @@ provides:
     - id: specpm.specs.ai_enrichment_preflight
       role: secondary
       summary: Provide a consumer-side preflight for SpecHarvester package-set AI enrichment proposals that verifies proposal-only authority, privacy flags, package alignment, allowlisted evidence paths, and provider provenance.
+    - id: specpm.specs.ai_draft_preflight_plan
+      role: secondary
+      summary: Plan a consumer-side preflight for SpecHarvester package-set AI draft proposals that verifies proposal-only authority, workspace inventory alignment, selected members, exclusions, evidence paths, and contains relations.
     - id: specpm.specs.spec_quality_model
       role: secondary
       summary: Document the review model for SpecPackage validation, evidence coverage, boundary discipline, interface depth, reproducibility, and consumer utility.
@@ -990,6 +993,7 @@ evidence:
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.ai_enrichment_preflight
+      - specpm.specs.ai_draft_preflight_plan
       - specpm.registry.package_set_materialization_helper
       - specpm.specs.producer_receipt_contract
       - producer_receipts_not_generation_authority
@@ -1119,6 +1123,7 @@ evidence:
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.ai_enrichment_preflight
+      - specpm.specs.ai_draft_preflight_plan
       - specpm.registry.curated_accepted_artifacts
       - producer_receipts_not_generation_authority
       - scope.includes
@@ -1415,6 +1420,7 @@ evidence:
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.ai_enrichment_preflight
+      - specpm.specs.ai_draft_preflight_plan
       - specpm.specs.producer_receipt_contract
   - id: docc_producer_bundle_fixture_policy
     kind: documentation
@@ -1515,6 +1521,7 @@ evidence:
       - specpm.specs.package_relations
       - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.ai_enrichment_preflight
+      - specpm.specs.ai_draft_preflight_plan
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.registry.curated_accepted_artifacts
       - specpm.registry.curated_artifact_lifecycle

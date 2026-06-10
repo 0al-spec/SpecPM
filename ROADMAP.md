@@ -1,7 +1,7 @@
 # SpecPM Roadmap
 
 Status: Public alpha roadmap
-Updated: 2026-06-10
+Updated: 2026-06-11
 
 SpecPM is the package substrate for SpecGraph. It packages, validates, indexes,
 inspects, preserves, and exposes reusable specification intent. It does not own
@@ -46,8 +46,8 @@ Implemented surfaces:
 - registry-visible package-set metadata through `/v0/relations`,
   `packageSet.members`, relation context, and package-set viewer panels;
 - SpecHarvester producer-bundle intake policy, handoff preflight, AI enrichment
-  preflight, maintainer-selected materialization, and curated accepted artifact
-  lifecycle policy;
+  preflight, maintainer-selected materialization, curated accepted artifact
+  lifecycle policy, and planned AI draft proposal preflight;
 - first abstract intent-level interface contract for public repository metadata;
 - GitHub Actions runtime-major maintenance policy for official `actions/*`
   workflow references;
@@ -525,6 +525,11 @@ maintainer-authored accepted metadata, new harvests update curated artifacts
 only through review diffs, `foreignArtifacts` preserve evidence chains,
 removing `preview_only` is a maintainer acceptance act, and accepted relations
 remain explicit `relations[]` manifest entries.
+The next package-set producer boundary is planned for
+`SpecHarvesterPackageSetAIDraftProposal`: SpecPM should verify AI-proposed
+member selection, exclusions, and `contains` relations against deterministic
+workspace inventory evidence while keeping the artifact proposal-only and
+outside registry acceptance or materialization authority.
 
 These are planned tracks. They do not add package upload, request-time registry
 mutation, package execution, semantic resolution, graph authority, or remote

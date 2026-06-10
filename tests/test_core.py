@@ -2725,6 +2725,7 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "specpm.specs.producer_bundle_fixture_policy" in manifest_capabilities
     assert "specpm.specs.ai_enrichment_consumer_policy" in manifest_capabilities
     assert "specpm.specs.ai_enrichment_preflight" in manifest_capabilities
+    assert "specpm.specs.ai_draft_preflight_plan" in manifest_capabilities
     assert "specpm.registry.acceptance_decision_record" in manifest_capabilities
     assert "specpm.specs.producer_receipt_contract" in boundary_capabilities
     assert "specpm.specs.producer_bundle_proposal_policy" in boundary_capabilities
@@ -2732,6 +2733,7 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "specpm.specs.producer_bundle_fixture_policy" in boundary_capabilities
     assert "specpm.specs.ai_enrichment_consumer_policy" in boundary_capabilities
     assert "specpm.specs.ai_enrichment_preflight" in boundary_capabilities
+    assert "specpm.specs.ai_draft_preflight_plan" in boundary_capabilities
     assert "specpm.registry.acceptance_decision_record" in boundary_capabilities
     assert "producer_receipts_not_generation_authority" in constraint_ids
     assert "specs/PRODUCER_RECEIPTS.md" in evidence_paths
@@ -2758,6 +2760,8 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "evidence_only" in docc_proposal_policy
     assert "specpm producer-bundle preflight-ai-enrichment" in proposal_policy
     assert "specpm producer-bundle preflight-ai-enrichment" in docc_proposal_policy
+    assert "SpecHarvesterPackageSetAIDraftProposal" in proposal_policy
+    assert "SpecHarvesterPackageSetAIDraftProposal" in docc_proposal_policy
     assert (
         "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
         in evidence_paths
@@ -2809,6 +2813,12 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "contains",
         "package-set-ai-enrichment-proposal.json",
         "SpecHarvesterPackageSetAIEnrichmentProposal",
+        "package-set-ai-draft-proposal.json",
+        "SpecHarvesterPackageSetAIDraftProposal",
+        "AI Draft Preflight Plan",
+        "specpm producer-bundle preflight-ai-draft",
+        "inventory-derived `sourceTargetPath` values",
+        "selected/excluded package consistency",
         "AI Enrichment Checklist",
         "proposal_only_not_registry_acceptance",
         "unsupported evidence paths are diagnostics",
@@ -2835,6 +2845,12 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "contains",
         "package-set-ai-enrichment-proposal.json",
         "SpecHarvesterPackageSetAIEnrichmentProposal",
+        "package-set-ai-draft-proposal.json",
+        "SpecHarvesterPackageSetAIDraftProposal",
+        "AI Draft Preflight Plan",
+        "specpm producer-bundle preflight-ai-draft",
+        "inventory-derived `sourceTargetPath` values",
+        "selected/excluded package consistency",
         "AI Enrichment Checklist",
         "proposal_only_not_registry_acceptance",
         "unsupported evidence paths remain diagnostics",
@@ -2885,6 +2901,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "materialize-package-set",
         "package-set-ai-enrichment-proposal.json",
         "proposal-only review evidence",
+        "SpecHarvesterPackageSetAIDraftProposal",
+        "planned AI draft proposal preflight",
+        "member selection, exclusions, and `contains` relations",
         "SpecHarvester-to-SpecPM package-set AI enrichment",
         "explicit maintainer package/relation selection",
         "machine-checkable AI enrichment review boundary",
@@ -2909,6 +2928,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "materialize-package-set",
         "package-set-ai-enrichment-proposal.json",
         "proposal-only review evidence",
+        "SpecHarvesterPackageSetAIDraftProposal",
+        "planned AI draft proposal preflight",
+        "member selection, exclusions, and `contains` relations",
         "SpecHarvester-to-SpecPM package-set AI enrichment",
         "explicit maintainer package/relation selection",
         "machine-checkable AI enrichment review boundary",
@@ -2935,6 +2957,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "The AI artifact did not alter accepted-source selection",
         "P66-T10. Package-Set AI Enrichment Consumer Preflight",
         "`specpm producer-bundle preflight-ai-enrichment`",
+        "P66-T16. Package-Set AI Draft Proposal Consumer Preflight",
+        "`SpecHarvesterPackageSetAIDraftProposal` artifacts",
+        "`specpm producer-bundle preflight-ai-draft`",
         "P66-T11. Xyflow Package-Set Acceptance Policy",
         "`xyflow.core@0.1.0`",
         "Removing `preview_only`",
@@ -2952,6 +2977,10 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "preflight-ai-enrichment",
         "AI artifact remained review evidence",
         "did not alter accepted-source selection",
+        "Package-Set AI Draft Evidence",
+        "spec-harvester.package-set-ai-draft/v0",
+        "preflight-ai-draft",
+        "must not create a handoff",
     ):
         assert required_text in proposal_policy_flat
         assert required_text in docc_proposal_policy_flat
