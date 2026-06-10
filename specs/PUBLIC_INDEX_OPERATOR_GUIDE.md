@@ -300,21 +300,22 @@ appends new repo-relative `path:` entries. The helper still does not accept
 packages or relations automatically; it only prepares reviewable accepted-source
 artifacts from an explicit maintainer selection.
 
-For the `xyflow` transition, maintainers should keep the existing
+For the `xyflow` reference transition, maintainers kept the existing
 `xyflow.core@0.1.0` accepted-source entry separate from the package-set review.
-The generated `xyflow.core` package can be used as previous review evidence,
-but a new package-set PR should decide explicitly whether `xyflow.core` remains
-unchanged, is superseded by `xyflow.workspace` plus scoped members, is kept as a
-compatibility package, or is removed in a later review. A package-set
-materialization PR should not silently replace `xyflow.core`.
+The generated `xyflow.core` package remains previous review evidence, while the
+current accepted package-set model uses curated `xyflow.workspace`,
+`xyflow.react`, `xyflow.svelte`, and `xyflow.system` artifacts. Future
+package-set transitions should make the same coexistence or supersession
+decision explicitly; a package-set materialization PR should not silently
+replace an existing single-package entry.
 
-The same PR should treat `preview_only` as a maintainer acceptance boundary. A
-producer draft may mark `xyflow.workspace`, `xyflow.system`, `xyflow.react`, or
-`xyflow.svelte` as `preview_only`; removing that flag requires explicit review
-of package claims, evidence, selected relations, versioning, and legacy
-`xyflow.core` coexistence. Passing handoff preflight, AI enrichment preflight,
-or materialization dry run is evidence for review, not approval to publish
-non-preview package metadata.
+The accepted `xyflow` package-set PR treated `preview_only` as a maintainer
+acceptance boundary. A producer draft may mark `xyflow.workspace`,
+`xyflow.system`, `xyflow.react`, or `xyflow.svelte` as `preview_only`; removing
+that flag requires explicit review of package claims, evidence, selected
+relations, versioning, and legacy `xyflow.core` coexistence. Passing handoff
+preflight, AI enrichment preflight, or materialization dry run is evidence for
+review, not approval to publish non-preview package metadata.
 
 ## Accepted Manifest PR
 

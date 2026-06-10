@@ -235,19 +235,21 @@ plus explicit package and relation selections, then prepare review artifacts or
 copy only selected package candidates into `public-index/generated` with
 `--apply` without auto-accepting producer output.
 The `xyflow` package-set acceptance policy is now documented as a transition
-rule for the existing `xyflow.core@0.1.0` candidate. A future package-set PR
-must decide explicitly whether `xyflow.core` remains unchanged, is superseded by
-`xyflow.workspace` plus scoped members, is kept as compatibility metadata, or is
-removed later. Removing `preview_only` from generated package-set candidates is
-also an explicit maintainer acceptance decision, not a consequence of green
-producer or SpecPM preflight checks.
-The `xyflow` package-set accepted-source materialization is now proposed from a
+rule for the existing `xyflow.core@0.1.0` candidate. Maintainers explicitly
+left `xyflow.core` unchanged as previous single-package review evidence while
+accepting `xyflow.workspace` plus scoped `xyflow.react`, `xyflow.svelte`, and
+`xyflow.system` curated members as the current package-set model. Removing
+`preview_only` from generated package-set candidates remains an explicit
+maintainer acceptance decision, not a consequence of green producer or SpecPM
+preflight checks.
+The `xyflow` package-set accepted-source materialization is now completed from a
 fresh real checkout run using current SpecHarvester and SpecPM `main`. The
-selected accepted-source inputs are `xyflow.workspace`, `xyflow.react`,
-`xyflow.svelte`, and `xyflow.system`, with three selected `contains` relations
-kept as maintainer-review evidence. `xyflow.core@0.1.0` remains unchanged as
-previous single-package review evidence, and AI enrichment remains
-proposal-only evidence rather than registry truth.
+selected accepted-source inputs are maintainer-curated `xyflow.workspace`,
+`xyflow.react`, `xyflow.svelte`, and `xyflow.system` artifacts, with three
+selected `contains` relations published as accepted registry metadata.
+`xyflow.core@0.1.0` remains unchanged as previous single-package review
+evidence, and AI enrichment remains proposal-only evidence rather than registry
+truth.
 Registry-visible package-set relations are now implemented as additive `/v0`
 metadata. Maintainer-reviewed `relations[]` entries in
 `public-index/accepted-packages.yml` generate `/v0/relations`, advertise

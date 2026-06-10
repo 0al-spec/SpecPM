@@ -2865,7 +2865,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "authority: proposal_only_not_registry_acceptance",
         "provider receipts are provenance, not registry authority",
         "`xyflow.core@0.1.0` accepted-source entry",
-        "should not silently replace `xyflow.core`",
+        "should not silently replace an existing single-package entry",
         "`preview_only` as a maintainer acceptance boundary",
     ):
         assert required_text in operator_guide_flat
