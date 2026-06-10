@@ -2140,6 +2140,42 @@ Result:
 - `public-index/accepted-packages.yml` now accepts the curated package-set
   members while leaving generated outputs as evidence.
 
+### P66-T15. Curated Accepted Artifact Lifecycle Policy
+
+Status: Completed.
+
+Motivation:
+
+- After `xyflow` moved to maintainer-curated accepted artifacts, the project
+  needs a reusable lifecycle policy rather than a one-off example.
+- Without a documented lifecycle, future updates could accidentally edit
+  generated producer output in place, remove `preview_only` because preflight
+  passed, or publish producer relation proposals without an explicit relation
+  acceptance decision.
+
+Goal:
+
+- Document the standard lifecycle for turning producer-generated candidates
+  into maintainer-curated accepted artifacts.
+- Cover generated candidate immutability, curated artifact ownership, new
+  harvest update review, `foreignArtifacts` evidence chains, `preview_only`
+  removal, and relation acceptance boundaries.
+
+Expected result:
+
+- Maintainers have a reusable policy for future harvested package updates.
+- Generated bundles remain producer evidence while curated artifacts remain
+  the registry source.
+- Package acceptance and relation acceptance stay separate review decisions.
+
+Result:
+
+- `specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md` and DocC document the six-part
+  lifecycle.
+- Multi-package intake, public index operator guidance, xyflow reference docs,
+  roadmap, and self-spec link the lifecycle.
+- Regression tests keep the lifecycle terms present in policy and DocC.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

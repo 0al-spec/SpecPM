@@ -164,6 +164,9 @@ provides:
     - id: specpm.registry.curated_accepted_artifacts
       role: secondary
       summary: Accept maintainer-curated registry package artifacts that cite producer receipts as evidence without pretending curated text was producer output.
+    - id: specpm.registry.curated_artifact_lifecycle
+      role: secondary
+      summary: Document the lifecycle for generated candidates, curated accepted artifacts, new harvest reviews, evidence chains, preview removal, and explicit relation acceptance.
     - id: specpm.registry.package_set_relation_metadata
       role: secondary
       summary: Publish maintainer-reviewed package-set relation metadata through additive `/v0` payloads and the static viewer without inferring relations from producer output.
@@ -1120,6 +1123,17 @@ evidence:
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
+  - id: curated_accepted_artifact_lifecycle_docs
+    kind: documentation
+    path: specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md
+    supports:
+      - specpm.registry.curated_artifact_lifecycle
+      - specpm.registry.curated_accepted_artifacts
+      - specpm.specs.multi_package_producer_intake
+      - specpm.specs.package_relations
+      - producer_receipts_not_generation_authority
+      - scope.includes
+      - scope.excludes
   - id: xyflow_package_set_reference_docs
     kind: documentation
     path: specs/XYFLOW_PACKAGE_SET_REFERENCE.md
@@ -1503,6 +1517,15 @@ evidence:
       - specpm.specs.ai_enrichment_preflight
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.registry.curated_accepted_artifacts
+      - specpm.registry.curated_artifact_lifecycle
+  - id: docc_curated_accepted_artifact_lifecycle
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/CuratedAcceptedArtifactLifecycle.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.curated_artifact_lifecycle
+      - specpm.registry.curated_accepted_artifacts
+      - specpm.specs.multi_package_producer_intake
   - id: docc_xyflow_package_set_reference
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md
@@ -1628,6 +1651,7 @@ implementationBindings:
         - Sources/SpecPM/Documentation.docc/PackageSetRegistryMetadata.md
         - Sources/SpecPM/Documentation.docc/SpecHarvesterMonorepoDiscovery.md
         - Sources/SpecPM/Documentation.docc/MultiPackageProducerIntake.md
+        - Sources/SpecPM/Documentation.docc/CuratedAcceptedArtifactLifecycle.md
         - Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md
         - Sources/SpecPM/Documentation.docc/CLIReference.md
         - Sources/SpecPM/Documentation.docc/JSONContracts.md
@@ -1672,6 +1696,7 @@ implementationBindings:
         - specs/PACKAGE_SET_REGISTRY_METADATA.md
         - specs/SPECHARVESTER_MONOREPO_DISCOVERY.md
         - specs/MULTI_PACKAGE_PRODUCER_INTAKE.md
+        - specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md
         - specs/XYFLOW_PACKAGE_SET_REFERENCE.md
         - tests/fixtures/package_sets/xyflow-reference
         - specs/INTENT_TAXONOMY_GOVERNANCE.md
