@@ -24,6 +24,10 @@ PACKAGE_SET_AI_ENRICHMENT_API_VERSION = "spec-harvester.package-set-ai-enrichmen
 PACKAGE_SET_AI_ENRICHMENT_KIND = "SpecHarvesterPackageSetAIEnrichmentProposal"
 PACKAGE_SET_AI_ENRICHMENT_PREFLIGHT_KIND = "SpecPMPackageSetAIEnrichmentPreflightReport"
 PACKAGE_SET_AI_ENRICHMENT_PREFLIGHT_SCHEMA_VERSION = 1
+PACKAGE_SET_AI_DRAFT_API_VERSION = "spec-harvester.package-set-ai-draft/v0"
+PACKAGE_SET_AI_DRAFT_KIND = "SpecHarvesterPackageSetAIDraftProposal"
+PACKAGE_SET_AI_DRAFT_PREFLIGHT_KIND = "SpecPMPackageSetAIDraftPreflightReport"
+PACKAGE_SET_AI_DRAFT_PREFLIGHT_SCHEMA_VERSION = 1
 
 REQUIRED_PRODUCER_EVIDENCE_ROLES = {
     "accepted_source_bundle",
@@ -76,6 +80,37 @@ AI_ENRICHMENT_REQUIRED_NON_GOALS = {
 }
 AI_ENRICHMENT_ALLOWED_ARTIFACT_STATUSES = {"completed", "warning"}
 AI_ENRICHMENT_PROPOSAL_STATUSES = {"proposed", "missing_model_output"}
+AI_DRAFT_REQUIRED_NON_GOALS = {
+    "deterministic_spec_generation",
+    "specpm_acceptance",
+    "package_acceptance",
+    "relation_acceptance",
+    "registry_publication",
+    "model_authored_file_mutation",
+}
+AI_DRAFT_ALLOWED_ARTIFACT_STATUSES = {"completed", "warning"}
+AI_DRAFT_MEMBER_ROLES = {
+    "workspace",
+    "primary_package",
+    "published_package",
+    "plugin_package",
+    "cli_package",
+    "platform_binary_package",
+    "example_package",
+    "fixture_package",
+    "test_package",
+    "private_tooling_package",
+    "member_package",
+}
+AI_DRAFT_EXCLUSION_CATEGORIES = {
+    "fixture",
+    "test",
+    "example",
+    "private_tooling",
+    "platform_artifact",
+    "out_of_scope",
+}
+AI_DRAFT_INPUT_PATH_SCOPES = KNOWN_PACKAGE_SET_EVIDENCE_PATH_SCOPES | {"request_relative"}
 
 JSON_FENCE_PATTERN = re.compile(r"```json\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 
@@ -529,6 +564,137 @@ def package_set_ai_enrichment_report(
             "proposalCount": len(proposals),
             "inputCount": len(inputs),
             "allowedEvidencePathCount": len(allowed_paths),
+            "providerReceiptCount": provider_receipt_count,
+            "errorCount": len(errors),
+            "warningCount": len(warnings),
+        },
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def preflight_package_set_ai_draft(
+    body_path: Path,
+    *,
+    root: Path | None = None,
+) -> dict[str, Any]:
+    try:
+        body = body_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        errors = [
+            issue(
+                "ai_draft_body_unreadable",
+                f"AI draft proposal could not be read: {exc}.",
+                field="body",
+            )
+        ]
+        return package_set_ai_draft_report(
+            body_path,
+            root,
+            None,
+            errors,
+            [],
+            {},
+            "not_loaded",
+        )
+
+    payloads = _extract_json_payloads(body)
+    draft = _find_package_set_ai_draft_payload(payloads)
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    if draft is None:
+        errors.append(
+            issue(
+                "ai_draft_payload_missing",
+                "Preflight requires a SpecHarvesterPackageSetAIDraftProposal JSON payload.",
+                field="body",
+            )
+        )
+        return package_set_ai_draft_report(
+            body_path,
+            root,
+            None,
+            errors,
+            warnings,
+            {},
+            "not_loaded",
+        )
+
+    inventory = load_ai_draft_workspace_inventory(draft, root, errors, warnings)
+    inventory_alignment = "not_provided"
+    if root is None:
+        warnings.append(
+            issue(
+                "ai_draft_root_not_provided",
+                "Workspace inventory file and digest alignment were not verified.",
+                field="root",
+            )
+        )
+    elif inventory:
+        inventory_alignment = "verified"
+    else:
+        inventory_alignment = "failed"
+
+    validate_package_set_ai_draft(draft, errors, warnings, root, inventory)
+
+    return package_set_ai_draft_report(
+        body_path,
+        root,
+        draft,
+        errors,
+        warnings,
+        inventory,
+        inventory_alignment,
+    )
+
+
+def package_set_ai_draft_report(
+    body_path: Path,
+    root: Path | None,
+    draft: dict[str, Any] | None,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    inventory: dict[str, Any],
+    inventory_alignment: str,
+) -> dict[str, Any]:
+    selected_members = _list_of_mappings(draft.get("selectedMembers")) if draft else []
+    excluded_packages = _list_of_mappings(draft.get("excludedPackages")) if draft else []
+    relations = _list_of_mappings(draft.get("relations")) if draft else []
+    inputs = _list_of_mappings(draft.get("inputs")) if draft else []
+    allowed_paths = ai_draft_allowed_evidence_paths(draft or {})
+    provider_receipt_count = 1 if draft and isinstance(draft.get("providerReceipt"), dict) else 0
+    package_set = _mapping_value(draft.get("packageSet")) if draft else {}
+    inventory_packages = workspace_inventory_package_records(inventory)
+    status = "failed" if errors else ("warning" if warnings else "passed")
+    return {
+        "kind": PACKAGE_SET_AI_DRAFT_PREFLIGHT_KIND,
+        "schemaVersion": PACKAGE_SET_AI_DRAFT_PREFLIGHT_SCHEMA_VERSION,
+        "status": status,
+        "body": str(body_path),
+        "root": str(root) if root else None,
+        "packageSetAIDraft": (
+            {
+                "id": package_set.get("packageId"),
+                "artifactStatus": draft.get("status"),
+                "authority": draft.get("authority"),
+                "selectedMemberCount": len(selected_members),
+                "excludedPackageCount": len(excluded_packages),
+                "relationCount": len(relations),
+                "providerReceiptCount": provider_receipt_count,
+                "inventoryAlignment": inventory_alignment,
+                "inventoryPackageCount": len(inventory_packages),
+            }
+            if draft
+            else None
+        ),
+        "summary": {
+            "packageSetId": package_set.get("packageId"),
+            "selectedMemberCount": len(selected_members),
+            "excludedPackageCount": len(excluded_packages),
+            "relationCount": len(relations),
+            "inputCount": len(inputs),
+            "allowedEvidencePathCount": len(allowed_paths),
+            "inventoryPackageCount": len(inventory_packages),
             "providerReceiptCount": provider_receipt_count,
             "errorCount": len(errors),
             "warningCount": len(warnings),
@@ -2043,6 +2209,881 @@ def ai_enrichment_allowed_evidence_paths(enrichment: dict[str, Any]) -> set[str]
     return allowed
 
 
+def validate_package_set_ai_draft(
+    draft: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    root: Path | None,
+    inventory: dict[str, Any],
+) -> None:
+    if draft.get("apiVersion") != PACKAGE_SET_AI_DRAFT_API_VERSION:
+        errors.append(
+            issue(
+                "ai_draft_api_version_invalid",
+                f"AI draft apiVersion must be {PACKAGE_SET_AI_DRAFT_API_VERSION}.",
+                field="aiDraft.apiVersion",
+            )
+        )
+    if draft.get("kind") != PACKAGE_SET_AI_DRAFT_KIND:
+        errors.append(
+            issue(
+                "ai_draft_kind_invalid",
+                f"AI draft kind must be {PACKAGE_SET_AI_DRAFT_KIND}.",
+                field="aiDraft.kind",
+            )
+        )
+    if draft.get("schemaVersion") != 1:
+        errors.append(
+            issue(
+                "ai_draft_schema_version_invalid",
+                "AI draft schemaVersion must be 1.",
+                field="aiDraft.schemaVersion",
+            )
+        )
+
+    artifact_status = draft.get("status")
+    if artifact_status == "failed":
+        errors.append(
+            issue(
+                "ai_draft_status_failed",
+                "Failed AI draft artifacts cannot pass SpecPM preflight.",
+                field="aiDraft.status",
+            )
+        )
+    elif artifact_status not in AI_DRAFT_ALLOWED_ARTIFACT_STATUSES:
+        errors.append(
+            issue(
+                "ai_draft_status_invalid",
+                "AI draft status must be completed or warning.",
+                field="aiDraft.status",
+            )
+        )
+    elif artifact_status == "warning":
+        warnings.append(
+            issue(
+                "ai_draft_artifact_warning",
+                "AI draft artifact completed with producer-side warnings.",
+                field="aiDraft.status",
+            )
+        )
+
+    if draft.get("authority") != "proposal_only_not_registry_acceptance":
+        errors.append(
+            issue(
+                "ai_draft_authority_invalid",
+                "AI draft authority must remain proposal_only_not_registry_acceptance.",
+                field="aiDraft.authority",
+            )
+        )
+
+    validate_ai_draft_no_acceptance_decision(draft, errors)
+    validate_ai_draft_privacy(_mapping_value(draft.get("privacy")), errors)
+    validate_ai_draft_trust_boundary(draft, errors)
+    validate_ai_draft_non_goals(draft, errors)
+    validate_ai_draft_provider(_mapping_value(draft.get("provider")), errors)
+    validate_ai_draft_provider_receipt(_mapping_value(draft.get("providerReceipt")), errors)
+    validate_ai_draft_inputs(draft, errors, root)
+
+    package_set = _mapping_value(draft.get("packageSet"))
+    package_set_id = package_set.get("packageId")
+    if not isinstance(package_set_id, str) or not package_set_id:
+        errors.append(
+            issue(
+                "ai_draft_package_set_id_missing",
+                "AI draft packageSet.packageId must be present.",
+                field="aiDraft.packageSet.packageId",
+            )
+        )
+
+    inventory_by_id = ai_draft_inventory_by_package_id(inventory)
+    inventory_package_set_id = ai_draft_inventory_package_set_id(inventory_by_id)
+    if (
+        isinstance(package_set_id, str)
+        and isinstance(inventory_package_set_id, str)
+        and package_set_id != inventory_package_set_id
+    ):
+        errors.append(
+            issue(
+                "ai_draft_package_set_id_mismatch",
+                "AI draft packageSet.packageId must match the workspace inventory aggregate id.",
+                field="aiDraft.packageSet.packageId",
+            )
+        )
+
+    selected_members = _list_of_mappings(draft.get("selectedMembers"))
+    excluded_packages = _list_of_mappings(draft.get("excludedPackages"))
+    relations = _list_of_mappings(draft.get("relations"))
+    summary = _mapping_value(draft.get("summary"))
+    for key, expected in (
+        ("selectedMemberCount", len(selected_members)),
+        ("excludedPackageCount", len(excluded_packages)),
+        ("relationCount", len(relations)),
+    ):
+        if summary.get(key) != expected:
+            errors.append(
+                issue(
+                    "ai_draft_summary_count_mismatch",
+                    f"AI draft summary.{key} must match proposal record counts.",
+                    field=f"aiDraft.summary.{key}",
+                )
+            )
+    if summary.get("errorCount") not in (0, None):
+        errors.append(
+            issue(
+                "ai_draft_summary_errors_present",
+                "AI draft summary.errorCount must be zero before SpecPM review use.",
+                field="aiDraft.summary.errorCount",
+            )
+        )
+
+    allowed_paths = ai_draft_allowed_evidence_paths(draft)
+    if not allowed_paths:
+        errors.append(
+            issue(
+                "ai_draft_allowed_evidence_missing",
+                "AI draft inputs must include compact_model_input evidencePaths.",
+                field="aiDraft.inputs",
+            )
+        )
+
+    validate_ai_draft_evidence_paths(
+        list_value(package_set.get("evidencePaths")),
+        allowed_paths,
+        errors,
+        warnings,
+        "aiDraft.packageSet.evidencePaths",
+    )
+    selected_ids = validate_ai_draft_selected_members(
+        selected_members,
+        inventory_by_id,
+        allowed_paths,
+        errors,
+        warnings,
+    )
+    excluded_ids = validate_ai_draft_excluded_packages(
+        excluded_packages,
+        inventory_by_id,
+        selected_ids,
+        allowed_paths,
+        errors,
+        warnings,
+    )
+    validate_ai_draft_relations(
+        relations,
+        package_set_id,
+        selected_ids,
+        allowed_paths,
+        errors,
+        warnings,
+    )
+    if selected_ids & excluded_ids:
+        errors.append(
+            issue(
+                "ai_draft_package_selected_and_excluded",
+                "AI draft packages cannot be both selected and excluded.",
+                field="aiDraft.excludedPackages",
+            )
+        )
+    validate_ai_draft_diagnostics(draft, errors, warnings)
+
+
+def validate_ai_draft_no_acceptance_decision(
+    draft: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    for key in ("registryAcceptanceDecision", "acceptanceDecision"):
+        if key in draft:
+            errors.append(
+                issue(
+                    "ai_draft_acceptance_decision_not_allowed",
+                    "AI draft artifacts must not carry registry acceptance decisions.",
+                    field=f"aiDraft.{key}",
+                )
+            )
+
+
+def validate_ai_draft_privacy(
+    privacy: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    for key in sorted(AI_ENRICHMENT_REQUIRED_PRIVACY_FLAGS):
+        if privacy.get(key) is not False:
+            errors.append(
+                issue(
+                    "ai_draft_privacy_flag_invalid",
+                    f"AI draft privacy.{key} must be false.",
+                    field=f"aiDraft.privacy.{key}",
+                )
+            )
+
+
+def validate_ai_draft_trust_boundary(
+    draft: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    notes = [item for item in list_value(draft.get("trustBoundary")) if isinstance(item, str)]
+    joined = "\n".join(notes).lower()
+    if "proposal" not in joined or "specpm remains" not in joined:
+        errors.append(
+            issue(
+                "ai_draft_trust_boundary_invalid",
+                "AI draft trustBoundary must keep output proposal-only and SpecPM authoritative.",
+                field="aiDraft.trustBoundary",
+            )
+        )
+
+
+def validate_ai_draft_non_goals(
+    draft: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    non_goals = {item for item in list_value(draft.get("nonGoals")) if isinstance(item, str)}
+    missing = sorted(AI_DRAFT_REQUIRED_NON_GOALS - non_goals)
+    if missing:
+        errors.append(
+            issue(
+                "ai_draft_non_goals_missing",
+                "AI draft nonGoals must exclude generation, acceptance, mutation, and publication: "
+                + ", ".join(missing),
+                field="aiDraft.nonGoals",
+            )
+        )
+
+
+def validate_ai_draft_provider(
+    provider: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if not isinstance(provider.get("kind"), str) or not provider["kind"]:
+        errors.append(
+            issue(
+                "ai_draft_provider_kind_missing",
+                "AI draft provider.kind must be present for provenance.",
+                field="aiDraft.provider.kind",
+            )
+        )
+    if provider.get("execution") not in {"operator_opt_in_local", "not_run_by_spec_harvester"}:
+        errors.append(
+            issue(
+                "ai_draft_provider_execution_invalid",
+                "AI draft provider.execution must describe local opt-in or external output.",
+                field="aiDraft.provider.execution",
+            )
+        )
+
+
+def validate_ai_draft_provider_receipt(
+    receipt: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if not receipt:
+        errors.append(
+            issue(
+                "ai_draft_provider_receipt_missing",
+                "AI draft artifacts must include providerReceipt provenance.",
+                field="aiDraft.providerReceipt",
+            )
+        )
+        return
+    for key in ("rawPromptPersisted", "rawResponsePersisted", "chainOfThoughtPersisted"):
+        if key in receipt and receipt[key] is not False:
+            errors.append(
+                issue(
+                    "ai_draft_provider_receipt_privacy_invalid",
+                    f"AI draft providerReceipt.{key} must be false when present.",
+                    field=f"aiDraft.providerReceipt.{key}",
+                )
+            )
+    if receipt.get("authority") in {"accepted", "registry_authority", "truth"}:
+        errors.append(
+            issue(
+                "ai_draft_provider_receipt_authority_invalid",
+                "AI draft providerReceipt is provenance only, not semantic authority.",
+                field="aiDraft.providerReceipt.authority",
+            )
+        )
+
+
+def validate_ai_draft_inputs(
+    draft: dict[str, Any],
+    errors: list[dict[str, Any]],
+    root: Path | None,
+) -> None:
+    roles = set()
+    for index, item in enumerate(_list_of_mappings(draft.get("inputs"))):
+        field = f"aiDraft.inputs[{index}]"
+        role = item.get("role")
+        if not isinstance(role, str) or not role:
+            errors.append(
+                issue(
+                    "ai_draft_input_role_missing",
+                    "AI draft input record must include role.",
+                    field=f"{field}.role",
+                )
+            )
+            continue
+        roles.add(role)
+        path = item.get("path")
+        path_scope = item.get("pathScope")
+        if path is not None:
+            if not isinstance(path, str) or not path:
+                errors.append(
+                    issue(
+                        "ai_draft_input_path_invalid",
+                        "AI draft input path must be a non-empty string.",
+                        field=f"{field}.path",
+                    )
+                )
+                continue
+            if path_scope not in AI_DRAFT_INPUT_PATH_SCOPES:
+                errors.append(
+                    issue(
+                        "ai_draft_input_path_scope_invalid",
+                        "AI draft input path must use a known pathScope.",
+                        field=f"{field}.pathScope",
+                    )
+                )
+            elif path_scope == "local_path":
+                errors.append(
+                    issue(
+                        "ai_draft_input_path_scope_invalid",
+                        "AI draft preflight does not read untrusted local_path inputs.",
+                        field=f"{field}.pathScope",
+                    )
+                )
+            elif root is not None:
+                validate_ai_draft_input_file(root, item, errors, field)
+        if role == "compact_model_input":
+            for evidence_index, evidence_path in enumerate(list_value(item.get("evidencePaths"))):
+                validate_ai_draft_allowed_path(
+                    evidence_path,
+                    errors,
+                    f"{field}.evidencePaths[{evidence_index}]",
+                )
+    for role in ("workspace_inventory", "compact_model_input"):
+        if role not in roles:
+            errors.append(
+                issue(
+                    "ai_draft_input_role_missing",
+                    f"AI draft inputs must include role: {role}.",
+                    field="aiDraft.inputs",
+                )
+            )
+
+
+def validate_ai_draft_input_file(
+    root: Path,
+    item: dict[str, Any],
+    errors: list[dict[str, Any]],
+    field: str,
+) -> None:
+    path = item.get("path")
+    if not isinstance(path, str):
+        return
+    resolved = resolve_package_set_path(root, path)
+    if resolved is None:
+        errors.append(
+            issue(
+                "ai_draft_input_path_escape",
+                "AI draft input path escapes the preflight root.",
+                field=f"{field}.path",
+            )
+        )
+        return
+    if not resolved.is_file():
+        errors.append(
+            issue(
+                "ai_draft_input_file_missing",
+                f"AI draft input file is missing: {path}.",
+                field=f"{field}.path",
+            )
+        )
+        return
+    expected = digest_value(item.get("digest"))
+    if expected is not None:
+        actual = f"sha256:{sha256_file(resolved)}"
+        if expected != actual:
+            errors.append(
+                issue(
+                    "ai_draft_input_digest_mismatch",
+                    "AI draft input digest does not match file bytes.",
+                    field=f"{field}.digest",
+                )
+            )
+
+
+def validate_ai_draft_allowed_path(
+    path: Any,
+    errors: list[dict[str, Any]],
+    field: str,
+) -> None:
+    if not isinstance(path, str) or not path:
+        errors.append(
+            issue(
+                "ai_draft_allowed_evidence_path_invalid",
+                "AI draft compact_model_input evidencePaths must be non-empty strings.",
+                field=field,
+            )
+        )
+    elif not is_safe_relative_path(path):
+        errors.append(
+            issue(
+                "ai_draft_allowed_evidence_path_unsafe",
+                "AI draft compact_model_input evidencePaths must be safe relative paths.",
+                field=field,
+            )
+        )
+
+
+def validate_ai_draft_selected_members(
+    selected_members: list[dict[str, Any]],
+    inventory_by_id: dict[str, dict[str, Any]],
+    allowed_paths: set[str],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> set[str]:
+    ids: set[str] = set()
+    if not selected_members:
+        errors.append(
+            issue(
+                "ai_draft_selected_members_missing",
+                "AI draft artifacts must include at least one selected member.",
+                field="aiDraft.selectedMembers",
+            )
+        )
+    for index, member in enumerate(selected_members):
+        field = f"aiDraft.selectedMembers[{index}]"
+        package_id = member.get("packageId")
+        if not isinstance(package_id, str) or not package_id:
+            errors.append(
+                issue(
+                    "ai_draft_selected_member_id_missing",
+                    "AI draft selected member must include packageId.",
+                    field=f"{field}.packageId",
+                )
+            )
+            continue
+        if package_id in ids:
+            errors.append(
+                issue(
+                    "ai_draft_selected_member_duplicate",
+                    f"Duplicate AI draft selected member packageId: {package_id}.",
+                    field=f"{field}.packageId",
+                )
+            )
+        ids.add(package_id)
+        inventory_record = inventory_by_id.get(package_id)
+        if inventory_by_id and inventory_record is None:
+            errors.append(
+                issue(
+                    "ai_draft_selected_member_not_in_inventory",
+                    "Selected member packageId is not present in workspace inventory: "
+                    f"{package_id}.",
+                    field=f"{field}.packageId",
+                )
+            )
+        validate_ai_draft_inventory_fields(
+            member,
+            inventory_record or {},
+            errors,
+            field,
+            package_id,
+        )
+        role = member.get("role")
+        if role not in AI_DRAFT_MEMBER_ROLES:
+            warnings.append(
+                issue(
+                    "ai_draft_selected_member_role_unknown",
+                    f"Selected member role is outside the documented taxonomy: {role}.",
+                    field=f"{field}.role",
+                )
+            )
+        validate_ai_draft_evidence_paths(
+            list_value(member.get("evidencePaths")),
+            allowed_paths,
+            errors,
+            warnings,
+            f"{field}.evidencePaths",
+        )
+    return ids
+
+
+def validate_ai_draft_excluded_packages(
+    excluded_packages: list[dict[str, Any]],
+    inventory_by_id: dict[str, dict[str, Any]],
+    selected_ids: set[str],
+    allowed_paths: set[str],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> set[str]:
+    ids: set[str] = set()
+    for index, excluded in enumerate(excluded_packages):
+        field = f"aiDraft.excludedPackages[{index}]"
+        package_id = excluded.get("packageId")
+        if not isinstance(package_id, str) or not package_id:
+            errors.append(
+                issue(
+                    "ai_draft_excluded_package_id_missing",
+                    "AI draft excluded package must include packageId.",
+                    field=f"{field}.packageId",
+                )
+            )
+            continue
+        if package_id in ids:
+            errors.append(
+                issue(
+                    "ai_draft_excluded_package_duplicate",
+                    f"Duplicate AI draft excluded package packageId: {package_id}.",
+                    field=f"{field}.packageId",
+                )
+            )
+        ids.add(package_id)
+        if package_id in selected_ids:
+            errors.append(
+                issue(
+                    "ai_draft_package_selected_and_excluded",
+                    f"Excluded package is also selected as a member: {package_id}.",
+                    field=f"{field}.packageId",
+                )
+            )
+        inventory_record = inventory_by_id.get(package_id)
+        if inventory_by_id and inventory_record is None:
+            errors.append(
+                issue(
+                    "ai_draft_excluded_package_not_in_inventory",
+                    f"Excluded packageId is not present in workspace inventory: {package_id}.",
+                    field=f"{field}.packageId",
+                )
+            )
+        validate_ai_draft_inventory_fields(
+            excluded,
+            inventory_record or {},
+            errors,
+            field,
+            package_id,
+        )
+        category = excluded.get("category")
+        if category not in AI_DRAFT_EXCLUSION_CATEGORIES:
+            warnings.append(
+                issue(
+                    "ai_draft_exclusion_category_unknown",
+                    f"Excluded package category is outside the documented taxonomy: {category}.",
+                    field=f"{field}.category",
+                )
+            )
+        validate_ai_draft_evidence_paths(
+            list_value(excluded.get("evidencePaths")),
+            allowed_paths,
+            errors,
+            warnings,
+            f"{field}.evidencePaths",
+        )
+    return ids
+
+
+def validate_ai_draft_inventory_fields(
+    record: dict[str, Any],
+    inventory_record: dict[str, Any],
+    errors: list[dict[str, Any]],
+    field: str,
+    package_id: str,
+) -> None:
+    if not inventory_record:
+        return
+    for key in ("sourceTargetPath", "manifestPath"):
+        value = record.get(key)
+        expected = inventory_record.get(key)
+        if isinstance(expected, str) and expected and value != expected:
+            errors.append(
+                issue(
+                    "ai_draft_inventory_field_mismatch",
+                    f"AI draft {key} for {package_id} must match workspace inventory.",
+                    field=f"{field}.{key}",
+                )
+            )
+
+
+def validate_ai_draft_relations(
+    relations: list[dict[str, Any]],
+    package_set_id: Any,
+    selected_ids: set[str],
+    allowed_paths: set[str],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> None:
+    ids: set[str] = set()
+    for index, relation in enumerate(relations):
+        field = f"aiDraft.relations[{index}]"
+        relation_id = relation.get("id")
+        relation_type = relation.get("type")
+        source_id = relation.get("sourcePackageId")
+        target_id = relation.get("targetPackageId")
+        if not isinstance(relation_id, str) or not relation_id:
+            errors.append(
+                issue(
+                    "ai_draft_relation_id_missing",
+                    "AI draft relation must include id.",
+                    field=f"{field}.id",
+                )
+            )
+        elif relation_id in ids:
+            errors.append(
+                issue(
+                    "ai_draft_relation_id_duplicate",
+                    f"Duplicate AI draft relation id: {relation_id}.",
+                    field=f"{field}.id",
+                )
+            )
+        if isinstance(relation_id, str):
+            ids.add(relation_id)
+        if relation_type != "contains":
+            errors.append(
+                issue(
+                    "ai_draft_relation_type_unsupported",
+                    "AI draft relations must use type contains.",
+                    field=f"{field}.type",
+                )
+            )
+        if source_id != package_set_id:
+            errors.append(
+                issue(
+                    "ai_draft_relation_source_not_package_set",
+                    "AI draft contains relation source must be packageSet.packageId.",
+                    field=f"{field}.sourcePackageId",
+                )
+            )
+        if target_id not in selected_ids:
+            errors.append(
+                issue(
+                    "ai_draft_relation_target_not_selected",
+                    f"AI draft relation target is not a selected member: {target_id}.",
+                    field=f"{field}.targetPackageId",
+                )
+            )
+        validate_ai_draft_evidence_paths(
+            list_value(relation.get("evidencePaths")),
+            allowed_paths,
+            errors,
+            warnings,
+            f"{field}.evidencePaths",
+        )
+
+
+def validate_ai_draft_evidence_paths(
+    paths: list[Any],
+    allowed_paths: set[str],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    field: str,
+) -> None:
+    if not paths:
+        warnings.append(
+            issue(
+                "ai_draft_evidence_paths_missing",
+                "AI draft proposal records should cite evidencePaths.",
+                field=field,
+            )
+        )
+        return
+    for index, path in enumerate(paths):
+        path_field = f"{field}[{index}]"
+        if not isinstance(path, str) or not path:
+            errors.append(
+                issue(
+                    "ai_draft_evidence_path_invalid",
+                    "AI draft evidencePaths must be non-empty strings.",
+                    field=path_field,
+                )
+            )
+        elif not is_safe_relative_path(path):
+            errors.append(
+                issue(
+                    "ai_draft_evidence_path_unsafe",
+                    "AI draft evidencePaths must be safe relative paths.",
+                    field=path_field,
+                )
+            )
+        elif allowed_paths and path not in allowed_paths:
+            errors.append(
+                issue(
+                    "ai_draft_evidence_path_not_allowlisted",
+                    "AI draft evidencePath is not present in compact_model_input allowlist.",
+                    field=path_field,
+                )
+            )
+
+
+def validate_ai_draft_diagnostics(
+    draft: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> None:
+    diagnostics = _list_of_mappings(draft.get("diagnostics"))
+    severity_counts = {"error": 0, "warning": 0}
+    for index, diagnostic in enumerate(diagnostics):
+        severity = diagnostic.get("severity")
+        if severity == "error":
+            severity_counts["error"] += 1
+            errors.append(
+                issue(
+                    "ai_draft_diagnostic_error",
+                    "AI draft producer diagnostics include an error.",
+                    field=f"aiDraft.diagnostics[{index}]",
+                )
+            )
+        elif severity == "warning":
+            severity_counts["warning"] += 1
+            warnings.append(
+                issue(
+                    "ai_draft_diagnostic_warning",
+                    "AI draft producer diagnostics include a warning.",
+                    field=f"aiDraft.diagnostics[{index}]",
+                )
+            )
+        elif severity is not None:
+            warnings.append(
+                issue(
+                    "ai_draft_diagnostic_severity_unknown",
+                    "AI draft diagnostic severity is not recognized.",
+                    field=f"aiDraft.diagnostics[{index}].severity",
+                )
+            )
+    summary = _mapping_value(draft.get("summary"))
+    if summary.get("warningCount") not in (None, severity_counts["warning"]):
+        warnings.append(
+            issue(
+                "ai_draft_summary_warning_count_mismatch",
+                "AI draft summary.warningCount does not match diagnostics.",
+                field="aiDraft.summary.warningCount",
+            )
+        )
+
+
+def load_ai_draft_workspace_inventory(
+    draft: dict[str, Any],
+    root: Path | None,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> dict[str, Any]:
+    inputs = _list_of_mappings(draft.get("inputs"))
+    inventory_input = next(
+        (item for item in inputs if item.get("role") == "workspace_inventory"),
+        None,
+    )
+    if inventory_input is None:
+        errors.append(
+            issue(
+                "ai_draft_workspace_inventory_missing",
+                "AI draft inputs must include workspace_inventory.",
+                field="aiDraft.inputs",
+            )
+        )
+        return {}
+    if root is None:
+        return {}
+    path = inventory_input.get("path")
+    if not isinstance(path, str) or not path:
+        return {}
+    path_scope = inventory_input.get("pathScope")
+    if path_scope == "local_path":
+        return {}
+    resolved = resolve_package_set_path(root, path)
+    if resolved is None:
+        errors.append(
+            issue(
+                "ai_draft_workspace_inventory_path_escape",
+                "AI draft workspace inventory path escapes the preflight root.",
+                field="aiDraft.inputs.workspace_inventory.path",
+            )
+        )
+        return {}
+    if not resolved.is_file():
+        errors.append(
+            issue(
+                "ai_draft_workspace_inventory_file_missing",
+                f"AI draft workspace inventory file is missing: {path}.",
+                field="aiDraft.inputs.workspace_inventory.path",
+            )
+        )
+        return {}
+    expected = digest_value(inventory_input.get("digest"))
+    if expected is not None:
+        actual = f"sha256:{sha256_file(resolved)}"
+        if expected != actual:
+            errors.append(
+                issue(
+                    "ai_draft_workspace_inventory_digest_mismatch",
+                    "AI draft workspace inventory digest does not match file bytes.",
+                    field="aiDraft.inputs.workspace_inventory.digest",
+                )
+            )
+    try:
+        loaded = json.loads(resolved.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(
+            issue(
+                "ai_draft_workspace_inventory_unreadable",
+                f"AI draft workspace inventory could not be read as JSON: {exc}.",
+                field="aiDraft.inputs.workspace_inventory.path",
+            )
+        )
+        return {}
+    if not isinstance(loaded, dict):
+        errors.append(
+            issue(
+                "ai_draft_workspace_inventory_invalid",
+                "AI draft workspace inventory must be a JSON object.",
+                field="aiDraft.inputs.workspace_inventory.path",
+            )
+        )
+        return {}
+    if not workspace_inventory_package_records(loaded):
+        warnings.append(
+            issue(
+                "ai_draft_workspace_inventory_packages_missing",
+                "AI draft workspace inventory did not expose package records for alignment.",
+                field="workspaceInventory.packages",
+            )
+        )
+    return loaded
+
+
+def ai_draft_allowed_evidence_paths(draft: dict[str, Any]) -> set[str]:
+    allowed: set[str] = set()
+    for item in _list_of_mappings(draft.get("inputs")):
+        if item.get("role") != "compact_model_input":
+            continue
+        for path in list_value(item.get("evidencePaths")):
+            if isinstance(path, str) and path:
+                allowed.add(path)
+    return allowed
+
+
+def workspace_inventory_package_records(inventory: dict[str, Any]) -> list[dict[str, Any]]:
+    return _list_of_mappings(inventory.get("packages"))
+
+
+def ai_draft_inventory_by_package_id(inventory: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    for package in workspace_inventory_package_records(inventory):
+        package_id = package.get("proposedSpecpmPackageId")
+        if isinstance(package_id, str) and package_id:
+            records[package_id] = {
+                "packageId": package_id,
+                "inventoryRole": package.get("role"),
+                "sourceTargetPath": package.get("sourceTargetPath"),
+                "manifestPath": package.get("manifestPath"),
+            }
+    return records
+
+
+def ai_draft_inventory_package_set_id(inventory_by_id: dict[str, dict[str, Any]]) -> str | None:
+    for package_id, record in inventory_by_id.items():
+        if record.get("inventoryRole") == "workspace":
+            return package_id
+    return next(iter(inventory_by_id), None)
+
+
 def package_set_handoff_member_ids(handoff: dict[str, Any]) -> set[str]:
     return {
         package_id
@@ -2102,6 +3143,21 @@ def _find_package_set_ai_enrichment_payload(payloads: list[Any]) -> dict[str, An
             or (
                 isinstance(payload.get("packageSet"), dict)
                 and isinstance(payload.get("proposals"), list)
+                and payload.get("authority") == "proposal_only_not_registry_acceptance"
+            )
+        ):
+            return payload
+    return None
+
+
+def _find_package_set_ai_draft_payload(payloads: list[Any]) -> dict[str, Any] | None:
+    for payload in payloads:
+        if isinstance(payload, dict) and (
+            payload.get("kind") == PACKAGE_SET_AI_DRAFT_KIND
+            or payload.get("apiVersion") == PACKAGE_SET_AI_DRAFT_API_VERSION
+            or (
+                isinstance(payload.get("packageSet"), dict)
+                and isinstance(payload.get("selectedMembers"), list)
                 and payload.get("authority") == "proposal_only_not_registry_acceptance"
             )
         ):

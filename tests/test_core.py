@@ -55,6 +55,7 @@ from specpm.index_submission import (
 )
 from specpm.producer_bundle import (
     materialize_package_set_handoff,
+    preflight_package_set_ai_draft,
     preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
 )
@@ -650,6 +651,170 @@ def write_ai_enrichment_fixture(root: Path) -> Path:
         ],
     }
     path = root / "package-set-ai-enrichment-proposal.json"
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def write_ai_draft_fixture(root: Path) -> Path:
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "packages/member").mkdir(parents=True)
+    (root / "fixtures/package").mkdir(parents=True)
+    (root / "package.json").write_text('{"name":"example-workspace"}\n', encoding="utf-8")
+    (root / "packages/member/package.json").write_text(
+        '{"name":"example-member"}\n', encoding="utf-8"
+    )
+    (root / "fixtures/package/package.json").write_text(
+        '{"name":"example-fixture"}\n', encoding="utf-8"
+    )
+    workspace_inventory = {
+        "apiVersion": "spec-harvester.workspace-inventory/v0",
+        "kind": "SpecHarvesterWorkspaceInventory",
+        "schemaVersion": 1,
+        "source": {"repository": "https://example.invalid/repo.git", "revision": "abc123"},
+        "packages": [
+            {
+                "proposedSpecpmPackageId": "example.workspace",
+                "role": "workspace",
+                "sourceTargetPath": ".",
+                "manifestPath": "package.json",
+            },
+            {
+                "proposedSpecpmPackageId": "example.member",
+                "role": "member_package",
+                "sourceTargetPath": "packages/member",
+                "manifestPath": "packages/member/package.json",
+            },
+            {
+                "proposedSpecpmPackageId": "example.fixture",
+                "role": "member_package",
+                "sourceTargetPath": "fixtures/package",
+                "manifestPath": "fixtures/package/package.json",
+            },
+        ],
+        "summary": {"packageCount": 3},
+    }
+    inventory_path = root / "workspace-inventory.json"
+    inventory_path.write_text(
+        json.dumps(workspace_inventory, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    evidence_paths = [
+        "workspace-inventory.json",
+        "package.json",
+        "packages/member/package.json",
+        "fixtures/package/package.json",
+    ]
+    payload = {
+        "apiVersion": "spec-harvester.package-set-ai-draft/v0",
+        "kind": "SpecHarvesterPackageSetAIDraftProposal",
+        "schemaVersion": 1,
+        "status": "completed",
+        "authority": "proposal_only_not_registry_acceptance",
+        "packageSet": {
+            "packageId": "example.workspace",
+            "summary": "Example workspace aggregate draft.",
+            "evidencePaths": ["workspace-inventory.json", "package.json"],
+            "confidence": "high",
+        },
+        "selectedMembers": [
+            {
+                "packageId": "example.member",
+                "role": "primary_package",
+                "inventoryRole": "member_package",
+                "sourceTargetPath": "packages/member",
+                "manifestPath": "packages/member/package.json",
+                "reason": "Published package selected for review.",
+                "evidencePaths": [
+                    "workspace-inventory.json",
+                    "packages/member/package.json",
+                ],
+                "confidence": "high",
+            }
+        ],
+        "excludedPackages": [
+            {
+                "packageId": "example.fixture",
+                "category": "fixture",
+                "inventoryRole": "member_package",
+                "sourceTargetPath": "fixtures/package",
+                "manifestPath": "fixtures/package/package.json",
+                "reason": "Fixture package is not a primary public package.",
+                "evidencePaths": [
+                    "workspace-inventory.json",
+                    "fixtures/package/package.json",
+                ],
+                "confidence": "high",
+            }
+        ],
+        "relations": [
+            {
+                "id": "example.workspace.contains.example.member",
+                "type": "contains",
+                "sourcePackageId": "example.workspace",
+                "targetPackageId": "example.member",
+                "evidencePaths": ["workspace-inventory.json"],
+                "confidence": "high",
+            }
+        ],
+        "provider": {
+            "kind": "external_model_output",
+            "name": "external",
+            "model": None,
+            "baseUrl": None,
+            "execution": "not_run_by_spec_harvester",
+        },
+        "providerReceipt": {
+            "source": "model-output.json",
+            "execution": "external",
+            "rawPromptPersisted": False,
+            "rawResponsePersisted": False,
+            "chainOfThoughtPersisted": False,
+        },
+        "inputs": [
+            {
+                "role": "workspace_inventory",
+                "path": "workspace-inventory.json",
+                "pathScope": "request_relative",
+                "digest": {
+                    "algorithm": "sha256",
+                    "value": sha256_path(inventory_path),
+                },
+            },
+            {
+                "role": "compact_model_input",
+                "packageCount": 3,
+                "evidencePathCount": len(evidence_paths),
+                "evidencePaths": evidence_paths,
+            },
+        ],
+        "diagnostics": [],
+        "summary": {
+            "selectedMemberCount": 1,
+            "excludedPackageCount": 1,
+            "relationCount": 1,
+            "errorCount": 0,
+            "warningCount": 0,
+        },
+        "privacy": {
+            "rawPromptsPersisted": False,
+            "rawModelResponsesPersisted": False,
+            "chainOfThoughtPersisted": False,
+            "secretsIncluded": False,
+        },
+        "trustBoundary": [
+            "AI draft output is a schema-bound package-set proposal only.",
+            "SpecPM remains the validation, acceptance, relation, and registry authority.",
+        ],
+        "nonGoals": [
+            "deterministic_spec_generation",
+            "specpm_acceptance",
+            "package_acceptance",
+            "relation_acceptance",
+            "registry_publication",
+            "model_authored_file_mutation",
+        ],
+    }
+    path = root / "package-set-ai-draft-proposal.json"
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
 
@@ -2725,7 +2890,7 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "specpm.specs.producer_bundle_fixture_policy" in manifest_capabilities
     assert "specpm.specs.ai_enrichment_consumer_policy" in manifest_capabilities
     assert "specpm.specs.ai_enrichment_preflight" in manifest_capabilities
-    assert "specpm.specs.ai_draft_preflight_plan" in manifest_capabilities
+    assert "specpm.specs.ai_draft_preflight" in manifest_capabilities
     assert "specpm.registry.acceptance_decision_record" in manifest_capabilities
     assert "specpm.specs.producer_receipt_contract" in boundary_capabilities
     assert "specpm.specs.producer_bundle_proposal_policy" in boundary_capabilities
@@ -2733,7 +2898,7 @@ def test_producer_receipt_contract_is_documented() -> None:
     assert "specpm.specs.producer_bundle_fixture_policy" in boundary_capabilities
     assert "specpm.specs.ai_enrichment_consumer_policy" in boundary_capabilities
     assert "specpm.specs.ai_enrichment_preflight" in boundary_capabilities
-    assert "specpm.specs.ai_draft_preflight_plan" in boundary_capabilities
+    assert "specpm.specs.ai_draft_preflight" in boundary_capabilities
     assert "specpm.registry.acceptance_decision_record" in boundary_capabilities
     assert "producer_receipts_not_generation_authority" in constraint_ids
     assert "specs/PRODUCER_RECEIPTS.md" in evidence_paths
@@ -2815,8 +2980,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "SpecHarvesterPackageSetAIEnrichmentProposal",
         "package-set-ai-draft-proposal.json",
         "SpecHarvesterPackageSetAIDraftProposal",
-        "AI Draft Preflight Plan",
+        "AI Draft Preflight Checklist",
         "specpm producer-bundle preflight-ai-draft",
+        "SpecPMPackageSetAIDraftPreflightReport",
         "inventory-derived `sourceTargetPath` values",
         "selected/excluded package consistency",
         "AI Enrichment Checklist",
@@ -2847,8 +3013,9 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "SpecHarvesterPackageSetAIEnrichmentProposal",
         "package-set-ai-draft-proposal.json",
         "SpecHarvesterPackageSetAIDraftProposal",
-        "AI Draft Preflight Plan",
+        "AI Draft Preflight Checklist",
         "specpm producer-bundle preflight-ai-draft",
+        "SpecPMPackageSetAIDraftPreflightReport",
         "inventory-derived `sourceTargetPath` values",
         "selected/excluded package consistency",
         "AI Enrichment Checklist",
@@ -2902,7 +3069,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "package-set-ai-enrichment-proposal.json",
         "proposal-only review evidence",
         "SpecHarvesterPackageSetAIDraftProposal",
-        "planned AI draft proposal preflight",
+        "AI draft preflight",
         "member selection, exclusions, and `contains` relations",
         "SpecHarvester-to-SpecPM package-set AI enrichment",
         "explicit maintainer package/relation selection",
@@ -2929,7 +3096,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "package-set-ai-enrichment-proposal.json",
         "proposal-only review evidence",
         "SpecHarvesterPackageSetAIDraftProposal",
-        "planned AI draft proposal preflight",
+        "AI draft preflight",
         "member selection, exclusions, and `contains` relations",
         "SpecHarvester-to-SpecPM package-set AI enrichment",
         "explicit maintainer package/relation selection",
@@ -2979,6 +3146,7 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "did not alter accepted-source selection",
         "Package-Set AI Draft Evidence",
         "spec-harvester.package-set-ai-draft/v0",
+        "SpecPMPackageSetAIDraftPreflightReport",
         "preflight-ai-draft",
         "must not create a handoff",
     ):
@@ -3528,6 +3696,145 @@ def test_ai_enrichment_preflight_rejects_handoff_package_mismatch(
     assert {
         "ai_enrichment_package_id_not_in_handoff",
         "ai_enrichment_handoff_package_set_mismatch",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_ai_draft_preflight_accepts_review_only_proposal_with_inventory(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    ai_draft = write_ai_draft_fixture(bundle_set)
+
+    report = preflight_package_set_ai_draft(ai_draft, root=bundle_set)
+
+    assert report["kind"] == "SpecPMPackageSetAIDraftPreflightReport"
+    assert report["status"] == "passed"
+    assert report["summary"] == {
+        "packageSetId": "example.workspace",
+        "selectedMemberCount": 1,
+        "excludedPackageCount": 1,
+        "relationCount": 1,
+        "inputCount": 2,
+        "allowedEvidencePathCount": 4,
+        "inventoryPackageCount": 3,
+        "providerReceiptCount": 1,
+        "errorCount": 0,
+        "warningCount": 0,
+    }
+    assert report["packageSetAIDraft"] == {
+        "id": "example.workspace",
+        "artifactStatus": "completed",
+        "authority": "proposal_only_not_registry_acceptance",
+        "selectedMemberCount": 1,
+        "excludedPackageCount": 1,
+        "relationCount": 1,
+        "providerReceiptCount": 1,
+        "inventoryAlignment": "verified",
+        "inventoryPackageCount": 3,
+    }
+
+
+def test_cli_ai_draft_preflight_emits_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    ai_draft = write_ai_draft_fixture(bundle_set)
+
+    exit_code = main(
+        [
+            "producer-bundle",
+            "preflight-ai-draft",
+            "--body",
+            str(ai_draft),
+            "--root",
+            str(bundle_set),
+            "--json",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["status"] == "passed"
+    assert report["packageSetAIDraft"]["inventoryAlignment"] == "verified"
+
+
+def test_ai_draft_preflight_warns_without_inventory_root(tmp_path: Path) -> None:
+    bundle_set = tmp_path / "package-set"
+    ai_draft = write_ai_draft_fixture(bundle_set)
+
+    report = preflight_package_set_ai_draft(ai_draft)
+
+    assert report["status"] == "warning"
+    assert report["packageSetAIDraft"]["inventoryAlignment"] == "not_provided"
+    assert "ai_draft_root_not_provided" in issue_codes(report["warnings"])
+
+
+def test_ai_draft_preflight_rejects_authority_privacy_and_acceptance(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    ai_draft = write_ai_draft_fixture(bundle_set)
+    payload = json.loads(ai_draft.read_text(encoding="utf-8"))
+    payload["authority"] = "accepted"
+    payload["privacy"]["rawPromptsPersisted"] = True
+    payload["providerReceipt"]["authority"] = "truth"
+    payload["registryAcceptanceDecision"] = {"status": "approved"}
+    ai_draft.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_draft(ai_draft, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert {
+        "ai_draft_authority_invalid",
+        "ai_draft_privacy_flag_invalid",
+        "ai_draft_provider_receipt_authority_invalid",
+        "ai_draft_acceptance_decision_not_allowed",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_ai_draft_preflight_rejects_inventory_drift_and_relation_type(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    ai_draft = write_ai_draft_fixture(bundle_set)
+    payload = json.loads(ai_draft.read_text(encoding="utf-8"))
+    payload["packageSet"]["packageId"] = "example.other"
+    payload["selectedMembers"][0]["sourceTargetPath"] = "packages/other"
+    payload["relations"][0]["type"] = "depends_on"
+    payload["relations"][0]["sourcePackageId"] = "example.other"
+    payload["relations"][0]["targetPackageId"] = "example.missing"
+    ai_draft.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_draft(ai_draft, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert {
+        "ai_draft_package_set_id_mismatch",
+        "ai_draft_inventory_field_mismatch",
+        "ai_draft_relation_type_unsupported",
+        "ai_draft_relation_target_not_selected",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_ai_draft_preflight_rejects_unallowlisted_evidence_and_digest_mismatch(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    ai_draft = write_ai_draft_fixture(bundle_set)
+    payload = json.loads(ai_draft.read_text(encoding="utf-8"))
+    payload["inputs"][0]["digest"]["value"] = "0" * 64
+    payload["selectedMembers"][0]["evidencePaths"] = ["../private-notes.md"]
+    payload["relations"][0]["evidencePaths"] = ["not-in-compact-input.json"]
+    ai_draft.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_draft(ai_draft, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert {
+        "ai_draft_workspace_inventory_digest_mismatch",
+        "ai_draft_input_digest_mismatch",
+        "ai_draft_evidence_path_unsafe",
+        "ai_draft_evidence_path_not_allowlisted",
     }.issubset(issue_codes(report["errors"]))
 
 

@@ -170,7 +170,7 @@ proposes aggregate membership, exclusions, and `contains` relations from a
 deterministic `workspace-inventory.json` request. It is not a package-set
 handoff, AI enrichment evidence, relation acceptance, or materialization input.
 
-The planned SpecPM consumer preflight for this artifact should verify:
+SpecPM can check this artifact with a consumer-side preflight:
 
 ```bash
 specpm producer-bundle preflight-ai-draft \
@@ -179,6 +179,7 @@ specpm producer-bundle preflight-ai-draft \
   --json
 ```
 
+- the report kind is `SpecPMPackageSetAIDraftPreflightReport`;
 - `apiVersion` is `spec-harvester.package-set-ai-draft/v0`;
 - `kind` is `SpecHarvesterPackageSetAIDraftProposal`;
 - `authority` is `proposal_only_not_registry_acceptance`;
@@ -197,8 +198,8 @@ specpm producer-bundle preflight-ai-draft \
 - provider receipts are provenance only and do not make model output
   authoritative.
 
-Passing AI draft preflight should remain review evidence only. It must not create
-a handoff, accept package members, accept relations, mutate generated specs,
+Passing AI draft preflight remains review evidence only. It must not create a
+handoff, accept package members, accept relations, mutate generated specs,
 materialize accepted sources, or publish registry metadata.
 
 ## Package-Set AI Enrichment Evidence

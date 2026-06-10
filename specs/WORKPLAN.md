@@ -2178,7 +2178,7 @@ Result:
 
 ### P66-T16. Package-Set AI Draft Proposal Consumer Preflight
 
-Status: Planned.
+Status: Completed.
 
 Motivation:
 
@@ -2186,13 +2186,13 @@ Motivation:
   return to the original `LLM + schema` idea: deterministic workspace inventory
   remains evidence, while the model proposes package-set membership, exclusions,
   and `contains` relations.
-- Without a SpecPM-side preflight plan, maintainers could confuse this early
+- Without a SpecPM-side preflight, maintainers could confuse this early
   structural proposal with package-set handoff evidence, AI enrichment evidence,
   accepted relations, or materialization input.
 
 Goal:
 
-- Add a future read-only `specpm producer-bundle preflight-ai-draft` command that
+- Add a read-only `specpm producer-bundle preflight-ai-draft` command that
   verifies `SpecHarvesterPackageSetAIDraftProposal` identity, proposal-only
   authority, privacy flags, provider receipts, workspace inventory input,
   package ID alignment, inventory-derived `sourceTargetPath` values, allowlisted
@@ -2212,6 +2212,22 @@ Expected result:
   package-set IDs, model-overridden paths, non-`contains` relation types,
   unsafe/unsupported evidence paths, privacy/authority failures, and missing or
   inconsistent workspace inventory links.
+
+Result:
+
+- `specpm producer-bundle preflight-ai-draft` emits
+  `SpecPMPackageSetAIDraftPreflightReport`.
+- The command checks artifact identity, proposal-only authority, privacy flags,
+  provider receipts, workspace inventory input/digest alignment, package-set ID
+  alignment, inventory-derived `sourceTargetPath` values, selected/excluded
+  package consistency, allowlisted evidence paths, and `contains` relation
+  endpoints.
+- Regression coverage rejects registry acceptance decisions, authority/privacy
+  drift, inventory/path drift, non-`contains` relation types, missing selected
+  targets, digest mismatches, unsafe paths, and unallowlisted evidence paths.
+- Passing reports remain review evidence only and do not create handoffs, accept
+  members or relations, mutate generated specs, materialize accepted sources, or
+  publish registry metadata.
 
 ## Post-MVP Tracks
 

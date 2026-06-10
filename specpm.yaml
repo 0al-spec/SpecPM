@@ -52,7 +52,7 @@ index:
       - specpm.specs.producer_bundle_fixture_policy
       - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.ai_enrichment_preflight
-      - specpm.specs.ai_draft_preflight_plan
+      - specpm.specs.ai_draft_preflight
       - specpm.specs.spec_quality_model
       - specpm.specs.package_sets
       - specpm.specs.package_relations
