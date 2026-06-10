@@ -339,9 +339,10 @@ including `contains`, `composes`, `refines`, `satisfies`, `supersedes`, and
 Package-set search semantics are documented in `specs/PACKAGE_SET_SEARCH.md`;
 exact lookup remains index-based and can return aggregate and scoped package
 results without requiring tree traversal.
-Package-set registry metadata shape is drafted in
-`specs/PACKAGE_SET_REGISTRY_METADATA.md` as additive `/v0` fields for future
-package-set subjects, members, relations, result scope, and relation context.
+Package-set registry metadata shape is documented in
+`specs/PACKAGE_SET_REGISTRY_METADATA.md` as additive `/v0` fields for
+package-set subjects, members, accepted relations, result scope, and relation
+context.
 SpecHarvester monorepo discovery handoff is documented in
 `specs/SPECHARVESTER_MONOREPO_DISCOVERY.md`; it defines workspace inventory,
 package-set and scoped member candidates, relation proposals, and review
