@@ -5,6 +5,17 @@ SpecPM is in public alpha as a package and registry substrate for SpecGraph.
 The canonical repository roadmap is `ROADMAP.md`. This DocC page summarizes the
 same direction for public documentation readers.
 
+## Maturity Snapshot
+
+SpecPM is in public alpha / MVP+ status. It is usable today as a read-only
+package and registry substrate with deployed `/v0` metadata, curated accepted
+artifacts, package-set relations, and the `xyflow` package-set reference flow.
+
+It is not yet a self-service package manager ecosystem. `specpm publish`,
+mutable remote registry APIs, authentication, dependency solving, runtime
+signature verification, and semantic package selection remain outside SpecPM
+core.
+
 ## Current Alpha Baseline
 
 SpecPM is usable today for:
@@ -21,6 +32,13 @@ SpecPM is usable today for:
 - local Docker registry integration at `http://localhost:8081`;
 - public alpha registry metadata at `https://0al-spec.github.io/SpecPM`;
 - GitHub Issue intake for package submissions, removals, and namespace claims;
+- registry-visible package-set metadata through `/v0/relations`,
+  `packageSet.members`, relation context, and package-set viewer panels;
+- maintainer-curated `xyflow` accepted artifacts with generated SpecHarvester
+  output preserved as producer evidence;
+- SpecHarvester producer-bundle intake policy, handoff preflight, AI enrichment
+  preflight, maintainer-selected materialization, and curated accepted artifact
+  lifecycle policy;
 - GitHub Actions runtime-major maintenance policy for official `actions/*`
   workflow references;
 - GitHub Actions permissions and secret-boundary policy for repository
@@ -93,6 +111,19 @@ This track defines collection entrypoints, relation vocabulary, registry
 metadata, SpecHarvester monorepo discovery handoff, and multi-package producer
 bundle intake without adding inheritance, package execution, dependency solving,
 or resolver authority to SpecPM core.
+
+The current public alpha reference flow is complete for `xyflow`: generated
+producer evidence, SpecPM handoff preflight, explicit maintainer package and
+relation selection, curated accepted artifacts, registry-visible relations, and
+viewer support are all in place.
+
+### Multi-Repository Quality Calibration
+
+Run SpecHarvester and SpecPM intake checks across several real repositories
+before expanding public intake automation. The goal is to measure summary,
+capability, evidence, interface, package-boundary, relation, and diagnostics
+quality across ecosystems while keeping automatic acceptance, semantic ranking,
+and self-service upload outside SpecPM core.
 
 ## Next Planned Sequence
 

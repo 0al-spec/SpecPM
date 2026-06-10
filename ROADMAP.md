@@ -1,12 +1,23 @@
 # SpecPM Roadmap
 
 Status: Public alpha roadmap
-Updated: 2026-06-06
+Updated: 2026-06-10
 
 SpecPM is the package substrate for SpecGraph. It packages, validates, indexes,
 inspects, preserves, and exposes reusable specification intent. It does not own
 graph reasoning, artifact generation, prompt execution, semantic intent
 resolution, or package content execution.
+
+## Maturity Snapshot
+
+SpecPM is in public alpha / MVP+ status. It is usable as a read-only package
+and registry substrate with a real deployed `/v0` registry, curated accepted
+artifacts, package-set metadata, and a visible `xyflow` reference flow.
+
+It is not yet a self-service package manager ecosystem. The project
+intentionally does not provide `specpm publish`, mutable remote registry APIs,
+authentication, dependency solving, runtime signature verification,
+or semantic package selection inside SpecPM core.
 
 ## Current Alpha Baseline
 
@@ -29,8 +40,14 @@ Implemented surfaces:
 - GitHub Pages public alpha registry at `https://0al-spec.github.io/SpecPM`;
 - GitHub Issue intake for public package submissions, removals, and namespace
   claims;
-- public alpha package set with `specpm.core`, `specnode.core`, and the example
-  email tools package;
+- public alpha package set with `specpm.core`, `specnode.core`, the example
+  email tools package, the public repository metadata contract, and the
+  maintainer-curated `xyflow` package-set reference;
+- registry-visible package-set metadata through `/v0/relations`,
+  `packageSet.members`, relation context, and package-set viewer panels;
+- SpecHarvester producer-bundle intake policy, handoff preflight, AI enrichment
+  preflight, maintainer-selected materialization, and curated accepted artifact
+  lifecycle policy;
 - first abstract intent-level interface contract for public repository metadata;
 - GitHub Actions runtime-major maintenance policy for official `actions/*`
   workflow references;
@@ -223,6 +240,11 @@ Goal: let SpecPM and producer tools represent multi-package repositories as
 reviewable package sets plus scoped member packages without forcing discovery
 through a package tree.
 
+Status: complete for the current public alpha reference flow. `xyflow` now
+demonstrates generated producer evidence, SpecPM handoff preflight, explicit
+maintainer package/relation selection, curated accepted artifacts, registry
+visible package-set relations, and viewer support.
+
 Tasks:
 
 - define `SpecPackageSet` or an equivalent collection profile for repository,
@@ -265,6 +287,33 @@ Success criteria:
   consumer-side preflight without giving producer output registry authority;
 - package relations improve navigation and evidence review without becoming a
   hidden semantic resolver.
+
+## Milestone 9: Multi-Repository Quality Calibration
+
+Goal: measure whether harvested and curated package specs remain useful beyond
+the `xyflow` reference case before adding broader public intake automation.
+
+Tasks:
+
+- run SpecHarvester and SpecPM intake checks across 5-10 real repositories from
+  different ecosystems and repository shapes;
+- record deterministic quality metrics for summaries, capabilities, evidence
+  coverage, interface claims, package boundaries, relation proposals, and
+  diagnostics;
+- separate producer defects from SpecPM intake policy gaps and maintainer
+  curation decisions;
+- update the spec quality model and curated artifact lifecycle only when repeated
+  repository runs show the same failure mode;
+- keep semantic ranking, automatic acceptance, and public self-service upload
+  outside this milestone.
+
+Success criteria:
+
+- maintainers can compare generated candidates with curated accepted artifacts
+  using a repeatable rubric;
+- common producer failure modes are visible before public-scale intake;
+- SpecPM's registry authority boundary remains explicit even when producer
+  quality improves.
 
 ## Explicit Non-Goals For SpecPM Core
 
