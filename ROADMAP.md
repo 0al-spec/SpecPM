@@ -448,7 +448,7 @@ accepting `xyflow.workspace` plus scoped `xyflow.react`, `xyflow.svelte`, and
 maintainer acceptance decision, not a consequence of green producer or SpecPM
 preflight checks.
 
-The `xyflow` package-set accepted-source materialization is now completed from a
+The `xyflow` package-set accepted-source materialization is now completed via a
 fresh real checkout run using current SpecHarvester and SpecPM `main`. The
 selected accepted-source inputs are maintainer-curated `xyflow.workspace`,
 `xyflow.react`, `xyflow.svelte`, and `xyflow.system` artifacts, with three
