@@ -109,6 +109,19 @@ For a package-set such as `xyflow.workspace`, maintainers must explicitly
 select both member packages and relation IDs before `/v0` can publish
 `contains` relation metadata.
 
+## 7. Refresh Decision Records
+
+A fresh producer run can be valuable even when it does not require a registry
+update. Maintainers should record that outcome as a
+`SpecPMGeneratedCandidateRefreshDecision` with `status: no_update_required`,
+`updateNeeded: false`, and `reason: no_contract_delta` when the generated
+contract bytes, accepted curated claims, source revision, package relations, and
+evidence support have no meaningful accepted contract delta.
+
+This avoids treating producer receipt churn, local run paths, newly emitted
+advisory quality reports, or equivalent generated candidates as reasons to
+churn accepted registry metadata.
+
 ## Non-Goals
 
 This lifecycle does not add automatic package acceptance, producer-owned
@@ -119,6 +132,7 @@ dependency solving, relation inheritance, or request-time registry mutation.
 
 - `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`
 - `specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`
+- `specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md`
 - `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`
 - `public-index/curated/xyflow.workspace/0.1.0/specpm.yaml`
 - `public-index/generated/xyflow.workspace/0.1.0/producer-receipt.json`

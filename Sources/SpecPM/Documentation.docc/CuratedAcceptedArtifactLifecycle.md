@@ -74,8 +74,23 @@ when maintainers add explicit entries to
 Accepting a package does not automatically accept its proposed relations, and
 accepting a relation does not grant trust, lifecycle, or capability inheritance.
 
+## Refresh Decision Records
+
+A fresh producer run can result in a no-op registry decision. Record that as a
+`SpecPMGeneratedCandidateRefreshDecision` with `status: no_update_required`,
+`updateNeeded: false`, and `reason: no_contract_delta` when generated contract
+bytes, curated accepted claims, source revision, relations, and evidence support
+have no meaningful accepted contract delta.
+
+Producer receipt churn, local run paths, newly emitted advisory quality reports,
+or equivalent generated candidates are not reasons to churn accepted registry
+metadata.
+
+Do not treat producer receipt churn as an accepted contract delta by itself.
+
 ## References
 
 - `specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md`
+- <doc:GeneratedCandidateRefreshDecisionPolicy>
 - <doc:MultiPackageProducerIntake>
 - <doc:XyflowPackageSetReference>

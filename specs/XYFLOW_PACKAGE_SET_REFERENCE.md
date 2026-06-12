@@ -301,3 +301,11 @@ metadata, new harvests update curated artifacts only through review diffs,
 evidence chains are preserved through `foreignArtifacts`, `preview_only`
 removal is a maintainer acceptance act, and relation acceptance remains
 separate from package acceptance.
+
+A later fresh `xyflow` producer run can be recorded as
+`SpecPMGeneratedCandidateRefreshDecision` with `updateNeeded: false` and
+`reason: no_contract_delta` when it uses the same source revision, reproduces
+the same contract-bearing generated files, and does not improve the curated
+accepted artifacts. In that case, producer receipt churn or a newly emitted
+quality report is useful review evidence, not a reason to mutate
+`public-index/generated/xyflow.*` or churn the accepted registry metadata.

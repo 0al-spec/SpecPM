@@ -525,6 +525,12 @@ maintainer-authored accepted metadata, new harvests update curated artifacts
 only through review diffs, `foreignArtifacts` preserve evidence chains,
 removing `preview_only` is a maintainer acceptance act, and accepted relations
 remain explicit `relations[]` manifest entries.
+Generated candidate refresh decisions are now documented as explicit review
+records: a fresh run can end with `SpecPMGeneratedCandidateRefreshDecision`
+`status: no_update_required`, `updateNeeded: false`, and
+`reason: no_contract_delta` when it reproduces the same contract-bearing
+generated files and the curated accepted artifact remains the stronger registry
+source.
 SpecPM now has a consumer-side `preflight-ai-draft` gate for
 `SpecHarvesterPackageSetAIDraftProposal`. It verifies AI-proposed member
 selection, exclusions, and `contains` relations against deterministic workspace

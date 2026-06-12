@@ -95,10 +95,19 @@ are preserved through `foreignArtifacts`, `preview_only` removal is a
 maintainer acceptance act, and relation acceptance remains separate from
 package acceptance.
 
+A later fresh `xyflow` run can be recorded as
+`SpecPMGeneratedCandidateRefreshDecision` with `updateNeeded: false` and
+`reason: no_contract_delta` when it reproduces the same contract-bearing
+generated files and does not improve the curated accepted artifacts.
+Producer receipt churn or a newly emitted quality report is review evidence,
+not a reason to mutate `public-index/generated/xyflow.*` or churn accepted
+registry metadata.
+
 ## References
 
 - `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`
 - `tests/fixtures/package_sets/xyflow-reference/`
+- <doc:GeneratedCandidateRefreshDecisionPolicy>
 - <doc:PackageSets>
 - <doc:PackageSetSearch>
 - <doc:PackageSetRegistryMetadata>
