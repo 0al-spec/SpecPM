@@ -128,6 +128,10 @@ specpm producer-bundle preflight-ai-draft \
   --body <package-set-ai-draft-proposal.json> \
   [--root <package-set-bundle-root>] \
   [--json]
+specpm producer-bundle preflight-refresh-decision \
+  --body <generated-candidate-refresh-decision.json> \
+  [--root <repository-root>] \
+  [--json]
 specpm producer-bundle materialize-package-set \
   --handoff <package-set-handoff-proposal.json> \
   --root <package-set-bundle-root> \
@@ -173,6 +177,16 @@ provenance, workspace inventory digest/alignment when `--root` is provided,
 selected/excluded package consistency, allowlisted evidence paths, and
 `contains` relation endpoints. It rejects acceptance-decision fields and does
 not create handoffs, materialize packages, or publish registry metadata.
+
+`preflight-refresh-decision` checks
+`SpecPMGeneratedCandidateRefreshDecision` records. It verifies the shared
+`apiVersion: specpm.decisions/v0` envelope, refresh decision status/update
+consistency, no-op `no_contract_delta` semantics, authority flags, package IDs,
+safe artifact paths, and generated contract-file SHA-256 digests when `--root`
+is provided. The report kind is
+`SpecPMGeneratedCandidateRefreshDecisionPreflightReport`. A passing report is
+review evidence only and does not mutate accepted packages, generated
+candidates, relations, or registry metadata.
 
 `materialize-package-set` consumes the same package-set handoff only after
 maintainers pass explicit `--package` and optional `--relation` selections. In

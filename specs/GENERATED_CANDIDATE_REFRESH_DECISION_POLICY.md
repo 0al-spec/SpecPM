@@ -221,6 +221,28 @@ records all four `xyflow` package-set members, cites the current curated and
 generated artifact paths, and snapshots the generated contract-file digests
 used to justify `updateNeeded: false`.
 
+## Consumer-Side Preflight
+
+SpecPM can verify a generated candidate refresh decision before maintainers use
+it as review evidence:
+
+```bash
+specpm producer-bundle preflight-refresh-decision \
+  --body tests/fixtures/refresh_decisions/xyflow-no-update.example.json \
+  --root . \
+  --json
+```
+
+The command emits `SpecPMGeneratedCandidateRefreshDecisionPreflightReport`. It
+checks the shared `apiVersion: specpm.decisions/v0` envelope, refresh decision
+status/update consistency, `no_contract_delta` no-op semantics, authority flags,
+package IDs, safe artifact paths, and generated contract-file SHA-256 digests
+when `--root` is provided.
+
+Passing preflight means the refresh decision record is internally consistent
+review evidence. It does not accept a package, update `public-index/curated`,
+mutate `public-index/generated`, accept relations, or publish registry metadata.
+
 ## Non-Goals
 
 This policy does not add automatic registry updates, producer-owned

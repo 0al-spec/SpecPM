@@ -58,6 +58,7 @@ from specpm.producer_bundle import (
     preflight_package_set_ai_draft,
     preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
+    preflight_refresh_decision,
 )
 from specpm.public_index import (
     generate_public_index,
@@ -3158,6 +3159,11 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "SpecPMPackageSetAIDraftPreflightReport",
         "preflight-ai-draft",
         "must not create a handoff",
+        "specpm producer-bundle preflight-refresh-decision",
+        "SpecPMGeneratedCandidateRefreshDecisionPreflightReport",
+        "status/update consistency",
+        "generated contract-file digests",
+        "does not perform registry acceptance or mutation",
     ):
         assert required_text in proposal_policy_flat
         assert required_text in docc_proposal_policy_flat
@@ -3169,6 +3175,10 @@ def test_multi_package_producer_intake_checklist_is_documented() -> None:
         "--relation <relation-id>",
         "--manifest-candidate-output",
         "fails closed",
+        "preflight-refresh-decision",
+        "SpecPMGeneratedCandidateRefreshDecisionPreflightReport",
+        "generated contract-file SHA-256 digests",
+        "does not mutate accepted packages",
     ):
         assert required_text in docc_cli_reference
 
@@ -3336,6 +3346,11 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "Receipt churn, local run paths, new quality reports",
         "`public-index/generated/<package_id>/<version>` is producer evidence",
         "fresh real `xyflow` package-set run",
+        "specpm producer-bundle preflight-refresh-decision",
+        "SpecPMGeneratedCandidateRefreshDecisionPreflightReport",
+        "status/update consistency",
+        "generated contract-file SHA-256 digests",
+        "It does not accept a package",
     ):
         assert required_text in policy_flat
 
@@ -3347,6 +3362,11 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "`updateNeeded: false`",
         "`reason: no_contract_delta`",
         "producer receipt churn plus an additional advisory quality report",
+        "specpm producer-bundle preflight-refresh-decision",
+        "SpecPMGeneratedCandidateRefreshDecisionPreflightReport",
+        "status/update consistency",
+        "generated contract-file SHA-256 digests",
+        "It does not accept a package",
     ):
         assert required_text in docc_policy_flat
 
@@ -3400,11 +3420,17 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "`updateNeeded: false`",
         "`reason: no_contract_delta`",
         "Receipt-only churn, local run paths, and advisory reports",
+        "P66-T19. Generated Candidate Refresh Decision Preflight",
+        "`specpm producer-bundle preflight-refresh-decision`",
+        "`SpecPMGeneratedCandidateRefreshDecisionPreflightReport`",
+        "Missing `--root` warns rather than fails",
     ):
         assert required_text in workplan_flat
 
     assert "specpm.registry.generated_candidate_refresh_decision_policy" in manifest
+    assert "specpm.registry.generated_candidate_refresh_decision_preflight" in manifest
     assert "specpm.registry.generated_candidate_refresh_decision_policy" in self_spec
+    assert "specpm.registry.generated_candidate_refresh_decision_preflight" in self_spec
     assert "specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md" in self_spec
     assert (
         "Sources/SpecPM/Documentation.docc/GeneratedCandidateRefreshDecisionPolicy.md" in self_spec
@@ -3548,6 +3574,114 @@ def test_xyflow_refresh_decision_fixture_matches_policy() -> None:
     assert "tests/fixtures/refresh_decisions/xyflow-no-update.example.json" in docc_xyflow_reference
     assert "tests/fixtures/refresh_decisions/xyflow-no-update.example.json" in self_spec
     assert "generated_candidate_refresh_decision_fixture" in self_spec
+
+
+def test_refresh_decision_preflight_accepts_xyflow_fixture() -> None:
+    report = preflight_refresh_decision(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE, root=ROOT)
+
+    assert report["kind"] == "SpecPMGeneratedCandidateRefreshDecisionPreflightReport"
+    assert report["status"] == "passed"
+    assert report["summary"] == {
+        "packageId": "xyflow.workspace",
+        "packageCount": 4,
+        "generatedContractFileCount": 8,
+        "digestVerifiedCount": 8,
+        "errorCount": 0,
+        "warningCount": 0,
+    }
+    assert report["refreshDecision"] == {
+        "decisionId": ("specpm-refresh-decision-2026-06-12-xyflow-package-set-0.1.0-no-update"),
+        "packageId": "xyflow.workspace",
+        "version": "0.1.0",
+        "status": "no_update_required",
+        "updateNeeded": False,
+        "reason": "no_contract_delta",
+        "packageCount": 4,
+        "generatedContractFileCount": 8,
+        "digestVerifiedCount": 8,
+    }
+
+
+def test_cli_refresh_decision_preflight_emits_json(capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = main(
+        [
+            "producer-bundle",
+            "preflight-refresh-decision",
+            "--body",
+            str(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE),
+            "--root",
+            str(ROOT),
+            "--json",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["status"] == "passed"
+    assert report["summary"]["digestVerifiedCount"] == 8
+
+
+def test_refresh_decision_preflight_warns_without_root() -> None:
+    report = preflight_refresh_decision(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE)
+
+    assert report["status"] == "warning"
+    assert report["summary"]["digestVerifiedCount"] == 0
+    assert {
+        "refresh_decision_root_not_provided",
+        "refresh_decision_contract_file_digests_not_verified",
+    }.issubset(issue_codes(report["warnings"]))
+
+
+def test_refresh_decision_preflight_rejects_authority_digest_and_no_update_drift(
+    tmp_path: Path,
+) -> None:
+    body = tmp_path / "refresh-decision.json"
+    payload = json.loads(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE.read_text(encoding="utf-8"))
+    payload["decision"]["updateNeeded"] = True
+    payload["comparison"]["generatedContractChanged"] = True
+    payload["authority"]["noRegistryMutation"] = False
+    payload["generatedContractFiles"][0]["sha256"] = "0" * 64
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_refresh_decision(body, root=ROOT)
+
+    assert report["status"] == "failed"
+    assert {
+        "refresh_decision_no_update_flag_invalid",
+        "refresh_decision_no_update_delta_flag_invalid",
+        "refresh_decision_registry_mutation_flag_invalid",
+        "refresh_decision_contract_file_digest_mismatch",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_refresh_decision_preflight_rejects_contract_file_symlink_escape(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "checkout"
+    outside = tmp_path / "outside"
+    symlink_parent = root / "public-index/generated/xyflow.workspace/0.1.0"
+    outside.mkdir(parents=True)
+    symlink_parent.parent.mkdir(parents=True)
+    contract_file = outside / "specpm.yaml"
+    contract_file.write_text(
+        "schemaVersion: 1\nmetadata:\n  id: xyflow.workspace\n", encoding="utf-8"
+    )
+    symlink_parent.symlink_to(outside, target_is_directory=True)
+
+    body = tmp_path / "refresh-decision.json"
+    payload = json.loads(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE.read_text(encoding="utf-8"))
+    payload["generatedContractFiles"] = [
+        {
+            "path": "public-index/generated/xyflow.workspace/0.1.0/specpm.yaml",
+            "sha256": sha256_path(contract_file),
+        }
+    ]
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_refresh_decision(body, root=root)
+
+    assert report["status"] == "failed"
+    assert "refresh_decision_contract_file_path_unresolved" in issue_codes(report["errors"])
 
 
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:

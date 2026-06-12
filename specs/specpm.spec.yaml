@@ -69,6 +69,7 @@ scope:
     - Document multi-package producer bundle intake for package-set proposals, partial acceptance, relation review, and accepted-source effects.
     - Document the xyflow package-set reference scenario with non-normative package-set, relation, discovery, and intent search fixtures.
     - Document generated candidate refresh decisions for no-op and update-needed outcomes when fresh producer runs are compared with maintainer-curated accepted artifacts.
+    - Preflight generated candidate refresh decision records for identity, no-op semantics, authority boundaries, safe paths, and generated contract-file digests.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -171,6 +172,9 @@ provides:
     - id: specpm.registry.generated_candidate_refresh_decision_policy
       role: secondary
       summary: Document machine-readable generated candidate refresh decisions, no-op `no_contract_delta` outcomes, update triggers, and generated candidate immutability.
+    - id: specpm.registry.generated_candidate_refresh_decision_preflight
+      role: secondary
+      summary: Preflight SpecPMGeneratedCandidateRefreshDecision records for decision shape, no-op consistency, authority boundaries, safe paths, and generated contract-file digests.
     - id: specpm.registry.package_set_relation_metadata
       role: secondary
       summary: Publish maintainer-reviewed package-set relation metadata through additive `/v0` payloads and the static viewer without inferring relations from producer output.
@@ -455,9 +459,13 @@ interfaces:
             - text/plain
     - id: cli_producer-bundle
       kind: cli
-      summary: specpm producer-bundle preflight and materialize-package-set for consumer-side review of producer evidence and maintainer-selected package-set accepted-source artifacts.
+      summary: specpm producer-bundle preflight, preflight-refresh-decision, and materialize-package-set for consumer-side review of producer evidence, refresh decisions, and maintainer-selected package-set accepted-source artifacts.
       outputs:
         - name: producer_bundle_preflight_report
+          mediaTypes:
+            - application/json
+            - text/plain
+        - name: refresh_decision_preflight_report
           mediaTypes:
             - application/json
             - text/plain
@@ -725,6 +733,7 @@ evidence:
       - specpm.registry.index_submission_flow
       - specpm.registry.accepted_manifest_pr_helper
       - specpm.registry.public_index_accepted_manifest
+      - specpm.registry.generated_candidate_refresh_decision_preflight
   - id: add_specpackages_issue_template
     kind: documentation
     path: .github/ISSUE_TEMPLATE/add-specpackages.yml
@@ -828,6 +837,7 @@ evidence:
       - specpm.registry.package_set_materialization_helper
       - specpm.specs.ai_enrichment_preflight
       - specpm.specs.ai_draft_preflight
+      - specpm.registry.generated_candidate_refresh_decision_preflight
   - id: index_submission_validator_source
     kind: source
     path: src/specpm/index_submission.py
@@ -999,6 +1009,7 @@ evidence:
       - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.ai_enrichment_preflight
       - specpm.specs.ai_draft_preflight
+      - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.package_set_materialization_helper
       - specpm.specs.producer_receipt_contract
       - producer_receipts_not_generation_authority
@@ -1151,6 +1162,7 @@ evidence:
     path: specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md
     supports:
       - specpm.registry.generated_candidate_refresh_decision_policy
+      - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake
@@ -1286,6 +1298,7 @@ evidence:
       - specpm.registry.intent_search
       - specpm.registry.observed_intent_catalog
       - specpm.specs.ai_draft_preflight
+      - specpm.registry.generated_candidate_refresh_decision_preflight
   - id: core_source
     kind: source
     path: src/specpm/core.py
@@ -1451,6 +1464,7 @@ evidence:
       - specpm.specs.ai_enrichment_consumer_policy
       - specpm.specs.ai_enrichment_preflight
       - specpm.specs.ai_draft_preflight
+      - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.specs.producer_receipt_contract
   - id: docc_producer_bundle_fixture_policy
     kind: documentation
@@ -1570,6 +1584,7 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.registry.generated_candidate_refresh_decision_policy
+      - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake
