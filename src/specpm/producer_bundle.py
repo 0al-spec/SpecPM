@@ -34,6 +34,13 @@ REFRESH_DECISION_PREFLIGHT_KIND = "SpecPMGeneratedCandidateRefreshDecisionPrefli
 REFRESH_DECISION_PREFLIGHT_SCHEMA_VERSION = 1
 REFRESH_DECISION_PREPARE_KIND = "SpecPMGeneratedCandidateRefreshDecisionPrepareReport"
 REFRESH_DECISION_PREPARE_SCHEMA_VERSION = 1
+BASELINE_SUBMISSION_HANDOFF_API_VERSION = "spec-harvester.baseline-submission-handoff/v0"
+BASELINE_SUBMISSION_HANDOFF_KIND = "SpecHarvesterBaselineSubmissionHandoff"
+BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_KIND = "SpecPMBaselineSubmissionHandoffPreflightReport"
+BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_SCHEMA_VERSION = 1
+FRESH_CANDIDATE_REFRESH_RUN_API_VERSION = "spec-harvester.fresh-candidate-refresh-run/v0"
+FRESH_CANDIDATE_REFRESH_RUN_KIND = "SpecHarvesterFreshCandidateRefreshRun"
+MISSING_BASELINE_DIAGNOSTIC = "refresh_decision_prepare_current_contract_files_missing"
 
 REQUIRED_PRODUCER_EVIDENCE_ROLES = {
     "accepted_source_bundle",
@@ -96,6 +103,20 @@ REFRESH_CONTRACT_DELTA_FLAGS = {
     "capabilitiesChanged",
     "relationsChanged",
     "evidenceChanged",
+}
+VALID_BASELINE_HANDOFF_STATUSES = {"first_submission_required", "baseline_review_required"}
+REQUIRED_BASELINE_HANDOFF_ACTIONS = {
+    "first_submission_review",
+    "seed_baseline",
+    "reject_or_request_regeneration",
+}
+REQUIRED_BASELINE_HANDOFF_NON_GOALS = {
+    "specpm_acceptance",
+    "registry_publication",
+    "baseline_mutation",
+    "refresh_decision_emission",
+    "source_repository_execution",
+    "package_manager_execution",
 }
 AI_ENRICHMENT_REQUIRED_PRIVACY_FLAGS = {
     "rawPromptsPersisted",
@@ -727,6 +748,90 @@ def preflight_refresh_decision(
     )
 
 
+def preflight_baseline_submission_handoff(
+    body_path: Path,
+    *,
+    root: Path | None = None,
+) -> dict[str, Any]:
+    try:
+        body = body_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        errors = [
+            issue(
+                "baseline_handoff_body_unreadable",
+                f"Baseline submission handoff could not be read: {exc}.",
+                field="body",
+            )
+        ]
+        return baseline_submission_handoff_report(
+            body_path,
+            root,
+            None,
+            errors,
+            [],
+            "not_loaded",
+            0,
+        )
+
+    payloads = _extract_json_payloads(body)
+    handoff = _find_baseline_submission_handoff_payload(payloads)
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    input_alignment = "not_provided"
+    digest_verified_count = 0
+    if handoff is None:
+        errors.append(
+            issue(
+                "baseline_handoff_payload_missing",
+                "Preflight requires a SpecHarvesterBaselineSubmissionHandoff JSON payload.",
+                field="body",
+            )
+        )
+        return baseline_submission_handoff_report(
+            body_path,
+            root,
+            None,
+            errors,
+            warnings,
+            "not_loaded",
+            0,
+        )
+
+    if root is None:
+        warnings.append(
+            issue(
+                "baseline_handoff_root_not_provided",
+                "Linked fresh-run and SpecPM prepare-report digests were not verified.",
+                field="root",
+            )
+        )
+
+    digest_verified_count = validate_baseline_submission_handoff(
+        handoff,
+        errors,
+        warnings,
+        root,
+    )
+    if root is None:
+        input_alignment = "not_verified"
+    elif any(
+        isinstance(error.get("code"), str) and error["code"].startswith("baseline_handoff_input_")
+        for error in errors
+    ):
+        input_alignment = "failed"
+    else:
+        input_alignment = "verified"
+    return baseline_submission_handoff_report(
+        body_path,
+        root,
+        handoff,
+        errors,
+        warnings,
+        input_alignment,
+        digest_verified_count,
+    )
+
+
 def prepare_refresh_decision(
     *,
     root: Path,
@@ -1105,6 +1210,62 @@ def refresh_decision_report(
             "packageId": subject.get("packageId"),
             "packageCount": len(package_ids),
             "generatedContractFileCount": len(generated_contract_files),
+            "digestVerifiedCount": digest_verified_count,
+            "errorCount": len(errors),
+            "warningCount": len(warnings),
+        },
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def baseline_submission_handoff_report(
+    body_path: Path,
+    root: Path | None,
+    handoff: dict[str, Any] | None,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    input_alignment: str,
+    digest_verified_count: int,
+) -> dict[str, Any]:
+    package_set = _mapping_value(handoff.get("packageSet")) if handoff else {}
+    prepare_report = _mapping_value(handoff.get("specpmPrepareReport")) if handoff else {}
+    authority = _mapping_value(handoff.get("authority")) if handoff else {}
+    member_ids = string_list(package_set.get("memberPackageIds"))
+    status = "failed" if errors else ("warning" if warnings else "passed")
+    return {
+        "kind": BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_KIND,
+        "schemaVersion": BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_SCHEMA_VERSION,
+        "status": status,
+        "body": str(body_path),
+        "root": str(root) if root else None,
+        "baselineSubmissionHandoff": (
+            {
+                "packageSetId": package_set.get("id"),
+                "artifactStatus": handoff.get("status"),
+                "reason": handoff.get("reason"),
+                "candidateCount": package_set.get("candidateCount"),
+                "memberPackageCount": len(member_ids),
+                "contractFileCount": package_set.get("contractFileCount"),
+                "missingBaselineDiagnosticCount": prepare_report.get(
+                    "missingBaselineDiagnosticCount"
+                ),
+                "inputAlignment": input_alignment,
+                "digestVerifiedCount": digest_verified_count,
+                "notRefreshDecision": authority.get("notRefreshDecision"),
+                "noRegistryMutation": authority.get("noRegistryMutation"),
+            }
+            if handoff
+            else None
+        ),
+        "summary": {
+            "packageSetId": package_set.get("id"),
+            "candidateCount": package_set.get("candidateCount") if handoff else 0,
+            "memberPackageCount": len(member_ids),
+            "contractFileCount": package_set.get("contractFileCount") if handoff else 0,
+            "missingBaselineDiagnosticCount": prepare_report.get(
+                "missingBaselineDiagnosticCount", 0
+            ),
             "digestVerifiedCount": digest_verified_count,
             "errorCount": len(errors),
             "warningCount": len(warnings),
@@ -1562,6 +1723,633 @@ def validate_refresh_contract_file_digest(
         )
         return False
     return True
+
+
+def validate_baseline_submission_handoff(
+    handoff: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    root: Path | None,
+) -> int:
+    if handoff.get("apiVersion") != BASELINE_SUBMISSION_HANDOFF_API_VERSION:
+        errors.append(
+            issue(
+                "baseline_handoff_api_version_invalid",
+                f"Baseline handoff apiVersion must be {BASELINE_SUBMISSION_HANDOFF_API_VERSION}.",
+                field="apiVersion",
+            )
+        )
+    if handoff.get("kind") != BASELINE_SUBMISSION_HANDOFF_KIND:
+        errors.append(
+            issue(
+                "baseline_handoff_kind_invalid",
+                f"Baseline handoff kind must be {BASELINE_SUBMISSION_HANDOFF_KIND}.",
+                field="kind",
+            )
+        )
+    if handoff.get("schemaVersion") != 1:
+        errors.append(
+            issue(
+                "baseline_handoff_schema_version_invalid",
+                "Baseline handoff schemaVersion must be 1.",
+                field="schemaVersion",
+            )
+        )
+
+    status = handoff.get("status")
+    reason = handoff.get("reason")
+    if status not in VALID_BASELINE_HANDOFF_STATUSES:
+        errors.append(
+            issue(
+                "baseline_handoff_status_invalid",
+                "Baseline handoff status must be first_submission_required or "
+                "baseline_review_required.",
+                field="status",
+            )
+        )
+    if status == "first_submission_required" and reason != "missing_current_generated_baseline":
+        errors.append(
+            issue(
+                "baseline_handoff_reason_invalid",
+                "first_submission_required requires reason missing_current_generated_baseline.",
+                field="reason",
+            )
+        )
+    if status == "baseline_review_required" and reason != "specpm_prepare_report_not_provided":
+        errors.append(
+            issue(
+                "baseline_handoff_reason_invalid",
+                "baseline_review_required requires reason specpm_prepare_report_not_provided.",
+                field="reason",
+            )
+        )
+
+    validate_baseline_handoff_source(_mapping_value(handoff.get("source")), errors)
+    package_set = _mapping_value(handoff.get("packageSet"))
+    validate_baseline_handoff_package_set(package_set, errors)
+    validate_baseline_handoff_prepare_report(
+        _mapping_value(handoff.get("specpmPrepareReport")),
+        status,
+        errors,
+        warnings,
+    )
+    validate_baseline_handoff_workflow(_mapping_value(handoff.get("baselineWorkflow")), errors)
+    validate_baseline_handoff_authority(_mapping_value(handoff.get("authority")), errors)
+    validate_baseline_handoff_non_goals(handoff.get("nonGoals"), errors)
+    return validate_baseline_handoff_inputs(handoff, errors, warnings, root)
+
+
+def validate_baseline_handoff_source(
+    source: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if not non_empty_string(source.get("repository")):
+        errors.append(
+            issue(
+                "baseline_handoff_source_repository_missing",
+                "Baseline handoff source.repository is required.",
+                field="source.repository",
+            )
+        )
+    revision = source.get("revision")
+    if not isinstance(revision, str) or not re.fullmatch(r"[a-f0-9]{40}", revision):
+        errors.append(
+            issue(
+                "baseline_handoff_source_revision_invalid",
+                "Baseline handoff source.revision must be a 40-character commit SHA.",
+                field="source.revision",
+            )
+        )
+
+
+def validate_baseline_handoff_package_set(
+    package_set: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    package_set_id = package_set.get("id")
+    if not non_empty_string(package_set_id):
+        errors.append(
+            issue(
+                "baseline_handoff_package_set_id_missing",
+                "Baseline handoff packageSet.id is required.",
+                field="packageSet.id",
+            )
+        )
+    member_ids = string_list(package_set.get("memberPackageIds"))
+    if not member_ids:
+        errors.append(
+            issue(
+                "baseline_handoff_member_package_ids_missing",
+                "Baseline handoff packageSet.memberPackageIds must list generated candidates.",
+                field="packageSet.memberPackageIds",
+            )
+        )
+    elif non_empty_string(package_set_id) and package_set_id not in member_ids:
+        errors.append(
+            issue(
+                "baseline_handoff_package_set_id_not_listed",
+                "Baseline handoff packageSet.id must appear in memberPackageIds.",
+                field="packageSet.memberPackageIds",
+            )
+        )
+    candidate_count = package_set.get("candidateCount")
+    if candidate_count != len(member_ids):
+        errors.append(
+            issue(
+                "baseline_handoff_candidate_count_mismatch",
+                "Baseline handoff packageSet.candidateCount must match memberPackageIds length.",
+                field="packageSet.candidateCount",
+            )
+        )
+    contract_file_count = package_set.get("contractFileCount")
+    if not isinstance(contract_file_count, int) or contract_file_count <= 0:
+        errors.append(
+            issue(
+                "baseline_handoff_contract_file_count_invalid",
+                "Baseline handoff packageSet.contractFileCount must be a positive integer.",
+                field="packageSet.contractFileCount",
+            )
+        )
+    elif member_ids and contract_file_count < len(member_ids):
+        errors.append(
+            issue(
+                "baseline_handoff_contract_file_count_too_low",
+                "Baseline handoff contractFileCount cannot be lower than candidate count.",
+                field="packageSet.contractFileCount",
+            )
+        )
+
+
+def validate_baseline_handoff_prepare_report(
+    prepare_report: dict[str, Any],
+    status: Any,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> None:
+    report_status = prepare_report.get("status")
+    count = prepare_report.get("missingBaselineDiagnosticCount")
+    if prepare_report.get("diagnosticCode") != MISSING_BASELINE_DIAGNOSTIC:
+        errors.append(
+            issue(
+                "baseline_handoff_diagnostic_code_invalid",
+                f"Baseline handoff diagnosticCode must be {MISSING_BASELINE_DIAGNOSTIC}.",
+                field="specpmPrepareReport.diagnosticCode",
+            )
+        )
+    if status == "first_submission_required":
+        if report_status != "missing_baseline":
+            errors.append(
+                issue(
+                    "baseline_handoff_prepare_status_invalid",
+                    "first_submission_required requires specpmPrepareReport.status "
+                    "missing_baseline.",
+                    field="specpmPrepareReport.status",
+                )
+            )
+        if not isinstance(count, int) or count <= 0:
+            errors.append(
+                issue(
+                    "baseline_handoff_missing_diagnostic_count_invalid",
+                    "first_submission_required requires at least one missing-baseline diagnostic.",
+                    field="specpmPrepareReport.missingBaselineDiagnosticCount",
+                )
+            )
+    elif status == "baseline_review_required":
+        if report_status != "not_provided":
+            errors.append(
+                issue(
+                    "baseline_handoff_prepare_status_invalid",
+                    "baseline_review_required requires specpmPrepareReport.status not_provided.",
+                    field="specpmPrepareReport.status",
+                )
+            )
+        if count not in (0, None):
+            errors.append(
+                issue(
+                    "baseline_handoff_missing_diagnostic_count_invalid",
+                    "baseline_review_required must not claim missing-baseline diagnostics.",
+                    field="specpmPrepareReport.missingBaselineDiagnosticCount",
+                )
+            )
+        warnings.append(
+            issue(
+                "baseline_handoff_prepare_report_not_provided",
+                "SpecPM prepare-report diagnostics were not confirmed in this handoff.",
+                field="specpmPrepareReport.status",
+            )
+        )
+
+
+def validate_baseline_handoff_workflow(
+    workflow: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if workflow.get("blockedRefreshDecision") is not True:
+        errors.append(
+            issue(
+                "baseline_handoff_blocked_refresh_flag_invalid",
+                "Baseline handoff must block refresh decisions until baseline review.",
+                field="baselineWorkflow.blockedRefreshDecision",
+            )
+        )
+    if workflow.get("requiredBefore") != "specpm_refresh_decision":
+        errors.append(
+            issue(
+                "baseline_handoff_required_before_invalid",
+                "Baseline handoff baselineWorkflow.requiredBefore must be specpm_refresh_decision.",
+                field="baselineWorkflow.requiredBefore",
+            )
+        )
+    action_ids = {
+        action_id
+        for action in _list_of_mappings(workflow.get("maintainerActions"))
+        if isinstance((action_id := action.get("id")), str) and action_id
+    }
+    missing = REQUIRED_BASELINE_HANDOFF_ACTIONS - action_ids
+    if missing:
+        errors.append(
+            issue(
+                "baseline_handoff_maintainer_actions_missing",
+                f"Baseline handoff maintainerActions must include {', '.join(sorted(missing))}.",
+                field="baselineWorkflow.maintainerActions",
+            )
+        )
+
+
+def validate_baseline_handoff_authority(
+    authority: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if authority.get("producerEvidenceAuthority") != "evidence_only":
+        errors.append(
+            issue(
+                "baseline_handoff_producer_authority_invalid",
+                "Baseline handoff producerEvidenceAuthority must be evidence_only.",
+                field="authority.producerEvidenceAuthority",
+            )
+        )
+    if authority.get("registryAuthority") != "SpecPM maintainer review":
+        errors.append(
+            issue(
+                "baseline_handoff_registry_authority_invalid",
+                "Baseline handoff registryAuthority must be SpecPM maintainer review.",
+                field="authority.registryAuthority",
+            )
+        )
+    if authority.get("noRegistryMutation") is not True:
+        errors.append(
+            issue(
+                "baseline_handoff_registry_mutation_flag_invalid",
+                "Baseline handoff noRegistryMutation must be true.",
+                field="authority.noRegistryMutation",
+            )
+        )
+    if authority.get("notRefreshDecision") is not True:
+        errors.append(
+            issue(
+                "baseline_handoff_not_refresh_decision_flag_invalid",
+                "Baseline handoff notRefreshDecision must be true.",
+                field="authority.notRefreshDecision",
+            )
+        )
+
+
+def validate_baseline_handoff_non_goals(value: Any, errors: list[dict[str, Any]]) -> None:
+    non_goals = set(string_list(value))
+    missing = REQUIRED_BASELINE_HANDOFF_NON_GOALS - non_goals
+    if missing:
+        errors.append(
+            issue(
+                "baseline_handoff_non_goals_missing",
+                f"Baseline handoff nonGoals must include {', '.join(sorted(missing))}.",
+                field="nonGoals",
+            )
+        )
+
+
+def validate_baseline_handoff_inputs(
+    handoff: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    root: Path | None,
+) -> int:
+    inputs = _mapping_value(handoff.get("inputs"))
+    fresh_input = _mapping_value(inputs.get("freshCandidateRefreshRun"))
+    if not fresh_input:
+        errors.append(
+            issue(
+                "baseline_handoff_fresh_run_input_missing",
+                "Baseline handoff inputs.freshCandidateRefreshRun is required.",
+                field="inputs.freshCandidateRefreshRun",
+            )
+        )
+        return 0
+    if fresh_input.get("apiVersion") != FRESH_CANDIDATE_REFRESH_RUN_API_VERSION:
+        errors.append(
+            issue(
+                "baseline_handoff_fresh_run_api_version_invalid",
+                f"Fresh run input apiVersion must be {FRESH_CANDIDATE_REFRESH_RUN_API_VERSION}.",
+                field="inputs.freshCandidateRefreshRun.apiVersion",
+            )
+        )
+    if fresh_input.get("kind") != FRESH_CANDIDATE_REFRESH_RUN_KIND:
+        errors.append(
+            issue(
+                "baseline_handoff_fresh_run_kind_invalid",
+                f"Fresh run input kind must be {FRESH_CANDIDATE_REFRESH_RUN_KIND}.",
+                field="inputs.freshCandidateRefreshRun.kind",
+            )
+        )
+
+    digest_verified_count = 0
+    if root is None:
+        if digest_value(fresh_input.get("digest")) is None:
+            errors.append(
+                issue(
+                    "baseline_handoff_input_digest_invalid",
+                    "Fresh run input must include a SHA-256 digest.",
+                    field="inputs.freshCandidateRefreshRun.digest",
+                )
+            )
+        return digest_verified_count
+
+    fresh_run = load_and_verify_baseline_handoff_input(
+        fresh_input,
+        root,
+        "inputs.freshCandidateRefreshRun",
+        "fresh run",
+        errors,
+    )
+    if fresh_run is not None:
+        digest_verified_count += 1
+        validate_linked_fresh_candidate_refresh_run(
+            fresh_run,
+            _mapping_value(handoff.get("packageSet")),
+            _mapping_value(handoff.get("source")),
+            errors,
+        )
+
+    prepare_input = _mapping_value(inputs.get("specpmPrepareReport"))
+    prepare_report_summary = _mapping_value(handoff.get("specpmPrepareReport"))
+    if prepare_report_summary.get("status") == "missing_baseline":
+        if not prepare_input:
+            errors.append(
+                issue(
+                    "baseline_handoff_prepare_report_input_missing",
+                    "Missing-baseline handoff must link the SpecPM prepare report input.",
+                    field="inputs.specpmPrepareReport",
+                )
+            )
+        else:
+            prepare_report = load_and_verify_baseline_handoff_input(
+                prepare_input,
+                root,
+                "inputs.specpmPrepareReport",
+                "SpecPM prepare report",
+                errors,
+            )
+            if prepare_report is not None:
+                digest_verified_count += 1
+                validate_linked_baseline_prepare_report(
+                    prepare_report,
+                    prepare_report_summary,
+                    errors,
+                )
+    elif prepare_input:
+        warnings.append(
+            issue(
+                "baseline_handoff_prepare_report_input_unexpected",
+                "baseline_review_required handoff should not link a SpecPM prepare report.",
+                field="inputs.specpmPrepareReport",
+            )
+        )
+    return digest_verified_count
+
+
+def load_and_verify_baseline_handoff_input(
+    input_record: dict[str, Any],
+    root: Path,
+    field: str,
+    label: str,
+    errors: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    path_value = input_record.get("path")
+    if not isinstance(path_value, str) or not path_value:
+        errors.append(
+            issue(
+                "baseline_handoff_input_path_missing",
+                f"Baseline handoff {label} input path is required.",
+                field=f"{field}.path",
+            )
+        )
+        return None
+    resolved = resolve_handoff_input_path(root, path_value)
+    if resolved is None:
+        errors.append(
+            issue(
+                "baseline_handoff_input_path_unresolved",
+                f"Baseline handoff {label} input path must resolve within --root.",
+                field=f"{field}.path",
+            )
+        )
+        return None
+    if not resolved.is_file():
+        errors.append(
+            issue(
+                "baseline_handoff_input_file_missing",
+                f"Baseline handoff {label} input file is missing: {path_value}.",
+                field=f"{field}.path",
+            )
+        )
+        return None
+    expected = digest_value(input_record.get("digest"))
+    if expected is None:
+        errors.append(
+            issue(
+                "baseline_handoff_input_digest_invalid",
+                f"Baseline handoff {label} input must include a SHA-256 digest.",
+                field=f"{field}.digest",
+            )
+        )
+        return None
+    actual = f"sha256:{sha256_file(resolved)}"
+    if expected != actual:
+        errors.append(
+            issue(
+                "baseline_handoff_input_digest_mismatch",
+                f"Baseline handoff {label} input digest does not match file bytes.",
+                field=f"{field}.digest",
+            )
+        )
+        return None
+    try:
+        loaded = json.loads(resolved.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(
+            issue(
+                "baseline_handoff_input_unreadable",
+                f"Baseline handoff {label} input could not be read as JSON: {exc}.",
+                field=f"{field}.path",
+            )
+        )
+        return None
+    if not isinstance(loaded, dict):
+        errors.append(
+            issue(
+                "baseline_handoff_input_invalid",
+                f"Baseline handoff {label} input must be a JSON object.",
+                field=f"{field}.path",
+            )
+        )
+        return None
+    return loaded
+
+
+def validate_linked_fresh_candidate_refresh_run(
+    fresh_run: dict[str, Any],
+    package_set: dict[str, Any],
+    source: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if fresh_run.get("apiVersion") != FRESH_CANDIDATE_REFRESH_RUN_API_VERSION:
+        errors.append(
+            issue(
+                "baseline_handoff_input_fresh_run_api_version_invalid",
+                "Linked fresh run apiVersion does not match the SpecHarvester contract.",
+                field="inputs.freshCandidateRefreshRun",
+            )
+        )
+    if fresh_run.get("kind") != FRESH_CANDIDATE_REFRESH_RUN_KIND:
+        errors.append(
+            issue(
+                "baseline_handoff_input_fresh_run_kind_invalid",
+                "Linked fresh run kind does not match the SpecHarvester contract.",
+                field="inputs.freshCandidateRefreshRun",
+            )
+        )
+    if fresh_run.get("schemaVersion") != 1:
+        errors.append(
+            issue(
+                "baseline_handoff_input_fresh_run_schema_version_invalid",
+                "Linked fresh run schemaVersion must be 1.",
+                field="inputs.freshCandidateRefreshRun.schemaVersion",
+            )
+        )
+    fresh_source = _mapping_value(fresh_run.get("source"))
+    for key in ("repository", "revision"):
+        if fresh_source.get(key) != source.get(key):
+            errors.append(
+                issue(
+                    "baseline_handoff_input_fresh_run_source_mismatch",
+                    f"Linked fresh run source.{key} must match handoff source.{key}.",
+                    field=f"source.{key}",
+                )
+            )
+    fresh_package_set = _mapping_value(fresh_run.get("packageSet"))
+    if fresh_package_set.get("id") != package_set.get("id"):
+        errors.append(
+            issue(
+                "baseline_handoff_input_fresh_run_package_set_mismatch",
+                "Linked fresh run packageSet.id must match handoff packageSet.id.",
+                field="packageSet.id",
+            )
+        )
+    fresh_member_ids = string_list(fresh_package_set.get("memberPackageIds"))
+    handoff_member_ids = string_list(package_set.get("memberPackageIds"))
+    if fresh_member_ids != handoff_member_ids:
+        errors.append(
+            issue(
+                "baseline_handoff_input_fresh_run_members_mismatch",
+                "Linked fresh run packageSet.memberPackageIds must match the handoff.",
+                field="packageSet.memberPackageIds",
+            )
+        )
+    if fresh_package_set.get("candidateCount") != package_set.get("candidateCount"):
+        errors.append(
+            issue(
+                "baseline_handoff_input_fresh_run_candidate_count_mismatch",
+                "Linked fresh run candidateCount must match the handoff.",
+                field="packageSet.candidateCount",
+            )
+        )
+    packages = _list_of_mappings(fresh_run.get("packages"))
+    contract_file_count = sum(
+        len(_list_of_mappings(package.get("contractFiles"))) for package in packages
+    )
+    if contract_file_count != package_set.get("contractFileCount"):
+        errors.append(
+            issue(
+                "baseline_handoff_input_fresh_run_contract_count_mismatch",
+                "Linked fresh run contract file count must match the handoff.",
+                field="packageSet.contractFileCount",
+            )
+        )
+
+
+def validate_linked_baseline_prepare_report(
+    prepare_report: dict[str, Any],
+    summary: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if prepare_report.get("kind") != REFRESH_DECISION_PREPARE_KIND:
+        errors.append(
+            issue(
+                "baseline_handoff_input_prepare_report_kind_invalid",
+                f"Linked prepare report kind must be {REFRESH_DECISION_PREPARE_KIND}.",
+                field="inputs.specpmPrepareReport.kind",
+            )
+        )
+    if prepare_report.get("schemaVersion") != REFRESH_DECISION_PREPARE_SCHEMA_VERSION:
+        errors.append(
+            issue(
+                "baseline_handoff_input_prepare_report_schema_version_invalid",
+                "Linked prepare report schemaVersion must be 1.",
+                field="inputs.specpmPrepareReport.schemaVersion",
+            )
+        )
+    missing_errors = [
+        item
+        for item in _list_of_mappings(prepare_report.get("errors"))
+        if item.get("code") == MISSING_BASELINE_DIAGNOSTIC
+    ]
+    if len(missing_errors) != summary.get("missingBaselineDiagnosticCount"):
+        errors.append(
+            issue(
+                "baseline_handoff_input_prepare_report_diagnostic_count_mismatch",
+                "Linked prepare report missing-baseline diagnostic count must match handoff.",
+                field="specpmPrepareReport.missingBaselineDiagnosticCount",
+            )
+        )
+    decision = _mapping_value(_mapping_value(prepare_report.get("decision")).get("decision"))
+    if decision.get("status") != summary.get("decisionStatus"):
+        errors.append(
+            issue(
+                "baseline_handoff_input_prepare_report_decision_status_mismatch",
+                "Linked prepare report decision.status must match handoff summary.",
+                field="specpmPrepareReport.decisionStatus",
+            )
+        )
+    if decision.get("reason") != summary.get("decisionReason"):
+        errors.append(
+            issue(
+                "baseline_handoff_input_prepare_report_decision_reason_mismatch",
+                "Linked prepare report decision.reason must match handoff summary.",
+                field="specpmPrepareReport.decisionReason",
+            )
+        )
+
+
+def resolve_handoff_input_path(root: Path, path: str) -> Path | None:
+    root_resolved = root.resolve(strict=False)
+    raw = Path(path)
+    candidate = (
+        raw.resolve(strict=False)
+        if raw.is_absolute()
+        else (root_resolved / raw).resolve(strict=False)
+    )
+    if not candidate.is_relative_to(root_resolved):
+        return None
+    return candidate
 
 
 def validate_refresh_relative_path(
@@ -4089,6 +4877,21 @@ def _find_refresh_decision_payload(payloads: list[Any]) -> dict[str, Any] | None
                 payload.get("apiVersion") == REFRESH_DECISION_API_VERSION
                 and isinstance(payload.get("decision"), dict)
                 and isinstance(payload.get("generatedContractFiles"), list)
+            )
+        ):
+            return payload
+    return None
+
+
+def _find_baseline_submission_handoff_payload(payloads: list[Any]) -> dict[str, Any] | None:
+    for payload in payloads:
+        if isinstance(payload, dict) and (
+            payload.get("kind") == BASELINE_SUBMISSION_HANDOFF_KIND
+            or payload.get("apiVersion") == BASELINE_SUBMISSION_HANDOFF_API_VERSION
+            or (
+                isinstance(payload.get("baselineWorkflow"), dict)
+                and isinstance(payload.get("authority"), dict)
+                and payload.get("status") in VALID_BASELINE_HANDOFF_STATUSES
             )
         ):
             return payload

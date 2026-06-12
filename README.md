@@ -270,6 +270,9 @@ Producer-backed pull requests can be checked with
 consumer-side preflight reads `producerEvidenceLinks` and
 `registryAcceptanceDecision` evidence without running producer tools or
 accepting the package.
+First-submission or seeded-baseline handoffs from SpecHarvester can be checked
+with `specpm producer-bundle preflight-baseline-submission`; passing preflight
+is review evidence only and does not seed a baseline or emit a refresh decision.
 `docker compose up public-index` serves that generated registry locally for
 SpecGraph, ContextBuilder, and manual integration testing.
 

@@ -35,6 +35,7 @@ index:
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.generated_candidate_refresh_decision_ci_artifact
+      - specpm.registry.baseline_submission_handoff_preflight
       - specpm.registry.index_removal_request_flow
       - specpm.registry.namespace_claim_request_flow
       - specpm.registry.namespace_claim_policy

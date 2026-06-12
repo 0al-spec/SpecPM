@@ -294,6 +294,29 @@ Passing preflight means the refresh decision record is internally consistent
 review evidence. It does not accept a package, update `public-index/curated`,
 mutate `public-index/generated`, accept relations, or publish registry metadata.
 
+## Missing Baseline Handoffs
+
+When `prepare-refresh-decision` reports
+`refresh_decision_prepare_current_contract_files_missing`, the correct output is
+not a normal refresh decision. The fresh candidate has no current generated
+baseline to compare against.
+
+SpecHarvester can turn that state into
+`SpecHarvesterBaselineSubmissionHandoff` evidence. SpecPM maintainers can check
+it with:
+
+```bash
+specpm producer-bundle preflight-baseline-submission \
+  --body <baseline-submission-handoff.json> \
+  --root <handoff-artifact-root> \
+  --json
+```
+
+This emits `SpecPMBaselineSubmissionHandoffPreflightReport`. Passing preflight
+means the handoff is internally consistent first-submission or seeded-baseline
+review evidence. It does not seed the baseline, emit a refresh decision, accept
+packages, or publish registry metadata.
+
 ## Non-Goals
 
 This policy does not add automatic registry updates, producer-owned
@@ -305,6 +328,7 @@ producer tools.
 
 - `specs/REGISTRY_ACCEPTANCE_DECISIONS.md`
 - `specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md`
+- `specs/BASELINE_SUBMISSION_HANDOFF_PREFLIGHT.md`
 - `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`
 - `specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`
 - `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`
