@@ -3416,6 +3416,9 @@ def test_xyflow_refresh_decision_fixture_matches_policy() -> None:
     policy = GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC.read_text(encoding="utf-8")
     docc_policy = DOCC_GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_PAGE.read_text(encoding="utf-8")
     xyflow_reference = (ROOT / "specs/XYFLOW_PACKAGE_SET_REFERENCE.md").read_text(encoding="utf-8")
+    docc_xyflow_reference = (
+        ROOT / "Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md"
+    ).read_text(encoding="utf-8")
     roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
     docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
     workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
@@ -3468,34 +3471,56 @@ def test_xyflow_refresh_decision_fixture_matches_policy() -> None:
     assert comparison["freshCandidateCount"] == 4
     assert comparison["acceptedRelationCount"] == 3
 
+    expected_accepted_artifacts = [
+        "public-index/curated/xyflow.workspace/0.1.0",
+        "public-index/curated/xyflow.react/0.1.0",
+        "public-index/curated/xyflow.svelte/0.1.0",
+        "public-index/curated/xyflow.system/0.1.0",
+    ]
+    expected_current_generated_artifacts = [
+        "public-index/generated/xyflow.workspace/0.1.0",
+        "public-index/generated/xyflow.react/0.1.0",
+        "public-index/generated/xyflow.svelte/0.1.0",
+        "public-index/generated/xyflow.system/0.1.0",
+    ]
+    assert subject["acceptedArtifacts"] == expected_accepted_artifacts
+    assert subject["currentGeneratedArtifacts"] == expected_current_generated_artifacts
+
     assert fixture["authority"] == {
         "producerEvidenceAuthority": "evidence_only",
         "registryAuthority": "maintainer_review_required",
         "noRegistryMutation": True,
     }
 
-    for path in subject["acceptedArtifacts"]:
+    for path in expected_accepted_artifacts:
         accepted_path = ROOT / path
         assert accepted_path.is_dir()
-        assert path.startswith("public-index/curated/xyflow.")
 
-    for path in subject["currentGeneratedArtifacts"]:
+    for path in expected_current_generated_artifacts:
         generated_path = ROOT / path
         assert generated_path.is_dir()
-        assert path.startswith("public-index/generated/xyflow.")
 
     generated_contract_files = fixture["generatedContractFiles"]
-    assert len(generated_contract_files) == 20
-    assert {Path(entry["path"]).name for entry in generated_contract_files} >= {
-        "specpm.yaml",
-        "harvest.json",
-        "diagnostics.json",
-        "validation-report.json",
-    }
+    expected_generated_contract_files = [
+        "public-index/generated/xyflow.workspace/0.1.0/specpm.yaml",
+        "public-index/generated/xyflow.workspace/0.1.0/specs/xyflow.spec.yaml",
+        "public-index/generated/xyflow.react/0.1.0/specpm.yaml",
+        "public-index/generated/xyflow.react/0.1.0/specs/react.spec.yaml",
+        "public-index/generated/xyflow.svelte/0.1.0/specpm.yaml",
+        "public-index/generated/xyflow.svelte/0.1.0/specs/svelte.spec.yaml",
+        "public-index/generated/xyflow.system/0.1.0/specpm.yaml",
+        "public-index/generated/xyflow.system/0.1.0/specs/system.spec.yaml",
+    ]
+    assert [
+        entry["path"] for entry in generated_contract_files
+    ] == expected_generated_contract_files
     for entry in generated_contract_files:
         path = ROOT / entry["path"]
         assert path.is_file()
         assert entry["sha256"] == sha256_path(path)
+        assert "/diagnostics.json" not in entry["path"]
+        assert "/harvest.json" not in entry["path"]
+        assert "/validation-report.json" not in entry["path"]
         assert "/producer-receipt.json" not in entry["path"]
 
     for required_text in (
@@ -3520,6 +3545,7 @@ def test_xyflow_refresh_decision_fixture_matches_policy() -> None:
     assert "tests/fixtures/refresh_decisions/" in roadmap
     assert "tests/fixtures/refresh_decisions/" in docc_roadmap
     assert "tests/fixtures/refresh_decisions/xyflow-no-update.example.json" in xyflow_reference
+    assert "tests/fixtures/refresh_decisions/xyflow-no-update.example.json" in docc_xyflow_reference
     assert "tests/fixtures/refresh_decisions/xyflow-no-update.example.json" in self_spec
     assert "generated_candidate_refresh_decision_fixture" in self_spec
 
