@@ -3654,6 +3654,36 @@ def test_refresh_decision_preflight_rejects_authority_digest_and_no_update_drift
     }.issubset(issue_codes(report["errors"]))
 
 
+def test_refresh_decision_preflight_rejects_contract_file_symlink_escape(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "checkout"
+    outside = tmp_path / "outside"
+    symlink_parent = root / "public-index/generated/xyflow.workspace/0.1.0"
+    outside.mkdir(parents=True)
+    symlink_parent.parent.mkdir(parents=True)
+    contract_file = outside / "specpm.yaml"
+    contract_file.write_text(
+        "schemaVersion: 1\nmetadata:\n  id: xyflow.workspace\n", encoding="utf-8"
+    )
+    symlink_parent.symlink_to(outside, target_is_directory=True)
+
+    body = tmp_path / "refresh-decision.json"
+    payload = json.loads(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE.read_text(encoding="utf-8"))
+    payload["generatedContractFiles"] = [
+        {
+            "path": "public-index/generated/xyflow.workspace/0.1.0/specpm.yaml",
+            "sha256": sha256_path(contract_file),
+        }
+    ]
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_refresh_decision(body, root=root)
+
+    assert report["status"] == "failed"
+    assert "refresh_decision_contract_file_path_unresolved" in issue_codes(report["errors"])
+
+
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:
     root = tmp_path / "checkout"
     package = root / "public-index/generated/example.package/0.1.0"

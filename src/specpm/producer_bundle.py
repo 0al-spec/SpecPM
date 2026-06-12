@@ -1194,6 +1194,13 @@ def validate_refresh_contract_file_digest(
 ) -> bool:
     resolved = resolve_package_set_path(root, path)
     if resolved is None:
+        errors.append(
+            issue(
+                "refresh_decision_contract_file_path_unresolved",
+                "Generated contract file path must resolve within the provided root.",
+                field=f"{field}.path",
+            )
+        )
         return False
     if not resolved.is_file():
         errors.append(
