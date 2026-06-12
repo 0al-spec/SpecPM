@@ -36,6 +36,7 @@ from specpm.producer_bundle import (
     preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
     preflight_refresh_decision,
+    prepare_refresh_decision,
     render_package_set_materialization_manifest_candidate,
     render_package_set_materialization_pr_body,
 )
@@ -359,6 +360,94 @@ def build_parser() -> argparse.ArgumentParser:
         help="Emit stable JSON.",
     )
     refresh_decision_preflight.set_defaults(handler=handle_refresh_decision_preflight)
+
+    refresh_decision_prepare = producer_bundle_subparsers.add_parser(
+        "prepare-refresh-decision",
+        help=(
+            "Prepare a generated candidate refresh decision from fresh/current generated artifacts."
+        ),
+    )
+    refresh_decision_prepare.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing current generated and curated registry artifacts.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--fresh-generated-root",
+        required=True,
+        help=(
+            "Fresh generated artifact root containing <package_id>/<version> directories. "
+            "May be outside --root."
+        ),
+    )
+    refresh_decision_prepare.add_argument(
+        "--current-generated-root",
+        default="public-index/generated",
+        help="Current generated artifact root under --root.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--curated-root",
+        default="public-index/curated",
+        help="Curated accepted artifact root under --root.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--package",
+        dest="packages",
+        action="append",
+        required=True,
+        help="Package ID to compare. May be passed more than once.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--package-id",
+        help="Subject package ID for the decision. Defaults to the first --package.",
+    )
+    refresh_decision_prepare.add_argument("--version", required=True, help="Package version.")
+    refresh_decision_prepare.add_argument(
+        "--scope",
+        default="package_set",
+        help="Decision subject scope. Defaults to package_set.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--source-revision",
+        required=True,
+        help="Fresh upstream source revision as a 40-character commit SHA.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--source-repository",
+        default="",
+        help="Fresh upstream source repository URL.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--run-label",
+        default="local-refresh-evaluation",
+        help="Human-readable label for the fresh generated run.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--review-location",
+        default="local-draft",
+        help="Maintainer review location to embed in the draft decision.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--decision-by",
+        default="SpecPM maintainer review",
+        help="Maintainer review actor label to embed in the draft decision.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--no-receipt-only-delta",
+        action="store_true",
+        help="Do not mark receiptOnlyChanged/supporting reason in no-op output.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--no-advisory-report-only-delta",
+        action="store_true",
+        help="Do not mark advisoryReportOnlyChanged in the comparison.",
+    )
+    refresh_decision_prepare.add_argument(
+        "--output",
+        help="Optional path to write the prepared SpecPMGeneratedCandidateRefreshDecision JSON.",
+    )
+    refresh_decision_prepare.add_argument("--json", action="store_true", help="Emit stable JSON.")
+    refresh_decision_prepare.set_defaults(handler=handle_refresh_decision_prepare)
 
     package_set_materialize = producer_bundle_subparsers.add_parser(
         "materialize-package-set",
@@ -753,6 +842,36 @@ def handle_refresh_decision_preflight(args: argparse.Namespace) -> int:
     return 1 if report["status"] == "failed" else 0
 
 
+def handle_refresh_decision_prepare(args: argparse.Namespace) -> int:
+    report = prepare_refresh_decision(
+        root=Path(args.root),
+        fresh_generated_root=Path(args.fresh_generated_root),
+        current_generated_root=Path(args.current_generated_root),
+        curated_root=Path(args.curated_root),
+        package_ids=args.packages,
+        package_id=args.package_id,
+        version=args.version,
+        scope=args.scope,
+        source_revision=args.source_revision,
+        source_repository=args.source_repository,
+        run_label=args.run_label,
+        review_location=args.review_location,
+        decision_by=args.decision_by,
+        receipt_only_changed=not args.no_receipt_only_delta,
+        advisory_report_only_changed=not args.no_advisory_report_only_delta,
+    )
+    if args.output and report["status"] != "failed":
+        write_cli_output(
+            Path(args.output),
+            json.dumps(report["decision"], indent=2, sort_keys=True) + "\n",
+        )
+    if args.json:
+        print_json(report)
+    else:
+        print_refresh_decision_prepare(report)
+    return 1 if report["status"] == "failed" else 0
+
+
 def handle_package_set_materialize(args: argparse.Namespace) -> int:
     report = materialize_package_set_handoff(
         Path(args.handoff),
@@ -840,6 +959,21 @@ def print_refresh_decision_preflight(report: dict[str, Any]) -> None:
         f"{report['status']}: generated candidate refresh decision preflight "
         f"({summary['packageCount']} packages, "
         f"{summary['generatedContractFileCount']} contract files, "
+        f"{summary['errorCount']} errors, {summary['warningCount']} warnings)"
+    )
+    for issue_payload in report["errors"]:
+        print(f"error {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+    for issue_payload in report["warnings"]:
+        print(f"warning {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+
+
+def print_refresh_decision_prepare(report: dict[str, Any]) -> None:
+    summary = report["summary"]
+    print(
+        f"{report['status']}: generated candidate refresh decision prepare "
+        f"({summary['packageCount']} packages, "
+        f"{summary['generatedContractFileCount']} contract files, "
+        f"updateNeeded={summary['updateNeeded']}, "
         f"{summary['errorCount']} errors, {summary['warningCount']} warnings)"
     )
     for issue_payload in report["errors"]:

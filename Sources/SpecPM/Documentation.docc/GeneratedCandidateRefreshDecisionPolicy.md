@@ -91,6 +91,38 @@ A complete example fixture is available at
 and snapshots generated contract-file digests that support
 `updateNeeded: false`.
 
+## Prepare Helper
+
+SpecPM can prepare a draft refresh decision by comparing fresh generated
+candidate artifacts with the current registry evidence:
+
+```bash
+specpm producer-bundle prepare-refresh-decision \
+  --root . \
+  --fresh-generated-root <fresh-public-index-generated-root> \
+  --package xyflow.workspace \
+  --package xyflow.react \
+  --package xyflow.svelte \
+  --package xyflow.system \
+  --package-id xyflow.workspace \
+  --version 0.1.0 \
+  --source-repository https://github.com/xyflow/xyflow \
+  --source-revision <40-char-source-sha> \
+  --output refresh-decision.json \
+  --json
+```
+
+The command emits `SpecPMGeneratedCandidateRefreshDecisionPrepareReport` and can
+write the prepared `SpecPMGeneratedCandidateRefreshDecision` with `--output`.
+It compares only contract-bearing generated files (`specpm.yaml` and
+`specs/*.spec.yaml`), records current generated contract-file SHA-256 digests,
+and runs the same consumer-side preflight rules against the prepared decision.
+
+Matching contract files produce `status: no_update_required`,
+`updateNeeded: false`, and `reason: no_contract_delta`. Contract, source
+revision, or accepted-artifact drift produces `manual_review_required` with
+`updateNeeded: true`. Both outcomes remain review evidence only.
+
 ## Consumer-Side Preflight
 
 SpecPM can verify refresh decision records with:

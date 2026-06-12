@@ -190,6 +190,26 @@ record `status: no_update_required` instead of opening a registry churn PR.
 Producer receipt churn, local output paths, or a newly emitted advisory quality
 report are review evidence, not accepted contract deltas by themselves.
 
+When a fresh generated candidate tree is available but no refresh decision has
+been written yet, maintainers can prepare a draft record from the current
+registry evidence:
+
+```bash
+specpm producer-bundle prepare-refresh-decision \
+  --root . \
+  --fresh-generated-root <fresh-public-index-generated-root> \
+  --package <package-id> \
+  --version <version> \
+  --source-revision <40-char-source-sha> \
+  --output <generated-candidate-refresh-decision.json> \
+  --json
+```
+
+The prepare helper compares generated `specpm.yaml` and `specs/*.spec.yaml`
+files, emits `SpecPMGeneratedCandidateRefreshDecisionPrepareReport`, writes the
+draft decision with `--output`, and performs the same preflight checks. It is
+read-only review evidence.
+
 When a `SpecPMGeneratedCandidateRefreshDecision` record is available,
 maintainers should run:
 

@@ -221,6 +221,41 @@ records all four `xyflow` package-set members, cites the current curated and
 generated artifact paths, and snapshots the generated contract-file digests
 used to justify `updateNeeded: false`.
 
+## Prepare Helper
+
+SpecPM can prepare a draft refresh decision by comparing a fresh generated
+candidate tree with the current registry evidence:
+
+```bash
+specpm producer-bundle prepare-refresh-decision \
+  --root . \
+  --fresh-generated-root <fresh-public-index-generated-root> \
+  --package xyflow.workspace \
+  --package xyflow.react \
+  --package xyflow.svelte \
+  --package xyflow.system \
+  --package-id xyflow.workspace \
+  --version 0.1.0 \
+  --source-repository https://github.com/xyflow/xyflow \
+  --source-revision <40-char-source-sha> \
+  --output refresh-decision.json \
+  --json
+```
+
+The command emits `SpecPMGeneratedCandidateRefreshDecisionPrepareReport` and can
+write the prepared `SpecPMGeneratedCandidateRefreshDecision` with `--output`.
+It compares only contract-bearing generated files (`specpm.yaml` and
+`specs/*.spec.yaml`), records current generated contract-file SHA-256 digests,
+checks the prepared decision with the same consumer-side preflight rules, and
+keeps the output read-only review evidence.
+
+If fresh and current generated contract files match, the draft decision uses
+`status: no_update_required`, `updateNeeded: false`, and
+`reason: no_contract_delta`. If contract files, source revisions, or accepted
+artifact assumptions differ, the draft uses `manual_review_required` and
+`updateNeeded: true`; it still does not mutate curated artifacts, generated
+artifacts, relations, or registry metadata.
+
 ## Consumer-Side Preflight
 
 SpecPM can verify a generated candidate refresh decision before maintainers use

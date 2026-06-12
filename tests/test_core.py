@@ -59,6 +59,7 @@ from specpm.producer_bundle import (
     preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
     preflight_refresh_decision,
+    prepare_refresh_decision,
 )
 from specpm.public_index import (
     generate_public_index,
@@ -3346,6 +3347,8 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "Receipt churn, local run paths, new quality reports",
         "`public-index/generated/<package_id>/<version>` is producer evidence",
         "fresh real `xyflow` package-set run",
+        "specpm producer-bundle prepare-refresh-decision",
+        "SpecPMGeneratedCandidateRefreshDecisionPrepareReport",
         "specpm producer-bundle preflight-refresh-decision",
         "SpecPMGeneratedCandidateRefreshDecisionPreflightReport",
         "status/update consistency",
@@ -3362,6 +3365,8 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "`updateNeeded: false`",
         "`reason: no_contract_delta`",
         "producer receipt churn plus an additional advisory quality report",
+        "specpm producer-bundle prepare-refresh-decision",
+        "SpecPMGeneratedCandidateRefreshDecisionPrepareReport",
         "specpm producer-bundle preflight-refresh-decision",
         "SpecPMGeneratedCandidateRefreshDecisionPreflightReport",
         "status/update consistency",
@@ -3385,6 +3390,7 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
     for required_text in (
         "`SpecPMGeneratedCandidateRefreshDecision` with `updateNeeded: false`",
         "`reason: no_contract_delta`",
+        "specpm producer-bundle prepare-refresh-decision",
     ):
         assert required_text in intake_flat
         assert required_text in operator_guide_flat
@@ -3403,6 +3409,7 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "`updateNeeded: false`",
         "`reason: no_contract_delta`",
         "curated accepted artifact remains the stronger registry source",
+        "SpecPMGeneratedCandidateRefreshDecisionPrepareReport",
     ):
         assert required_text in roadmap_flat
         assert required_text in docc_roadmap_flat
@@ -3424,13 +3431,18 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "`specpm producer-bundle preflight-refresh-decision`",
         "`SpecPMGeneratedCandidateRefreshDecisionPreflightReport`",
         "Missing `--root` warns rather than fails",
+        "P66-T20. Generated Candidate Refresh Decision Prepare Helper",
+        "`specpm producer-bundle prepare-refresh-decision`",
+        "`SpecPMGeneratedCandidateRefreshDecisionPrepareReport`",
     ):
         assert required_text in workplan_flat
 
     assert "specpm.registry.generated_candidate_refresh_decision_policy" in manifest
     assert "specpm.registry.generated_candidate_refresh_decision_preflight" in manifest
+    assert "specpm.registry.generated_candidate_refresh_decision_prepare" in manifest
     assert "specpm.registry.generated_candidate_refresh_decision_policy" in self_spec
     assert "specpm.registry.generated_candidate_refresh_decision_preflight" in self_spec
+    assert "specpm.registry.generated_candidate_refresh_decision_prepare" in self_spec
     assert "specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md" in self_spec
     assert (
         "Sources/SpecPM/Documentation.docc/GeneratedCandidateRefreshDecisionPolicy.md" in self_spec
@@ -3619,6 +3631,229 @@ def test_cli_refresh_decision_preflight_emits_json(capsys: pytest.CaptureFixture
     assert exit_code == 0
     assert report["status"] == "passed"
     assert report["summary"]["digestVerifiedCount"] == 8
+
+
+def test_refresh_decision_prepare_accepts_xyflow_noop() -> None:
+    report = prepare_refresh_decision(
+        root=ROOT,
+        fresh_generated_root=ROOT / "public-index/generated",
+        package_ids=[
+            "xyflow.workspace",
+            "xyflow.react",
+            "xyflow.svelte",
+            "xyflow.system",
+        ],
+        package_id="xyflow.workspace",
+        version="0.1.0",
+        source_repository="https://github.com/xyflow/xyflow",
+        source_revision="a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd",
+        run_label="xyflow-registry-update-eval-20260612",
+        review_location="local-refresh-draft",
+    )
+
+    assert report["kind"] == "SpecPMGeneratedCandidateRefreshDecisionPrepareReport"
+    assert report["status"] == "passed"
+    assert report["summary"] == {
+        "packageId": "xyflow.workspace",
+        "packageCount": 4,
+        "generatedContractFileCount": 8,
+        "digestVerifiedCount": 8,
+        "updateNeeded": False,
+        "errorCount": 0,
+        "warningCount": 0,
+    }
+    decision = report["decision"]
+    assert decision["kind"] == "SpecPMGeneratedCandidateRefreshDecision"
+    assert decision["decision"]["status"] == "no_update_required"
+    assert decision["decision"]["reason"] == "no_contract_delta"
+    assert decision["decision"]["supportingReasons"] == [
+        "same_source_revision",
+        "generated_contract_bytes_unchanged",
+        "curated_artifact_remains_stronger",
+        "producer_receipt_only_delta",
+        "immutable_generated_candidate",
+    ]
+    assert decision["comparison"]["generatedContractChanged"] is False
+    assert decision["authority"]["noRegistryMutation"] is True
+    assert report["preflight"]["status"] == "passed"
+
+
+def test_cli_refresh_decision_prepare_writes_decision_json(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    output = tmp_path / "refresh-decision.json"
+    exit_code = main(
+        [
+            "producer-bundle",
+            "prepare-refresh-decision",
+            "--root",
+            str(ROOT),
+            "--fresh-generated-root",
+            str(ROOT / "public-index/generated"),
+            "--package",
+            "xyflow.workspace",
+            "--package",
+            "xyflow.react",
+            "--package",
+            "xyflow.svelte",
+            "--package",
+            "xyflow.system",
+            "--package-id",
+            "xyflow.workspace",
+            "--version",
+            "0.1.0",
+            "--source-repository",
+            "https://github.com/xyflow/xyflow",
+            "--source-revision",
+            "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd",
+            "--output",
+            str(output),
+            "--json",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    written = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report["status"] == "passed"
+    assert written["kind"] == "SpecPMGeneratedCandidateRefreshDecision"
+    assert written["decision"]["updateNeeded"] is False
+    assert preflight_refresh_decision(output, root=ROOT)["status"] == "passed"
+
+
+def test_cli_refresh_decision_prepare_does_not_write_failed_decision(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    output = tmp_path / "refresh-decision.json"
+
+    exit_code = main(
+        [
+            "producer-bundle",
+            "prepare-refresh-decision",
+            "--root",
+            str(tmp_path / "repo"),
+            "--fresh-generated-root",
+            str(tmp_path / "missing-fresh-root"),
+            "--package",
+            "example.package",
+            "--version",
+            "0.1.0",
+            "--source-revision",
+            "a" * 40,
+            "--output",
+            str(output),
+            "--json",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 1
+    assert report["status"] == "failed"
+    assert not output.exists()
+
+
+def test_refresh_decision_prepare_omits_same_source_without_contract_revision(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "repo"
+    current_package = root / "public-index/generated/example.package/0.1.0"
+    curated_package = root / "public-index/curated/example.package/0.1.0"
+    fresh_package = tmp_path / "fresh/example.package/0.1.0"
+    for package in (current_package, curated_package, fresh_package):
+        package.mkdir(parents=True)
+    manifest = "apiVersion: specpm.dev/v0.1\nmetadata:\n  id: example.package\n"
+    (current_package / "specpm.yaml").write_text(manifest, encoding="utf-8")
+    (fresh_package / "specpm.yaml").write_text(manifest, encoding="utf-8")
+
+    report = prepare_refresh_decision(
+        root=root,
+        fresh_generated_root=tmp_path / "fresh",
+        package_ids=["example.package"],
+        package_id="example.package",
+        version="0.1.0",
+        source_revision="a" * 40,
+    )
+
+    assert report["status"] == "passed"
+    assert report["decision"]["decision"]["status"] == "no_update_required"
+    assert "same_source_revision" not in report["decision"]["decision"]["supportingReasons"]
+    assert report["decision"]["comparison"]["sourceRevisionChanged"] is False
+
+
+def test_refresh_decision_prepare_rejects_current_contract_symlink_escape(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "repo"
+    current_package = root / "public-index/generated/example.package/0.1.0"
+    curated_package = root / "public-index/curated/example.package/0.1.0"
+    fresh_package = tmp_path / "fresh/example.package/0.1.0"
+    outside = tmp_path / "outside"
+    for package in (current_package, curated_package, fresh_package, outside):
+        package.mkdir(parents=True)
+    outside_manifest = outside / "specpm.yaml"
+    outside_manifest.write_text(
+        "apiVersion: specpm.dev/v0.1\n"
+        "metadata:\n"
+        "  id: example.package\n"
+        "provenance:\n"
+        f"  sourceRevision: {'b' * 40}\n",
+        encoding="utf-8",
+    )
+    (current_package / "specpm.yaml").symlink_to(outside_manifest)
+    (fresh_package / "specpm.yaml").write_text(
+        "apiVersion: specpm.dev/v0.1\nmetadata:\n  id: example.package\n",
+        encoding="utf-8",
+    )
+
+    report = prepare_refresh_decision(
+        root=root,
+        fresh_generated_root=tmp_path / "fresh",
+        package_ids=["example.package"],
+        package_id="example.package",
+        version="0.1.0",
+        source_revision="a" * 40,
+    )
+
+    assert report["status"] == "failed"
+    assert "refresh_decision_prepare_contract_file_path_unresolved" in issue_codes(report["errors"])
+    assert report["decision"]["comparison"]["sourceRevisionChanged"] is False
+    assert report["summary"]["digestVerifiedCount"] == 0
+
+
+def test_refresh_decision_prepare_flags_generated_contract_delta(tmp_path: Path) -> None:
+    fresh_root = tmp_path / "generated"
+    shutil.copytree(
+        ROOT / "public-index/generated/xyflow.workspace",
+        fresh_root / "xyflow.workspace",
+    )
+    manifest = fresh_root / "xyflow.workspace/0.1.0/specpm.yaml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8") + "\nkeywords:\n  - changed-refresh-candidate\n",
+        encoding="utf-8",
+    )
+
+    report = prepare_refresh_decision(
+        root=ROOT,
+        fresh_generated_root=fresh_root,
+        package_ids=["xyflow.workspace"],
+        package_id="xyflow.workspace",
+        version="0.1.0",
+        source_repository="https://github.com/xyflow/xyflow",
+        source_revision="a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd",
+    )
+
+    assert report["status"] == "passed"
+    assert report["summary"]["updateNeeded"] is True
+    assert report["decision"]["decision"] == {
+        "status": "manual_review_required",
+        "updateNeeded": True,
+        "reason": "refresh_prepare_requires_review",
+        "supportingReasons": [],
+    }
+    assert report["decision"]["comparison"]["generatedContractChanged"] is True
+    assert report["preflight"]["status"] == "passed"
 
 
 def test_refresh_decision_preflight_warns_without_root() -> None:

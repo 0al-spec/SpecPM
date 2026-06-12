@@ -32,6 +32,8 @@ REFRESH_DECISION_API_VERSION = "specpm.decisions/v0"
 REFRESH_DECISION_KIND = "SpecPMGeneratedCandidateRefreshDecision"
 REFRESH_DECISION_PREFLIGHT_KIND = "SpecPMGeneratedCandidateRefreshDecisionPreflightReport"
 REFRESH_DECISION_PREFLIGHT_SCHEMA_VERSION = 1
+REFRESH_DECISION_PREPARE_KIND = "SpecPMGeneratedCandidateRefreshDecisionPrepareReport"
+REFRESH_DECISION_PREPARE_SCHEMA_VERSION = 1
 
 REQUIRED_PRODUCER_EVIDENCE_ROLES = {
     "accepted_source_bundle",
@@ -723,6 +725,344 @@ def preflight_refresh_decision(
         warnings,
         digest_verified_count,
     )
+
+
+def prepare_refresh_decision(
+    *,
+    root: Path,
+    fresh_generated_root: Path,
+    package_ids: list[str],
+    version: str,
+    source_revision: str,
+    source_repository: str | None = None,
+    package_id: str | None = None,
+    scope: str = "package_set",
+    current_generated_root: Path = Path("public-index/generated"),
+    curated_root: Path = Path("public-index/curated"),
+    run_label: str = "local-refresh-evaluation",
+    review_location: str = "local-draft",
+    decision_by: str = "SpecPM maintainer review",
+    receipt_only_changed: bool = True,
+    advisory_report_only_changed: bool = True,
+) -> dict[str, Any]:
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    root_resolved = root.resolve(strict=False)
+    package_ids = [value for value in package_ids if isinstance(value, str) and value]
+    subject_package_id = package_id or (package_ids[0] if package_ids else "")
+
+    if not package_ids:
+        errors.append(
+            issue(
+                "refresh_decision_prepare_packages_missing",
+                "Prepare refresh decision requires at least one --package.",
+                field="packageIds",
+            )
+        )
+    if not non_empty_string(version):
+        errors.append(
+            issue(
+                "refresh_decision_prepare_version_missing",
+                "Prepare refresh decision requires --version.",
+                field="version",
+            )
+        )
+    if not non_empty_string(source_revision):
+        errors.append(
+            issue(
+                "refresh_decision_prepare_source_revision_missing",
+                "Prepare refresh decision requires --source-revision.",
+                field="sourceRevision",
+            )
+        )
+
+    accepted_artifacts: list[str] = []
+    current_generated_artifacts: list[str] = []
+    generated_contract_files: list[dict[str, Any]] = []
+    generated_contract_changed = False
+    accepted_contract_changed = False
+    source_revision_changed = False
+    source_revision_evidence_found = False
+
+    for item_index, item_package_id in enumerate(package_ids):
+        package_field = f"packageIds[{item_index}]"
+        if not is_safe_relative_path(item_package_id) or "/" in item_package_id:
+            errors.append(
+                issue(
+                    "refresh_decision_prepare_package_id_unsafe",
+                    "Package IDs must be safe single path segments for generated refresh compare.",
+                    field=package_field,
+                )
+            )
+            continue
+
+        current_package_dir = root_join(
+            root_resolved,
+            current_generated_root,
+            item_package_id,
+            version,
+        )
+        fresh_package_dir = root_join(root_resolved, fresh_generated_root, item_package_id, version)
+        curated_package_dir = root_join(root_resolved, curated_root, item_package_id, version)
+        current_artifact = repo_relative_path(root_resolved, current_package_dir)
+        accepted_artifact = repo_relative_path(root_resolved, curated_package_dir)
+        if current_artifact is None:
+            errors.append(
+                issue(
+                    "refresh_decision_prepare_current_path_unresolved",
+                    "Current generated package path must resolve within --root.",
+                    field=package_field,
+                )
+            )
+        else:
+            current_generated_artifacts.append(current_artifact)
+        if accepted_artifact is None:
+            errors.append(
+                issue(
+                    "refresh_decision_prepare_curated_path_unresolved",
+                    "Curated package path must resolve within --root.",
+                    field=package_field,
+                )
+            )
+        else:
+            accepted_artifacts.append(accepted_artifact)
+
+        if not curated_package_dir.is_dir():
+            accepted_contract_changed = True
+            warnings.append(
+                issue(
+                    "refresh_decision_prepare_curated_artifact_missing",
+                    (
+                        "Curated accepted artifact is missing: "
+                        f"{accepted_artifact or curated_package_dir}."
+                    ),
+                    field=package_field,
+                )
+            )
+
+        current_contract_candidates = (
+            refresh_contract_files(current_package_dir) if current_artifact is not None else []
+        )
+        current_contracts: list[Path] = []
+        for current_contract in current_contract_candidates:
+            current_contract_repo_path = repo_relative_path(root_resolved, current_contract)
+            if current_contract_repo_path is None:
+                errors.append(
+                    issue(
+                        "refresh_decision_prepare_contract_file_path_unresolved",
+                        "Current generated contract file must resolve within --root.",
+                        field=package_field,
+                    )
+                )
+                continue
+            current_contracts.append(current_contract)
+            generated_contract_files.append(
+                {
+                    "path": current_contract_repo_path,
+                    "sha256": sha256_file(current_contract),
+                }
+            )
+        fresh_contracts = refresh_contract_files(fresh_package_dir)
+        if not current_contracts:
+            errors.append(
+                issue(
+                    "refresh_decision_prepare_current_contract_files_missing",
+                    (
+                        "Current generated artifact has no contract files: "
+                        f"{current_artifact or current_package_dir}."
+                    ),
+                    field=package_field,
+                )
+            )
+        if not fresh_contracts:
+            generated_contract_changed = True
+            errors.append(
+                issue(
+                    "refresh_decision_prepare_fresh_contract_files_missing",
+                    f"Fresh generated artifact has no contract files: {fresh_package_dir}.",
+                    field=package_field,
+                )
+            )
+
+        current_relative_paths = {
+            path.relative_to(current_package_dir) for path in current_contracts
+        }
+        fresh_relative_paths = {path.relative_to(fresh_package_dir) for path in fresh_contracts}
+        if current_relative_paths != fresh_relative_paths:
+            generated_contract_changed = True
+            warnings.append(
+                issue(
+                    "refresh_decision_prepare_contract_file_set_changed",
+                    (
+                        "Fresh generated contract-file set differs from the current "
+                        "generated artifact."
+                    ),
+                    field=package_field,
+                )
+            )
+
+        for current_contract in current_contracts:
+            relative_contract = current_contract.relative_to(current_package_dir)
+            fresh_contract = fresh_package_dir / relative_contract
+            if (
+                fresh_contract.is_file()
+                and current_contract.read_bytes() != fresh_contract.read_bytes()
+            ):
+                generated_contract_changed = True
+
+        current_source_revisions = source_revisions_from_contracts(current_contracts)
+        if current_source_revisions:
+            source_revision_evidence_found = True
+        if current_source_revisions and any(
+            value != source_revision for value in current_source_revisions
+        ):
+            source_revision_changed = True
+
+    update_needed = bool(
+        errors or generated_contract_changed or accepted_contract_changed or source_revision_changed
+    )
+    status = "manual_review_required" if update_needed else "no_update_required"
+    reason = "refresh_prepare_requires_review" if update_needed else "no_contract_delta"
+    supporting_reasons: list[str] = []
+    if not update_needed:
+        supporting_reasons = [
+            "generated_contract_bytes_unchanged",
+            "curated_artifact_remains_stronger",
+            "immutable_generated_candidate",
+        ]
+        if source_revision_evidence_found:
+            supporting_reasons.insert(0, "same_source_revision")
+        if receipt_only_changed:
+            insert_index = 3 if source_revision_evidence_found else 2
+            supporting_reasons.insert(insert_index, "producer_receipt_only_delta")
+
+    decision = {
+        "apiVersion": REFRESH_DECISION_API_VERSION,
+        "kind": REFRESH_DECISION_KIND,
+        "schemaVersion": 1,
+        "decisionId": refresh_decision_id(subject_package_id, version, source_revision, status),
+        "requiredFor": ["public_index_refresh_evaluation"],
+        "subject": {
+            "packageId": subject_package_id,
+            "version": version,
+            "scope": scope,
+            "packageIds": package_ids,
+            "acceptedArtifacts": accepted_artifacts,
+            "currentGeneratedArtifacts": current_generated_artifacts,
+            "freshGeneratedRun": {
+                "kind": "local_review_evidence",
+                "label": run_label,
+                "sourceRepository": source_repository or "",
+                "sourceRevision": source_revision,
+                "summary": refresh_decision_fresh_run_summary(update_needed),
+            },
+        },
+        "decision": {
+            "status": status,
+            "updateNeeded": update_needed,
+            "reason": reason,
+            "supportingReasons": supporting_reasons,
+        },
+        "comparison": {
+            "sourceRevisionChanged": source_revision_changed,
+            "acceptedContractChanged": accepted_contract_changed,
+            "generatedContractChanged": generated_contract_changed,
+            "capabilitiesChanged": generated_contract_changed,
+            "relationsChanged": generated_contract_changed,
+            "evidenceChanged": generated_contract_changed,
+            "receiptOnlyChanged": receipt_only_changed,
+            "advisoryReportOnlyChanged": advisory_report_only_changed,
+            "freshCandidateCount": len(package_ids),
+        },
+        "generatedContractFiles": generated_contract_files,
+        "authority": {
+            "producerEvidenceAuthority": "evidence_only",
+            "registryAuthority": "maintainer_review_required",
+            "noRegistryMutation": True,
+        },
+        "maintainerReview": {
+            "decisionBy": decision_by,
+            "reviewLocation": review_location,
+            "summary": refresh_decision_review_summary(update_needed),
+        },
+    }
+    preflight_errors: list[dict[str, Any]] = []
+    preflight_warnings: list[dict[str, Any]] = []
+    digest_verified_count = validate_refresh_decision(
+        decision,
+        preflight_errors,
+        preflight_warnings,
+        root_resolved,
+    )
+    return refresh_decision_prepare_report(
+        root_resolved,
+        fresh_generated_root,
+        decision,
+        errors,
+        warnings,
+        preflight_errors,
+        preflight_warnings,
+        digest_verified_count,
+    )
+
+
+def refresh_decision_prepare_report(
+    root: Path,
+    fresh_generated_root: Path,
+    decision: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    preflight_errors: list[dict[str, Any]],
+    preflight_warnings: list[dict[str, Any]],
+    digest_verified_count: int,
+) -> dict[str, Any]:
+    subject = _mapping_value(decision.get("subject"))
+    decision_payload = _mapping_value(decision.get("decision"))
+    generated_contract_files = _list_of_mappings(decision.get("generatedContractFiles"))
+    all_errors = errors + preflight_errors
+    all_warnings = warnings + preflight_warnings
+    status = "failed" if all_errors else ("warning" if all_warnings else "passed")
+    return {
+        "kind": REFRESH_DECISION_PREPARE_KIND,
+        "schemaVersion": REFRESH_DECISION_PREPARE_SCHEMA_VERSION,
+        "status": status,
+        "root": str(root),
+        "freshGeneratedRoot": str(fresh_generated_root),
+        "refreshDecision": {
+            "decisionId": decision.get("decisionId"),
+            "packageId": subject.get("packageId"),
+            "version": subject.get("version"),
+            "status": decision_payload.get("status"),
+            "updateNeeded": decision_payload.get("updateNeeded"),
+            "reason": decision_payload.get("reason"),
+            "packageCount": len(string_list(subject.get("packageIds"))),
+            "generatedContractFileCount": len(generated_contract_files),
+            "digestVerifiedCount": digest_verified_count,
+        },
+        "summary": {
+            "packageId": subject.get("packageId"),
+            "packageCount": len(string_list(subject.get("packageIds"))),
+            "generatedContractFileCount": len(generated_contract_files),
+            "digestVerifiedCount": digest_verified_count,
+            "updateNeeded": decision_payload.get("updateNeeded"),
+            "errorCount": len(all_errors),
+            "warningCount": len(all_warnings),
+        },
+        "decision": decision,
+        "preflight": {
+            "kind": REFRESH_DECISION_PREFLIGHT_KIND,
+            "status": (
+                "failed" if preflight_errors else ("warning" if preflight_warnings else "passed")
+            ),
+            "digestVerifiedCount": digest_verified_count,
+            "errorCount": len(preflight_errors),
+            "warningCount": len(preflight_warnings),
+            "errors": preflight_errors,
+            "warnings": preflight_warnings,
+        },
+        "errors": all_errors,
+        "warnings": all_warnings,
+    }
 
 
 def refresh_decision_report(
@@ -3831,6 +4171,100 @@ def resolve_package_set_path(root: Path, path: str) -> Path | None:
     if not candidate.is_relative_to(root_resolved):
         return None
     return candidate
+
+
+def root_join(root: Path, base: Path, *parts: str) -> Path:
+    if base.is_absolute():
+        return base.joinpath(*parts)
+    return root.joinpath(base, *parts)
+
+
+def repo_relative_path(root: Path, path: Path) -> str | None:
+    root_resolved = root.resolve(strict=False)
+    resolved = path.resolve(strict=False)
+    if not resolved.is_relative_to(root_resolved):
+        return None
+    relative = resolved.relative_to(root_resolved).as_posix()
+    if not is_safe_relative_path(relative):
+        return None
+    return relative
+
+
+def refresh_contract_files(package_dir: Path) -> list[Path]:
+    paths: list[Path] = []
+    manifest = package_dir / "specpm.yaml"
+    if manifest.is_file():
+        paths.append(manifest)
+    specs_dir = package_dir / "specs"
+    if specs_dir.is_dir():
+        paths.extend(sorted(specs_dir.glob("*.spec.yaml")))
+    return paths
+
+
+def source_revisions_from_contracts(paths: list[Path]) -> set[str]:
+    revisions: set[str] = set()
+    for path in paths:
+        if path.suffix not in {".yaml", ".yml"}:
+            continue
+        try:
+            loaded = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        if not isinstance(loaded, dict):
+            continue
+        collect_source_revisions(loaded, revisions)
+    return revisions
+
+
+def collect_source_revisions(value: Any, revisions: set[str]) -> None:
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            if key in {"sourceRevision", "revision"} and isinstance(nested, str):
+                if re.fullmatch(r"[a-f0-9]{40}", nested):
+                    revisions.add(nested)
+            else:
+                collect_source_revisions(nested, revisions)
+    elif isinstance(value, list):
+        for item in value:
+            collect_source_revisions(item, revisions)
+
+
+def refresh_decision_id(
+    package_id: str,
+    version: str,
+    source_revision: str,
+    status: str,
+) -> str:
+    safe_package_id = re.sub(r"[^a-zA-Z0-9_.-]+", "-", package_id).strip("-") or "unknown"
+    safe_version = re.sub(r"[^a-zA-Z0-9_.-]+", "-", version).strip("-") or "unknown"
+    revision_prefix = source_revision[:12] if source_revision else "unknown"
+    return (
+        f"specpm-refresh-decision-draft-{safe_package_id}-{safe_version}-{revision_prefix}-{status}"
+    )
+
+
+def refresh_decision_fresh_run_summary(update_needed: bool) -> str:
+    if update_needed:
+        return (
+            "Fresh generated candidate comparison requires maintainer review before any "
+            "registry update."
+        )
+    return (
+        "Fresh generated candidate comparison reproduced the current generated contract "
+        "files; no registry update is proposed."
+    )
+
+
+def refresh_decision_review_summary(update_needed: bool) -> str:
+    if update_needed:
+        return (
+            "Prepared as review evidence only; maintainer review must decide whether a "
+            "curated update, generated candidate update, or package version change is required."
+        )
+    return (
+        "Prepared as no-update review evidence because current and fresh generated "
+        "contract-bearing files match."
+    )
 
 
 def candidate_tree_contains_symlink(path: Path) -> bool:

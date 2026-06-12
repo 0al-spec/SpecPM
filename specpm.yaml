@@ -33,6 +33,7 @@ index:
       - specpm.registry.curated_accepted_artifacts
       - specpm.registry.generated_candidate_refresh_decision_policy
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.index_removal_request_flow
       - specpm.registry.namespace_claim_request_flow
       - specpm.registry.namespace_claim_policy
