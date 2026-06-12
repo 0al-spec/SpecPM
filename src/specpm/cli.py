@@ -32,6 +32,7 @@ from specpm.core import (
 )
 from specpm.producer_bundle import (
     materialize_package_set_handoff,
+    preflight_package_set_ai_draft,
     preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
     render_package_set_materialization_manifest_candidate,
@@ -321,6 +322,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ai_enrichment_preflight.add_argument("--json", action="store_true", help="Emit stable JSON.")
     ai_enrichment_preflight.set_defaults(handler=handle_ai_enrichment_preflight)
+
+    ai_draft_preflight = producer_bundle_subparsers.add_parser(
+        "preflight-ai-draft",
+        help="Preflight SpecHarvester package-set AI draft proposal evidence.",
+    )
+    ai_draft_preflight.add_argument(
+        "--body",
+        required=True,
+        help="JSON or Markdown file containing SpecHarvesterPackageSetAIDraftProposal.",
+    )
+    ai_draft_preflight.add_argument(
+        "--root",
+        help="Optional package-set bundle/request root used to verify workspace inventory.",
+    )
+    ai_draft_preflight.add_argument("--json", action="store_true", help="Emit stable JSON.")
+    ai_draft_preflight.set_defaults(handler=handle_ai_draft_preflight)
 
     package_set_materialize = producer_bundle_subparsers.add_parser(
         "materialize-package-set",
@@ -691,6 +708,18 @@ def handle_ai_enrichment_preflight(args: argparse.Namespace) -> int:
     return 1 if report["status"] == "failed" else 0
 
 
+def handle_ai_draft_preflight(args: argparse.Namespace) -> int:
+    report = preflight_package_set_ai_draft(
+        Path(args.body),
+        root=Path(args.root) if args.root else None,
+    )
+    if args.json:
+        print_json(report)
+    else:
+        print_ai_draft_preflight(report)
+    return 1 if report["status"] == "failed" else 0
+
+
 def handle_package_set_materialize(args: argparse.Namespace) -> int:
     report = materialize_package_set_handoff(
         Path(args.handoff),
@@ -749,6 +778,21 @@ def print_ai_enrichment_preflight(report: dict[str, Any]) -> None:
     print(
         f"{report['status']}: package-set AI enrichment preflight "
         f"({summary['proposalCount']} proposals, "
+        f"{summary['errorCount']} errors, {summary['warningCount']} warnings)"
+    )
+    for issue_payload in report["errors"]:
+        print(f"error {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+    for issue_payload in report["warnings"]:
+        print(f"warning {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+
+
+def print_ai_draft_preflight(report: dict[str, Any]) -> None:
+    summary = report["summary"]
+    print(
+        f"{report['status']}: package-set AI draft preflight "
+        f"({summary['selectedMemberCount']} selected, "
+        f"{summary['excludedPackageCount']} excluded, "
+        f"{summary['relationCount']} relations, "
         f"{summary['errorCount']} errors, {summary['warningCount']} warnings)"
     )
     for issue_payload in report["errors"]:

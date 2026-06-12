@@ -124,6 +124,10 @@ specpm producer-bundle preflight-ai-enrichment \
   [--root <package-set-bundle-root>] \
   [--handoff <package-set-handoff-proposal.json>] \
   [--json]
+specpm producer-bundle preflight-ai-draft \
+  --body <package-set-ai-draft-proposal.json> \
+  [--root <package-set-bundle-root>] \
+  [--json]
 specpm producer-bundle materialize-package-set \
   --handoff <package-set-handoff-proposal.json> \
   --root <package-set-bundle-root> \
@@ -161,6 +165,14 @@ boundary, non-goals, provider provenance, package ID alignment when `--handoff`
 is provided, allowlisted evidence paths, and `interfaces[].kind`. It rejects
 acceptance-decision fields and does not feed AI output into package-set
 materialization.
+
+`preflight-ai-draft` checks optional
+`SpecHarvesterPackageSetAIDraftProposal` artifacts before handoff generation. It
+verifies artifact identity, proposal-only authority, privacy flags, provider
+provenance, workspace inventory digest/alignment when `--root` is provided,
+selected/excluded package consistency, allowlisted evidence paths, and
+`contains` relation endpoints. It rejects acceptance-decision fields and does
+not create handoffs, materialize packages, or publish registry metadata.
 
 `materialize-package-set` consumes the same package-set handoff only after
 maintainers pass explicit `--package` and optional `--relation` selections. In

@@ -141,9 +141,9 @@ specpm producer-bundle preflight-ai-enrichment \
 This checks the machine-readable proposal boundary. It does not accept model
 suggestions or alter package-set materialization.
 
-## AI Draft Preflight Plan
+## AI Draft Preflight Checklist
 
-SpecPM should add a consumer-side AI draft preflight before maintainers use
+Maintainers can run a consumer-side AI draft preflight before using
 `SpecHarvesterPackageSetAIDraftProposal` as review evidence:
 
 ```bash
@@ -153,14 +153,14 @@ specpm producer-bundle preflight-ai-draft \
   --json
 ```
 
-The planned preflight should verify artifact identity, proposal-only authority,
-privacy flags, provider receipts, workspace inventory input, package ID
-alignment, inventory-derived `sourceTargetPath` values, allowlisted evidence
-paths, selected/excluded package consistency, and `contains` relation endpoints.
-It should reject registry acceptance decision fields and remain review evidence
-only. A passing report must not create a handoff, accept package members, accept
-relations, mutate generated specs, materialize accepted sources, or publish
-registry metadata.
+This emits `SpecPMPackageSetAIDraftPreflightReport` and verifies artifact
+identity, proposal-only authority, privacy flags, provider receipts, workspace
+inventory input, package ID alignment, inventory-derived `sourceTargetPath`
+values, allowlisted evidence paths, selected/excluded package consistency, and
+`contains` relation endpoints. It rejects registry acceptance decision fields and
+remains review evidence only. A passing report must not create a handoff, accept
+package members, accept relations, mutate generated specs, materialize accepted
+sources, or publish registry metadata.
 
 ## Partial Acceptance
 

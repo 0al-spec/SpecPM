@@ -81,7 +81,9 @@ exclusions, and `contains` relations from deterministic workspace inventory
 evidence. It is not a package-set handoff, AI enrichment evidence, relation
 acceptance, or materialization input.
 
-The planned SpecPM consumer preflight should verify `apiVersion:
+SpecPM can check this artifact with `specpm producer-bundle
+preflight-ai-draft`, which emits a
+`SpecPMPackageSetAIDraftPreflightReport`. The preflight verifies `apiVersion:
 spec-harvester.package-set-ai-draft/v0`, `kind:
 SpecHarvesterPackageSetAIDraftProposal`, `authority:
 proposal_only_not_registry_acceptance`, privacy flags, provider receipts,
