@@ -620,8 +620,6 @@ def preflight_package_set_ai_draft(
             "not_loaded",
         )
 
-    inventory = load_ai_draft_workspace_inventory(draft, root, errors, warnings)
-    inventory_alignment = "not_provided"
     if root is None:
         warnings.append(
             issue(
@@ -630,12 +628,9 @@ def preflight_package_set_ai_draft(
                 field="root",
             )
         )
-    elif inventory:
-        inventory_alignment = "verified"
-    else:
-        inventory_alignment = "failed"
-
+    inventory = load_ai_draft_workspace_inventory(draft, root, errors, warnings)
     validate_package_set_ai_draft(draft, errors, warnings, root, inventory)
+    inventory_alignment = ai_draft_inventory_alignment(root, inventory, errors)
 
     return package_set_ai_draft_report(
         body_path,
@@ -2983,9 +2978,32 @@ def load_ai_draft_workspace_inventory(
         return {}
     path = inventory_input.get("path")
     if not isinstance(path, str) or not path:
+        errors.append(
+            issue(
+                "ai_draft_workspace_inventory_path_missing",
+                "AI draft workspace inventory input must include a non-empty path.",
+                field="aiDraft.inputs.workspace_inventory.path",
+            )
+        )
         return {}
     path_scope = inventory_input.get("pathScope")
+    if path_scope not in AI_DRAFT_INPUT_PATH_SCOPES:
+        errors.append(
+            issue(
+                "ai_draft_workspace_inventory_path_scope_invalid",
+                "AI draft workspace inventory input must use a known pathScope.",
+                field="aiDraft.inputs.workspace_inventory.pathScope",
+            )
+        )
+        return {}
     if path_scope == "local_path":
+        errors.append(
+            issue(
+                "ai_draft_workspace_inventory_path_scope_invalid",
+                "AI draft preflight does not read workspace_inventory local_path inputs.",
+                field="aiDraft.inputs.workspace_inventory.pathScope",
+            )
+        )
         return {}
     resolved = resolve_package_set_path(root, path)
     if resolved is None:
@@ -3046,6 +3064,24 @@ def load_ai_draft_workspace_inventory(
             )
         )
     return loaded
+
+
+def ai_draft_inventory_alignment(
+    root: Path | None,
+    inventory: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> str:
+    if root is None:
+        return "not_provided"
+    if any(
+        isinstance(error.get("code"), str)
+        and error["code"].startswith("ai_draft_workspace_inventory_")
+        for error in errors
+    ):
+        return "failed"
+    if workspace_inventory_package_records(inventory):
+        return "verified"
+    return "failed"
 
 
 def ai_draft_allowed_evidence_paths(draft: dict[str, Any]) -> set[str]:

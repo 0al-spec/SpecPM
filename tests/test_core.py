@@ -3830,12 +3830,52 @@ def test_ai_draft_preflight_rejects_unallowlisted_evidence_and_digest_mismatch(
     report = preflight_package_set_ai_draft(ai_draft, root=bundle_set)
 
     assert report["status"] == "failed"
+    assert report["packageSetAIDraft"]["inventoryAlignment"] == "failed"
     assert {
         "ai_draft_workspace_inventory_digest_mismatch",
         "ai_draft_input_digest_mismatch",
         "ai_draft_evidence_path_unsafe",
         "ai_draft_evidence_path_not_allowlisted",
     }.issubset(issue_codes(report["errors"]))
+
+
+def test_ai_draft_preflight_rejects_workspace_inventory_without_path(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    ai_draft = write_ai_draft_fixture(bundle_set)
+    payload = json.loads(ai_draft.read_text(encoding="utf-8"))
+    payload["inputs"][0].pop("path")
+    payload["inputs"][0].pop("digest")
+    ai_draft.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_draft(ai_draft, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert report["packageSetAIDraft"]["inventoryAlignment"] == "failed"
+    assert "ai_draft_workspace_inventory_path_missing" in issue_codes(report["errors"])
+
+
+def test_ai_draft_preflight_rejects_workspace_inventory_unknown_scope_without_reading(
+    tmp_path: Path,
+) -> None:
+    bundle_set = tmp_path / "package-set"
+    ai_draft = write_ai_draft_fixture(bundle_set)
+    payload = json.loads(ai_draft.read_text(encoding="utf-8"))
+    payload["inputs"][0]["pathScope"] = "unknown_scope"
+    payload["inputs"][0]["path"] = "../workspace-inventory.json"
+    payload["inputs"][0].pop("digest")
+    ai_draft.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_package_set_ai_draft(ai_draft, root=bundle_set)
+
+    assert report["status"] == "failed"
+    assert report["packageSetAIDraft"]["inventoryAlignment"] == "failed"
+    assert {
+        "ai_draft_workspace_inventory_path_scope_invalid",
+        "ai_draft_input_path_scope_invalid",
+    }.issubset(issue_codes(report["errors"]))
+    assert "ai_draft_workspace_inventory_path_escape" not in issue_codes(report["errors"])
 
 
 def test_package_set_materialization_prepares_selected_accepted_source_entries(
