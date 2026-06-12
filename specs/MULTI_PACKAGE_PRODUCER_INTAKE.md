@@ -256,6 +256,12 @@ The full curated artifact lifecycle is documented in
 - package relation acceptance is recorded separately in
   `public-index/accepted-packages.yml` `relations[]`.
 
+When a fresh package-set run is available, maintainers can use
+`specpm producer-bundle prepare-refresh-decision` to draft the refresh decision
+from generated contract-file comparisons before running
+`preflight-refresh-decision`. This remains evidence preparation, not package or
+relation acceptance.
+
 ## Bundle-Set Checklist
 
 Before accepting any part of a multi-package proposal, maintainers should verify:

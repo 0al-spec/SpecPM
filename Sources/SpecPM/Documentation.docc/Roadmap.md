@@ -310,6 +310,11 @@ The `xyflow` no-op refresh decision is now captured as a checked example
 fixture under `tests/fixtures/refresh_decisions/`, giving future tooling a
 stable artifact for `updateNeeded: false` without making no-op records registry
 authority.
+SpecPM can now prepare refresh decision records from a fresh generated candidate
+tree with `specpm producer-bundle prepare-refresh-decision`, compare
+contract-bearing generated files, and emit read-only
+`SpecPMGeneratedCandidateRefreshDecisionPrepareReport` evidence before any
+maintainer registry decision.
 SpecPM now has a consumer-side `preflight-ai-draft` gate for
 `SpecHarvesterPackageSetAIDraftProposal`. It verifies AI-proposed member
 selection, exclusions, and `contains` relations against deterministic workspace

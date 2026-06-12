@@ -175,6 +175,9 @@ provides:
     - id: specpm.registry.generated_candidate_refresh_decision_preflight
       role: secondary
       summary: Preflight SpecPMGeneratedCandidateRefreshDecision records for decision shape, no-op consistency, authority boundaries, safe paths, and generated contract-file digests.
+    - id: specpm.registry.generated_candidate_refresh_decision_prepare
+      role: secondary
+      summary: Prepare draft SpecPMGeneratedCandidateRefreshDecision records from fresh/current generated artifact comparisons without mutating registry state.
     - id: specpm.registry.package_set_relation_metadata
       role: secondary
       summary: Publish maintainer-reviewed package-set relation metadata through additive `/v0` payloads and the static viewer without inferring relations from producer output.
@@ -459,9 +462,13 @@ interfaces:
             - text/plain
     - id: cli_producer-bundle
       kind: cli
-      summary: specpm producer-bundle preflight, preflight-refresh-decision, and materialize-package-set for consumer-side review of producer evidence, refresh decisions, and maintainer-selected package-set accepted-source artifacts.
+      summary: specpm producer-bundle preflight, prepare/preflight-refresh-decision, and materialize-package-set for consumer-side review of producer evidence, refresh decisions, and maintainer-selected package-set accepted-source artifacts.
       outputs:
         - name: producer_bundle_preflight_report
+          mediaTypes:
+            - application/json
+            - text/plain
+        - name: refresh_decision_prepare_report
           mediaTypes:
             - application/json
             - text/plain
@@ -734,6 +741,7 @@ evidence:
       - specpm.registry.accepted_manifest_pr_helper
       - specpm.registry.public_index_accepted_manifest
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.generated_candidate_refresh_decision_prepare
   - id: add_specpackages_issue_template
     kind: documentation
     path: .github/ISSUE_TEMPLATE/add-specpackages.yml
@@ -838,6 +846,7 @@ evidence:
       - specpm.specs.ai_enrichment_preflight
       - specpm.specs.ai_draft_preflight
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.generated_candidate_refresh_decision_prepare
   - id: index_submission_validator_source
     kind: source
     path: src/specpm/index_submission.py
@@ -1010,6 +1019,7 @@ evidence:
       - specpm.specs.ai_enrichment_preflight
       - specpm.specs.ai_draft_preflight
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.package_set_materialization_helper
       - specpm.specs.producer_receipt_contract
       - producer_receipts_not_generation_authority
@@ -1163,6 +1173,7 @@ evidence:
     supports:
       - specpm.registry.generated_candidate_refresh_decision_policy
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake
@@ -1299,6 +1310,7 @@ evidence:
       - specpm.registry.observed_intent_catalog
       - specpm.specs.ai_draft_preflight
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.generated_candidate_refresh_decision_prepare
   - id: core_source
     kind: source
     path: src/specpm/core.py
@@ -1465,6 +1477,7 @@ evidence:
       - specpm.specs.ai_enrichment_preflight
       - specpm.specs.ai_draft_preflight
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.specs.producer_receipt_contract
   - id: docc_producer_bundle_fixture_policy
     kind: documentation
@@ -1585,6 +1598,7 @@ evidence:
       - specpm.documentation.docc_site
       - specpm.registry.generated_candidate_refresh_decision_policy
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake

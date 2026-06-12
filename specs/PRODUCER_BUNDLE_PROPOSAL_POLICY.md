@@ -292,6 +292,28 @@ The command verifies the `specpm.decisions/v0` decision envelope,
 authority boundary, safe artifact paths, and generated contract-file digests.
 It is review evidence only and does not perform registry acceptance or mutation.
 
+When maintainers have a fresh generated candidate tree and need to decide
+whether it changes current registry evidence, SpecPM can prepare the decision
+record first:
+
+```bash
+specpm producer-bundle prepare-refresh-decision \
+  --root <repository-root> \
+  --fresh-generated-root <fresh-generated-root> \
+  --package <package-id> \
+  --version <version> \
+  --source-revision <40-char-source-sha> \
+  --output <generated-candidate-refresh-decision.json> \
+  --json
+```
+
+The report kind is `SpecPMGeneratedCandidateRefreshDecisionPrepareReport`. The
+helper compares contract-bearing generated files, emits a draft
+`SpecPMGeneratedCandidateRefreshDecision`, and immediately runs the same
+consumer-side preflight checks. It is read-only review evidence and does not
+write accepted packages, generated candidates, relations, or public registry
+metadata.
+
 ## Fixture Alignment
 
 Cross-repository fixture ownership and drift handling are defined in

@@ -2362,6 +2362,54 @@ Result:
   operator guidance, DocC, and self-spec document the command and non-authority
   boundary.
 
+### P66-T20. Generated Candidate Refresh Decision Prepare Helper
+
+Status: Completed.
+
+Motivation:
+
+- P66-T19 can verify an already-written refresh decision, but maintainers still
+  need a repeatable way to draft that decision from a fresh generated candidate
+  run.
+- Manual fixture editing is too error-prone for package-set refresh review:
+  paths, package IDs, source revision metadata, and generated contract-file
+  digests must stay aligned.
+
+Goal:
+
+- Add a read-only `specpm producer-bundle prepare-refresh-decision` command that
+  compares a fresh generated artifact tree with the current
+  `public-index/generated` evidence.
+- Compare contract-bearing generated files (`specpm.yaml` and
+  `specs/*.spec.yaml`), record current generated SHA-256 digests, and produce a
+  draft `SpecPMGeneratedCandidateRefreshDecision`.
+- Return `no_update_required` when fresh and current contract files match, and
+  `manual_review_required` when generated contract drift or source revision
+  drift requires maintainer review.
+- Immediately run the existing preflight rules against the prepared decision,
+  while keeping the helper read-only and non-authoritative.
+
+Expected result:
+
+- Maintainers can run prepare against a fresh SpecHarvester output and get both
+  a machine-readable prepare report and an optional decision JSON file.
+- The helper does not mutate accepted packages, generated candidates, accepted
+  relations, or public registry metadata.
+- The prepared decision can be passed directly to
+  `specpm producer-bundle preflight-refresh-decision`.
+
+Result:
+
+- `specpm producer-bundle prepare-refresh-decision` emits
+  `SpecPMGeneratedCandidateRefreshDecisionPrepareReport`.
+- The command supports package-set comparisons through repeated `--package`,
+  explicit `--package-id`, `--version`, `--source-revision`, and `--output`.
+- Regression coverage checks the real `xyflow` no-op prepare path, CLI decision
+  output, preflight compatibility, and generated contract-delta detection.
+- Refresh decision policy, producer bundle policy, public index operator guide,
+  CLI reference, DocC, roadmap, and self-spec document the helper and
+  non-authority boundary.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

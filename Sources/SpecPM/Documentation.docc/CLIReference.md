@@ -188,6 +188,15 @@ is provided. The report kind is
 review evidence only and does not mutate accepted packages, generated
 candidates, relations, or registry metadata.
 
+`prepare-refresh-decision` builds a draft
+`SpecPMGeneratedCandidateRefreshDecision` from a fresh generated artifact tree
+and current registry evidence. It compares `specpm.yaml` and
+`specs/*.spec.yaml`, writes the decision JSON with `--output` when requested,
+and emits `SpecPMGeneratedCandidateRefreshDecisionPrepareReport`. It can produce
+`no_update_required` for byte-identical generated contract files or
+`manual_review_required` when contract drift needs maintainer review. It is
+read-only and does not mutate registry artifacts.
+
 `materialize-package-set` consumes the same package-set handoff only after
 maintainers pass explicit `--package` and optional `--relation` selections. In
 dry-run mode it writes a materialization report, accepted-manifest candidate,
