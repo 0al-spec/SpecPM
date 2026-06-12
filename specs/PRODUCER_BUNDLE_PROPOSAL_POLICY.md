@@ -277,6 +277,21 @@ workflow runs this command only when the pull request body contains both
 machine-readable evidence blocks. Non-producer pull requests are reported as
 skipped.
 
+SpecPM can also preflight generated candidate refresh decisions:
+
+```bash
+specpm producer-bundle preflight-refresh-decision \
+  --body <generated-candidate-refresh-decision.json> \
+  --root <repository-root> \
+  --json
+```
+
+The report kind is `SpecPMGeneratedCandidateRefreshDecisionPreflightReport`.
+The command verifies the `specpm.decisions/v0` decision envelope,
+`SpecPMGeneratedCandidateRefreshDecision` kind, status/update consistency,
+authority boundary, safe artifact paths, and generated contract-file digests.
+It is review evidence only and does not perform registry acceptance or mutation.
+
 ## Fixture Alignment
 
 Cross-repository fixture ownership and drift handling are defined in

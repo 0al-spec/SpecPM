@@ -91,6 +91,26 @@ A complete example fixture is available at
 and snapshots generated contract-file digests that support
 `updateNeeded: false`.
 
+## Consumer-Side Preflight
+
+SpecPM can verify refresh decision records with:
+
+```bash
+specpm producer-bundle preflight-refresh-decision \
+  --body tests/fixtures/refresh_decisions/xyflow-no-update.example.json \
+  --root . \
+  --json
+```
+
+The command emits `SpecPMGeneratedCandidateRefreshDecisionPreflightReport`. It
+checks the shared decision envelope, status/update consistency,
+`no_contract_delta` no-op semantics, authority flags, package IDs, safe artifact
+paths, and generated contract-file SHA-256 digests when `--root` is provided.
+
+Passing preflight means the decision is internally consistent review evidence.
+It does not accept a package, update curated artifacts, mutate generated
+candidates, accept relations, or publish registry metadata.
+
 ## References
 
 - `specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md`

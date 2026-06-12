@@ -190,6 +190,21 @@ record `status: no_update_required` instead of opening a registry churn PR.
 Producer receipt churn, local output paths, or a newly emitted advisory quality
 report are review evidence, not accepted contract deltas by themselves.
 
+When a `SpecPMGeneratedCandidateRefreshDecision` record is available,
+maintainers should run:
+
+```bash
+specpm producer-bundle preflight-refresh-decision \
+  --body <generated-candidate-refresh-decision.json> \
+  --root . \
+  --json
+```
+
+The preflight checks decision identity, no-op/update consistency, authority
+flags, safe paths, and generated contract-file digests. Passing preflight is
+review evidence only; it does not mutate accepted packages, generated
+candidates, relations, or registry metadata.
+
 For producer-backed pull requests that include machine-readable
 `producerEvidenceLinks` and `registryAcceptanceDecision` blocks, maintainers or
 CI may run:

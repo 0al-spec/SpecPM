@@ -2317,6 +2317,51 @@ Result:
   referenced artifact paths, generated contract-file digests, and non-authority
   boundary.
 
+### P66-T19. Generated Candidate Refresh Decision Preflight
+
+Status: Completed.
+
+Motivation:
+
+- P66-T18 added a concrete no-op refresh decision fixture, but the fixture was
+  only checked by repository tests.
+- Maintainers need a reusable CLI gate for future refresh decisions so they can
+  verify identity, no-op semantics, authority boundaries, safe paths, and
+  generated contract-file digests before using a decision as review evidence.
+
+Goal:
+
+- Add a read-only `specpm producer-bundle preflight-refresh-decision` command
+  that accepts `SpecPMGeneratedCandidateRefreshDecision` JSON or Markdown with a
+  JSON block.
+- Verify the shared `apiVersion: specpm.decisions/v0` envelope, `kind`,
+  `schemaVersion`, `requiredFor`, subject package IDs, decision status/update
+  consistency, `no_contract_delta` no-op semantics, comparison flags, authority
+  flags, maintainer review fields, safe paths, and SHA-256 digests when
+  `--root` is provided.
+- Keep passing reports as review evidence only, with no accepted-source,
+  generated-candidate, relation, or registry publication mutation.
+
+Expected result:
+
+- The existing `xyflow-no-update.example.json` fixture passes the new preflight
+  with all generated contract-file digests verified.
+- Missing `--root` warns rather than fails, because shape can be checked without
+  file access but digest alignment cannot be proven.
+- Invalid authority, no-op/update mismatch, unsafe paths, and digest mismatches
+  fail closed.
+
+Result:
+
+- `specpm producer-bundle preflight-refresh-decision` emits
+  `SpecPMGeneratedCandidateRefreshDecisionPreflightReport`.
+- Regression coverage checks the real `xyflow` fixture success path, CLI JSON
+  output, no-root warning behavior, authority drift, no-op comparison drift, and
+  digest mismatch failures.
+- CLI reference, refresh decision policy, producer bundle policy, public index
+  operator guidance, DocC, and self-spec document the command and non-authority
+  boundary.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

@@ -28,6 +28,10 @@ PACKAGE_SET_AI_DRAFT_API_VERSION = "spec-harvester.package-set-ai-draft/v0"
 PACKAGE_SET_AI_DRAFT_KIND = "SpecHarvesterPackageSetAIDraftProposal"
 PACKAGE_SET_AI_DRAFT_PREFLIGHT_KIND = "SpecPMPackageSetAIDraftPreflightReport"
 PACKAGE_SET_AI_DRAFT_PREFLIGHT_SCHEMA_VERSION = 1
+REFRESH_DECISION_API_VERSION = "specpm.decisions/v0"
+REFRESH_DECISION_KIND = "SpecPMGeneratedCandidateRefreshDecision"
+REFRESH_DECISION_PREFLIGHT_KIND = "SpecPMGeneratedCandidateRefreshDecisionPreflightReport"
+REFRESH_DECISION_PREFLIGHT_SCHEMA_VERSION = 1
 
 REQUIRED_PRODUCER_EVIDENCE_ROLES = {
     "accepted_source_bundle",
@@ -65,6 +69,31 @@ VALID_DECISION_STATUSES = {
     "rejected",
     "override",
     "withdrawn",
+}
+VALID_REFRESH_DECISION_STATUSES = {
+    "no_update_required",
+    "curated_update_required",
+    "new_generated_candidate_required",
+    "new_package_version_required",
+    "manual_review_required",
+}
+VALID_NO_UPDATE_REASONS = {
+    "no_contract_delta",
+}
+VALID_REFRESH_SUPPORTING_REASONS = {
+    "same_source_revision",
+    "generated_contract_bytes_unchanged",
+    "curated_artifact_remains_stronger",
+    "producer_receipt_only_delta",
+    "immutable_generated_candidate",
+}
+REFRESH_CONTRACT_DELTA_FLAGS = {
+    "sourceRevisionChanged",
+    "acceptedContractChanged",
+    "generatedContractChanged",
+    "capabilitiesChanged",
+    "relationsChanged",
+    "evidenceChanged",
 }
 AI_ENRICHMENT_REQUIRED_PRIVACY_FLAGS = {
     "rawPromptsPersisted",
@@ -113,6 +142,7 @@ AI_DRAFT_EXCLUSION_CATEGORIES = {
 AI_DRAFT_INPUT_PATH_SCOPES = KNOWN_PACKAGE_SET_EVIDENCE_PATH_SCOPES | {"request_relative"}
 
 JSON_FENCE_PATTERN = re.compile(r"```json\s*(.*?)```", re.DOTALL | re.IGNORECASE)
+SHA256_HEX_PATTERN = re.compile(r"^[a-f0-9]{64}$")
 
 
 def preflight_producer_bundle(body_path: Path, root: Path | None = None) -> dict[str, Any]:
@@ -643,6 +673,107 @@ def preflight_package_set_ai_draft(
     )
 
 
+def preflight_refresh_decision(
+    body_path: Path,
+    *,
+    root: Path | None = None,
+) -> dict[str, Any]:
+    try:
+        body = body_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        errors = [
+            issue(
+                "refresh_decision_body_unreadable",
+                f"Refresh decision could not be read: {exc}.",
+                field="body",
+            )
+        ]
+        return refresh_decision_report(body_path, root, None, errors, [], 0)
+
+    payloads = _extract_json_payloads(body)
+    decision = _find_refresh_decision_payload(payloads)
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    digest_verified_count = 0
+    if decision is None:
+        errors.append(
+            issue(
+                "refresh_decision_payload_missing",
+                "Preflight requires a SpecPMGeneratedCandidateRefreshDecision JSON payload.",
+                field="body",
+            )
+        )
+        return refresh_decision_report(body_path, root, None, errors, warnings, 0)
+
+    if root is None:
+        warnings.append(
+            issue(
+                "refresh_decision_root_not_provided",
+                "Generated contract file existence and digest alignment were not verified.",
+                field="root",
+            )
+        )
+
+    digest_verified_count = validate_refresh_decision(decision, errors, warnings, root)
+    return refresh_decision_report(
+        body_path,
+        root,
+        decision,
+        errors,
+        warnings,
+        digest_verified_count,
+    )
+
+
+def refresh_decision_report(
+    body_path: Path,
+    root: Path | None,
+    decision: dict[str, Any] | None,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    digest_verified_count: int,
+) -> dict[str, Any]:
+    subject = _mapping_value(decision.get("subject")) if decision else {}
+    decision_payload = _mapping_value(decision.get("decision")) if decision else {}
+    package_ids = string_list(subject.get("packageIds"))
+    generated_contract_files = (
+        _list_of_mappings(decision.get("generatedContractFiles")) if decision else []
+    )
+    status = "failed" if errors else ("warning" if warnings else "passed")
+    return {
+        "kind": REFRESH_DECISION_PREFLIGHT_KIND,
+        "schemaVersion": REFRESH_DECISION_PREFLIGHT_SCHEMA_VERSION,
+        "status": status,
+        "body": str(body_path),
+        "root": str(root) if root else None,
+        "refreshDecision": (
+            {
+                "decisionId": decision.get("decisionId"),
+                "packageId": subject.get("packageId"),
+                "version": subject.get("version"),
+                "status": decision_payload.get("status"),
+                "updateNeeded": decision_payload.get("updateNeeded"),
+                "reason": decision_payload.get("reason"),
+                "packageCount": len(package_ids),
+                "generatedContractFileCount": len(generated_contract_files),
+                "digestVerifiedCount": digest_verified_count,
+            }
+            if decision
+            else None
+        ),
+        "summary": {
+            "packageId": subject.get("packageId"),
+            "packageCount": len(package_ids),
+            "generatedContractFileCount": len(generated_contract_files),
+            "digestVerifiedCount": digest_verified_count,
+            "errorCount": len(errors),
+            "warningCount": len(warnings),
+        },
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
 def package_set_ai_draft_report(
     body_path: Path,
     root: Path | None,
@@ -697,6 +828,408 @@ def package_set_ai_draft_report(
         "errors": errors,
         "warnings": warnings,
     }
+
+
+def validate_refresh_decision(
+    decision: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    root: Path | None,
+) -> int:
+    if decision.get("apiVersion") != REFRESH_DECISION_API_VERSION:
+        errors.append(
+            issue(
+                "refresh_decision_api_version_invalid",
+                f"Refresh decision apiVersion must be {REFRESH_DECISION_API_VERSION}.",
+                field="apiVersion",
+            )
+        )
+    if decision.get("kind") != REFRESH_DECISION_KIND:
+        errors.append(
+            issue(
+                "refresh_decision_kind_invalid",
+                f"Refresh decision kind must be {REFRESH_DECISION_KIND}.",
+                field="kind",
+            )
+        )
+    if decision.get("schemaVersion") != 1:
+        errors.append(
+            issue(
+                "refresh_decision_schema_version_invalid",
+                "Refresh decision schemaVersion must be 1.",
+                field="schemaVersion",
+            )
+        )
+    if not non_empty_string(decision.get("decisionId")):
+        errors.append(
+            issue(
+                "refresh_decision_id_missing",
+                "Refresh decision must include a stable decisionId.",
+                field="decisionId",
+            )
+        )
+
+    required_for = string_list(decision.get("requiredFor"))
+    if "public_index_refresh_evaluation" not in required_for:
+        errors.append(
+            issue(
+                "refresh_decision_required_for_missing",
+                "Refresh decision requiredFor must include public_index_refresh_evaluation.",
+                field="requiredFor",
+            )
+        )
+
+    subject = _mapping_value(decision.get("subject"))
+    validate_refresh_decision_subject(subject, errors)
+    validate_refresh_decision_decision(_mapping_value(decision.get("decision")), errors)
+    validate_refresh_decision_comparison(
+        _mapping_value(decision.get("comparison")),
+        _mapping_value(decision.get("decision")),
+        errors,
+    )
+    validate_refresh_decision_authority(_mapping_value(decision.get("authority")), errors)
+    validate_refresh_decision_review(_mapping_value(decision.get("maintainerReview")), errors)
+    return validate_refresh_decision_contract_files(
+        _list_of_mappings(decision.get("generatedContractFiles")),
+        errors,
+        warnings,
+        root,
+    )
+
+
+def validate_refresh_decision_subject(
+    subject: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    package_id = subject.get("packageId")
+    if not non_empty_string(package_id):
+        errors.append(
+            issue(
+                "refresh_decision_package_id_missing",
+                "Refresh decision subject.packageId is required.",
+                field="subject.packageId",
+            )
+        )
+    if not non_empty_string(subject.get("version")):
+        errors.append(
+            issue(
+                "refresh_decision_version_missing",
+                "Refresh decision subject.version is required.",
+                field="subject.version",
+            )
+        )
+
+    package_ids = string_list(subject.get("packageIds"))
+    if not package_ids:
+        errors.append(
+            issue(
+                "refresh_decision_package_ids_missing",
+                "Refresh decision subject.packageIds must list the evaluated packages.",
+                field="subject.packageIds",
+            )
+        )
+    elif non_empty_string(package_id) and package_id not in package_ids:
+        errors.append(
+            issue(
+                "refresh_decision_package_id_not_listed",
+                "Refresh decision subject.packageId must appear in subject.packageIds.",
+                field="subject.packageIds",
+            )
+        )
+
+    for field in ("acceptedArtifacts", "currentGeneratedArtifacts"):
+        values = string_list(subject.get(field))
+        if not values:
+            errors.append(
+                issue(
+                    f"refresh_decision_{field}_missing",
+                    f"Refresh decision subject.{field} must list repo-relative paths.",
+                    field=f"subject.{field}",
+                )
+            )
+        for index, path in enumerate(values):
+            validate_refresh_relative_path(path, errors, f"subject.{field}[{index}]")
+
+    fresh_run = _mapping_value(subject.get("freshGeneratedRun"))
+    source_revision = fresh_run.get("sourceRevision")
+    if not isinstance(source_revision, str) or not re.fullmatch(r"[a-f0-9]{40}", source_revision):
+        errors.append(
+            issue(
+                "refresh_decision_source_revision_invalid",
+                "Refresh decision freshGeneratedRun.sourceRevision must be a 40-character SHA.",
+                field="subject.freshGeneratedRun.sourceRevision",
+            )
+        )
+
+
+def validate_refresh_decision_decision(
+    decision_payload: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    status = decision_payload.get("status")
+    update_needed = decision_payload.get("updateNeeded")
+    reason = decision_payload.get("reason")
+    if status not in VALID_REFRESH_DECISION_STATUSES:
+        errors.append(
+            issue(
+                "refresh_decision_status_invalid",
+                "Refresh decision status must be a known refresh decision status.",
+                field="decision.status",
+            )
+        )
+        return
+    if not isinstance(update_needed, bool):
+        errors.append(
+            issue(
+                "refresh_decision_update_needed_invalid",
+                "Refresh decision updateNeeded must be a boolean.",
+                field="decision.updateNeeded",
+            )
+        )
+    elif status == "no_update_required" and update_needed is not False:
+        errors.append(
+            issue(
+                "refresh_decision_no_update_flag_invalid",
+                "status no_update_required requires updateNeeded false.",
+                field="decision.updateNeeded",
+            )
+        )
+    elif status != "no_update_required" and update_needed is not True:
+        errors.append(
+            issue(
+                "refresh_decision_update_required_flag_invalid",
+                "Update-required statuses require updateNeeded true.",
+                field="decision.updateNeeded",
+            )
+        )
+
+    if status == "no_update_required" and reason not in VALID_NO_UPDATE_REASONS:
+        errors.append(
+            issue(
+                "refresh_decision_no_update_reason_invalid",
+                "status no_update_required requires reason no_contract_delta.",
+                field="decision.reason",
+            )
+        )
+    elif status != "no_update_required" and not non_empty_string(reason):
+        errors.append(
+            issue(
+                "refresh_decision_reason_missing",
+                "Update-required refresh decisions must include a reason.",
+                field="decision.reason",
+            )
+        )
+
+    supporting_reasons = string_list(decision_payload.get("supportingReasons"))
+    if status == "no_update_required" and not supporting_reasons:
+        errors.append(
+            issue(
+                "refresh_decision_supporting_reasons_missing",
+                "No-update refresh decisions must include supportingReasons.",
+                field="decision.supportingReasons",
+            )
+        )
+    for index, supporting_reason in enumerate(supporting_reasons):
+        if (
+            status == "no_update_required"
+            and supporting_reason not in VALID_REFRESH_SUPPORTING_REASONS
+        ):
+            errors.append(
+                issue(
+                    "refresh_decision_supporting_reason_unknown",
+                    f"Unknown refresh decision supporting reason: {supporting_reason}.",
+                    field=f"decision.supportingReasons[{index}]",
+                )
+            )
+
+
+def validate_refresh_decision_comparison(
+    comparison: dict[str, Any],
+    decision_payload: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    no_update = decision_payload.get("status") == "no_update_required"
+    for flag in sorted(REFRESH_CONTRACT_DELTA_FLAGS):
+        value = comparison.get(flag)
+        if not isinstance(value, bool):
+            errors.append(
+                issue(
+                    "refresh_decision_comparison_flag_invalid",
+                    f"Refresh decision comparison.{flag} must be boolean.",
+                    field=f"comparison.{flag}",
+                )
+            )
+        elif no_update and value is not False:
+            errors.append(
+                issue(
+                    "refresh_decision_no_update_delta_flag_invalid",
+                    f"No-update refresh decisions require comparison.{flag} false.",
+                    field=f"comparison.{flag}",
+                )
+            )
+
+
+def validate_refresh_decision_authority(
+    authority: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    if authority.get("producerEvidenceAuthority") != "evidence_only":
+        errors.append(
+            issue(
+                "refresh_decision_producer_authority_invalid",
+                "Refresh decision producerEvidenceAuthority must be evidence_only.",
+                field="authority.producerEvidenceAuthority",
+            )
+        )
+    if authority.get("registryAuthority") != "maintainer_review_required":
+        errors.append(
+            issue(
+                "refresh_decision_registry_authority_invalid",
+                "Refresh decision registryAuthority must be maintainer_review_required.",
+                field="authority.registryAuthority",
+            )
+        )
+    if authority.get("noRegistryMutation") is not True:
+        errors.append(
+            issue(
+                "refresh_decision_registry_mutation_flag_invalid",
+                "Refresh decision authority.noRegistryMutation must be true.",
+                field="authority.noRegistryMutation",
+            )
+        )
+
+
+def validate_refresh_decision_review(
+    review: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    for field in ("decisionBy", "reviewLocation", "summary"):
+        if not non_empty_string(review.get(field)):
+            errors.append(
+                issue(
+                    "refresh_decision_review_field_missing",
+                    f"Refresh decision maintainerReview.{field} is required.",
+                    field=f"maintainerReview.{field}",
+                )
+            )
+
+
+def validate_refresh_decision_contract_files(
+    contract_files: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    root: Path | None,
+) -> int:
+    if not contract_files:
+        errors.append(
+            issue(
+                "refresh_decision_contract_files_missing",
+                "Refresh decision must include generatedContractFiles.",
+                field="generatedContractFiles",
+            )
+        )
+        return 0
+
+    seen_paths: set[str] = set()
+    verified_count = 0
+    for index, item in enumerate(contract_files):
+        path = item.get("path")
+        sha256 = item.get("sha256")
+        field = f"generatedContractFiles[{index}]"
+        if not isinstance(path, str) or not path:
+            errors.append(
+                issue(
+                    "refresh_decision_contract_file_path_missing",
+                    "Generated contract file entry must include path.",
+                    field=f"{field}.path",
+                )
+            )
+            continue
+        validate_refresh_relative_path(path, errors, f"{field}.path")
+        if path in seen_paths:
+            errors.append(
+                issue(
+                    "refresh_decision_contract_file_duplicate",
+                    f"Duplicate generated contract file path: {path}.",
+                    field=f"{field}.path",
+                )
+            )
+        seen_paths.add(path)
+
+        if not isinstance(sha256, str) or not SHA256_HEX_PATTERN.fullmatch(sha256):
+            errors.append(
+                issue(
+                    "refresh_decision_contract_file_digest_invalid",
+                    "Generated contract file sha256 must be a lowercase hex SHA-256 digest.",
+                    field=f"{field}.sha256",
+                )
+            )
+            continue
+        if root is not None and validate_refresh_contract_file_digest(
+            root,
+            path,
+            sha256,
+            errors,
+            field,
+        ):
+            verified_count += 1
+
+    if root is None and contract_files:
+        warnings.append(
+            issue(
+                "refresh_decision_contract_file_digests_not_verified",
+                "Generated contract file digests were not verified because --root was omitted.",
+                field="generatedContractFiles",
+            )
+        )
+    return verified_count
+
+
+def validate_refresh_contract_file_digest(
+    root: Path,
+    path: str,
+    sha256: str,
+    errors: list[dict[str, Any]],
+    field: str,
+) -> bool:
+    resolved = resolve_package_set_path(root, path)
+    if resolved is None:
+        return False
+    if not resolved.is_file():
+        errors.append(
+            issue(
+                "refresh_decision_contract_file_missing",
+                f"Generated contract file does not exist: {path}.",
+                field=f"{field}.path",
+            )
+        )
+        return False
+    actual = sha256_file(resolved)
+    if actual != sha256:
+        errors.append(
+            issue(
+                "refresh_decision_contract_file_digest_mismatch",
+                "Generated contract file digest does not match file bytes.",
+                field=f"{field}.sha256",
+            )
+        )
+        return False
+    return True
+
+
+def validate_refresh_relative_path(
+    path: str,
+    errors: list[dict[str, Any]],
+    field: str,
+) -> None:
+    if not is_safe_relative_path(path):
+        errors.append(
+            issue(
+                "refresh_decision_path_unsafe",
+                "Refresh decision paths must be safe repo-relative paths.",
+                field=field,
+            )
+        )
 
 
 def load_package_set_handoff(path: Path) -> dict[str, Any]:
@@ -3201,6 +3734,20 @@ def _find_package_set_ai_draft_payload(payloads: list[Any]) -> dict[str, Any] | 
     return None
 
 
+def _find_refresh_decision_payload(payloads: list[Any]) -> dict[str, Any] | None:
+    for payload in payloads:
+        if isinstance(payload, dict) and (
+            payload.get("kind") == REFRESH_DECISION_KIND
+            or (
+                payload.get("apiVersion") == REFRESH_DECISION_API_VERSION
+                and isinstance(payload.get("decision"), dict)
+                and isinstance(payload.get("generatedContractFiles"), list)
+            )
+        ):
+            return payload
+    return None
+
+
 def _find_mapping_payload(payloads: list[Any], key: str) -> dict[str, Any] | None:
     for payload in payloads:
         if isinstance(payload, dict) and isinstance(payload.get(key), dict):
@@ -3220,6 +3767,16 @@ def _list_of_mappings(value: Any) -> list[dict[str, Any]]:
 
 def list_value(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
+
+
+def string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str) and item]
+
+
+def non_empty_string(value: Any) -> bool:
+    return isinstance(value, str) and bool(value)
 
 
 def ordered_unique(values: list[str]) -> list[str]:
