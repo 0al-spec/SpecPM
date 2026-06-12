@@ -860,7 +860,7 @@ def handle_refresh_decision_prepare(args: argparse.Namespace) -> int:
         receipt_only_changed=not args.no_receipt_only_delta,
         advisory_report_only_changed=not args.no_advisory_report_only_delta,
     )
-    if args.output:
+    if args.output and report["status"] != "failed":
         write_cli_output(
             Path(args.output),
             json.dumps(report["decision"], indent=2, sort_keys=True) + "\n",

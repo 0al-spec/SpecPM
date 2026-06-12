@@ -782,6 +782,7 @@ def prepare_refresh_decision(
     generated_contract_changed = False
     accepted_contract_changed = False
     source_revision_changed = False
+    source_revision_evidence_found = False
 
     for item_index, item_package_id in enumerate(package_ids):
         package_field = f"packageIds[{item_index}]"
@@ -839,7 +840,28 @@ def prepare_refresh_decision(
                 )
             )
 
-        current_contracts = refresh_contract_files(current_package_dir)
+        current_contract_candidates = (
+            refresh_contract_files(current_package_dir) if current_artifact is not None else []
+        )
+        current_contracts: list[Path] = []
+        for current_contract in current_contract_candidates:
+            current_contract_repo_path = repo_relative_path(root_resolved, current_contract)
+            if current_contract_repo_path is None:
+                errors.append(
+                    issue(
+                        "refresh_decision_prepare_contract_file_path_unresolved",
+                        "Current generated contract file must resolve within --root.",
+                        field=package_field,
+                    )
+                )
+                continue
+            current_contracts.append(current_contract)
+            generated_contract_files.append(
+                {
+                    "path": current_contract_repo_path,
+                    "sha256": sha256_file(current_contract),
+                }
+            )
         fresh_contracts = refresh_contract_files(fresh_package_dir)
         if not current_contracts:
             errors.append(
@@ -880,22 +902,6 @@ def prepare_refresh_decision(
             )
 
         for current_contract in current_contracts:
-            current_contract_repo_path = repo_relative_path(root_resolved, current_contract)
-            if current_contract_repo_path is None:
-                errors.append(
-                    issue(
-                        "refresh_decision_prepare_contract_file_path_unresolved",
-                        "Current generated contract file must resolve within --root.",
-                        field=package_field,
-                    )
-                )
-                continue
-            generated_contract_files.append(
-                {
-                    "path": current_contract_repo_path,
-                    "sha256": sha256_file(current_contract),
-                }
-            )
             relative_contract = current_contract.relative_to(current_package_dir)
             fresh_contract = fresh_package_dir / relative_contract
             if (
@@ -905,6 +911,8 @@ def prepare_refresh_decision(
                 generated_contract_changed = True
 
         current_source_revisions = source_revisions_from_contracts(current_contracts)
+        if current_source_revisions:
+            source_revision_evidence_found = True
         if current_source_revisions and any(
             value != source_revision for value in current_source_revisions
         ):
@@ -918,13 +926,15 @@ def prepare_refresh_decision(
     supporting_reasons: list[str] = []
     if not update_needed:
         supporting_reasons = [
-            "same_source_revision",
             "generated_contract_bytes_unchanged",
             "curated_artifact_remains_stronger",
             "immutable_generated_candidate",
         ]
+        if source_revision_evidence_found:
+            supporting_reasons.insert(0, "same_source_revision")
         if receipt_only_changed:
-            supporting_reasons.insert(3, "producer_receipt_only_delta")
+            insert_index = 3 if source_revision_evidence_found else 2
+            supporting_reasons.insert(insert_index, "producer_receipt_only_delta")
 
     decision = {
         "apiVersion": REFRESH_DECISION_API_VERSION,

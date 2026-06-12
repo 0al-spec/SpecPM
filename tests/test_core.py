@@ -3722,6 +3722,106 @@ def test_cli_refresh_decision_prepare_writes_decision_json(
     assert preflight_refresh_decision(output, root=ROOT)["status"] == "passed"
 
 
+def test_cli_refresh_decision_prepare_does_not_write_failed_decision(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    output = tmp_path / "refresh-decision.json"
+
+    exit_code = main(
+        [
+            "producer-bundle",
+            "prepare-refresh-decision",
+            "--root",
+            str(tmp_path / "repo"),
+            "--fresh-generated-root",
+            str(tmp_path / "missing-fresh-root"),
+            "--package",
+            "example.package",
+            "--version",
+            "0.1.0",
+            "--source-revision",
+            "a" * 40,
+            "--output",
+            str(output),
+            "--json",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 1
+    assert report["status"] == "failed"
+    assert not output.exists()
+
+
+def test_refresh_decision_prepare_omits_same_source_without_contract_revision(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "repo"
+    current_package = root / "public-index/generated/example.package/0.1.0"
+    curated_package = root / "public-index/curated/example.package/0.1.0"
+    fresh_package = tmp_path / "fresh/example.package/0.1.0"
+    for package in (current_package, curated_package, fresh_package):
+        package.mkdir(parents=True)
+    manifest = "apiVersion: specpm.dev/v0.1\nmetadata:\n  id: example.package\n"
+    (current_package / "specpm.yaml").write_text(manifest, encoding="utf-8")
+    (fresh_package / "specpm.yaml").write_text(manifest, encoding="utf-8")
+
+    report = prepare_refresh_decision(
+        root=root,
+        fresh_generated_root=tmp_path / "fresh",
+        package_ids=["example.package"],
+        package_id="example.package",
+        version="0.1.0",
+        source_revision="a" * 40,
+    )
+
+    assert report["status"] == "passed"
+    assert report["decision"]["decision"]["status"] == "no_update_required"
+    assert "same_source_revision" not in report["decision"]["decision"]["supportingReasons"]
+    assert report["decision"]["comparison"]["sourceRevisionChanged"] is False
+
+
+def test_refresh_decision_prepare_rejects_current_contract_symlink_escape(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "repo"
+    current_package = root / "public-index/generated/example.package/0.1.0"
+    curated_package = root / "public-index/curated/example.package/0.1.0"
+    fresh_package = tmp_path / "fresh/example.package/0.1.0"
+    outside = tmp_path / "outside"
+    for package in (current_package, curated_package, fresh_package, outside):
+        package.mkdir(parents=True)
+    outside_manifest = outside / "specpm.yaml"
+    outside_manifest.write_text(
+        "apiVersion: specpm.dev/v0.1\n"
+        "metadata:\n"
+        "  id: example.package\n"
+        "provenance:\n"
+        f"  sourceRevision: {'b' * 40}\n",
+        encoding="utf-8",
+    )
+    (current_package / "specpm.yaml").symlink_to(outside_manifest)
+    (fresh_package / "specpm.yaml").write_text(
+        "apiVersion: specpm.dev/v0.1\nmetadata:\n  id: example.package\n",
+        encoding="utf-8",
+    )
+
+    report = prepare_refresh_decision(
+        root=root,
+        fresh_generated_root=tmp_path / "fresh",
+        package_ids=["example.package"],
+        package_id="example.package",
+        version="0.1.0",
+        source_revision="a" * 40,
+    )
+
+    assert report["status"] == "failed"
+    assert "refresh_decision_prepare_contract_file_path_unresolved" in issue_codes(report["errors"])
+    assert report["decision"]["comparison"]["sourceRevisionChanged"] is False
+    assert report["summary"]["digestVerifiedCount"] == 0
+
+
 def test_refresh_decision_prepare_flags_generated_contract_delta(tmp_path: Path) -> None:
     fresh_root = tmp_path / "generated"
     shutil.copytree(
