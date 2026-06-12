@@ -1,0 +1,155 @@
+{
+  "apiVersion": "specpm.decisions/v0",
+  "kind": "SpecPMGeneratedCandidateRefreshDecision",
+  "schemaVersion": 1,
+  "decisionId": "specpm-refresh-decision-2026-06-12-xyflow-package-set-0.1.0-no-update",
+  "requiredFor": [
+    "public_index_refresh_evaluation"
+  ],
+  "subject": {
+    "packageId": "xyflow.workspace",
+    "version": "0.1.0",
+    "scope": "package_set",
+    "packageIds": [
+      "xyflow.workspace",
+      "xyflow.react",
+      "xyflow.svelte",
+      "xyflow.system"
+    ],
+    "acceptedArtifacts": [
+      "public-index/curated/xyflow.workspace/0.1.0",
+      "public-index/curated/xyflow.react/0.1.0",
+      "public-index/curated/xyflow.svelte/0.1.0",
+      "public-index/curated/xyflow.system/0.1.0"
+    ],
+    "currentGeneratedArtifacts": [
+      "public-index/generated/xyflow.workspace/0.1.0",
+      "public-index/generated/xyflow.react/0.1.0",
+      "public-index/generated/xyflow.svelte/0.1.0",
+      "public-index/generated/xyflow.system/0.1.0"
+    ],
+    "freshGeneratedRun": {
+      "kind": "local_review_evidence",
+      "label": "xyflow-registry-update-eval-20260612",
+      "sourceRepository": "https://github.com/xyflow/xyflow",
+      "sourceRevision": "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd",
+      "summary": "Fresh SpecHarvester package-set run reproduced the current generated contract files and produced only receipt/advisory quality-report deltas."
+    }
+  },
+  "decision": {
+    "status": "no_update_required",
+    "updateNeeded": false,
+    "reason": "no_contract_delta",
+    "supportingReasons": [
+      "same_source_revision",
+      "generated_contract_bytes_unchanged",
+      "curated_artifact_remains_stronger",
+      "producer_receipt_only_delta",
+      "immutable_generated_candidate"
+    ]
+  },
+  "comparison": {
+    "sourceRevisionChanged": false,
+    "acceptedContractChanged": false,
+    "generatedContractChanged": false,
+    "capabilitiesChanged": false,
+    "relationsChanged": false,
+    "evidenceChanged": false,
+    "receiptOnlyChanged": true,
+    "advisoryReportOnlyChanged": true,
+    "freshCandidateCount": 4,
+    "acceptedRelationCount": 3
+  },
+  "generatedContractFiles": [
+    {
+      "path": "public-index/generated/xyflow.workspace/0.1.0/diagnostics.json",
+      "sha256": "cf9bf7b972acd966b534ed001c8fd4f3d794dea61aa70c0ed444c9fb322fcb70"
+    },
+    {
+      "path": "public-index/generated/xyflow.workspace/0.1.0/harvest.json",
+      "sha256": "1a926003e1ce1a53ae3d5c9c9a59b0cca9d7a2ea816396906cedc0699563461f"
+    },
+    {
+      "path": "public-index/generated/xyflow.workspace/0.1.0/specpm.yaml",
+      "sha256": "6fb6dcfecbfe64904e4ca168af05fc564c114508aed96b87271f34c9124f4a85"
+    },
+    {
+      "path": "public-index/generated/xyflow.workspace/0.1.0/specs/xyflow.spec.yaml",
+      "sha256": "b6b57d81613d90fc7e7ab18887d2e145c6f284ca42eb67bc3728d39a0e90f458"
+    },
+    {
+      "path": "public-index/generated/xyflow.workspace/0.1.0/validation-report.json",
+      "sha256": "8019258699830aa80074ff6f262dbfcbd30c53ef27b9e9eea0c39d7a26fefc5d"
+    },
+    {
+      "path": "public-index/generated/xyflow.react/0.1.0/diagnostics.json",
+      "sha256": "da16ab100c0c70fada8851200ce70279f38b8a12010161c10df37e1217ba976f"
+    },
+    {
+      "path": "public-index/generated/xyflow.react/0.1.0/harvest.json",
+      "sha256": "a76a1b3ab73d7ea33a02e5f4c90a6ace4f0f39c92594357c036f817fc1b80545"
+    },
+    {
+      "path": "public-index/generated/xyflow.react/0.1.0/specpm.yaml",
+      "sha256": "8a13423b8c2063f108051eeb87e4581b8174d898c3060223d29a9b47e83ba56b"
+    },
+    {
+      "path": "public-index/generated/xyflow.react/0.1.0/specs/react.spec.yaml",
+      "sha256": "83e1c5934a929874880bfb54da6f946bed349a854eaf06e3f4706bf65c9f84c1"
+    },
+    {
+      "path": "public-index/generated/xyflow.react/0.1.0/validation-report.json",
+      "sha256": "8521f20ddb6ff1744495382521de533047c8238e2ce4f4e9454b74b19b06e48c"
+    },
+    {
+      "path": "public-index/generated/xyflow.svelte/0.1.0/diagnostics.json",
+      "sha256": "8c167768db4f3c713ebb3ebfbc86520ffc9bb728f7ba1cc76dae153b2c56610e"
+    },
+    {
+      "path": "public-index/generated/xyflow.svelte/0.1.0/harvest.json",
+      "sha256": "489d4c58d9e0b416149153d346b218fb20e9ea59f94966a2c8915ce664df3c12"
+    },
+    {
+      "path": "public-index/generated/xyflow.svelte/0.1.0/specpm.yaml",
+      "sha256": "6f104495b9fd79437e99458bbfe297d8bd757f3b3676d7f539953ee1ea2e40c2"
+    },
+    {
+      "path": "public-index/generated/xyflow.svelte/0.1.0/specs/svelte.spec.yaml",
+      "sha256": "d24e1ea473fb5f1b38ab873b56949cbb60ac0c65245c7139ce86a2acfb60dcb8"
+    },
+    {
+      "path": "public-index/generated/xyflow.svelte/0.1.0/validation-report.json",
+      "sha256": "f0798554c7af104fc7f020074af79f43d651b6fc5d2bfe39219977aeafb41803"
+    },
+    {
+      "path": "public-index/generated/xyflow.system/0.1.0/diagnostics.json",
+      "sha256": "c5427cf685a0cb943d352163d851ac5fb548c7bb0a936eda328263c129548300"
+    },
+    {
+      "path": "public-index/generated/xyflow.system/0.1.0/harvest.json",
+      "sha256": "d08c8037fb6f9cd7bbfac81f12f6bd54ff369ce56737409f355807626c5c485c"
+    },
+    {
+      "path": "public-index/generated/xyflow.system/0.1.0/specpm.yaml",
+      "sha256": "2b99f46f5c41bf10eeb0d949ec47702cce7e5f2fe69c5abaea85d6eb38ff1828"
+    },
+    {
+      "path": "public-index/generated/xyflow.system/0.1.0/specs/system.spec.yaml",
+      "sha256": "ece18b95477a9044cbc97321053aa4d86e477e4fe392a961419c4967428ae226"
+    },
+    {
+      "path": "public-index/generated/xyflow.system/0.1.0/validation-report.json",
+      "sha256": "47ec371dbb3401ea9b282b3745e0fac04e8bd9d2bd057af00be8642a761c8140"
+    }
+  ],
+  "authority": {
+    "producerEvidenceAuthority": "evidence_only",
+    "registryAuthority": "maintainer_review_required",
+    "noRegistryMutation": true
+  },
+  "maintainerReview": {
+    "decisionBy": "SpecPM maintainer review",
+    "reviewLocation": "https://github.com/0al-spec/SpecPM/pull/134",
+    "summary": "Recorded as no registry update because the fresh run did not change accepted contract-bearing package data."
+  }
+}

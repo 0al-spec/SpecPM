@@ -210,6 +210,17 @@ That decision preserves the value of the new SpecHarvester quality machinery:
 it proves the current registry state is stable and avoids churning accepted
 metadata when there is no meaningful package contract delta.
 
+A complete machine-readable example is stored in:
+
+```text
+tests/fixtures/refresh_decisions/xyflow-no-update.example.json
+```
+
+The fixture uses the shared `apiVersion: specpm.decisions/v0` decision envelope,
+records all four `xyflow` package-set members, cites the current curated and
+generated artifact paths, and snapshots the generated contract-file digests
+used to justify `updateNeeded: false`.
+
 ## Non-Goals
 
 This policy does not add automatic registry updates, producer-owned
@@ -224,5 +235,6 @@ producer tools.
 - `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`
 - `specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`
 - `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`
+- `tests/fixtures/refresh_decisions/xyflow-no-update.example.json`
 - `public-index/curated/xyflow.workspace/0.1.0/specpm.yaml`
 - `public-index/generated/xyflow.workspace/0.1.0/producer-receipt.json`

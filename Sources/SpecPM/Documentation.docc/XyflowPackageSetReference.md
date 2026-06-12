@@ -103,6 +103,9 @@ Producer receipt churn or a newly emitted quality report is review evidence,
 not a reason to mutate `public-index/generated/xyflow.*` or churn accepted
 registry metadata.
 
+The example refresh decision fixture for this no-op outcome lives at
+`tests/fixtures/refresh_decisions/xyflow-no-update.example.json`.
+
 ## References
 
 - `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`
