@@ -2229,6 +2229,51 @@ Result:
   members or relations, mutate generated specs, materialize accepted sources, or
   publish registry metadata.
 
+### P66-T17. Generated Candidate Refresh Decision Policy
+
+Status: Completed.
+
+Motivation:
+
+- After the `xyflow` package-set registry update evaluation, the fresh
+  SpecHarvester run proved that current generated evidence and curated accepted
+  artifacts were stable, but there was no durable SpecPM-side way to record
+  "no update needed".
+- Without an explicit refresh decision record, a useful no-op run can look like
+  unfinished work, or future maintainers may open registry churn PRs for
+  producer receipt changes, local output path changes, or newly emitted
+  advisory quality reports.
+
+Goal:
+
+- Document a machine-readable
+  `SpecPMGeneratedCandidateRefreshDecision` record for comparing fresh
+  producer output with current generated evidence and maintainer-curated
+  accepted artifacts.
+- Define `status: no_update_required`, `updateNeeded: false`, and
+  `reason: no_contract_delta` for no-op refreshes.
+- Preserve generated candidate immutability and make clear that curated
+  artifacts remain the registry source.
+
+Expected result:
+
+- Maintainers can record successful refresh evaluations even when no registry
+  update PR should be opened.
+- Contract deltas, source revision deltas, relation deltas, and evidence
+  changes remain review triggers.
+- Receipt-only churn, local run paths, and advisory reports do not churn
+  accepted registry metadata by themselves.
+
+Result:
+
+- `specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md` and DocC define the
+  decision record, status vocabulary, no-op reasons, comparison rules, update
+  triggers, generated candidate immutability, and the `xyflow` no-op example.
+- Curated lifecycle, multi-package intake, public index operator guidance,
+  xyflow reference docs, roadmap, and self-spec link the policy.
+- Regression tests keep the refresh decision vocabulary present in policy,
+  DocC, operator docs, roadmap, workplan, and self-spec.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.

@@ -111,6 +111,9 @@ PRODUCER_BUNDLE_PROPOSAL_AUTOMATION_DOC = ROOT / "specs/PRODUCER_BUNDLE_PROPOSAL
 PRODUCER_BUNDLE_FIXTURE_POLICY_DOC = ROOT / "specs/PRODUCER_BUNDLE_FIXTURE_POLICY.md"
 MULTI_PACKAGE_PRODUCER_INTAKE_DOC = ROOT / "specs/MULTI_PACKAGE_PRODUCER_INTAKE.md"
 CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_DOC = ROOT / "specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md"
+GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC = (
+    ROOT / "specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md"
+)
 PRODUCER_RECEIPT_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
 )
@@ -154,6 +157,9 @@ DOCC_MULTI_PACKAGE_PRODUCER_INTAKE_PAGE = (
 )
 DOCC_CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/CuratedAcceptedArtifactLifecycle.md"
+)
+DOCC_GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/GeneratedCandidateRefreshDecisionPolicy.md"
 )
 DOCC_REGISTRY_ACCEPTANCE_DECISIONS_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/RegistryAcceptanceDecisions.md"
@@ -3275,6 +3281,131 @@ def test_curated_accepted_artifact_lifecycle_is_documented() -> None:
     assert "specpm.registry.curated_artifact_lifecycle" in self_spec
     assert "specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md" in self_spec
     assert "Sources/SpecPM/Documentation.docc/CuratedAcceptedArtifactLifecycle.md" in self_spec
+
+
+def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
+    policy = GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_PAGE.read_text(encoding="utf-8")
+    lifecycle = CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_DOC.read_text(encoding="utf-8")
+    docc_lifecycle = DOCC_CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_PAGE.read_text(encoding="utf-8")
+    intake = MULTI_PACKAGE_PRODUCER_INTAKE_DOC.read_text(encoding="utf-8")
+    operator_guide = PUBLIC_INDEX_OPERATOR_GUIDE.read_text(encoding="utf-8")
+    xyflow_reference = (ROOT / "specs/XYFLOW_PACKAGE_SET_REFERENCE.md").read_text(encoding="utf-8")
+    docc_xyflow_reference = (
+        ROOT / "Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md"
+    ).read_text(encoding="utf-8")
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    docc_root = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    self_spec = (ROOT / "specs/specpm.spec.yaml").read_text(encoding="utf-8")
+    manifest = (ROOT / "specpm.yaml").read_text(encoding="utf-8")
+
+    policy_flat = re.sub(r"\s+", " ", policy)
+    docc_policy_flat = re.sub(r"\s+", " ", docc_policy)
+    lifecycle_flat = re.sub(r"\s+", " ", lifecycle)
+    docc_lifecycle_flat = re.sub(r"\s+", " ", docc_lifecycle)
+    intake_flat = re.sub(r"\s+", " ", intake)
+    operator_guide_flat = re.sub(r"\s+", " ", operator_guide)
+    xyflow_reference_flat = re.sub(r"\s+", " ", xyflow_reference)
+    docc_xyflow_reference_flat = re.sub(r"\s+", " ", docc_xyflow_reference)
+    roadmap_flat = re.sub(r"\s+", " ", roadmap)
+    docc_roadmap_flat = re.sub(r"\s+", " ", docc_roadmap)
+    docc_root_flat = re.sub(r"\s+", " ", docc_root)
+    workplan_flat = re.sub(r"\s+", " ", workplan)
+
+    for required_text in (
+        "SpecPMGeneratedCandidateRefreshDecision",
+        "specpm.decisions/v0",
+        "without introducing a separate decision API family",
+        '"status": "no_update_required"',
+        '"updateNeeded": false',
+        '"reason": "no_contract_delta"',
+        "same_source_revision",
+        "generated_contract_bytes_unchanged",
+        "curated_artifact_remains_stronger",
+        "producer_receipt_only_delta",
+        "immutable_generated_candidate",
+        "curated_update_required",
+        "new_generated_candidate_required",
+        "new_package_version_required",
+        "manual_review_required",
+        "Receipt churn, local run paths, new quality reports",
+        "`public-index/generated/<package_id>/<version>` is producer evidence",
+        "fresh real `xyflow` package-set run",
+    ):
+        assert required_text in policy_flat
+
+    for required_text in (
+        "SpecPMGeneratedCandidateRefreshDecision",
+        "specpm.decisions/v0",
+        "without introducing another decision API family",
+        "`status: no_update_required`",
+        "`updateNeeded: false`",
+        "`reason: no_contract_delta`",
+        "producer receipt churn plus an additional advisory quality report",
+    ):
+        assert required_text in docc_policy_flat
+
+    for required_text in (
+        "Refresh Decision Records",
+        "`SpecPMGeneratedCandidateRefreshDecision`",
+        "`status: no_update_required`",
+        "`updateNeeded: false`",
+        "`reason: no_contract_delta`",
+        "producer receipt churn",
+        "advisory quality reports",
+    ):
+        assert required_text in lifecycle_flat
+        assert required_text in docc_lifecycle_flat
+
+    for required_text in (
+        "`SpecPMGeneratedCandidateRefreshDecision` with `updateNeeded: false`",
+        "`reason: no_contract_delta`",
+    ):
+        assert required_text in intake_flat
+        assert required_text in operator_guide_flat
+
+    for required_text in (
+        "`SpecPMGeneratedCandidateRefreshDecision` with `updateNeeded: false`",
+        "`reason: no_contract_delta`",
+        "`public-index/generated/xyflow.*`",
+    ):
+        assert required_text in xyflow_reference_flat
+        assert required_text in docc_xyflow_reference_flat
+
+    for required_text in (
+        "Generated candidate refresh decisions",
+        "`status: no_update_required`",
+        "`updateNeeded: false`",
+        "`reason: no_contract_delta`",
+        "curated accepted artifact remains the stronger registry source",
+    ):
+        assert required_text in roadmap_flat
+        assert required_text in docc_roadmap_flat
+
+    for required_text in (
+        "specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md",
+        "<doc:GeneratedCandidateRefreshDecisionPolicy>",
+    ):
+        assert required_text in docc_root_flat
+
+    for required_text in (
+        "P66-T17. Generated Candidate Refresh Decision Policy",
+        "`SpecPMGeneratedCandidateRefreshDecision`",
+        "`status: no_update_required`",
+        "`updateNeeded: false`",
+        "`reason: no_contract_delta`",
+        "Receipt-only churn, local run paths, and advisory reports",
+    ):
+        assert required_text in workplan_flat
+
+    assert "specpm.registry.generated_candidate_refresh_decision_policy" in manifest
+    assert "specpm.registry.generated_candidate_refresh_decision_policy" in self_spec
+    assert "specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md" in self_spec
+    assert (
+        "Sources/SpecPM/Documentation.docc/GeneratedCandidateRefreshDecisionPolicy.md" in self_spec
+    )
 
 
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:

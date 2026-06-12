@@ -248,6 +248,9 @@ The full curated artifact lifecycle is documented in
 - generated candidates are immutable producer evidence;
 - curated artifacts own maintainer-authored accepted metadata;
 - new harvests update curated artifacts only through review diffs;
+- no-op refreshes should be recorded as
+  `SpecPMGeneratedCandidateRefreshDecision` with `updateNeeded: false` and
+  `reason: no_contract_delta`;
 - curated artifacts preserve `foreignArtifacts` evidence chains;
 - removing `preview_only` is a maintainer acceptance act;
 - package relation acceptance is recorded separately in

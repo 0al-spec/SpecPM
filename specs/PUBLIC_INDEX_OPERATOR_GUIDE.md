@@ -173,13 +173,22 @@ The curated accepted artifact lifecycle is:
 2. Curated artifacts own maintainer-authored summaries, capabilities, evidence
    wording, package boundaries, and non-preview acceptance posture.
 3. New harvests update curated artifacts only through a reviewed diff.
-4. Curated artifacts preserve `foreignArtifacts` links to generated
+4. No-op refreshes are recorded as
+   `SpecPMGeneratedCandidateRefreshDecision` with `updateNeeded: false` and
+   `reason: no_contract_delta`.
+5. Curated artifacts preserve `foreignArtifacts` links to generated
    candidates, receipts, validation reports, diagnostics, handoffs, and
    materialization evidence when available.
-5. Removing `preview_only` is a maintainer acceptance act, not a preflight
+6. Removing `preview_only` is a maintainer acceptance act, not a preflight
    result.
-6. Accepted package relations live in `public-index/accepted-packages.yml`
+7. Accepted package relations live in `public-index/accepted-packages.yml`
    `relations[]`; producer relation proposals remain evidence until selected.
+
+For a fresh producer run that reproduces the same contract-bearing generated
+files and does not improve the curated accepted artifact, maintainers should
+record `status: no_update_required` instead of opening a registry churn PR.
+Producer receipt churn, local output paths, or a newly emitted advisory quality
+report are review evidence, not accepted contract deltas by themselves.
 
 For producer-backed pull requests that include machine-readable
 `producerEvidenceLinks` and `registryAcceptanceDecision` blocks, maintainers or

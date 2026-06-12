@@ -68,6 +68,7 @@ scope:
     - Document SpecHarvester monorepo discovery handoff for package-set and scoped member package candidates without making producer output authoritative.
     - Document multi-package producer bundle intake for package-set proposals, partial acceptance, relation review, and accepted-source effects.
     - Document the xyflow package-set reference scenario with non-normative package-set, relation, discovery, and intent search fixtures.
+    - Document generated candidate refresh decisions for no-op and update-needed outcomes when fresh producer runs are compared with maintainer-curated accepted artifacts.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -167,6 +168,9 @@ provides:
     - id: specpm.registry.curated_artifact_lifecycle
       role: secondary
       summary: Document the lifecycle for generated candidates, curated accepted artifacts, new harvest reviews, evidence chains, preview removal, and explicit relation acceptance.
+    - id: specpm.registry.generated_candidate_refresh_decision_policy
+      role: secondary
+      summary: Document machine-readable generated candidate refresh decisions, no-op `no_contract_delta` outcomes, update triggers, and generated candidate immutability.
     - id: specpm.registry.package_set_relation_metadata
       role: secondary
       summary: Publish maintainer-reviewed package-set relation metadata through additive `/v0` payloads and the static viewer without inferring relations from producer output.
@@ -1126,6 +1130,7 @@ evidence:
       - specpm.specs.ai_enrichment_preflight
       - specpm.specs.ai_draft_preflight
       - specpm.registry.curated_accepted_artifacts
+      - specpm.registry.generated_candidate_refresh_decision_policy
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
@@ -1135,8 +1140,21 @@ evidence:
     supports:
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
+      - specpm.registry.generated_candidate_refresh_decision_policy
       - specpm.specs.multi_package_producer_intake
       - specpm.specs.package_relations
+      - producer_receipts_not_generation_authority
+      - scope.includes
+      - scope.excludes
+  - id: generated_candidate_refresh_decision_policy_docs
+    kind: documentation
+    path: specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md
+    supports:
+      - specpm.registry.generated_candidate_refresh_decision_policy
+      - specpm.registry.curated_artifact_lifecycle
+      - specpm.registry.curated_accepted_artifacts
+      - specpm.specs.multi_package_producer_intake
+      - specpm.specs.xyflow_package_set_reference
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
@@ -1152,6 +1170,7 @@ evidence:
       - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.multi_package_producer_intake
       - specpm.registry.curated_accepted_artifacts
+      - specpm.registry.generated_candidate_refresh_decision_policy
       - scope.includes
       - scope.excludes
   - id: xyflow_package_set_reference_fixtures
@@ -1535,6 +1554,17 @@ evidence:
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake
+      - specpm.registry.generated_candidate_refresh_decision_policy
+  - id: docc_generated_candidate_refresh_decision_policy
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/GeneratedCandidateRefreshDecisionPolicy.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.generated_candidate_refresh_decision_policy
+      - specpm.registry.curated_artifact_lifecycle
+      - specpm.registry.curated_accepted_artifacts
+      - specpm.specs.multi_package_producer_intake
+      - specpm.specs.xyflow_package_set_reference
   - id: docc_xyflow_package_set_reference
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md
@@ -1546,6 +1576,7 @@ evidence:
       - specpm.specs.package_set_registry_metadata
       - specpm.specs.specharvester_monorepo_discovery
       - specpm.specs.multi_package_producer_intake
+      - specpm.registry.generated_candidate_refresh_decision_policy
   - id: docc_intent_taxonomy_governance
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/IntentTaxonomyGovernance.md
@@ -1706,6 +1737,7 @@ implementationBindings:
         - specs/SPECHARVESTER_MONOREPO_DISCOVERY.md
         - specs/MULTI_PACKAGE_PRODUCER_INTAKE.md
         - specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md
+        - specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md
         - specs/XYFLOW_PACKAGE_SET_REFERENCE.md
         - tests/fixtures/package_sets/xyflow-reference
         - specs/INTENT_TAXONOMY_GOVERNANCE.md
