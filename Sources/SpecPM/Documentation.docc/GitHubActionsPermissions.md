@@ -20,6 +20,9 @@ separate GitHub Pages deploy job with `pages: write` and `id-token: write`.
 The producer bundle preflight workflow is a read-only pull request check: it
 only runs consumer-side evidence validation when a pull request body includes
 producer bundle evidence blocks.
+The refresh decision prepare workflow is also read-only: it runs only on manual
+dispatch, prepares/preflights generated candidate refresh decision artifacts,
+and uploads those artifacts for maintainer review without registry mutation.
 
 The only deployment secrets currently allowed are `FTP_HOST`, `FTP_PORT`,
 `FTP_USER`, `FTP_PASS`, and `FTP_REMOTE_ROOT`. They are scoped to the `FTP`

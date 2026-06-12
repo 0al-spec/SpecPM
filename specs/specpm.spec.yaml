@@ -178,6 +178,9 @@ provides:
     - id: specpm.registry.generated_candidate_refresh_decision_prepare
       role: secondary
       summary: Prepare draft SpecPMGeneratedCandidateRefreshDecision records from fresh/current generated artifact comparisons without mutating registry state.
+    - id: specpm.registry.generated_candidate_refresh_decision_ci_artifact
+      role: secondary
+      summary: Produce read-only GitHub Actions refresh decision artifacts for maintainer review without registry write credentials.
     - id: specpm.registry.package_set_relation_metadata
       role: secondary
       summary: Publish maintainer-reviewed package-set relation metadata through additive `/v0` payloads and the static viewer without inferring relations from producer output.
@@ -742,6 +745,7 @@ evidence:
       - specpm.registry.public_index_accepted_manifest
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
+      - specpm.registry.generated_candidate_refresh_decision_ci_artifact
   - id: add_specpackages_issue_template
     kind: documentation
     path: .github/ISSUE_TEMPLATE/add-specpackages.yml
@@ -837,6 +841,13 @@ evidence:
     path: .github/workflows/producer-bundle-preflight.yml
     supports:
       - specpm.specs.producer_bundle_proposal_policy
+  - id: refresh_decision_prepare_workflow
+    kind: source
+    path: .github/workflows/refresh-decision-prepare.yml
+    supports:
+      - specpm.registry.generated_candidate_refresh_decision_ci_artifact
+      - specpm.registry.generated_candidate_refresh_decision_prepare
+      - specpm.registry.generated_candidate_refresh_decision_preflight
   - id: producer_bundle_source
     kind: source
     path: src/specpm/producer_bundle.py
@@ -969,6 +980,7 @@ evidence:
     path: specs/GITHUB_ACTIONS_PERMISSIONS.md
     supports:
       - specpm.deployment.github_actions_permissions_policy
+      - specpm.registry.generated_candidate_refresh_decision_ci_artifact
       - github_actions_least_privilege
       - scope.includes
       - scope.excludes
@@ -1020,6 +1032,7 @@ evidence:
       - specpm.specs.ai_draft_preflight
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
+      - specpm.registry.generated_candidate_refresh_decision_ci_artifact
       - specpm.registry.package_set_materialization_helper
       - specpm.specs.producer_receipt_contract
       - producer_receipts_not_generation_authority
@@ -1174,6 +1187,7 @@ evidence:
       - specpm.registry.generated_candidate_refresh_decision_policy
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
+      - specpm.registry.generated_candidate_refresh_decision_ci_artifact
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake
@@ -1311,6 +1325,7 @@ evidence:
       - specpm.specs.ai_draft_preflight
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
+      - specpm.registry.generated_candidate_refresh_decision_ci_artifact
   - id: core_source
     kind: source
     path: src/specpm/core.py
@@ -1440,6 +1455,7 @@ evidence:
     supports:
       - specpm.documentation.docc_site
       - specpm.deployment.github_actions_permissions_policy
+      - specpm.registry.generated_candidate_refresh_decision_ci_artifact
   - id: docc_remote_package_acquisition
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/RemotePackageAcquisition.md
@@ -1599,6 +1615,7 @@ evidence:
       - specpm.registry.generated_candidate_refresh_decision_policy
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
+      - specpm.registry.generated_candidate_refresh_decision_ci_artifact
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake

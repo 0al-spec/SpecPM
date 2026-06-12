@@ -540,6 +540,9 @@ tree with `specpm producer-bundle prepare-refresh-decision`, compare
 contract-bearing generated files, and emit read-only
 `SpecPMGeneratedCandidateRefreshDecisionPrepareReport` evidence before any
 maintainer registry decision.
+The manual `Refresh Decision Prepare` GitHub Actions workflow now packages that
+same refresh decision evidence as CI artifacts without write credentials or
+registry mutation.
 SpecPM now has a consumer-side `preflight-ai-draft` gate for
 `SpecHarvesterPackageSetAIDraftProposal`. It verifies AI-proposed member
 selection, exclusions, and `contains` relations against deterministic workspace

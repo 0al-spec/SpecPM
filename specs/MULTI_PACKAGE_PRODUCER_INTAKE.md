@@ -261,6 +261,8 @@ When a fresh package-set run is available, maintainers can use
 from generated contract-file comparisons before running
 `preflight-refresh-decision`. This remains evidence preparation, not package or
 relation acceptance.
+For a GitHub Actions artifact trail, the manual `Refresh Decision Prepare`
+workflow can upload the prepared decision and prepare/preflight reports.
 
 ## Bundle-Set Checklist
 

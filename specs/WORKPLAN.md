@@ -2410,6 +2410,45 @@ Result:
   CLI reference, DocC, roadmap, and self-spec document the helper and
   non-authority boundary.
 
+### P66-T21. Generated Candidate Refresh Decision CI Artifact
+
+Status: Completed.
+
+Motivation:
+
+- P66-T20 gives maintainers a local prepare helper, but review should also have
+  an auditable GitHub Actions path that produces the same machine-readable
+  evidence.
+- CI artifact generation should not require registry write credentials or look
+  like package acceptance.
+
+Goal:
+
+- Add a manual `Refresh Decision Prepare` workflow that runs
+  `specpm producer-bundle prepare-refresh-decision`, then runs
+  `preflight-refresh-decision` against the prepared output.
+- Upload `refresh-decision.json`, `prepare-report.json`, and
+  `preflight-report.json` as workflow artifacts.
+- Keep workflow permissions read-only and default inputs aligned with the real
+  `xyflow` package-set no-op comparison.
+
+Expected result:
+
+- Maintainers can run a dry-run refresh evaluation from GitHub Actions and
+  attach the resulting artifact bundle to review.
+- The workflow is explicit `workflow_dispatch`, has `contents: read`, and does
+  not mutate accepted packages, generated candidates, accepted relations, or
+  public registry metadata.
+
+Result:
+
+- `.github/workflows/refresh-decision-prepare.yml` prepares and preflights the
+  refresh decision artifact bundle.
+- Policy docs, operator guide, DocC, roadmap, and self-spec document that the
+  workflow is evidence-only and credential-free.
+- Regression coverage parses the workflow and checks manual dispatch inputs,
+  read-only permissions, prepare/preflight commands, and artifact upload paths.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
