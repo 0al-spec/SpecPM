@@ -3316,7 +3316,8 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
 
     for required_text in (
         "SpecPMGeneratedCandidateRefreshDecision",
-        "specpm.registry-update-decision/v0",
+        "specpm.decisions/v0",
+        "without introducing a separate decision API family",
         '"status": "no_update_required"',
         '"updateNeeded": false',
         '"reason": "no_contract_delta"',
@@ -3337,7 +3338,8 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
 
     for required_text in (
         "SpecPMGeneratedCandidateRefreshDecision",
-        "specpm.registry-update-decision/v0",
+        "specpm.decisions/v0",
+        "without introducing another decision API family",
         "`status: no_update_required`",
         "`updateNeeded: false`",
         "`reason: no_contract_delta`",

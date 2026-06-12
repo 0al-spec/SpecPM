@@ -32,11 +32,16 @@ The review outcome should be captured as a machine-readable
 `SpecPMGeneratedCandidateRefreshDecision` when a fresh generated candidate is
 compared with current registry sources.
 
+The record reuses the shared SpecPM decision envelope
+`apiVersion: specpm.decisions/v0`. It uses a distinct
+`kind: SpecPMGeneratedCandidateRefreshDecision` so tooling can recognize the
+refresh/no-update decision without introducing a separate decision API family.
+
 Minimum shape:
 
 ```json
 {
-  "apiVersion": "specpm.registry-update-decision/v0",
+  "apiVersion": "specpm.decisions/v0",
   "kind": "SpecPMGeneratedCandidateRefreshDecision",
   "schemaVersion": 1,
   "subject": {
@@ -214,6 +219,7 @@ producer tools.
 
 ## References
 
+- `specs/REGISTRY_ACCEPTANCE_DECISIONS.md`
 - `specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md`
 - `specs/MULTI_PACKAGE_PRODUCER_INTAKE.md`
 - `specs/PUBLIC_INDEX_OPERATOR_GUIDE.md`

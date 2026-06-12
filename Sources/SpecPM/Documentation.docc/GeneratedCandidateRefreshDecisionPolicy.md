@@ -13,7 +13,7 @@ The decision record is `SpecPMGeneratedCandidateRefreshDecision`:
 
 ```json
 {
-  "apiVersion": "specpm.registry-update-decision/v0",
+  "apiVersion": "specpm.decisions/v0",
   "kind": "SpecPMGeneratedCandidateRefreshDecision",
   "schemaVersion": 1,
   "decision": {
@@ -34,6 +34,11 @@ The decision record is `SpecPMGeneratedCandidateRefreshDecision`:
   }
 }
 ```
+
+The record reuses the shared SpecPM decision envelope
+`apiVersion: specpm.decisions/v0`. The distinct
+`kind: SpecPMGeneratedCandidateRefreshDecision` lets tooling recognize refresh
+or no-update decisions without introducing another decision API family.
 
 ## No-Update Outcome
 
@@ -83,6 +88,7 @@ churning accepted registry metadata.
 ## References
 
 - `specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md`
+- <doc:RegistryAcceptanceDecisions>
 - <doc:CuratedAcceptedArtifactLifecycle>
 - <doc:MultiPackageProducerIntake>
 - <doc:XyflowPackageSetReference>
