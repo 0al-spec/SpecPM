@@ -85,9 +85,16 @@ The correct decision is `no_update_required` with
 `reason: no_contract_delta`. This records the value of the refresh without
 churning accepted registry metadata.
 
+A complete example fixture is available at
+`tests/fixtures/refresh_decisions/xyflow-no-update.example.json`. It uses
+`apiVersion: specpm.decisions/v0`, covers the four `xyflow` package-set members,
+and snapshots generated contract-file digests that support
+`updateNeeded: false`.
+
 ## References
 
 - `specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md`
+- `tests/fixtures/refresh_decisions/xyflow-no-update.example.json`
 - <doc:RegistryAcceptanceDecisions>
 - <doc:CuratedAcceptedArtifactLifecycle>
 - <doc:MultiPackageProducerIntake>

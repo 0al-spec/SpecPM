@@ -121,6 +121,9 @@ REGISTRY_ACCEPTANCE_DECISION_DOC = ROOT / "specs/REGISTRY_ACCEPTANCE_DECISIONS.m
 REGISTRY_ACCEPTANCE_DECISION_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/registry-acceptance-decision.example.json"
 )
+GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE = (
+    ROOT / "tests/fixtures/refresh_decisions/xyflow-no-update.example.json"
+)
 INTENT_TAXONOMY_GOVERNANCE_DOC = ROOT / "specs/INTENT_TAXONOMY_GOVERNANCE.md"
 DOCC_DEPLOYMENT_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/Deployment.md"
 DOCC_ADD_PACKAGE_PAGE = ROOT / "Sources/SpecPM/Documentation.docc/AddSpecPackage.md"
@@ -3406,6 +3409,145 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
     assert (
         "Sources/SpecPM/Documentation.docc/GeneratedCandidateRefreshDecisionPolicy.md" in self_spec
     )
+
+
+def test_xyflow_refresh_decision_fixture_matches_policy() -> None:
+    fixture = json.loads(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE.read_text(encoding="utf-8"))
+    policy = GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_PAGE.read_text(encoding="utf-8")
+    xyflow_reference = (ROOT / "specs/XYFLOW_PACKAGE_SET_REFERENCE.md").read_text(encoding="utf-8")
+    docc_xyflow_reference = (
+        ROOT / "Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md"
+    ).read_text(encoding="utf-8")
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    self_spec = (ROOT / "specs/specpm.spec.yaml").read_text(encoding="utf-8")
+
+    assert fixture["apiVersion"] == "specpm.decisions/v0"
+    assert fixture["kind"] == "SpecPMGeneratedCandidateRefreshDecision"
+    assert fixture["schemaVersion"] == 1
+    assert fixture["decisionId"] == (
+        "specpm-refresh-decision-2026-06-12-xyflow-package-set-0.1.0-no-update"
+    )
+    assert fixture["requiredFor"] == ["public_index_refresh_evaluation"]
+
+    subject = fixture["subject"]
+    assert subject["packageId"] == "xyflow.workspace"
+    assert subject["version"] == "0.1.0"
+    assert subject["scope"] == "package_set"
+    assert subject["packageIds"] == [
+        "xyflow.workspace",
+        "xyflow.react",
+        "xyflow.svelte",
+        "xyflow.system",
+    ]
+    assert subject["freshGeneratedRun"]["sourceRevision"] == (
+        "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd"
+    )
+
+    assert fixture["decision"] == {
+        "status": "no_update_required",
+        "updateNeeded": False,
+        "reason": "no_contract_delta",
+        "supportingReasons": [
+            "same_source_revision",
+            "generated_contract_bytes_unchanged",
+            "curated_artifact_remains_stronger",
+            "producer_receipt_only_delta",
+            "immutable_generated_candidate",
+        ],
+    }
+
+    comparison = fixture["comparison"]
+    assert comparison["sourceRevisionChanged"] is False
+    assert comparison["acceptedContractChanged"] is False
+    assert comparison["generatedContractChanged"] is False
+    assert comparison["capabilitiesChanged"] is False
+    assert comparison["relationsChanged"] is False
+    assert comparison["evidenceChanged"] is False
+    assert comparison["receiptOnlyChanged"] is True
+    assert comparison["advisoryReportOnlyChanged"] is True
+    assert comparison["freshCandidateCount"] == 4
+    assert comparison["acceptedRelationCount"] == 3
+
+    expected_accepted_artifacts = [
+        "public-index/curated/xyflow.workspace/0.1.0",
+        "public-index/curated/xyflow.react/0.1.0",
+        "public-index/curated/xyflow.svelte/0.1.0",
+        "public-index/curated/xyflow.system/0.1.0",
+    ]
+    expected_current_generated_artifacts = [
+        "public-index/generated/xyflow.workspace/0.1.0",
+        "public-index/generated/xyflow.react/0.1.0",
+        "public-index/generated/xyflow.svelte/0.1.0",
+        "public-index/generated/xyflow.system/0.1.0",
+    ]
+    assert subject["acceptedArtifacts"] == expected_accepted_artifacts
+    assert subject["currentGeneratedArtifacts"] == expected_current_generated_artifacts
+
+    assert fixture["authority"] == {
+        "producerEvidenceAuthority": "evidence_only",
+        "registryAuthority": "maintainer_review_required",
+        "noRegistryMutation": True,
+    }
+
+    for path in expected_accepted_artifacts:
+        accepted_path = ROOT / path
+        assert accepted_path.is_dir()
+
+    for path in expected_current_generated_artifacts:
+        generated_path = ROOT / path
+        assert generated_path.is_dir()
+
+    generated_contract_files = fixture["generatedContractFiles"]
+    expected_generated_contract_files = [
+        "public-index/generated/xyflow.workspace/0.1.0/specpm.yaml",
+        "public-index/generated/xyflow.workspace/0.1.0/specs/xyflow.spec.yaml",
+        "public-index/generated/xyflow.react/0.1.0/specpm.yaml",
+        "public-index/generated/xyflow.react/0.1.0/specs/react.spec.yaml",
+        "public-index/generated/xyflow.svelte/0.1.0/specpm.yaml",
+        "public-index/generated/xyflow.svelte/0.1.0/specs/svelte.spec.yaml",
+        "public-index/generated/xyflow.system/0.1.0/specpm.yaml",
+        "public-index/generated/xyflow.system/0.1.0/specs/system.spec.yaml",
+    ]
+    assert [
+        entry["path"] for entry in generated_contract_files
+    ] == expected_generated_contract_files
+    for entry in generated_contract_files:
+        path = ROOT / entry["path"]
+        assert path.is_file()
+        assert entry["sha256"] == sha256_path(path)
+        assert "/diagnostics.json" not in entry["path"]
+        assert "/harvest.json" not in entry["path"]
+        assert "/validation-report.json" not in entry["path"]
+        assert "/producer-receipt.json" not in entry["path"]
+
+    for required_text in (
+        "tests/fixtures/refresh_decisions/xyflow-no-update.example.json",
+        "`apiVersion: specpm.decisions/v0`",
+        "`updateNeeded: false`",
+        "generated contract-file digests",
+    ):
+        assert required_text in policy
+        assert required_text in docc_policy
+
+    for required_text in (
+        "tests/fixtures/refresh_decisions/xyflow-no-update.example.json",
+        "P66-T18. Generated Candidate Refresh Decision Example Fixture",
+        "`SpecPMGeneratedCandidateRefreshDecision`",
+        "`status: no_update_required`",
+        "`updateNeeded: false`",
+        "`reason: no_contract_delta`",
+    ):
+        assert required_text in workplan
+
+    assert "tests/fixtures/refresh_decisions/" in roadmap
+    assert "tests/fixtures/refresh_decisions/" in docc_roadmap
+    assert "tests/fixtures/refresh_decisions/xyflow-no-update.example.json" in xyflow_reference
+    assert "tests/fixtures/refresh_decisions/xyflow-no-update.example.json" in docc_xyflow_reference
+    assert "tests/fixtures/refresh_decisions/xyflow-no-update.example.json" in self_spec
+    assert "generated_candidate_refresh_decision_fixture" in self_spec
 
 
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:

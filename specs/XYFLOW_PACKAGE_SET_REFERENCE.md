@@ -309,3 +309,9 @@ the same contract-bearing generated files, and does not improve the curated
 accepted artifacts. In that case, producer receipt churn or a newly emitted
 quality report is useful review evidence, not a reason to mutate
 `public-index/generated/xyflow.*` or churn the accepted registry metadata.
+
+The example refresh decision fixture for this no-op outcome lives at:
+
+```text
+tests/fixtures/refresh_decisions/xyflow-no-update.example.json
+```

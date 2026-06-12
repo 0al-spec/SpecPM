@@ -306,6 +306,10 @@ records: a fresh run can end with `SpecPMGeneratedCandidateRefreshDecision`
 `reason: no_contract_delta` when it reproduces the same contract-bearing
 generated files and the curated accepted artifact remains the stronger registry
 source.
+The `xyflow` no-op refresh decision is now captured as a checked example
+fixture under `tests/fixtures/refresh_decisions/`, giving future tooling a
+stable artifact for `updateNeeded: false` without making no-op records registry
+authority.
 SpecPM now has a consumer-side `preflight-ai-draft` gate for
 `SpecHarvesterPackageSetAIDraftProposal`. It verifies AI-proposed member
 selection, exclusions, and `contains` relations against deterministic workspace

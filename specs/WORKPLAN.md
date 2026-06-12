@@ -2274,6 +2274,49 @@ Result:
 - Regression tests keep the refresh decision vocabulary present in policy,
   DocC, operator docs, roadmap, workplan, and self-spec.
 
+### P66-T18. Generated Candidate Refresh Decision Example Fixture
+
+Status: Completed.
+
+Motivation:
+
+- P66-T17 documented the refresh decision policy, but future tooling still
+  needs a stable example artifact that shows how a no-op refresh should look in
+  practice.
+- The real `xyflow` registry update evaluation produced the intended outcome:
+  the fresh SpecHarvester run was useful review evidence, but there was no
+  accepted contract delta and no registry update PR was needed.
+
+Goal:
+
+- Add a checked
+  `SpecPMGeneratedCandidateRefreshDecision` example fixture for the real
+  `xyflow` no-op refresh outcome.
+- Use the shared `apiVersion: specpm.decisions/v0` envelope with
+  `status: no_update_required`, `updateNeeded: false`, and
+  `reason: no_contract_delta`.
+- Snapshot the current generated contract-file digests that justify
+  `generated_contract_bytes_unchanged`.
+
+Expected result:
+
+- Maintainers and future tooling have a concrete fixture for
+  `updateNeeded: false` refresh decisions.
+- The fixture proves the current `xyflow.workspace/react/svelte/system`
+  generated evidence paths still match the recorded no-op decision.
+- The fixture remains review evidence only; it does not mutate accepted
+  packages, generated candidates, relations, or registry metadata.
+
+Result:
+
+- `tests/fixtures/refresh_decisions/xyflow-no-update.example.json` records the
+  no-op `xyflow` package-set refresh decision.
+- Generated candidate refresh policy docs, DocC, xyflow reference docs, roadmap,
+  and self-spec link the fixture.
+- Regression tests verify the fixture shape, no-op decision vocabulary,
+  referenced artifact paths, generated contract-file digests, and non-authority
+  boundary.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
