@@ -210,6 +210,11 @@ files, emits `SpecPMGeneratedCandidateRefreshDecisionPrepareReport`, writes the
 draft decision with `--output`, and performs the same preflight checks. It is
 read-only review evidence.
 
+For an auditable GitHub Actions run, use the manual
+`Refresh Decision Prepare` workflow. It uploads `refresh-decision.json`,
+`prepare-report.json`, and `preflight-report.json` as review artifacts with
+read-only repository permissions.
+
 When a `SpecPMGeneratedCandidateRefreshDecision` record is available,
 maintainers should run:
 

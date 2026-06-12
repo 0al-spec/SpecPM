@@ -123,6 +123,20 @@ Matching contract files produce `status: no_update_required`,
 revision, or accepted-artifact drift produces `manual_review_required` with
 `updateNeeded: true`. Both outcomes remain review evidence only.
 
+## CI Artifact
+
+The manual `.github/workflows/refresh-decision-prepare.yml` workflow runs the
+same prepare helper through `workflow_dispatch` and uploads:
+
+- `refresh-decision.json`
+- `prepare-report.json`
+- `preflight-report.json`
+
+It defaults to the current `xyflow` package-set no-op comparison and exposes
+inputs for package IDs, version, source repository, source revision, fresh
+generated root, and run label. The workflow has `contents: read` permissions,
+does not require write credentials, and does not mutate registry state.
+
 ## Consumer-Side Preflight
 
 SpecPM can verify refresh decision records with:

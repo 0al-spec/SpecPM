@@ -219,6 +219,11 @@ consumer-side preflight checks. It is read-only review evidence and does not
 write accepted packages, generated candidates, relations, or public registry
 metadata.
 
+The manual `.github/workflows/refresh-decision-prepare.yml` workflow wraps this
+helper as a dry-run artifact producer. It runs with `contents: read`, uploads
+the prepared decision plus prepare/preflight reports, and does not require
+registry write credentials.
+
 ## Fixture Alignment
 
 Cross-repository fixture ownership and drift handling are defined in

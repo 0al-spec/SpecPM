@@ -256,6 +256,22 @@ artifact assumptions differ, the draft uses `manual_review_required` and
 `updateNeeded: true`; it still does not mutate curated artifacts, generated
 artifacts, relations, or registry metadata.
 
+## CI Artifact
+
+The manual `.github/workflows/refresh-decision-prepare.yml` workflow runs the
+same prepare helper through `workflow_dispatch` and uploads three review
+artifacts:
+
+- `refresh-decision.json`
+- `prepare-report.json`
+- `preflight-report.json`
+
+The workflow defaults to the current `xyflow` package-set no-op comparison, but
+maintainers can override package IDs, version, source repository, source
+revision, fresh generated root, and run label. It has `contents: read`
+permissions, does not require write credentials, and does not mutate accepted
+packages, generated candidates, accepted relations, or registry metadata.
+
 ## Consumer-Side Preflight
 
 SpecPM can verify a generated candidate refresh decision before maintainers use

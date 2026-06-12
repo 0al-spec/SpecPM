@@ -1,0 +1,136 @@
+name: Refresh Decision Prepare
+
+"on":
+  workflow_dispatch:
+    inputs:
+      package_ids:
+        description: "Comma-separated package IDs to compare."
+        required: true
+        default: "xyflow.workspace,xyflow.react,xyflow.svelte,xyflow.system"
+      package_id:
+        description: "Decision subject package ID."
+        required: true
+        default: "xyflow.workspace"
+      version:
+        description: "Package version to compare."
+        required: true
+        default: "0.1.0"
+      source_repository:
+        description: "Fresh upstream source repository URL."
+        required: true
+        default: "https://github.com/xyflow/xyflow"
+      source_revision:
+        description: "Fresh upstream source revision as a 40-character commit SHA."
+        required: true
+        default: "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd"
+      fresh_generated_root:
+        description: "Fresh generated artifact root containing <package_id>/<version>."
+        required: true
+        default: "public-index/generated"
+      run_label:
+        description: "Human-readable label for the refresh evaluation."
+        required: true
+        default: "manual-refresh-decision-prepare"
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-refresh-decision:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install SpecPM
+        run: python -m pip install -e ".[dev]"
+
+      - name: Prepare refresh decision artifact
+        env:
+          PACKAGE_IDS: ${{ inputs.package_ids }}
+          PACKAGE_ID: ${{ inputs.package_id }}
+          VERSION: ${{ inputs.version }}
+          SOURCE_REPOSITORY: ${{ inputs.source_repository }}
+          SOURCE_REVISION: ${{ inputs.source_revision }}
+          FRESH_GENERATED_ROOT: ${{ inputs.fresh_generated_root }}
+          RUN_LABEL: ${{ inputs.run_label }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/refresh-decision"
+          python - <<'PY'
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          output_root = Path(os.environ["RUNNER_TEMP"]) / "refresh-decision"
+          decision_path = output_root / "refresh-decision.json"
+          report_path = output_root / "prepare-report.json"
+          package_ids = [
+              value.strip()
+              for value in os.environ["PACKAGE_IDS"].replace("\n", ",").split(",")
+              if value.strip()
+          ]
+          if not package_ids:
+              raise SystemExit("package_ids input must contain at least one package ID")
+
+          command = [
+              sys.executable,
+              "-m",
+              "specpm.cli",
+              "producer-bundle",
+              "prepare-refresh-decision",
+              "--root",
+              os.environ["GITHUB_WORKSPACE"],
+              "--fresh-generated-root",
+              os.environ["FRESH_GENERATED_ROOT"],
+              "--package-id",
+              os.environ["PACKAGE_ID"],
+              "--version",
+              os.environ["VERSION"],
+              "--source-repository",
+              os.environ["SOURCE_REPOSITORY"],
+              "--source-revision",
+              os.environ["SOURCE_REVISION"],
+              "--run-label",
+              os.environ["RUN_LABEL"],
+              "--review-location",
+              f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+              "--output",
+              str(decision_path),
+              "--json",
+          ]
+          for package_id in package_ids:
+              command.extend(["--package", package_id])
+
+          completed = subprocess.run(command, capture_output=True, text=True, check=False)
+          report_path.write_text(completed.stdout, encoding="utf-8")
+          if completed.stdout:
+              print(completed.stdout)
+          if completed.stderr:
+              print(completed.stderr, file=sys.stderr)
+          raise SystemExit(completed.returncode)
+          PY
+
+      - name: Preflight prepared refresh decision
+        run: |
+          python -m specpm.cli producer-bundle preflight-refresh-decision \
+            --body "$RUNNER_TEMP/refresh-decision/refresh-decision.json" \
+            --root "$GITHUB_WORKSPACE" \
+            --json \
+            > "$RUNNER_TEMP/refresh-decision/preflight-report.json"
+          cat "$RUNNER_TEMP/refresh-decision/preflight-report.json"
+
+      - name: Upload refresh decision artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: generated-candidate-refresh-decision
+          path: |
+            ${{ runner.temp }}/refresh-decision/refresh-decision.json
+            ${{ runner.temp }}/refresh-decision/prepare-report.json
+            ${{ runner.temp }}/refresh-decision/preflight-report.json

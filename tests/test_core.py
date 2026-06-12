@@ -80,6 +80,7 @@ PUBLIC_INDEX_OPERATOR_GUIDE = ROOT / "specs/PUBLIC_INDEX_OPERATOR_GUIDE.md"
 PACKAGE_SUBMISSION_WORKFLOW = ROOT / ".github/workflows/package-submission-check.yml"
 PACKAGE_SUBMISSION_TRIAGE_WORKFLOW = ROOT / ".github/workflows/package-submission-triage.yml"
 PRODUCER_BUNDLE_PREFLIGHT_WORKFLOW = ROOT / ".github/workflows/producer-bundle-preflight.yml"
+REFRESH_DECISION_PREPARE_WORKFLOW = ROOT / ".github/workflows/refresh-decision-prepare.yml"
 NAMESPACE_CLAIM_TRIAGE_WORKFLOW = ROOT / ".github/workflows/namespace-claim-triage.yml"
 NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW = (
     ROOT / ".github/workflows/namespace-claim-decision-report.yml"
@@ -1902,6 +1903,52 @@ def test_package_submission_triage_workflow_applies_review_labels_only() -> None
         assert forbidden not in script
 
 
+def test_refresh_decision_prepare_workflow_uploads_read_only_artifacts() -> None:
+    loaded = load_yaml_file(REFRESH_DECISION_PREPARE_WORKFLOW)
+
+    assert loaded["name"] == "Refresh Decision Prepare"
+    assert loaded["permissions"] == {"contents": "read"}
+    assert "workflow_dispatch" in loaded["on"]
+    inputs = loaded["on"]["workflow_dispatch"]["inputs"]
+    assert inputs["package_ids"]["default"] == (
+        "xyflow.workspace,xyflow.react,xyflow.svelte,xyflow.system"
+    )
+    assert inputs["package_id"]["default"] == "xyflow.workspace"
+    assert inputs["version"]["default"] == "0.1.0"
+    assert inputs["source_repository"]["default"] == "https://github.com/xyflow/xyflow"
+    assert inputs["source_revision"]["default"] == "a58568f11bc0e1a1bdca1b3549e959e2e1ca0cdd"
+    assert inputs["fresh_generated_root"]["default"] == "public-index/generated"
+
+    job = loaded["jobs"]["prepare-refresh-decision"]
+    steps = {step["name"]: step for step in job["steps"] if "name" in step}
+    assert steps["Check out repository"]["uses"] == "actions/checkout@v6"
+    assert steps["Set up Python"]["uses"] == "actions/setup-python@v6"
+    prepare_script = steps["Prepare refresh decision artifact"]["run"]
+    assert "prepare-refresh-decision" in prepare_script
+    assert "--output" in prepare_script
+    assert "refresh-decision.json" in prepare_script
+    assert "prepare-report.json" in prepare_script
+    preflight_script = steps["Preflight prepared refresh decision"]["run"]
+    assert "preflight-refresh-decision" in preflight_script
+    assert "preflight-report.json" in preflight_script
+    upload_step = steps["Upload refresh decision artifact"]
+    assert upload_step["uses"] == "actions/upload-artifact@v7"
+    assert upload_step["with"]["name"] == "generated-candidate-refresh-decision"
+    assert "refresh-decision.json" in upload_step["with"]["path"]
+    assert "prepare-report.json" in upload_step["with"]["path"]
+    assert "preflight-report.json" in upload_step["with"]["path"]
+
+    workflow_text = REFRESH_DECISION_PREPARE_WORKFLOW.read_text(encoding="utf-8")
+    for forbidden in (
+        "git push",
+        "gh pr create",
+        "public-index generate",
+        "FTP_PASS",
+        "contents: write",
+    ):
+        assert forbidden not in workflow_text
+
+
 def test_namespace_claim_triage_workflow_applies_review_labels_only() -> None:
     loaded = load_yaml_file(NAMESPACE_CLAIM_TRIAGE_WORKFLOW)
 
@@ -2151,6 +2198,7 @@ def test_github_actions_permissions_and_secrets_boundary_is_documented() -> None
         PACKAGE_SUBMISSION_WORKFLOW: {"contents": "read", "issues": "write"},
         PACKAGE_SUBMISSION_TRIAGE_WORKFLOW: {"contents": "read", "issues": "write"},
         PRODUCER_BUNDLE_PREFLIGHT_WORKFLOW: {"contents": "read"},
+        REFRESH_DECISION_PREPARE_WORKFLOW: {"contents": "read"},
         NAMESPACE_CLAIM_TRIAGE_WORKFLOW: {"contents": "read", "issues": "write"},
         NAMESPACE_CLAIM_DECISION_REPORT_WORKFLOW: {"contents": "read", "issues": "write"},
         NAMESPACE_CLAIM_DECISION_SUMMARY_WORKFLOW: {"contents": "read", "issues": "read"},
@@ -3349,6 +3397,10 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "fresh real `xyflow` package-set run",
         "specpm producer-bundle prepare-refresh-decision",
         "SpecPMGeneratedCandidateRefreshDecisionPrepareReport",
+        ".github/workflows/refresh-decision-prepare.yml",
+        "refresh-decision.json",
+        "prepare-report.json",
+        "preflight-report.json",
         "specpm producer-bundle preflight-refresh-decision",
         "SpecPMGeneratedCandidateRefreshDecisionPreflightReport",
         "status/update consistency",
@@ -3367,6 +3419,10 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "producer receipt churn plus an additional advisory quality report",
         "specpm producer-bundle prepare-refresh-decision",
         "SpecPMGeneratedCandidateRefreshDecisionPrepareReport",
+        ".github/workflows/refresh-decision-prepare.yml",
+        "refresh-decision.json",
+        "prepare-report.json",
+        "preflight-report.json",
         "specpm producer-bundle preflight-refresh-decision",
         "SpecPMGeneratedCandidateRefreshDecisionPreflightReport",
         "status/update consistency",
@@ -3391,6 +3447,7 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "`SpecPMGeneratedCandidateRefreshDecision` with `updateNeeded: false`",
         "`reason: no_contract_delta`",
         "specpm producer-bundle prepare-refresh-decision",
+        "Refresh Decision Prepare",
     ):
         assert required_text in intake_flat
         assert required_text in operator_guide_flat
@@ -3410,6 +3467,7 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "`reason: no_contract_delta`",
         "curated accepted artifact remains the stronger registry source",
         "SpecPMGeneratedCandidateRefreshDecisionPrepareReport",
+        "Refresh Decision Prepare",
     ):
         assert required_text in roadmap_flat
         assert required_text in docc_roadmap_flat
@@ -3434,15 +3492,22 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
         "P66-T20. Generated Candidate Refresh Decision Prepare Helper",
         "`specpm producer-bundle prepare-refresh-decision`",
         "`SpecPMGeneratedCandidateRefreshDecisionPrepareReport`",
+        "P66-T21. Generated Candidate Refresh Decision CI Artifact",
+        "`refresh-decision.json`",
+        "`prepare-report.json`",
+        "`preflight-report.json`",
     ):
         assert required_text in workplan_flat
 
     assert "specpm.registry.generated_candidate_refresh_decision_policy" in manifest
     assert "specpm.registry.generated_candidate_refresh_decision_preflight" in manifest
     assert "specpm.registry.generated_candidate_refresh_decision_prepare" in manifest
+    assert "specpm.registry.generated_candidate_refresh_decision_ci_artifact" in manifest
     assert "specpm.registry.generated_candidate_refresh_decision_policy" in self_spec
     assert "specpm.registry.generated_candidate_refresh_decision_preflight" in self_spec
     assert "specpm.registry.generated_candidate_refresh_decision_prepare" in self_spec
+    assert "specpm.registry.generated_candidate_refresh_decision_ci_artifact" in self_spec
+    assert ".github/workflows/refresh-decision-prepare.yml" in self_spec
     assert "specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md" in self_spec
     assert (
         "Sources/SpecPM/Documentation.docc/GeneratedCandidateRefreshDecisionPolicy.md" in self_spec
