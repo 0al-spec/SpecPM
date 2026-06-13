@@ -60,6 +60,7 @@ from specpm.producer_bundle import (
     preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
     preflight_refresh_decision,
+    preflight_selected_candidate_handoff,
     prepare_refresh_decision,
 )
 from specpm.public_index import (
@@ -119,6 +120,7 @@ GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC = (
     ROOT / "specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md"
 )
 BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_DOC = ROOT / "specs/BASELINE_SUBMISSION_HANDOFF_PREFLIGHT.md"
+SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_DOC = ROOT / "specs/SELECTED_CANDIDATE_HANDOFF_PREFLIGHT.md"
 PRODUCER_RECEIPT_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
 )
@@ -171,6 +173,9 @@ DOCC_GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_PAGE = (
 )
 DOCC_BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/BaselineSubmissionHandoffPreflight.md"
+)
+DOCC_SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/SelectedCandidateHandoffPreflight.md"
 )
 DOCC_REGISTRY_ACCEPTANCE_DECISIONS_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/RegistryAcceptanceDecisions.md"
@@ -689,6 +694,191 @@ def write_baseline_submission_handoff_fixture(root: Path) -> Path:
     handoff_path = root / "baseline-submission-handoff.json"
     handoff_path.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return handoff_path
+
+
+def write_selected_candidate_handoff_fixture(root: Path) -> Path:
+    root.mkdir(parents=True)
+    source_specs = [
+        (
+            "p30_t5_selected_handoff_dry_run",
+            "P30-T5",
+            "SpecHarvesterLimitedPopularLibrarySelectedHandoffDryRun",
+            "tests/fixtures/limited_popular_library_selected_handoff_dry_run/"
+            "p30-t5-limited-popular-libraries.example.json",
+        ),
+        (
+            "p32_t3_xyflow_regeneration",
+            "P32-T3",
+            "SpecHarvesterXyflowPackageSetIdentityRegenerationDryRun",
+            "tests/fixtures/xyflow_package_set_identity_regeneration/"
+            "p32-t3-xyflow-package-set-identity-regeneration.example.json",
+        ),
+        (
+            "p32_t4_single_package_regeneration",
+            "P32-T4",
+            "SpecHarvesterSinglePackageDeferredCandidateRegenerationDryRun",
+            "tests/fixtures/single_package_deferred_candidate_regeneration/"
+            "p32-t4-single-package-deferred-candidate-regeneration.example.json",
+        ),
+    ]
+    sources = []
+    for source_id, task_id, kind, relative_path in source_specs:
+        path = root / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "apiVersion": f"spec-harvester.test-fixture/{task_id.lower()}",
+                    "kind": kind,
+                    "id": source_id,
+                    "taskId": task_id,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        sources.append(
+            {
+                "id": source_id,
+                "taskId": task_id,
+                "kind": kind,
+                "path": relative_path,
+                "digest": f"sha256:{sha256_path(path)}",
+                "status": "source_fixture_committed",
+            }
+        )
+
+    selected_ids = [
+        "flask.core",
+        "gin.core",
+        "docc2context.core",
+        "xyflow.workspace",
+        "xyflow.react",
+        "xyflow.svelte",
+        "xyflow.system",
+        "navigation_split_view.core",
+    ]
+    selected_candidates = [
+        selected_candidate_handoff_record(package_id, source_specs[0][1], source_specs[0][0])
+        for package_id in selected_ids[:3]
+    ]
+    selected_candidates.extend(
+        selected_candidate_handoff_record(package_id, source_specs[1][1], source_specs[1][0])
+        for package_id in selected_ids[3:7]
+    )
+    selected_candidates.append(
+        selected_candidate_handoff_record(selected_ids[7], source_specs[2][1], source_specs[2][0])
+    )
+    handoff = {
+        "apiVersion": "spec-harvester.refreshed-candidate-layer-selected-handoff/v0",
+        "kind": "SpecHarvesterRefreshedCandidateLayerSelectedHandoff",
+        "schemaVersion": 1,
+        "authority": "producer_preview_evidence_only",
+        "run": {
+            "taskId": "P32-T5",
+            "corpusId": "p30-limited-popular-libraries",
+            "decision": "refresh_selected_handoff_from_recorded_evidence",
+            "newHarvestExecuted": False,
+            "aiRunExecuted": False,
+        },
+        "summary": {
+            "selectedCandidateCount": len(selected_candidates),
+            "deferredCandidateCount": 1,
+            "candidateLayerReviewRequiredCount": len(selected_candidates),
+            "needsRegenerationCount": 1,
+            "producerPreflightPassedCount": len(selected_candidates),
+            "viewerOkCount": len(selected_candidates),
+            "registryMutationCount": 0,
+            "specpmPullRequestCreated": False,
+        },
+        "expectedConsumerGate": {
+            "repository": "SpecPM",
+            "kind": "SpecPMSelectedCandidateHandoffPreflightReport",
+            "apiVersion": "specpm.selected-candidate-handoff-preflight/v0",
+            "status": "required_before_acceptance",
+            "nextTask": "P32-T6",
+        },
+        "sources": sources,
+        "selectedCandidates": selected_candidates,
+        "deferredCandidates": [
+            {
+                "id": "cupertino.core",
+                "repositoryId": "cupertino",
+                "sourceTaskId": "P32-T4",
+                "sourceFixtureId": "p32_t4_single_package_regeneration",
+                "candidateLayerDecision": {
+                    "status": "needs_regeneration",
+                    "selectedHandoffEligible": False,
+                },
+                "blockers": ["refined_summary_missing"],
+                "previewOnly": True,
+                "producerPreflight": {
+                    "status": "passed",
+                    "warningCount": 0,
+                    "errorCount": 0,
+                },
+                "viewer": {"status": "ok"},
+            }
+        ],
+        "nonAuthority": {
+            "acceptsPackages": False,
+            "acceptsRelations": False,
+            "createsSpecPMPullRequest": False,
+            "producerEvidenceOnly": True,
+            "publishesRegistryMetadata": False,
+            "removesPreviewOnly": False,
+            "seedsBaselines": False,
+            "treatsAIOutputAsRegistryTruth": False,
+        },
+    }
+    handoff_path = root / "selected-candidate-handoff.json"
+    handoff_path.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return handoff_path
+
+
+def selected_candidate_handoff_record(
+    package_id: str,
+    source_task_id: str,
+    source_fixture_id: str,
+) -> dict[str, Any]:
+    return {
+        "id": package_id,
+        "repositoryId": package_id.split(".", maxsplit=1)[0],
+        "sourceTaskId": source_task_id,
+        "sourceFixtureId": source_fixture_id,
+        "candidateLayerDecision": {
+            "status": "candidate_layer_review_required",
+            "selectedHandoffEligible": True,
+        },
+        "handoffRecommendation": "ready_for_specpm_dry_run_review",
+        "previewOnly": True,
+        "producerPreflight": {
+            "status": "passed",
+            "warningCount": 0,
+            "errorCount": 0,
+            "reportDigest": f"sha256:{'a' * 64}",
+        },
+        "viewer": {
+            "status": "ok",
+            "indexDigest": f"sha256:{'b' * 64}",
+            "specPackageDigest": f"sha256:{'c' * 64}",
+        },
+        "registryAcceptanceDecision": {
+            "producerAuthority": "evidence_only",
+            "requiredFor": "public_index_acceptance",
+            "status": "external_required",
+        },
+        "evidenceRoles": [
+            {"role": "manifest", "digest": f"sha256:{'1' * 64}"},
+            {"role": "boundary_spec", "digest": f"sha256:{'2' * 64}"},
+            {"role": "producer_receipt", "digest": f"sha256:{'3' * 64}"},
+            {"role": "validation_report", "digest": f"sha256:{'4' * 64}"},
+            {"role": "diagnostics", "digest": f"sha256:{'5' * 64}"},
+            {"role": "quality_report", "digest": f"sha256:{'6' * 64}"},
+        ],
+    }
 
 
 def member_handoff_links(root: Path, dirname: str, spec_name: str) -> list[dict[str, str]]:
@@ -3805,6 +3995,103 @@ def test_baseline_submission_handoff_preflight_policy_is_documented() -> None:
     assert "<doc:BaselineSubmissionHandoffPreflight>" in docc_root_flat
 
 
+def test_selected_candidate_handoff_preflight_policy_is_documented() -> None:
+    policy = SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_PAGE.read_text(encoding="utf-8")
+    intake = MULTI_PACKAGE_PRODUCER_INTAKE_DOC.read_text(encoding="utf-8")
+    docc_intake = DOCC_MULTI_PACKAGE_PRODUCER_INTAKE_PAGE.read_text(encoding="utf-8")
+    producer_bundle_policy = (ROOT / "specs/PRODUCER_BUNDLE_PROPOSAL_POLICY.md").read_text(
+        encoding="utf-8"
+    )
+    docc_producer_bundle_policy = DOCC_PRODUCER_BUNDLE_POLICY_PAGE.read_text(encoding="utf-8")
+    cli_reference = (ROOT / "Sources/SpecPM/Documentation.docc/CLIReference.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    self_spec = (ROOT / "specs/specpm.spec.yaml").read_text(encoding="utf-8")
+    manifest = (ROOT / "specpm.yaml").read_text(encoding="utf-8")
+    docc_root = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(encoding="utf-8")
+
+    policy_flat = re.sub(r"\s+", " ", policy)
+    docc_policy_flat = re.sub(r"\s+", " ", docc_policy)
+    intake_flat = re.sub(r"\s+", " ", intake)
+    docc_intake_flat = re.sub(r"\s+", " ", docc_intake)
+    producer_bundle_flat = re.sub(r"\s+", " ", producer_bundle_policy)
+    docc_producer_bundle_flat = re.sub(r"\s+", " ", docc_producer_bundle_policy)
+    cli_flat = re.sub(r"\s+", " ", cli_reference)
+    roadmap_flat = re.sub(r"\s+", " ", roadmap)
+    docc_roadmap_flat = re.sub(r"\s+", " ", docc_roadmap)
+    workplan_flat = re.sub(r"\s+", " ", workplan)
+    docc_root_flat = re.sub(r"\s+", " ", docc_root)
+
+    for required_text in (
+        "SpecHarvesterSelectedCandidateHandoffProposal",
+        "SpecHarvesterRefreshedCandidateLayerSelectedHandoff",
+        "SpecPMSelectedCandidateHandoffPreflightReport",
+        "specpm.selected-candidate-handoff-preflight/v0",
+        "specpm producer-bundle preflight-selected-candidate-handoff",
+        "producer_preview_evidence_only",
+        "previewOnly: true",
+        "external_required",
+        "cupertino.core",
+        "refined_summary_missing",
+        "does not accept packages",
+        "does not accept relations",
+    ):
+        assert required_text in policy_flat
+
+    for required_text in (
+        "SpecPMSelectedCandidateHandoffPreflightReport",
+        "SpecHarvesterRefreshedCandidateLayerSelectedHandoff",
+        "preflight-selected-candidate-handoff",
+        "cupertino.core",
+        "does not accept packages",
+    ):
+        assert required_text in docc_policy_flat
+
+    for required_text in (
+        "specpm producer-bundle preflight-selected-candidate-handoff",
+        "SpecPMSelectedCandidateHandoffPreflightReport",
+        "SpecHarvesterSelectedCandidateHandoffProposal",
+        "SpecHarvesterRefreshedCandidateLayerSelectedHandoff",
+        "does not accept packages",
+        "does not accept relations",
+    ):
+        assert required_text in intake_flat
+        assert required_text in docc_intake_flat
+        assert required_text in producer_bundle_flat
+        assert required_text in docc_producer_bundle_flat
+
+    assert "preflight-selected-candidate-handoff" in cli_flat
+    assert "SpecPMSelectedCandidateHandoffPreflightReport" in cli_flat
+    assert "SpecHarvesterRefreshedCandidateLayerSelectedHandoff" in cli_flat
+
+    for required_text in (
+        "preflight-selected-candidate-handoff",
+        "SpecHarvesterRefreshedCandidateLayerSelectedHandoff",
+        "limited corpus intake review",
+    ):
+        assert required_text in roadmap_flat
+        assert required_text in docc_roadmap_flat
+
+    for required_text in (
+        "P66-T23. Selected Candidate Handoff Preflight",
+        "`specpm producer-bundle preflight-selected-candidate-handoff`",
+        "`SpecPMSelectedCandidateHandoffPreflightReport`",
+        "legacy selected handoff compatibility",
+    ):
+        assert required_text in workplan_flat
+
+    assert "specpm.registry.selected_candidate_handoff_preflight" in manifest
+    assert "specpm.registry.selected_candidate_handoff_preflight" in self_spec
+    assert "specs/SELECTED_CANDIDATE_HANDOFF_PREFLIGHT.md" in self_spec
+    assert "Sources/SpecPM/Documentation.docc/SelectedCandidateHandoffPreflight.md" in self_spec
+    assert "specs/SELECTED_CANDIDATE_HANDOFF_PREFLIGHT.md" in docc_root_flat
+    assert "<doc:SelectedCandidateHandoffPreflight>" in docc_root_flat
+
+
 def test_xyflow_refresh_decision_fixture_matches_policy() -> None:
     fixture = json.loads(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE.read_text(encoding="utf-8"))
     policy = GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC.read_text(encoding="utf-8")
@@ -4458,6 +4745,280 @@ def test_baseline_submission_handoff_preflight_rejects_prepare_report_mismatch(
     assert "baseline_handoff_input_prepare_report_diagnostic_count_mismatch" in issue_codes(
         report["errors"]
     )
+
+
+def test_selected_candidate_handoff_preflight_accepts_refreshed_handoff(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_selected_candidate_handoff_fixture(root)
+
+    report = preflight_selected_candidate_handoff(body, root=root)
+
+    assert report["apiVersion"] == "specpm.selected-candidate-handoff-preflight/v0"
+    assert report["kind"] == "SpecPMSelectedCandidateHandoffPreflightReport"
+    assert report["status"] == "passed"
+    assert report["summary"] == {
+        "selectedCandidateCount": 8,
+        "deferredCandidateCount": 1,
+        "requiredEvidenceRoleCount": 6,
+        "digestVerifiedCount": 3,
+        "errorCount": 0,
+        "warningCount": 0,
+    }
+    assert report["selectedCandidateHandoff"]["selectedCandidateIds"] == [
+        "flask.core",
+        "gin.core",
+        "docc2context.core",
+        "xyflow.workspace",
+        "xyflow.react",
+        "xyflow.svelte",
+        "xyflow.system",
+        "navigation_split_view.core",
+    ]
+    assert report["selectedCandidateHandoff"]["deferredCandidateIds"] == ["cupertino.core"]
+    assert report["nonAuthority"]["acceptsPackages"] is False
+
+
+def test_cli_selected_candidate_handoff_preflight_emits_json(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_selected_candidate_handoff_fixture(root)
+
+    exit_code = main(
+        [
+            "producer-bundle",
+            "preflight-selected-candidate-handoff",
+            "--body",
+            str(body),
+            "--root",
+            str(root),
+            "--json",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["status"] == "passed"
+    assert report["summary"]["selectedCandidateCount"] == 8
+    assert report["summary"]["digestVerifiedCount"] == 3
+
+
+def test_selected_candidate_handoff_preflight_warns_without_root(
+    tmp_path: Path,
+) -> None:
+    body = write_selected_candidate_handoff_fixture(tmp_path / "handoff")
+
+    report = preflight_selected_candidate_handoff(body)
+
+    assert report["status"] == "warning"
+    assert report["summary"]["digestVerifiedCount"] == 0
+    assert "selected_handoff_root_not_provided" in issue_codes(report["warnings"])
+
+
+def test_selected_candidate_handoff_preflight_rejects_authority_and_summary_drift(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_selected_candidate_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    payload["schemaVersion"] = 2
+    payload["authority"] = "producer_acceptance"
+    payload["summary"]["selectedCandidateCount"] = 7
+    payload["summary"]["registryMutationCount"] = 1
+    payload["nonAuthority"]["acceptsPackages"] = True
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_selected_candidate_handoff(body, root=root)
+
+    assert report["status"] == "failed"
+    assert {
+        "unsupported_handoff_schema_version",
+        "unsupported_producer_authority",
+        "selected_candidate_count_mismatch",
+        "unexpected_registry_mutation",
+        "producer_claims_acceptance",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_selected_candidate_handoff_preflight_rejects_candidate_drift(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_selected_candidate_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    payload["selectedCandidates"][0]["previewOnly"] = False
+    payload["selectedCandidates"][0]["producerPreflight"]["warningCount"] = 1
+    payload["selectedCandidates"][0]["viewer"]["status"] = "missing"
+    payload["selectedCandidates"][0]["registryAcceptanceDecision"]["status"] = "approved"
+    payload["selectedCandidates"][0]["evidenceRoles"] = [
+        item
+        for item in payload["selectedCandidates"][0]["evidenceRoles"]
+        if item["role"] != "quality_report"
+    ]
+    payload["selectedCandidates"][1]["id"] = payload["selectedCandidates"][0]["id"]
+    payload["deferredCandidates"][0]["id"] = payload["selectedCandidates"][2]["id"]
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_selected_candidate_handoff(body, root=root)
+
+    assert report["status"] == "failed"
+    assert {
+        "selected_candidate_not_preview_only",
+        "producer_preflight_warning_count_nonzero",
+        "static_viewer_not_ok",
+        "registry_acceptance_not_external_required",
+        "missing_required_evidence_role",
+        "duplicate_selected_candidate_id",
+        "deferred_candidate_selected",
+        "cupertino_core_deferral_missing",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_selected_candidate_handoff_preflight_rejects_source_digest_drift(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_selected_candidate_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    payload["sources"][0]["digest"] = f"sha256:{'0' * 64}"
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_selected_candidate_handoff(body, root=root)
+
+    assert report["status"] == "failed"
+    assert "selected_handoff_source_digest_mismatch" in issue_codes(report["errors"])
+
+
+def test_selected_candidate_handoff_preflight_accepts_legacy_proposal(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    source_path = root / "tests/fixtures/limited_popular_library_selected_handoff_dry_run"
+    source_path.mkdir(parents=True)
+    dry_run = source_path / "p30-t5-limited-popular-libraries.example.json"
+    dry_run.write_text('{"kind": "SpecHarvesterLimitedPopularLibrarySelectedHandoffDryRun"}\n')
+    dry_run_digest = f"sha256:{sha256_path(dry_run)}"
+    body = root / "legacy-selected-candidate-handoff.json"
+    payload = {
+        "apiVersion": "spec-harvester.selected-candidate-handoff-proposal/v0",
+        "kind": "SpecHarvesterSelectedCandidateHandoffProposal",
+        "schemaVersion": 1,
+        "authority": "producer_preview_evidence_only",
+        "summary": {
+            "selectedCandidateCount": 1,
+            "deferredCandidateCount": 1,
+            "requiredEvidenceRoleCount": 11,
+            "registryMutationCount": 0,
+            "specpmPullRequestCreated": False,
+        },
+        "requiredEvidenceRoles": [
+            {"role": role, "required": True, "scope": "selected_candidate"}
+            for role in [
+                "candidate_bundle",
+                "manifest",
+                "boundary_spec",
+                "producer_receipt",
+                "validation_report",
+                "diagnostics",
+                "quality_report",
+                "producer_preflight",
+                "static_viewer",
+                "static_viewer_payload",
+                "selected_handoff_dry_run",
+            ]
+        ],
+        "source": {
+            "selectedDryRunFixture": {
+                "apiVersion": "spec-harvester.limited-popular-library-selected-handoff-dry-run/v0",
+                "kind": "SpecHarvesterLimitedPopularLibrarySelectedHandoffDryRun",
+                "path": "tests/fixtures/limited_popular_library_selected_handoff_dry_run/"
+                "p30-t5-limited-popular-libraries.example.json",
+                "digest": dry_run_digest,
+                "status": "selected_handoff_dry_run_ready",
+            }
+        },
+        "selectedCandidates": [
+            {
+                "id": "flask.core",
+                "previewOnly": True,
+                "triageClassification": "candidate_layer_review_required",
+                "maintainerAction": "review_for_possible_specpm_intake",
+                "producerPreflight": {"status": "passed", "warningCount": 0, "errorCount": 0},
+                "staticViewer": {"status": "ok"},
+                "registryAcceptanceDecision": {
+                    "producerAuthority": "evidence_only",
+                    "requiredFor": "public_index_acceptance",
+                    "status": "external_required",
+                },
+                "evidenceLinks": [
+                    {
+                        "role": "candidate_bundle",
+                        "path": "candidate",
+                        "pathScope": "local_path",
+                        "status": "present",
+                    },
+                    *[
+                        {
+                            "role": role,
+                            "path": f"{role}.json",
+                            "pathScope": "local_path",
+                            "status": "present",
+                            "digest": f"sha256:{str(index) * 64}",
+                        }
+                        for index, role in enumerate(
+                            [
+                                "manifest",
+                                "boundary_spec",
+                                "producer_receipt",
+                                "validation_report",
+                                "diagnostics",
+                                "quality_report",
+                                "producer_preflight",
+                                "static_viewer",
+                                "static_viewer_payload",
+                            ],
+                            start=1,
+                        )
+                    ],
+                    {
+                        "role": "selected_handoff_dry_run",
+                        "path": "tests/fixtures/limited_popular_library_selected_handoff_dry_run/"
+                        "p30-t5-limited-popular-libraries.example.json",
+                        "pathScope": "local_path",
+                        "status": "present",
+                        "digest": dry_run_digest,
+                    },
+                ],
+            }
+        ],
+        "deferredCandidates": [
+            {
+                "id": "cupertino.core",
+                "handoffStatus": "excluded_from_selected_handoff",
+            }
+        ],
+        "nonAuthority": [
+            "This proposal is review evidence only.",
+            "It is not SpecPM registry acceptance.",
+            "It does not accept packages.",
+            "It does not accept relations.",
+            "It does not seed baselines.",
+            "It does not remove preview_only.",
+            "It does not publish registry metadata.",
+            "It does not create a SpecPM pull request.",
+        ],
+    }
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_selected_candidate_handoff(body, root=root)
+
+    assert report["status"] == "passed"
+    assert report["summary"]["selectedCandidateCount"] == 1
+    assert report["summary"]["requiredEvidenceRoleCount"] == 11
+    assert report["summary"]["digestVerifiedCount"] == 1
 
 
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:

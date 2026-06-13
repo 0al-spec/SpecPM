@@ -73,6 +73,18 @@ package-set handoff identity, member IDs, manifest identity, linked evidence
 digests, bundle-set preflight status/counts, `contains` relation endpoints, and
 the external acceptance boundary without running producer tools.
 
+For bounded corpus selected candidate evidence, `specpm producer-bundle
+preflight-selected-candidate-handoff` can read
+`SpecHarvesterSelectedCandidateHandoffProposal` or
+`SpecHarvesterRefreshedCandidateLayerSelectedHandoff` JSON directly. It emits
+`SpecPMSelectedCandidateHandoffPreflightReport` and verifies selected/deferred
+candidate consistency, preview-only posture, producer preflight status, static
+viewer status, evidence role digests, source fixture digests when `--root` is
+provided, and non-authority flags. A passing report is intake review evidence
+only; it does not accept packages, accept relations, seed baselines, remove
+`preview_only`, create a SpecPM pull request, or publish registry metadata.
+Short form: it does not accept packages and does not accept relations.
+
 ## Package-Set AI Draft Evidence
 
 SpecHarvester may produce a `SpecHarvesterPackageSetAIDraftProposal` before the

@@ -124,6 +124,27 @@ The handoff must leave the final choice to maintainer actions:
 `first_submission_review`, `seed_baseline`, or
 `reject_or_request_regeneration`.
 
+Maintainers can also preflight selected candidate handoff evidence before
+limited corpus intake review:
+
+```bash
+specpm producer-bundle preflight-selected-candidate-handoff \
+  --body <selected-candidate-handoff.json> \
+  --root <handoff-artifact-root> \
+  --json
+```
+
+This emits `SpecPMSelectedCandidateHandoffPreflightReport` and verifies
+`SpecHarvesterSelectedCandidateHandoffProposal` or
+`SpecHarvesterRefreshedCandidateLayerSelectedHandoff` evidence. It checks
+artifact identity, selected/deferred candidate counts, preview-only posture,
+producer preflight status, static viewer status, external registry acceptance
+requirements, evidence roles, source fixture digests when `--root` is provided,
+and non-authority flags. Passing preflight is review evidence only; it does not
+accept packages, accept relations, seed baselines, remove `preview_only`, create
+a SpecPM pull request, or publish registry metadata.
+Short form: it does not accept packages and does not accept relations.
+
 After review, maintainers can materialize an explicit subset:
 
 ```bash

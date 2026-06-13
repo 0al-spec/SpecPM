@@ -38,6 +38,15 @@ BASELINE_SUBMISSION_HANDOFF_API_VERSION = "spec-harvester.baseline-submission-ha
 BASELINE_SUBMISSION_HANDOFF_KIND = "SpecHarvesterBaselineSubmissionHandoff"
 BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_KIND = "SpecPMBaselineSubmissionHandoffPreflightReport"
 BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_SCHEMA_VERSION = 1
+SELECTED_CANDIDATE_HANDOFF_API_VERSION = "spec-harvester.selected-candidate-handoff-proposal/v0"
+SELECTED_CANDIDATE_HANDOFF_KIND = "SpecHarvesterSelectedCandidateHandoffProposal"
+REFRESHED_SELECTED_CANDIDATE_HANDOFF_API_VERSION = (
+    "spec-harvester.refreshed-candidate-layer-selected-handoff/v0"
+)
+REFRESHED_SELECTED_CANDIDATE_HANDOFF_KIND = "SpecHarvesterRefreshedCandidateLayerSelectedHandoff"
+SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_API_VERSION = "specpm.selected-candidate-handoff-preflight/v0"
+SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_KIND = "SpecPMSelectedCandidateHandoffPreflightReport"
+SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_SCHEMA_VERSION = 1
 FRESH_CANDIDATE_REFRESH_RUN_API_VERSION = "spec-harvester.fresh-candidate-refresh-run/v0"
 FRESH_CANDIDATE_REFRESH_RUN_KIND = "SpecHarvesterFreshCandidateRefreshRun"
 MISSING_BASELINE_DIAGNOSTIC = "refresh_decision_prepare_current_contract_files_missing"
@@ -117,6 +126,60 @@ REQUIRED_BASELINE_HANDOFF_NON_GOALS = {
     "refresh_decision_emission",
     "source_repository_execution",
     "package_manager_execution",
+}
+REQUIRED_SELECTED_CANDIDATE_EVIDENCE_ROLES = {
+    "candidate_bundle",
+    "manifest",
+    "boundary_spec",
+    "producer_receipt",
+    "validation_report",
+    "diagnostics",
+    "quality_report",
+    "producer_preflight",
+    "static_viewer",
+    "static_viewer_payload",
+    "selected_handoff_dry_run",
+}
+REQUIRED_REFRESHED_SELECTED_CANDIDATE_EVIDENCE_ROLES = {
+    "manifest",
+    "boundary_spec",
+    "producer_receipt",
+    "validation_report",
+    "diagnostics",
+    "quality_report",
+}
+REQUIRED_REFRESHED_SELECTED_CANDIDATE_MEMBER_EVIDENCE_ROLES = {
+    "member_manifest",
+    "member_producer_receipt",
+    "member_validation_report",
+    "member_diagnostics",
+    "member_quality_report",
+}
+KNOWN_SELECTED_CANDIDATE_EVIDENCE_PATH_SCOPES = {
+    "bundle_relative",
+    "candidate_bundle",
+    "local_path",
+    "repo_relative",
+    "workflow_artifact",
+}
+REQUIRED_REFRESHED_SELECTED_HANDOFF_NON_AUTHORITY_FLAGS = {
+    "acceptsPackages": False,
+    "acceptsRelations": False,
+    "createsSpecPMPullRequest": False,
+    "producerEvidenceOnly": True,
+    "publishesRegistryMetadata": False,
+    "removesPreviewOnly": False,
+    "seedsBaselines": False,
+    "treatsAIOutputAsRegistryTruth": False,
+}
+REQUIRED_LEGACY_SELECTED_HANDOFF_NON_AUTHORITY_PHRASES = {
+    "not specpm registry acceptance",
+    "does not accept packages",
+    "does not accept relations",
+    "does not seed baselines",
+    "does not remove preview",
+    "does not publish registry metadata",
+    "does not create a specpm pull request",
 }
 AI_ENRICHMENT_REQUIRED_PRIVACY_FLAGS = {
     "rawPromptsPersisted",
@@ -832,6 +895,62 @@ def preflight_baseline_submission_handoff(
     )
 
 
+def preflight_selected_candidate_handoff(
+    body_path: Path,
+    *,
+    root: Path | None = None,
+) -> dict[str, Any]:
+    try:
+        body = body_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        errors = [
+            issue(
+                "selected_handoff_body_unreadable",
+                f"Selected candidate handoff could not be read: {exc}.",
+                field="body",
+            )
+        ]
+        return selected_candidate_handoff_report(body_path, root, None, errors, [], 0)
+
+    payloads = _extract_json_payloads(body)
+    handoff = _find_selected_candidate_handoff_payload(payloads)
+    errors: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    if handoff is None:
+        errors.append(
+            issue(
+                "selected_handoff_payload_missing",
+                "Preflight requires a SpecHarvester selected candidate handoff JSON payload.",
+                field="body",
+            )
+        )
+        return selected_candidate_handoff_report(body_path, root, None, errors, warnings, 0)
+
+    if root is None:
+        warnings.append(
+            issue(
+                "selected_handoff_root_not_provided",
+                "Linked source fixture digests were not verified.",
+                field="root",
+            )
+        )
+
+    digest_verified_count = validate_selected_candidate_handoff(
+        handoff,
+        errors,
+        warnings,
+        root,
+    )
+    return selected_candidate_handoff_report(
+        body_path,
+        root,
+        handoff,
+        errors,
+        warnings,
+        digest_verified_count,
+    )
+
+
 def prepare_refresh_decision(
     *,
     root: Path,
@@ -1269,6 +1388,73 @@ def baseline_submission_handoff_report(
             "digestVerifiedCount": digest_verified_count,
             "errorCount": len(errors),
             "warningCount": len(warnings),
+        },
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def selected_candidate_handoff_report(
+    body_path: Path,
+    root: Path | None,
+    handoff: dict[str, Any] | None,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    digest_verified_count: int,
+) -> dict[str, Any]:
+    selected_candidates = _list_of_mappings(handoff.get("selectedCandidates")) if handoff else []
+    deferred_candidates = _list_of_mappings(handoff.get("deferredCandidates")) if handoff else []
+    required_roles = selected_handoff_required_roles(handoff) if handoff else set()
+    status = "failed" if errors else ("warning" if warnings else "passed")
+    return {
+        "apiVersion": SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_API_VERSION,
+        "kind": SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_KIND,
+        "schemaVersion": SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_SCHEMA_VERSION,
+        "status": status,
+        "authority": "specpm_consumer_preflight",
+        "body": str(body_path),
+        "root": str(root) if root else None,
+        "input": (
+            {
+                "apiVersion": handoff.get("apiVersion"),
+                "kind": handoff.get("kind"),
+                "authority": handoff.get("authority"),
+            }
+            if handoff
+            else None
+        ),
+        "selectedCandidateHandoff": (
+            {
+                "selectedCandidateCount": len(selected_candidates),
+                "deferredCandidateCount": len(deferred_candidates),
+                "requiredEvidenceRoleCount": len(required_roles),
+                "digestVerifiedCount": digest_verified_count,
+                "selectedCandidateIds": [
+                    candidate_id(candidate) for candidate in selected_candidates
+                ],
+                "deferredCandidateIds": [
+                    candidate_id(candidate) for candidate in deferred_candidates
+                ],
+            }
+            if handoff
+            else None
+        ),
+        "summary": {
+            "selectedCandidateCount": len(selected_candidates),
+            "deferredCandidateCount": len(deferred_candidates),
+            "requiredEvidenceRoleCount": len(required_roles),
+            "digestVerifiedCount": digest_verified_count,
+            "errorCount": len(errors),
+            "warningCount": len(warnings),
+        },
+        "nonAuthority": {
+            "preflightOnly": True,
+            "acceptsPackages": False,
+            "acceptsRelations": False,
+            "seedsBaselines": False,
+            "removesPreviewOnly": False,
+            "publishesRegistryMetadata": False,
+            "createsSpecPMPullRequest": False,
         },
         "errors": errors,
         "warnings": warnings,
@@ -1723,6 +1909,894 @@ def validate_refresh_contract_file_digest(
         )
         return False
     return True
+
+
+def validate_selected_candidate_handoff(
+    handoff: dict[str, Any],
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+    root: Path | None,
+) -> int:
+    is_refreshed = handoff.get("kind") == REFRESHED_SELECTED_CANDIDATE_HANDOFF_KIND
+    is_legacy = handoff.get("kind") == SELECTED_CANDIDATE_HANDOFF_KIND
+    validate_selected_handoff_identity(handoff, errors)
+
+    selected = _list_of_mappings(handoff.get("selectedCandidates"))
+    deferred = _list_of_mappings(handoff.get("deferredCandidates"))
+    required_roles = selected_handoff_required_roles(handoff)
+
+    validate_selected_handoff_summary(handoff, selected, deferred, required_roles, errors)
+    validate_selected_handoff_candidate_sets(selected, deferred, errors)
+    validate_selected_handoff_non_authority(handoff, is_refreshed, errors)
+
+    for index, candidate in enumerate(selected):
+        validate_selected_candidate_record(
+            candidate,
+            index,
+            required_roles,
+            is_refreshed,
+            errors,
+            warnings,
+        )
+    for index, candidate in enumerate(deferred):
+        validate_deferred_candidate_record(candidate, index, is_refreshed, errors)
+
+    if is_refreshed:
+        validate_refreshed_selected_handoff_consumer_gate(handoff, errors)
+        validate_refreshed_cupertino_deferral(deferred, errors)
+        return validate_refreshed_selected_handoff_sources(handoff, errors, root)
+
+    if is_legacy:
+        return validate_legacy_selected_handoff_source(handoff, selected, errors, root)
+
+    return 0
+
+
+def validate_selected_handoff_identity(
+    handoff: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    identity = (handoff.get("apiVersion"), handoff.get("kind"))
+    supported = {
+        (SELECTED_CANDIDATE_HANDOFF_API_VERSION, SELECTED_CANDIDATE_HANDOFF_KIND),
+        (
+            REFRESHED_SELECTED_CANDIDATE_HANDOFF_API_VERSION,
+            REFRESHED_SELECTED_CANDIDATE_HANDOFF_KIND,
+        ),
+    }
+    if identity not in supported:
+        errors.append(
+            issue(
+                "unsupported_handoff_identity",
+                "Selected candidate handoff apiVersion/kind is not supported.",
+                field="apiVersion",
+            )
+        )
+    if handoff.get("schemaVersion") != 1:
+        errors.append(
+            issue(
+                "unsupported_handoff_schema_version",
+                "Selected candidate handoff schemaVersion must be 1.",
+                field="schemaVersion",
+            )
+        )
+    if handoff.get("authority") != "producer_preview_evidence_only":
+        errors.append(
+            issue(
+                "unsupported_producer_authority",
+                "Selected candidate handoff authority must be producer_preview_evidence_only.",
+                field="authority",
+            )
+        )
+
+
+def validate_selected_handoff_summary(
+    handoff: dict[str, Any],
+    selected: list[dict[str, Any]],
+    deferred: list[dict[str, Any]],
+    required_roles: set[str],
+    errors: list[dict[str, Any]],
+) -> None:
+    summary = _mapping_value(handoff.get("summary"))
+    if summary.get("selectedCandidateCount") != len(selected):
+        errors.append(
+            issue(
+                "selected_candidate_count_mismatch",
+                "summary.selectedCandidateCount must match selectedCandidates length.",
+                field="summary.selectedCandidateCount",
+            )
+        )
+    if summary.get("deferredCandidateCount") != len(deferred):
+        errors.append(
+            issue(
+                "deferred_candidate_count_mismatch",
+                "summary.deferredCandidateCount must match deferredCandidates length.",
+                field="summary.deferredCandidateCount",
+            )
+        )
+    if "requiredEvidenceRoleCount" in summary and summary.get("requiredEvidenceRoleCount") != len(
+        required_roles
+    ):
+        errors.append(
+            issue(
+                "required_evidence_role_count_mismatch",
+                "summary.requiredEvidenceRoleCount must match requiredEvidenceRoles length.",
+                field="summary.requiredEvidenceRoleCount",
+            )
+        )
+    if summary.get("specpmPullRequestCreated") is not False:
+        errors.append(
+            issue(
+                "unexpected_specpm_pull_request",
+                "Selected candidate handoff must not claim a SpecPM pull request was created.",
+                field="summary.specpmPullRequestCreated",
+            )
+        )
+    if summary.get("registryMutationCount") != 0:
+        errors.append(
+            issue(
+                "unexpected_registry_mutation",
+                "Selected candidate handoff must not claim registry mutation.",
+                field="summary.registryMutationCount",
+            )
+        )
+    if handoff.get("kind") == REFRESHED_SELECTED_CANDIDATE_HANDOFF_KIND:
+        refreshed_count_checks = {
+            "candidateLayerReviewRequiredCount": (
+                len(selected),
+                "candidate_layer_review_count_mismatch",
+            ),
+            "needsRegenerationCount": (len(deferred), "needs_regeneration_count_mismatch"),
+            "producerPreflightPassedCount": (
+                len(selected),
+                "producer_preflight_passed_count_mismatch",
+            ),
+            "viewerOkCount": (len(selected), "viewer_ok_count_mismatch"),
+        }
+        for field_name, (expected, code) in refreshed_count_checks.items():
+            if summary.get(field_name) != expected:
+                errors.append(
+                    issue(
+                        code,
+                        f"summary.{field_name} must match the refreshed selected handoff set.",
+                        field=f"summary.{field_name}",
+                    )
+                )
+
+
+def validate_selected_handoff_candidate_sets(
+    selected: list[dict[str, Any]],
+    deferred: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+) -> None:
+    selected_ids = [candidate_id(candidate) for candidate in selected]
+    deferred_ids = [candidate_id(candidate) for candidate in deferred]
+    for index, package_id in enumerate(selected_ids):
+        if not package_id:
+            errors.append(
+                issue(
+                    "selected_candidate_id_missing",
+                    "Selected candidate id is required.",
+                    field=f"selectedCandidates[{index}].id",
+                )
+            )
+    for index, package_id in enumerate(deferred_ids):
+        if not package_id:
+            errors.append(
+                issue(
+                    "deferred_candidate_id_missing",
+                    "Deferred candidate id is required.",
+                    field=f"deferredCandidates[{index}].id",
+                )
+            )
+    for duplicate in sorted(duplicates([value for value in selected_ids if value])):
+        errors.append(
+            issue(
+                "duplicate_selected_candidate_id",
+                f"Duplicate selected candidate id: {duplicate}.",
+                field="selectedCandidates",
+            )
+        )
+    for duplicate in sorted(duplicates([value for value in deferred_ids if value])):
+        errors.append(
+            issue(
+                "duplicate_deferred_candidate_id",
+                f"Duplicate deferred candidate id: {duplicate}.",
+                field="deferredCandidates",
+            )
+        )
+    overlap = sorted(set(selected_ids) & set(deferred_ids))
+    if overlap:
+        errors.append(
+            issue(
+                "deferred_candidate_selected",
+                f"Deferred candidates must not also be selected: {', '.join(overlap)}.",
+                field="deferredCandidates",
+            )
+        )
+
+
+def validate_selected_candidate_record(
+    candidate: dict[str, Any],
+    index: int,
+    required_roles: set[str],
+    is_refreshed: bool,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> None:
+    field = f"selectedCandidates[{index}]"
+    package_id = candidate_id(candidate) or f"selected candidate {index}"
+    if candidate.get("previewOnly") is not True:
+        errors.append(
+            issue(
+                "selected_candidate_not_preview_only",
+                f"{package_id} must remain previewOnly before maintainer acceptance.",
+                field=f"{field}.previewOnly",
+            )
+        )
+
+    preflight = _mapping_value(candidate.get("producerPreflight"))
+    if preflight.get("status") != "passed":
+        errors.append(
+            issue(
+                "producer_preflight_not_passed",
+                f"{package_id} producer preflight must be passed.",
+                field=f"{field}.producerPreflight.status",
+            )
+        )
+    if preflight.get("warningCount") != 0:
+        errors.append(
+            issue(
+                "producer_preflight_warning_count_nonzero",
+                f"{package_id} producer preflight warningCount must be 0.",
+                field=f"{field}.producerPreflight.warningCount",
+            )
+        )
+    if preflight.get("errorCount") != 0:
+        errors.append(
+            issue(
+                "producer_preflight_error_count_nonzero",
+                f"{package_id} producer preflight errorCount must be 0.",
+                field=f"{field}.producerPreflight.errorCount",
+            )
+        )
+
+    viewer = _mapping_value(candidate.get("viewer") or candidate.get("staticViewer"))
+    if viewer.get("status") != "ok":
+        errors.append(
+            issue(
+                "static_viewer_not_ok",
+                f"{package_id} static viewer status must be ok.",
+                field=f"{field}.viewer.status",
+            )
+        )
+
+    decision = _mapping_value(candidate.get("registryAcceptanceDecision"))
+    validate_selected_candidate_registry_decision(decision, field, package_id, errors)
+    validate_selected_candidate_triage(candidate, field, package_id, is_refreshed, errors)
+    validate_selected_candidate_evidence(
+        candidate,
+        field,
+        package_id,
+        required_roles,
+        is_refreshed,
+        errors,
+        warnings,
+    )
+
+
+def validate_selected_candidate_registry_decision(
+    decision: dict[str, Any],
+    field: str,
+    package_id: str,
+    errors: list[dict[str, Any]],
+) -> None:
+    if decision.get("status") != "external_required":
+        errors.append(
+            issue(
+                "registry_acceptance_not_external_required",
+                f"{package_id} registry acceptance status must be external_required.",
+                field=f"{field}.registryAcceptanceDecision.status",
+            )
+        )
+    if decision.get("producerAuthority") != "evidence_only":
+        errors.append(
+            issue(
+                "registry_acceptance_producer_authority_invalid",
+                f"{package_id} producer authority must remain evidence_only.",
+                field=f"{field}.registryAcceptanceDecision.producerAuthority",
+            )
+        )
+    required_for = decision.get("requiredFor")
+    valid_required_for = required_for == "public_index_acceptance" or (
+        isinstance(required_for, list) and "public_index_acceptance" in required_for
+    )
+    if not valid_required_for:
+        errors.append(
+            issue(
+                "registry_acceptance_required_for_missing",
+                f"{package_id} registry acceptance must be required for public_index_acceptance.",
+                field=f"{field}.registryAcceptanceDecision.requiredFor",
+            )
+        )
+
+
+def validate_selected_candidate_triage(
+    candidate: dict[str, Any],
+    field: str,
+    package_id: str,
+    is_refreshed: bool,
+    errors: list[dict[str, Any]],
+) -> None:
+    if is_refreshed:
+        decision = _mapping_value(candidate.get("candidateLayerDecision"))
+        if decision.get("status") != "candidate_layer_review_required":
+            errors.append(
+                issue(
+                    "selected_candidate_triage_status_invalid",
+                    f"{package_id} must be candidate_layer_review_required.",
+                    field=f"{field}.candidateLayerDecision.status",
+                )
+            )
+        if decision.get("selectedHandoffEligible") is not True:
+            errors.append(
+                issue(
+                    "selected_candidate_not_handoff_eligible",
+                    f"{package_id} must be selectedHandoffEligible.",
+                    field=f"{field}.candidateLayerDecision.selectedHandoffEligible",
+                )
+            )
+        if candidate.get("handoffRecommendation") != "ready_for_specpm_dry_run_review":
+            errors.append(
+                issue(
+                    "selected_candidate_maintainer_action_invalid",
+                    f"{package_id} handoff recommendation must be review-oriented.",
+                    field=f"{field}.handoffRecommendation",
+                )
+            )
+        return
+
+    if candidate.get("triageClassification") != "candidate_layer_review_required":
+        errors.append(
+            issue(
+                "selected_candidate_triage_status_invalid",
+                f"{package_id} must be candidate_layer_review_required.",
+                field=f"{field}.triageClassification",
+            )
+        )
+    maintainer_action = candidate.get("maintainerAction")
+    if maintainer_action not in {"review_for_possible_specpm_intake"}:
+        errors.append(
+            issue(
+                "selected_candidate_maintainer_action_invalid",
+                f"{package_id} maintainerAction must be review-oriented.",
+                field=f"{field}.maintainerAction",
+            )
+        )
+
+
+def validate_selected_candidate_evidence(
+    candidate: dict[str, Any],
+    field: str,
+    package_id: str,
+    required_roles: set[str],
+    is_refreshed: bool,
+    errors: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> None:
+    if is_refreshed:
+        role_map = evidence_role_map(
+            _list_of_mappings(candidate.get("evidenceRoles")),
+            field=f"{field}.evidenceRoles",
+            errors=errors,
+        )
+        missing_roles = sorted(
+            missing_refreshed_selected_candidate_evidence_roles(set(role_map), required_roles)
+        )
+        for role in missing_roles:
+            errors.append(
+                issue(
+                    "missing_required_evidence_role",
+                    f"{package_id} is missing required evidence role {role}.",
+                    field=f"{field}.evidenceRoles",
+                )
+            )
+        for role, entry in role_map.items():
+            if selected_handoff_digest_value(entry.get("digest")) is None:
+                errors.append(
+                    issue(
+                        "invalid_evidence_digest",
+                        f"{package_id} evidence role {role} must include a SHA-256 digest.",
+                        field=f"{field}.evidenceRoles.{role}.digest",
+                    )
+                )
+        validate_optional_digest_field(
+            _mapping_value(candidate.get("producerPreflight")).get("reportDigest"),
+            f"{field}.producerPreflight.reportDigest",
+            errors,
+        )
+        viewer = _mapping_value(candidate.get("viewer"))
+        validate_optional_digest_field(
+            viewer.get("indexDigest"),
+            f"{field}.viewer.indexDigest",
+            errors,
+        )
+        validate_optional_digest_field(
+            viewer.get("specPackageDigest"),
+            f"{field}.viewer.specPackageDigest",
+            errors,
+        )
+        return
+
+    links = _list_of_mappings(candidate.get("evidenceLinks"))
+    role_map = evidence_role_map(links, field=f"{field}.evidenceLinks", errors=errors)
+    missing_roles = sorted(required_roles - set(role_map))
+    for role in missing_roles:
+        errors.append(
+            issue(
+                "missing_required_evidence_role",
+                f"{package_id} is missing required evidence role {role}.",
+                field=f"{field}.evidenceLinks",
+            )
+        )
+    for role, entry in role_map.items():
+        path_scope = entry.get("pathScope")
+        if path_scope not in KNOWN_SELECTED_CANDIDATE_EVIDENCE_PATH_SCOPES:
+            errors.append(
+                issue(
+                    "unsupported_evidence_path_scope",
+                    f"{package_id} evidence role {role} has unsupported pathScope.",
+                    field=f"{field}.evidenceLinks.{role}.pathScope",
+                )
+            )
+        digest = selected_handoff_digest_value(entry.get("digest"))
+        if role == "selected_handoff_dry_run" and digest is None:
+            errors.append(
+                issue(
+                    "missing_selected_handoff_dry_run_digest",
+                    f"{package_id} selected_handoff_dry_run evidence must include a digest.",
+                    field=f"{field}.evidenceLinks.{role}.digest",
+                )
+            )
+        elif role != "candidate_bundle" and digest is None:
+            errors.append(
+                issue(
+                    "invalid_evidence_digest",
+                    f"{package_id} evidence role {role} must include a SHA-256 digest.",
+                    field=f"{field}.evidenceLinks.{role}.digest",
+                )
+            )
+        maybe_warn_historical_local_path(entry, role, field, warnings)
+
+
+def validate_deferred_candidate_record(
+    candidate: dict[str, Any],
+    index: int,
+    is_refreshed: bool,
+    errors: list[dict[str, Any]],
+) -> None:
+    field = f"deferredCandidates[{index}]"
+    package_id = candidate_id(candidate) or f"deferred candidate {index}"
+    if is_refreshed:
+        decision = _mapping_value(candidate.get("candidateLayerDecision"))
+        if decision.get("selectedHandoffEligible") is not False:
+            errors.append(
+                issue(
+                    "deferred_candidate_handoff_eligible",
+                    f"{package_id} must not be selectedHandoffEligible.",
+                    field=f"{field}.candidateLayerDecision.selectedHandoffEligible",
+                )
+            )
+        if decision.get("status") not in {"needs_regeneration", "blocked", "not_for_intake"}:
+            errors.append(
+                issue(
+                    "deferred_candidate_status_invalid",
+                    f"{package_id} deferred status must block selected handoff.",
+                    field=f"{field}.candidateLayerDecision.status",
+                )
+            )
+        return
+
+    if candidate.get("handoffStatus") != "excluded_from_selected_handoff":
+        errors.append(
+            issue(
+                "deferred_candidate_handoff_status_invalid",
+                f"{package_id} must remain excluded_from_selected_handoff.",
+                field=f"{field}.handoffStatus",
+            )
+        )
+
+
+def validate_selected_handoff_non_authority(
+    handoff: dict[str, Any],
+    is_refreshed: bool,
+    errors: list[dict[str, Any]],
+) -> None:
+    if is_refreshed:
+        flags = _mapping_value(handoff.get("nonAuthority"))
+        for key, expected in REQUIRED_REFRESHED_SELECTED_HANDOFF_NON_AUTHORITY_FLAGS.items():
+            if flags.get(key) != expected:
+                code = (
+                    "producer_claims_acceptance"
+                    if key != "producerEvidenceOnly" and flags.get(key) is True
+                    else "missing_non_authority_statement"
+                )
+                errors.append(
+                    issue(
+                        code,
+                        f"Selected handoff nonAuthority.{key} must be {expected}.",
+                        field=f"nonAuthority.{key}",
+                    )
+                )
+        return
+
+    statements = " ".join(string_list(handoff.get("nonAuthority"))).lower().replace("_", " ")
+    for phrase in REQUIRED_LEGACY_SELECTED_HANDOFF_NON_AUTHORITY_PHRASES:
+        if phrase not in statements:
+            errors.append(
+                issue(
+                    "missing_non_authority_statement",
+                    f"Selected handoff must state: {phrase}.",
+                    field="nonAuthority",
+                )
+            )
+    if "registry acceptance" in statements and "not specpm registry acceptance" not in statements:
+        errors.append(
+            issue(
+                "producer_claims_registry_authority",
+                "Selected handoff must not claim registry acceptance authority.",
+                field="nonAuthority",
+            )
+        )
+
+
+def validate_refreshed_selected_handoff_consumer_gate(
+    handoff: dict[str, Any],
+    errors: list[dict[str, Any]],
+) -> None:
+    gate = _mapping_value(handoff.get("expectedConsumerGate"))
+    if (
+        gate.get("repository") != "SpecPM"
+        or gate.get("kind") != SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_KIND
+        or gate.get("apiVersion") != SELECTED_CANDIDATE_HANDOFF_PREFLIGHT_API_VERSION
+        or gate.get("status") != "required_before_acceptance"
+        or gate.get("nextTask") != "P32-T6"
+    ):
+        errors.append(
+            issue(
+                "selected_handoff_expected_consumer_gate_invalid",
+                "Refreshed selected handoff must point to the SpecPM P32-T6 preflight gate.",
+                field="expectedConsumerGate",
+            )
+        )
+
+
+def validate_refreshed_cupertino_deferral(
+    deferred: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+) -> None:
+    cupertino = next(
+        (candidate for candidate in deferred if candidate_id(candidate) == "cupertino.core"),
+        None,
+    )
+    if cupertino is None:
+        errors.append(
+            issue(
+                "cupertino_core_deferral_missing",
+                "Refreshed selected handoff must keep cupertino.core deferred.",
+                field="deferredCandidates",
+            )
+        )
+        return
+    if "refined_summary_missing" not in string_list(cupertino.get("blockers")):
+        errors.append(
+            issue(
+                "cupertino_core_deferral_blocker_missing",
+                "cupertino.core deferral must retain refined_summary_missing blocker.",
+                field="deferredCandidates.cupertino.core.blockers",
+            )
+        )
+
+
+def validate_refreshed_selected_handoff_sources(
+    handoff: dict[str, Any],
+    errors: list[dict[str, Any]],
+    root: Path | None,
+) -> int:
+    sources = _list_of_mappings(handoff.get("sources"))
+    if not sources:
+        errors.append(
+            issue(
+                "selected_handoff_source_missing",
+                "Refreshed selected handoff must link source fixtures.",
+                field="sources",
+            )
+        )
+        return 0
+    digest_verified_count = 0
+    for index, source in enumerate(sources):
+        field = f"sources[{index}]"
+        if source.get("status") != "source_fixture_committed":
+            errors.append(
+                issue(
+                    "selected_handoff_source_status_invalid",
+                    "Refreshed selected handoff source status must be source_fixture_committed.",
+                    field=f"{field}.status",
+                )
+            )
+        if not non_empty_string(source.get("path")):
+            errors.append(
+                issue(
+                    "selected_handoff_source_missing",
+                    "Refreshed selected handoff source path is required.",
+                    field=f"{field}.path",
+                )
+            )
+            continue
+        if selected_handoff_digest_value(source.get("digest")) is None:
+            errors.append(
+                issue(
+                    "selected_handoff_source_digest_missing",
+                    "Refreshed selected handoff source digest is required.",
+                    field=f"{field}.digest",
+                )
+            )
+            continue
+        if root is not None and verify_selected_handoff_source_digest(
+            source,
+            root,
+            field,
+            errors,
+        ):
+            digest_verified_count += 1
+    return digest_verified_count
+
+
+def validate_legacy_selected_handoff_source(
+    handoff: dict[str, Any],
+    selected: list[dict[str, Any]],
+    errors: list[dict[str, Any]],
+    root: Path | None,
+) -> int:
+    source = _mapping_value(_mapping_value(handoff.get("source")).get("selectedDryRunFixture"))
+    if not source:
+        errors.append(
+            issue(
+                "selected_handoff_source_missing",
+                "Selected candidate handoff must link source.selectedDryRunFixture.",
+                field="source.selectedDryRunFixture",
+            )
+        )
+        return 0
+    if source.get("status") != "selected_handoff_dry_run_ready":
+        errors.append(
+            issue(
+                "selected_handoff_source_status_invalid",
+                "source.selectedDryRunFixture.status must be selected_handoff_dry_run_ready.",
+                field="source.selectedDryRunFixture.status",
+            )
+        )
+    source_digest = selected_handoff_digest_value(source.get("digest"))
+    if source_digest is None:
+        errors.append(
+            issue(
+                "selected_handoff_source_digest_missing",
+                "source.selectedDryRunFixture.digest is required.",
+                field="source.selectedDryRunFixture.digest",
+            )
+        )
+    for index, candidate in enumerate(selected):
+        for link in _list_of_mappings(candidate.get("evidenceLinks")):
+            if link.get("role") == "selected_handoff_dry_run":
+                link_digest = selected_handoff_digest_value(link.get("digest"))
+                if (
+                    source_digest is not None
+                    and link_digest is not None
+                    and link_digest != source_digest
+                ):
+                    errors.append(
+                        issue(
+                            "selected_handoff_source_digest_mismatch",
+                            "selected_handoff_dry_run evidence digest must match source fixture.",
+                            field=f"selectedCandidates[{index}].evidenceLinks",
+                        )
+                    )
+    if (
+        root is not None
+        and source_digest is not None
+        and verify_selected_handoff_source_digest(
+            source,
+            root,
+            "source.selectedDryRunFixture",
+            errors,
+        )
+    ):
+        return 1
+    return 0
+
+
+def verify_selected_handoff_source_digest(
+    source: dict[str, Any],
+    root: Path,
+    field: str,
+    errors: list[dict[str, Any]],
+) -> bool:
+    path_value = source.get("path")
+    if not isinstance(path_value, str) or not path_value:
+        errors.append(
+            issue(
+                "selected_handoff_source_missing",
+                "Selected handoff source path is required.",
+                field=f"{field}.path",
+            )
+        )
+        return False
+    resolved = resolve_handoff_input_path(root, path_value)
+    if resolved is None:
+        errors.append(
+            issue(
+                "selected_handoff_source_path_unresolved",
+                "Selected handoff source path must resolve within --root.",
+                field=f"{field}.path",
+            )
+        )
+        return False
+    if not resolved.is_file():
+        errors.append(
+            issue(
+                "selected_handoff_source_missing",
+                f"Selected handoff source file is missing: {path_value}.",
+                field=f"{field}.path",
+            )
+        )
+        return False
+    expected = selected_handoff_digest_value(source.get("digest"))
+    if expected is None:
+        errors.append(
+            issue(
+                "selected_handoff_source_digest_missing",
+                "Selected handoff source digest is required.",
+                field=f"{field}.digest",
+            )
+        )
+        return False
+    actual = f"sha256:{sha256_file(resolved)}"
+    if actual != expected:
+        errors.append(
+            issue(
+                "selected_handoff_source_digest_mismatch",
+                "Selected handoff source digest does not match file bytes.",
+                field=f"{field}.digest",
+            )
+        )
+        return False
+    return True
+
+
+def selected_handoff_required_roles(handoff: dict[str, Any]) -> set[str]:
+    if handoff.get("kind") == REFRESHED_SELECTED_CANDIDATE_HANDOFF_KIND:
+        return set(REQUIRED_REFRESHED_SELECTED_CANDIDATE_EVIDENCE_ROLES)
+    roles = {
+        role
+        for entry in _list_of_mappings(handoff.get("requiredEvidenceRoles"))
+        if entry.get("required") is True and isinstance((role := entry.get("role")), str)
+    }
+    return roles or set(REQUIRED_SELECTED_CANDIDATE_EVIDENCE_ROLES)
+
+
+def missing_refreshed_selected_candidate_evidence_roles(
+    actual_roles: set[str],
+    default_required_roles: set[str],
+) -> set[str]:
+    if default_required_roles <= actual_roles:
+        return set()
+    if REQUIRED_REFRESHED_SELECTED_CANDIDATE_MEMBER_EVIDENCE_ROLES <= actual_roles:
+        return set()
+    default_missing = default_required_roles - actual_roles
+    member_missing = REQUIRED_REFRESHED_SELECTED_CANDIDATE_MEMBER_EVIDENCE_ROLES - actual_roles
+    return default_missing if len(default_missing) <= len(member_missing) else member_missing
+
+
+def evidence_role_map(
+    entries: list[dict[str, Any]],
+    *,
+    field: str,
+    errors: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    role_map: dict[str, dict[str, Any]] = {}
+    for index, entry in enumerate(entries):
+        role = entry.get("role")
+        if not isinstance(role, str) or not role:
+            errors.append(
+                issue(
+                    "missing_required_evidence_role",
+                    "Evidence entry role is required.",
+                    field=f"{field}[{index}].role",
+                )
+            )
+            continue
+        if role in role_map:
+            errors.append(
+                issue(
+                    "duplicate_evidence_role",
+                    f"Duplicate evidence role: {role}.",
+                    field=f"{field}[{index}].role",
+                )
+            )
+            continue
+        role_map[role] = entry
+    return role_map
+
+
+def validate_digest_field(
+    value: Any,
+    field: str,
+    errors: list[dict[str, Any]],
+) -> None:
+    if selected_handoff_digest_value(value) is None:
+        errors.append(
+            issue(
+                "invalid_evidence_digest",
+                "Expected a SHA-256 digest.",
+                field=field,
+            )
+        )
+
+
+def validate_optional_digest_field(
+    value: Any,
+    field: str,
+    errors: list[dict[str, Any]],
+) -> None:
+    if value is None:
+        return
+    validate_digest_field(value, field, errors)
+
+
+def selected_handoff_digest_value(digest: Any) -> str | None:
+    value = digest_value(digest)
+    if value is None:
+        return None
+    hexdigest = value.removeprefix("sha256:")
+    if SHA256_HEX_PATTERN.fullmatch(hexdigest):
+        return value
+    return None
+
+
+def maybe_warn_historical_local_path(
+    entry: dict[str, Any],
+    role: str,
+    field: str,
+    warnings: list[dict[str, Any]],
+) -> None:
+    path = entry.get("path")
+    if (
+        entry.get("pathScope") == "local_path"
+        and isinstance(path, str)
+        and Path(path).is_absolute()
+    ):
+        warnings.append(
+            issue(
+                "historical_local_path_missing_nonfatal",
+                f"Evidence role {role} uses a historical absolute local path.",
+                field=f"{field}.evidenceLinks.{role}.path",
+            )
+        )
+
+
+def candidate_id(candidate: dict[str, Any]) -> str | None:
+    value = candidate.get("id") or candidate.get("packageId")
+    return value if isinstance(value, str) and value else None
+
+
+def duplicates(values: list[str]) -> set[str]:
+    seen: set[str] = set()
+    result: set[str] = set()
+    for value in values:
+        if value in seen:
+            result.add(value)
+        seen.add(value)
+    return result
 
 
 def validate_baseline_submission_handoff(
@@ -4936,6 +6010,29 @@ def _find_baseline_submission_handoff_payload(payloads: list[Any]) -> dict[str, 
                 isinstance(payload.get("baselineWorkflow"), dict)
                 and isinstance(payload.get("authority"), dict)
                 and payload.get("status") in VALID_BASELINE_HANDOFF_STATUSES
+            )
+        ):
+            return payload
+    return None
+
+
+def _find_selected_candidate_handoff_payload(payloads: list[Any]) -> dict[str, Any] | None:
+    for payload in payloads:
+        if isinstance(payload, dict) and (
+            payload.get("kind")
+            in {
+                SELECTED_CANDIDATE_HANDOFF_KIND,
+                REFRESHED_SELECTED_CANDIDATE_HANDOFF_KIND,
+            }
+            or payload.get("apiVersion")
+            in {
+                SELECTED_CANDIDATE_HANDOFF_API_VERSION,
+                REFRESHED_SELECTED_CANDIDATE_HANDOFF_API_VERSION,
+            }
+            or (
+                isinstance(payload.get("selectedCandidates"), list)
+                and isinstance(payload.get("deferredCandidates"), list)
+                and payload.get("authority") == "producer_preview_evidence_only"
             )
         ):
             return payload

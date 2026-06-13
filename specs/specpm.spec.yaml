@@ -70,6 +70,7 @@ scope:
     - Document the xyflow package-set reference scenario with non-normative package-set, relation, discovery, and intent search fixtures.
     - Document generated candidate refresh decisions for no-op and update-needed outcomes when fresh producer runs are compared with maintainer-curated accepted artifacts.
     - Preflight generated candidate refresh decision records for identity, no-op semantics, authority boundaries, safe paths, and generated contract-file digests.
+    - Preflight SpecHarvester selected candidate handoff records for selected/deferred candidate consistency, producer preflight status, static viewer status, evidence digests, and non-authority boundaries.
     - Document abstract SpecPackage contracts and seed the registry with an abstract public repository metadata contract.
     - Recognize `public_interface_index` as a known evidence kind for deterministic public interface summaries.
     - Document API versioning boundaries across package schemas, registry payloads, endpoint families, archive formats, CLI JSON contracts, and conformance suites.
@@ -184,6 +185,9 @@ provides:
     - id: specpm.registry.baseline_submission_handoff_preflight
       role: secondary
       summary: Preflight SpecHarvesterBaselineSubmissionHandoff records for first-submission or seeded-baseline review without seeding baselines or accepting registry input.
+    - id: specpm.registry.selected_candidate_handoff_preflight
+      role: secondary
+      summary: Preflight SpecHarvester selected candidate handoff records for preview candidate consistency and evidence digests without accepting packages or publishing registry input.
     - id: specpm.registry.package_set_relation_metadata
       role: secondary
       summary: Publish maintainer-reviewed package-set relation metadata through additive `/v0` payloads and the static viewer without inferring relations from producer output.
@@ -468,7 +472,7 @@ interfaces:
             - text/plain
     - id: cli_producer-bundle
       kind: cli
-      summary: specpm producer-bundle preflight, prepare/preflight-refresh-decision, and materialize-package-set for consumer-side review of producer evidence, refresh decisions, and maintainer-selected package-set accepted-source artifacts.
+      summary: specpm producer-bundle preflight, prepare/preflight-refresh-decision, preflight-selected-candidate-handoff, and materialize-package-set for consumer-side review of producer evidence, refresh decisions, selected handoffs, and maintainer-selected package-set accepted-source artifacts.
       outputs:
         - name: producer_bundle_preflight_report
           mediaTypes:
@@ -479,6 +483,10 @@ interfaces:
             - application/json
             - text/plain
         - name: refresh_decision_preflight_report
+          mediaTypes:
+            - application/json
+            - text/plain
+        - name: selected_candidate_handoff_preflight_report
           mediaTypes:
             - application/json
             - text/plain
@@ -1245,6 +1253,16 @@ evidence:
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
+  - id: selected_candidate_handoff_preflight_docs
+    kind: documentation
+    path: specs/SELECTED_CANDIDATE_HANDOFF_PREFLIGHT.md
+    supports:
+      - specpm.registry.selected_candidate_handoff_preflight
+      - specpm.specs.multi_package_producer_intake
+      - specpm.specs.producer_bundle_proposal_policy
+      - producer_receipts_not_generation_authority
+      - scope.includes
+      - scope.excludes
   - id: provenance_receipt_fixture
     kind: test
     path: tests/fixtures/provenance_receipts/public-static-receipt.example.json
@@ -1648,6 +1666,14 @@ evidence:
       - specpm.registry.baseline_submission_handoff_preflight
       - specpm.specs.multi_package_producer_intake
       - specpm.registry.generated_candidate_refresh_decision_policy
+  - id: docc_selected_candidate_handoff_preflight
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/SelectedCandidateHandoffPreflight.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.selected_candidate_handoff_preflight
+      - specpm.specs.multi_package_producer_intake
+      - specpm.specs.producer_bundle_proposal_policy
   - id: docc_xyflow_package_set_reference
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md

@@ -329,6 +329,13 @@ seeded-baseline handoff identity, missing-baseline diagnostics, linked
 fresh-run and prepare-report digests, maintainer action choices, and authority
 flags while keeping baseline seeding and registry acceptance under maintainer
 review.
+SpecPM now has a consumer-side
+`preflight-selected-candidate-handoff` gate for
+`SpecHarvesterSelectedCandidateHandoffProposal` and
+`SpecHarvesterRefreshedCandidateLayerSelectedHandoff`. It verifies selected and
+deferred candidate consistency, preview-only posture, producer preflight and
+static viewer status, evidence role digests, refreshed source fixture digests,
+and non-authority flags before limited corpus intake review.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

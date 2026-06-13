@@ -136,6 +136,10 @@ specpm producer-bundle preflight-baseline-submission \
   --body <baseline-submission-handoff.json> \
   [--root <handoff-artifact-root>] \
   [--json]
+specpm producer-bundle preflight-selected-candidate-handoff \
+  --body <selected-candidate-handoff.json> \
+  [--root <handoff-artifact-root>] \
+  [--json]
 specpm producer-bundle materialize-package-set \
   --handoff <package-set-handoff-proposal.json> \
   --root <package-set-bundle-root> \
@@ -201,6 +205,18 @@ digests when `--root` is provided. The report kind is
 `SpecPMBaselineSubmissionHandoffPreflightReport`. A passing report is review
 evidence only and does not seed a baseline, emit a refresh decision, accept
 packages, or publish registry metadata.
+
+`preflight-selected-candidate-handoff` checks
+`SpecHarvesterSelectedCandidateHandoffProposal` and
+`SpecHarvesterRefreshedCandidateLayerSelectedHandoff` records before limited
+corpus intake review. It verifies handoff identity, selected/deferred candidate
+counts, preview-only posture, producer preflight status, static viewer status,
+external registry acceptance requirements, evidence roles, source fixture
+digests when `--root` is provided, and non-authority flags. The report kind is
+`SpecPMSelectedCandidateHandoffPreflightReport`. A passing report is review
+evidence only and does not accept packages, accept relations, seed baselines,
+remove `preview_only`, create a SpecPM pull request, or publish registry
+metadata.
 
 `prepare-refresh-decision` builds a draft
 `SpecPMGeneratedCandidateRefreshDecision` from a fresh generated artifact tree
