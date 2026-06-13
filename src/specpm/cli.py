@@ -37,6 +37,7 @@ from specpm.producer_bundle import (
     preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
     preflight_refresh_decision,
+    preflight_selected_candidate_handoff,
     prepare_refresh_decision,
     render_package_set_materialization_manifest_candidate,
     render_package_set_materialization_pr_body,
@@ -381,6 +382,30 @@ def build_parser() -> argparse.ArgumentParser:
         help="Emit stable JSON.",
     )
     baseline_submission_preflight.set_defaults(handler=handle_baseline_submission_preflight)
+
+    selected_candidate_handoff_preflight = producer_bundle_subparsers.add_parser(
+        "preflight-selected-candidate-handoff",
+        help="Preflight a SpecHarvester selected candidate handoff artifact.",
+    )
+    selected_candidate_handoff_preflight.add_argument(
+        "--body",
+        required=True,
+        help=(
+            "JSON or Markdown file containing SpecHarvester selected candidate handoff evidence."
+        ),
+    )
+    selected_candidate_handoff_preflight.add_argument(
+        "--root",
+        help="Optional handoff artifact root used to verify linked source fixture digests.",
+    )
+    selected_candidate_handoff_preflight.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit stable JSON.",
+    )
+    selected_candidate_handoff_preflight.set_defaults(
+        handler=handle_selected_candidate_handoff_preflight
+    )
 
     refresh_decision_prepare = producer_bundle_subparsers.add_parser(
         "prepare-refresh-decision",
@@ -875,6 +900,18 @@ def handle_baseline_submission_preflight(args: argparse.Namespace) -> int:
     return 1 if report["status"] == "failed" else 0
 
 
+def handle_selected_candidate_handoff_preflight(args: argparse.Namespace) -> int:
+    report = preflight_selected_candidate_handoff(
+        Path(args.body),
+        root=Path(args.root) if args.root else None,
+    )
+    if args.json:
+        print_json(report)
+    else:
+        print_selected_candidate_handoff_preflight(report)
+    return 1 if report["status"] == "failed" else 0
+
+
 def handle_refresh_decision_prepare(args: argparse.Namespace) -> int:
     report = prepare_refresh_decision(
         root=Path(args.root),
@@ -1006,6 +1043,21 @@ def print_baseline_submission_preflight(report: dict[str, Any]) -> None:
         f"{report['status']}: baseline submission handoff preflight "
         f"({summary['memberPackageCount']} packages, "
         f"{summary['contractFileCount']} contract files, "
+        f"{summary['errorCount']} errors, {summary['warningCount']} warnings)"
+    )
+    for issue_payload in report["errors"]:
+        print(f"error {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+    for issue_payload in report["warnings"]:
+        print(f"warning {issue_payload['code']}: {issue_payload['message']}", file=sys.stderr)
+
+
+def print_selected_candidate_handoff_preflight(report: dict[str, Any]) -> None:
+    summary = report["summary"]
+    print(
+        f"{report['status']}: selected candidate handoff preflight "
+        f"({summary['selectedCandidateCount']} selected, "
+        f"{summary['deferredCandidateCount']} deferred, "
+        f"{summary['digestVerifiedCount']} digests verified, "
         f"{summary['errorCount']} errors, {summary['warningCount']} warnings)"
     )
     for issue_payload in report["errors"]:

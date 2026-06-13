@@ -226,6 +226,33 @@ accept relations, update curated artifacts, emit a refresh decision, or publish
 registry metadata. Maintainers must still choose `first_submission_review`,
 `seed_baseline`, or `reject_or_request_regeneration`.
 
+## Selected Candidate Handoff Preflight Checklist
+
+When SpecHarvester emits selected candidate handoff evidence for a bounded
+corpus, maintainers can run:
+
+```bash
+specpm producer-bundle preflight-selected-candidate-handoff \
+  --body <selected-candidate-handoff.json> \
+  --root <handoff-artifact-root> \
+  --json
+```
+
+This emits `SpecPMSelectedCandidateHandoffPreflightReport` and verifies
+`SpecHarvesterSelectedCandidateHandoffProposal` or
+`SpecHarvesterRefreshedCandidateLayerSelectedHandoff` evidence. The gate checks
+artifact identity, selected/deferred candidate counts, preview-only posture,
+producer preflight status, static viewer status, external registry acceptance
+requirements, evidence roles, source fixture digests when `--root` is provided,
+and non-authority flags.
+
+Passing preflight means the selected candidate handoff is internally consistent
+review evidence. It does not accept packages, accept relations, seed baselines,
+remove `preview_only`, create a SpecPM pull request, or publish registry
+metadata. Maintainers must still accept, reject, request regeneration, seed a
+baseline, or prepare a separate accepted-source diff outside producer authority.
+Short form: it does not accept packages and does not accept relations.
+
 After review, maintainers can generate a proposed accepted-source diff from an
 explicit subset:
 

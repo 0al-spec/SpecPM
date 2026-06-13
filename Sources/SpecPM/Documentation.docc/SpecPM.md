@@ -74,6 +74,7 @@ The canonical source files remain in the repository:
 - `specs/CURATED_ACCEPTED_ARTIFACT_LIFECYCLE.md`
 - `specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md`
 - `specs/BASELINE_SUBMISSION_HANDOFF_PREFLIGHT.md`
+- `specs/SELECTED_CANDIDATE_HANDOFF_PREFLIGHT.md`
 - `specs/XYFLOW_PACKAGE_SET_REFERENCE.md`
 - `specs/RFC_0001_COVERAGE.md`
 - `skills/README.md`
@@ -123,6 +124,7 @@ Package content can describe desired outputs. Package content cannot command the
 - <doc:CuratedAcceptedArtifactLifecycle>
 - <doc:GeneratedCandidateRefreshDecisionPolicy>
 - <doc:BaselineSubmissionHandoffPreflight>
+- <doc:SelectedCandidateHandoffPreflight>
 - <doc:XyflowPackageSetReference>
 - <doc:Deployment>
 - <doc:RegistryOperations>

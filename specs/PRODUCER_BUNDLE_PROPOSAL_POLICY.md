@@ -162,6 +162,18 @@ external registry acceptance boundary. Package-set preflight does not require
 single-package `producerEvidenceLinks`; member evidence is checked through the
 handoff `members[].evidenceLinks` records.
 
+For bounded corpus selected candidate evidence, `specpm producer-bundle
+preflight-selected-candidate-handoff` accepts
+`SpecHarvesterSelectedCandidateHandoffProposal` and
+`SpecHarvesterRefreshedCandidateLayerSelectedHandoff` JSON bodies. It emits
+`SpecPMSelectedCandidateHandoffPreflightReport` and verifies selected/deferred
+candidate consistency, preview-only posture, producer preflight status, static
+viewer status, evidence role digests, source fixture digests when `--root` is
+provided, and non-authority flags. Passing preflight is review evidence only;
+it does not accept packages, accept relations, seed baselines, remove
+`preview_only`, create a SpecPM pull request, or publish registry metadata.
+Short form: it does not accept packages and does not accept relations.
+
 ## Package-Set AI Draft Evidence
 
 SpecHarvester may produce a `SpecHarvesterPackageSetAIDraftProposal` before the

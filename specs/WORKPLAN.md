@@ -2496,6 +2496,57 @@ Result:
   policy, CLI reference, DocC, roadmap, and self-spec document the command and
   non-authority boundary.
 
+### P66-T23. Selected Candidate Handoff Preflight
+
+Status: Completed.
+
+Motivation:
+
+- SpecHarvester P32-T5 now emits refreshed selected candidate handoff evidence
+  for the limited popular-library corpus: eight selected preview candidates and
+  one deferred `cupertino.core`.
+- Without a SpecPM-side gate, maintainers could review that producer evidence
+  manually but could not machine-check selected/deferred consistency, evidence
+  digests, producer preflight status, static viewer status, or non-authority
+  boundaries before intake review.
+
+Goal:
+
+- Add a read-only `specpm producer-bundle
+  preflight-selected-candidate-handoff` command that accepts
+  `SpecHarvesterSelectedCandidateHandoffProposal` and
+  `SpecHarvesterRefreshedCandidateLayerSelectedHandoff` JSON or Markdown with a
+  JSON block.
+- Verify artifact identity, `schemaVersion`, producer authority,
+  selected/deferred candidate counts, unique package IDs, `previewOnly`,
+  producer preflight status, static viewer status, external registry acceptance
+  requirements, evidence role digests, refreshed source fixture digests, and
+  `cupertino.core` deferral.
+- Keep passing reports as review evidence only, with no package acceptance,
+  relation acceptance, baseline seeding, `preview_only` removal, SpecPM pull
+  request creation, or public registry publication.
+
+Expected result:
+
+- Maintainers can check selected candidate handoff evidence from SpecHarvester
+  before deciding whether the limited corpus is ready for intake review.
+- Missing `--root` warns rather than fails, because shape can be checked without
+  file access but source fixture digest alignment cannot be proven.
+- Invalid authority, summary counts, selected/deferred overlap, producer
+  preflight drift, viewer drift, evidence digest drift, source digest drift, or
+  acceptance claims fail closed.
+
+Result:
+
+- `specpm producer-bundle preflight-selected-candidate-handoff` emits
+  `SpecPMSelectedCandidateHandoffPreflightReport`.
+- Regression coverage checks refreshed handoff success, CLI JSON output,
+  no-root warning, authority/schema/summary drift, selected/deferred candidate
+  drift, source digest mismatch, and legacy selected handoff compatibility.
+- Selected candidate handoff preflight policy, multi-package intake, producer
+  bundle policy, CLI reference, DocC, roadmap, and self-spec document the
+  command and non-authority boundary.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
