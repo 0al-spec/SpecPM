@@ -4347,6 +4347,51 @@ def test_baseline_submission_handoff_preflight_warns_without_root(
     assert "baseline_handoff_root_not_provided" in issue_codes(report["warnings"])
 
 
+def test_baseline_submission_handoff_preflight_rejects_missing_prepare_input_without_root(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    del payload["inputs"]["specpmPrepareReport"]
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_baseline_submission_handoff(body)
+
+    assert report["status"] == "failed"
+    assert "baseline_handoff_prepare_report_input_missing" in issue_codes(report["errors"])
+    assert "baseline_handoff_root_not_provided" in issue_codes(report["warnings"])
+
+
+def test_baseline_submission_handoff_preflight_accepts_baseline_review_required(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    payload["status"] = "baseline_review_required"
+    payload["reason"] = "specpm_prepare_report_not_provided"
+    payload["specpmPrepareReport"] = {
+        "status": "not_provided",
+        "decisionStatus": None,
+        "decisionReason": None,
+        "missingBaselineDiagnosticCount": 0,
+        "diagnosticCode": "refresh_decision_prepare_current_contract_files_missing",
+        "sampleDiagnostics": [],
+    }
+    del payload["inputs"]["specpmPrepareReport"]
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_baseline_submission_handoff(body, root=root)
+
+    assert report["status"] == "warning"
+    assert report["summary"]["digestVerifiedCount"] == 1
+    assert report["baselineSubmissionHandoff"]["artifactStatus"] == "baseline_review_required"
+    assert report["baselineSubmissionHandoff"]["inputAlignment"] == "verified"
+    assert issue_codes(report["errors"]) == set()
+    assert "baseline_handoff_prepare_report_not_provided" in issue_codes(report["warnings"])
+
+
 def test_baseline_submission_handoff_preflight_rejects_authority_and_schema_drift(
     tmp_path: Path,
 ) -> None:

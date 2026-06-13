@@ -2035,6 +2035,10 @@ def validate_baseline_handoff_inputs(
 ) -> int:
     inputs = _mapping_value(handoff.get("inputs"))
     fresh_input = _mapping_value(inputs.get("freshCandidateRefreshRun"))
+    prepare_input = _mapping_value(inputs.get("specpmPrepareReport"))
+    prepare_report_summary = _mapping_value(handoff.get("specpmPrepareReport"))
+    fresh_input_valid = False
+    prepare_input_valid = False
     if not fresh_input:
         errors.append(
             issue(
@@ -2043,8 +2047,14 @@ def validate_baseline_handoff_inputs(
                 field="inputs.freshCandidateRefreshRun",
             )
         )
-        return 0
-    if fresh_input.get("apiVersion") != FRESH_CANDIDATE_REFRESH_RUN_API_VERSION:
+    else:
+        fresh_input_valid = validate_baseline_handoff_input_reference(
+            fresh_input,
+            "inputs.freshCandidateRefreshRun",
+            "fresh run",
+            errors,
+        )
+    if fresh_input and fresh_input.get("apiVersion") != FRESH_CANDIDATE_REFRESH_RUN_API_VERSION:
         errors.append(
             issue(
                 "baseline_handoff_fresh_run_api_version_invalid",
@@ -2052,7 +2062,7 @@ def validate_baseline_handoff_inputs(
                 field="inputs.freshCandidateRefreshRun.apiVersion",
             )
         )
-    if fresh_input.get("kind") != FRESH_CANDIDATE_REFRESH_RUN_KIND:
+    if fresh_input and fresh_input.get("kind") != FRESH_CANDIDATE_REFRESH_RUN_KIND:
         errors.append(
             issue(
                 "baseline_handoff_fresh_run_kind_invalid",
@@ -2061,36 +2071,6 @@ def validate_baseline_handoff_inputs(
             )
         )
 
-    digest_verified_count = 0
-    if root is None:
-        if digest_value(fresh_input.get("digest")) is None:
-            errors.append(
-                issue(
-                    "baseline_handoff_input_digest_invalid",
-                    "Fresh run input must include a SHA-256 digest.",
-                    field="inputs.freshCandidateRefreshRun.digest",
-                )
-            )
-        return digest_verified_count
-
-    fresh_run = load_and_verify_baseline_handoff_input(
-        fresh_input,
-        root,
-        "inputs.freshCandidateRefreshRun",
-        "fresh run",
-        errors,
-    )
-    if fresh_run is not None:
-        digest_verified_count += 1
-        validate_linked_fresh_candidate_refresh_run(
-            fresh_run,
-            _mapping_value(handoff.get("packageSet")),
-            _mapping_value(handoff.get("source")),
-            errors,
-        )
-
-    prepare_input = _mapping_value(inputs.get("specpmPrepareReport"))
-    prepare_report_summary = _mapping_value(handoff.get("specpmPrepareReport"))
     if prepare_report_summary.get("status") == "missing_baseline":
         if not prepare_input:
             errors.append(
@@ -2101,20 +2081,12 @@ def validate_baseline_handoff_inputs(
                 )
             )
         else:
-            prepare_report = load_and_verify_baseline_handoff_input(
+            prepare_input_valid = validate_baseline_handoff_input_reference(
                 prepare_input,
-                root,
                 "inputs.specpmPrepareReport",
                 "SpecPM prepare report",
                 errors,
             )
-            if prepare_report is not None:
-                digest_verified_count += 1
-                validate_linked_baseline_prepare_report(
-                    prepare_report,
-                    prepare_report_summary,
-                    errors,
-                )
     elif prepare_input:
         warnings.append(
             issue(
@@ -2123,7 +2095,79 @@ def validate_baseline_handoff_inputs(
                 field="inputs.specpmPrepareReport",
             )
         )
+        prepare_input_valid = validate_baseline_handoff_input_reference(
+            prepare_input,
+            "inputs.specpmPrepareReport",
+            "SpecPM prepare report",
+            errors,
+        )
+
+    digest_verified_count = 0
+    if root is None:
+        return digest_verified_count
+
+    if fresh_input_valid:
+        fresh_run = load_and_verify_baseline_handoff_input(
+            fresh_input,
+            root,
+            "inputs.freshCandidateRefreshRun",
+            "fresh run",
+            errors,
+        )
+        if fresh_run is not None:
+            digest_verified_count += 1
+            validate_linked_fresh_candidate_refresh_run(
+                fresh_run,
+                _mapping_value(handoff.get("packageSet")),
+                _mapping_value(handoff.get("source")),
+                errors,
+            )
+
+    if prepare_report_summary.get("status") == "missing_baseline" and prepare_input_valid:
+        prepare_report = load_and_verify_baseline_handoff_input(
+            prepare_input,
+            root,
+            "inputs.specpmPrepareReport",
+            "SpecPM prepare report",
+            errors,
+        )
+        if prepare_report is not None:
+            digest_verified_count += 1
+            validate_linked_baseline_prepare_report(
+                prepare_report,
+                prepare_report_summary,
+                errors,
+            )
     return digest_verified_count
+
+
+def validate_baseline_handoff_input_reference(
+    input_record: dict[str, Any],
+    field: str,
+    label: str,
+    errors: list[dict[str, Any]],
+) -> bool:
+    valid = True
+    path_value = input_record.get("path")
+    if not isinstance(path_value, str) or not path_value:
+        valid = False
+        errors.append(
+            issue(
+                "baseline_handoff_input_path_missing",
+                f"Baseline handoff {label} input path is required.",
+                field=f"{field}.path",
+            )
+        )
+    if digest_value(input_record.get("digest")) is None:
+        valid = False
+        errors.append(
+            issue(
+                "baseline_handoff_input_digest_invalid",
+                f"Baseline handoff {label} input must include a SHA-256 digest.",
+                field=f"{field}.digest",
+            )
+        )
+    return valid
 
 
 def load_and_verify_baseline_handoff_input(
