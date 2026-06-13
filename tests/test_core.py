@@ -55,6 +55,7 @@ from specpm.index_submission import (
 )
 from specpm.producer_bundle import (
     materialize_package_set_handoff,
+    preflight_baseline_submission_handoff,
     preflight_package_set_ai_draft,
     preflight_package_set_ai_enrichment,
     preflight_producer_bundle,
@@ -117,6 +118,7 @@ CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_DOC = ROOT / "specs/CURATED_ACCEPTED_ARTIFAC
 GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC = (
     ROOT / "specs/GENERATED_CANDIDATE_REFRESH_DECISION_POLICY.md"
 )
+BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_DOC = ROOT / "specs/BASELINE_SUBMISSION_HANDOFF_PREFLIGHT.md"
 PRODUCER_RECEIPT_FIXTURE = (
     ROOT / "tests/fixtures/provenance_receipts/generated-spec-package-receipt.example.json"
 )
@@ -166,6 +168,9 @@ DOCC_CURATED_ACCEPTED_ARTIFACT_LIFECYCLE_PAGE = (
 )
 DOCC_GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/GeneratedCandidateRefreshDecisionPolicy.md"
+)
+DOCC_BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_PAGE = (
+    ROOT / "Sources/SpecPM/Documentation.docc/BaselineSubmissionHandoffPreflight.md"
 )
 DOCC_REGISTRY_ACCEPTANCE_DECISIONS_PAGE = (
     ROOT / "Sources/SpecPM/Documentation.docc/RegistryAcceptanceDecisions.md"
@@ -514,6 +519,174 @@ def write_package_set_handoff_fixture(root: Path, *, bad_relation: bool = False)
         "nonGoals": ["specpm_acceptance", "relation_acceptance", "registry_publication"],
     }
     handoff_path = root / "package-set-handoff-proposal.json"
+    handoff_path.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return handoff_path
+
+
+def write_baseline_submission_handoff_fixture(root: Path) -> Path:
+    root.mkdir(parents=True)
+    fresh_run = {
+        "apiVersion": "spec-harvester.fresh-candidate-refresh-run/v0",
+        "kind": "SpecHarvesterFreshCandidateRefreshRun",
+        "schemaVersion": 1,
+        "status": "prepared",
+        "source": {
+            "repository": "https://github.com/example/workspace",
+            "revision": "a" * 40,
+            "revisionAuthority": "git_commit",
+        },
+        "packageSet": {
+            "id": "example.workspace",
+            "candidateCount": 2,
+            "memberPackageIds": ["example.workspace", "example.member"],
+        },
+        "freshGeneratedRoot": {
+            "path": str(root / "fresh-generated"),
+            "layout": "specpm-public-index-generated-root/v0",
+            "packagePathTemplate": "<package_id>/<version>",
+        },
+        "packages": [
+            {
+                "packageId": "example.workspace",
+                "version": "0.1.0",
+                "contractFiles": [
+                    {
+                        "path": "example.workspace/0.1.0/specpm.yaml",
+                        "role": "manifest",
+                        "digest": {"algorithm": "sha256", "value": "0" * 64},
+                    },
+                    {
+                        "path": "example.workspace/0.1.0/specs/workspace.spec.yaml",
+                        "role": "boundary_spec",
+                        "digest": {"algorithm": "sha256", "value": "1" * 64},
+                    },
+                ],
+            },
+            {
+                "packageId": "example.member",
+                "version": "0.1.0",
+                "contractFiles": [
+                    {
+                        "path": "example.member/0.1.0/specpm.yaml",
+                        "role": "manifest",
+                        "digest": {"algorithm": "sha256", "value": "2" * 64},
+                    },
+                    {
+                        "path": "example.member/0.1.0/specs/member.spec.yaml",
+                        "role": "boundary_spec",
+                        "digest": {"algorithm": "sha256", "value": "3" * 64},
+                    },
+                ],
+            },
+        ],
+        "authority": {
+            "producerEvidenceAuthority": "evidence_only",
+            "registryAuthority": "SpecPM maintainer review",
+            "noRegistryMutation": True,
+        },
+    }
+    prepare_report = {
+        "kind": "SpecPMGeneratedCandidateRefreshDecisionPrepareReport",
+        "schemaVersion": 1,
+        "status": "failed",
+        "summary": {
+            "packageId": "example.workspace",
+            "packageCount": 2,
+            "generatedContractFileCount": 0,
+            "digestVerifiedCount": 0,
+            "updateNeeded": True,
+            "errorCount": 2,
+            "warningCount": 0,
+        },
+        "decision": {
+            "decision": {
+                "status": "manual_review_required",
+                "reason": "refresh_prepare_requires_review",
+            }
+        },
+        "errors": [
+            {
+                "code": "refresh_decision_prepare_current_contract_files_missing",
+                "field": "packageIds[0]",
+                "message": "Current generated artifact has no contract files.",
+            },
+            {
+                "code": "refresh_decision_prepare_current_contract_files_missing",
+                "field": "packageIds[1]",
+                "message": "Current generated artifact has no contract files.",
+            },
+        ],
+        "warnings": [],
+    }
+    fresh_run_path = root / "fresh-candidate-refresh-run.json"
+    prepare_report_path = root / "prepare-report.json"
+    fresh_run_path.write_text(
+        json.dumps(fresh_run, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    prepare_report_path.write_text(
+        json.dumps(prepare_report, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    handoff = {
+        "apiVersion": "spec-harvester.baseline-submission-handoff/v0",
+        "kind": "SpecHarvesterBaselineSubmissionHandoff",
+        "schemaVersion": 1,
+        "status": "first_submission_required",
+        "reason": "missing_current_generated_baseline",
+        "inputs": {
+            "freshCandidateRefreshRun": {
+                "path": "fresh-candidate-refresh-run.json",
+                "digest": {"algorithm": "sha256", "value": sha256_path(fresh_run_path)},
+                "apiVersion": "spec-harvester.fresh-candidate-refresh-run/v0",
+                "kind": "SpecHarvesterFreshCandidateRefreshRun",
+            },
+            "specpmPrepareReport": {
+                "path": "prepare-report.json",
+                "digest": {"algorithm": "sha256", "value": sha256_path(prepare_report_path)},
+            },
+        },
+        "source": fresh_run["source"],
+        "packageSet": {
+            "id": "example.workspace",
+            "candidateCount": 2,
+            "memberPackageIds": ["example.workspace", "example.member"],
+            "contractFileCount": 4,
+        },
+        "freshGeneratedRoot": fresh_run["freshGeneratedRoot"],
+        "specpmPrepareReport": {
+            "status": "missing_baseline",
+            "decisionStatus": "manual_review_required",
+            "decisionReason": "refresh_prepare_requires_review",
+            "missingBaselineDiagnosticCount": 2,
+            "diagnosticCode": "refresh_decision_prepare_current_contract_files_missing",
+            "sampleDiagnostics": prepare_report["errors"],
+        },
+        "baselineWorkflow": {
+            "blockedRefreshDecision": True,
+            "requiredBefore": "specpm_refresh_decision",
+            "maintainerActions": [
+                {"id": "first_submission_review"},
+                {"id": "seed_baseline"},
+                {"id": "reject_or_request_regeneration"},
+            ],
+        },
+        "authority": {
+            "producerEvidenceAuthority": "evidence_only",
+            "registryAuthority": "SpecPM maintainer review",
+            "noRegistryMutation": True,
+            "notRefreshDecision": True,
+        },
+        "nonGoals": [
+            "specpm_acceptance",
+            "registry_publication",
+            "baseline_mutation",
+            "refresh_decision_emission",
+            "source_repository_execution",
+            "package_manager_execution",
+        ],
+    }
+    handoff_path = root / "baseline-submission-handoff.json"
     handoff_path.write_text(json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return handoff_path
 
@@ -3514,6 +3687,124 @@ def test_generated_candidate_refresh_decision_policy_is_documented() -> None:
     )
 
 
+def test_baseline_submission_handoff_preflight_policy_is_documented() -> None:
+    policy = BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_DOC.read_text(encoding="utf-8")
+    docc_policy = DOCC_BASELINE_SUBMISSION_HANDOFF_PREFLIGHT_PAGE.read_text(encoding="utf-8")
+    intake = MULTI_PACKAGE_PRODUCER_INTAKE_DOC.read_text(encoding="utf-8")
+    docc_intake = DOCC_MULTI_PACKAGE_PRODUCER_INTAKE_PAGE.read_text(encoding="utf-8")
+    refresh_policy = GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC.read_text(encoding="utf-8")
+    docc_refresh_policy = DOCC_GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_PAGE.read_text(
+        encoding="utf-8"
+    )
+    cli_reference = (ROOT / "Sources/SpecPM/Documentation.docc/CLIReference.md").read_text(
+        encoding="utf-8"
+    )
+    roadmap = ROADMAP_DOC.read_text(encoding="utf-8")
+    docc_roadmap = DOCC_ROADMAP_PAGE.read_text(encoding="utf-8")
+    workplan = (ROOT / "specs/WORKPLAN.md").read_text(encoding="utf-8")
+    self_spec = (ROOT / "specs/specpm.spec.yaml").read_text(encoding="utf-8")
+    manifest = (ROOT / "specpm.yaml").read_text(encoding="utf-8")
+    docc_root = (ROOT / "Sources/SpecPM/Documentation.docc/SpecPM.md").read_text(encoding="utf-8")
+
+    policy_flat = re.sub(r"\s+", " ", policy)
+    docc_policy_flat = re.sub(r"\s+", " ", docc_policy)
+    intake_flat = re.sub(r"\s+", " ", intake)
+    docc_intake_flat = re.sub(r"\s+", " ", docc_intake)
+    refresh_policy_flat = re.sub(r"\s+", " ", refresh_policy)
+    docc_refresh_policy_flat = re.sub(r"\s+", " ", docc_refresh_policy)
+    cli_flat = re.sub(r"\s+", " ", cli_reference)
+    roadmap_flat = re.sub(r"\s+", " ", roadmap)
+    docc_roadmap_flat = re.sub(r"\s+", " ", docc_roadmap)
+    workplan_flat = re.sub(r"\s+", " ", workplan)
+    docc_root_flat = re.sub(r"\s+", " ", docc_root)
+
+    for required_text in (
+        "SpecHarvesterBaselineSubmissionHandoff",
+        "spec-harvester.baseline-submission-handoff/v0",
+        "SpecPMBaselineSubmissionHandoffPreflightReport",
+        "specpm producer-bundle preflight-baseline-submission",
+        "first_submission_required",
+        "baseline_review_required",
+        "missing_current_generated_baseline",
+        "refresh_decision_prepare_current_contract_files_missing",
+        "first_submission_review",
+        "seed_baseline",
+        "reject_or_request_regeneration",
+        "producerEvidenceAuthority: evidence_only",
+        "noRegistryMutation: true",
+        "notRefreshDecision: true",
+        "does not seed the baseline",
+        "does not accept packages",
+    ):
+        assert required_text in policy_flat
+
+    for required_text in (
+        "SpecHarvesterBaselineSubmissionHandoff",
+        "SpecPMBaselineSubmissionHandoffPreflightReport",
+        "specpm producer-bundle preflight-baseline-submission",
+        "first_submission_required",
+        "seed_baseline",
+        "notRefreshDecision: true",
+        "does not seed a baseline",
+    ):
+        assert required_text in docc_policy_flat
+
+    for required_text in (
+        "baseline-submission-handoff.json",
+        "SpecHarvesterBaselineSubmissionHandoff",
+        "specpm producer-bundle preflight-baseline-submission",
+        "SpecPMBaselineSubmissionHandoffPreflightReport",
+        "first_submission_review",
+        "seed_baseline",
+        "reject_or_request_regeneration",
+    ):
+        assert required_text in intake_flat
+        assert required_text in docc_intake_flat
+
+    for required_text in (
+        "SpecHarvesterBaselineSubmissionHandoff",
+        "specpm producer-bundle preflight-baseline-submission",
+        "SpecPMBaselineSubmissionHandoffPreflightReport",
+        "does not seed the baseline",
+        "emit a refresh decision",
+    ):
+        assert required_text in refresh_policy_flat
+        assert required_text in docc_refresh_policy_flat
+
+    for required_text in (
+        "preflight-baseline-submission",
+        "SpecHarvesterBaselineSubmissionHandoff",
+        "SpecPMBaselineSubmissionHandoffPreflightReport",
+        "does not seed a baseline",
+    ):
+        assert required_text in cli_flat
+
+    for required_text in (
+        "preflight-baseline-submission",
+        "SpecHarvesterBaselineSubmissionHandoff",
+        "missing-baseline diagnostics",
+        "baseline seeding and registry acceptance under maintainer review",
+    ):
+        assert required_text in roadmap_flat
+        assert required_text in docc_roadmap_flat
+
+    for required_text in (
+        "P66-T22. Baseline Submission Handoff Preflight",
+        "`specpm producer-bundle preflight-baseline-submission`",
+        "`SpecPMBaselineSubmissionHandoffPreflightReport`",
+        "linked fresh-run schema/member drift",
+        "linked prepare-report diagnostic-count mismatch",
+    ):
+        assert required_text in workplan_flat
+
+    assert "specpm.registry.baseline_submission_handoff_preflight" in manifest
+    assert "specpm.registry.baseline_submission_handoff_preflight" in self_spec
+    assert "specs/BASELINE_SUBMISSION_HANDOFF_PREFLIGHT.md" in self_spec
+    assert "Sources/SpecPM/Documentation.docc/BaselineSubmissionHandoffPreflight.md" in self_spec
+    assert "specs/BASELINE_SUBMISSION_HANDOFF_PREFLIGHT.md" in docc_root_flat
+    assert "<doc:BaselineSubmissionHandoffPreflight>" in docc_root_flat
+
+
 def test_xyflow_refresh_decision_fixture_matches_policy() -> None:
     fixture = json.loads(GENERATED_CANDIDATE_REFRESH_DECISION_FIXTURE.read_text(encoding="utf-8"))
     policy = GENERATED_CANDIDATE_REFRESH_DECISION_POLICY_DOC.read_text(encoding="utf-8")
@@ -3982,6 +4273,191 @@ def test_refresh_decision_preflight_rejects_contract_file_symlink_escape(
 
     assert report["status"] == "failed"
     assert "refresh_decision_contract_file_path_unresolved" in issue_codes(report["errors"])
+
+
+def test_baseline_submission_handoff_preflight_accepts_missing_baseline(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+
+    report = preflight_baseline_submission_handoff(body, root=root)
+
+    assert report["kind"] == "SpecPMBaselineSubmissionHandoffPreflightReport"
+    assert report["status"] == "passed"
+    assert report["summary"] == {
+        "packageSetId": "example.workspace",
+        "candidateCount": 2,
+        "memberPackageCount": 2,
+        "contractFileCount": 4,
+        "missingBaselineDiagnosticCount": 2,
+        "digestVerifiedCount": 2,
+        "errorCount": 0,
+        "warningCount": 0,
+    }
+    assert report["baselineSubmissionHandoff"] == {
+        "packageSetId": "example.workspace",
+        "artifactStatus": "first_submission_required",
+        "reason": "missing_current_generated_baseline",
+        "candidateCount": 2,
+        "memberPackageCount": 2,
+        "contractFileCount": 4,
+        "missingBaselineDiagnosticCount": 2,
+        "inputAlignment": "verified",
+        "digestVerifiedCount": 2,
+        "notRefreshDecision": True,
+        "noRegistryMutation": True,
+    }
+
+
+def test_cli_baseline_submission_handoff_preflight_emits_json(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+
+    exit_code = main(
+        [
+            "producer-bundle",
+            "preflight-baseline-submission",
+            "--body",
+            str(body),
+            "--root",
+            str(root),
+            "--json",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["status"] == "passed"
+    assert report["summary"]["digestVerifiedCount"] == 2
+
+
+def test_baseline_submission_handoff_preflight_warns_without_root(
+    tmp_path: Path,
+) -> None:
+    body = write_baseline_submission_handoff_fixture(tmp_path / "handoff")
+
+    report = preflight_baseline_submission_handoff(body)
+
+    assert report["status"] == "warning"
+    assert report["baselineSubmissionHandoff"]["inputAlignment"] == "not_verified"
+    assert "baseline_handoff_root_not_provided" in issue_codes(report["warnings"])
+
+
+def test_baseline_submission_handoff_preflight_rejects_missing_prepare_input_without_root(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    del payload["inputs"]["specpmPrepareReport"]
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_baseline_submission_handoff(body)
+
+    assert report["status"] == "failed"
+    assert "baseline_handoff_prepare_report_input_missing" in issue_codes(report["errors"])
+    assert "baseline_handoff_root_not_provided" in issue_codes(report["warnings"])
+
+
+def test_baseline_submission_handoff_preflight_accepts_baseline_review_required(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    payload["status"] = "baseline_review_required"
+    payload["reason"] = "specpm_prepare_report_not_provided"
+    payload["specpmPrepareReport"] = {
+        "status": "not_provided",
+        "decisionStatus": None,
+        "decisionReason": None,
+        "missingBaselineDiagnosticCount": 0,
+        "diagnosticCode": "refresh_decision_prepare_current_contract_files_missing",
+        "sampleDiagnostics": [],
+    }
+    del payload["inputs"]["specpmPrepareReport"]
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_baseline_submission_handoff(body, root=root)
+
+    assert report["status"] == "warning"
+    assert report["summary"]["digestVerifiedCount"] == 1
+    assert report["baselineSubmissionHandoff"]["artifactStatus"] == "baseline_review_required"
+    assert report["baselineSubmissionHandoff"]["inputAlignment"] == "verified"
+    assert issue_codes(report["errors"]) == set()
+    assert "baseline_handoff_prepare_report_not_provided" in issue_codes(report["warnings"])
+
+
+def test_baseline_submission_handoff_preflight_rejects_authority_and_schema_drift(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    payload["schemaVersion"] = 2
+    payload["authority"]["noRegistryMutation"] = False
+    payload["authority"]["notRefreshDecision"] = False
+    payload["baselineWorkflow"]["maintainerActions"] = [{"id": "first_submission_review"}]
+    payload["nonGoals"].remove("baseline_mutation")
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_baseline_submission_handoff(body, root=root)
+
+    assert report["status"] == "failed"
+    assert {
+        "baseline_handoff_schema_version_invalid",
+        "baseline_handoff_registry_mutation_flag_invalid",
+        "baseline_handoff_not_refresh_decision_flag_invalid",
+        "baseline_handoff_maintainer_actions_missing",
+        "baseline_handoff_non_goals_missing",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_baseline_submission_handoff_preflight_rejects_linked_input_drift(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+    fresh_run_path = root / "fresh-candidate-refresh-run.json"
+    fresh_run = json.loads(fresh_run_path.read_text(encoding="utf-8"))
+    fresh_run["schemaVersion"] = 2
+    fresh_run["packageSet"]["memberPackageIds"] = ["example.workspace"]
+    fresh_run_path.write_text(
+        json.dumps(fresh_run, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    payload["inputs"]["freshCandidateRefreshRun"]["digest"]["value"] = sha256_path(fresh_run_path)
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_baseline_submission_handoff(body, root=root)
+
+    assert report["status"] == "failed"
+    assert {
+        "baseline_handoff_input_fresh_run_schema_version_invalid",
+        "baseline_handoff_input_fresh_run_members_mismatch",
+    }.issubset(issue_codes(report["errors"]))
+
+
+def test_baseline_submission_handoff_preflight_rejects_prepare_report_mismatch(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "handoff"
+    body = write_baseline_submission_handoff_fixture(root)
+    payload = json.loads(body.read_text(encoding="utf-8"))
+    payload["specpmPrepareReport"]["missingBaselineDiagnosticCount"] = 3
+    body.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = preflight_baseline_submission_handoff(body, root=root)
+
+    assert report["status"] == "failed"
+    assert "baseline_handoff_input_prepare_report_diagnostic_count_mismatch" in issue_codes(
+        report["errors"]
+    )
 
 
 def test_producer_bundle_preflight_accepts_spec_harvester_pr_body(tmp_path: Path) -> None:

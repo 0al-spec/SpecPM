@@ -224,6 +224,24 @@ helper as a dry-run artifact producer. It runs with `contents: read`, uploads
 the prepared decision plus prepare/preflight reports, and does not require
 registry write credentials.
 
+When the prepare step cannot emit an ordinary refresh decision because the
+current generated baseline is missing, SpecHarvester may attach
+`SpecHarvesterBaselineSubmissionHandoff` evidence. SpecPM can check that
+handoff with:
+
+```bash
+specpm producer-bundle preflight-baseline-submission \
+  --body <baseline-submission-handoff.json> \
+  --root <handoff-artifact-root> \
+  --json
+```
+
+The report kind is `SpecPMBaselineSubmissionHandoffPreflightReport`. The command
+verifies handoff identity, first-submission status, linked fresh-run and
+prepare-report digests, maintainer actions, and evidence-only authority. A
+passing report does not seed the baseline, emit a refresh decision, or accept
+packages into the registry.
+
 ## Fixture Alignment
 
 Cross-repository fixture ownership and drift handling are defined in

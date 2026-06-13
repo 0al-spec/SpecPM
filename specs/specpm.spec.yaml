@@ -181,6 +181,9 @@ provides:
     - id: specpm.registry.generated_candidate_refresh_decision_ci_artifact
       role: secondary
       summary: Produce read-only GitHub Actions refresh decision artifacts for maintainer review without registry write credentials.
+    - id: specpm.registry.baseline_submission_handoff_preflight
+      role: secondary
+      summary: Preflight SpecHarvesterBaselineSubmissionHandoff records for first-submission or seeded-baseline review without seeding baselines or accepting registry input.
     - id: specpm.registry.package_set_relation_metadata
       role: secondary
       summary: Publish maintainer-reviewed package-set relation metadata through additive `/v0` payloads and the static viewer without inferring relations from producer output.
@@ -848,6 +851,7 @@ evidence:
       - specpm.registry.generated_candidate_refresh_decision_ci_artifact
       - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.generated_candidate_refresh_decision_preflight
+      - specpm.registry.baseline_submission_handoff_preflight
   - id: producer_bundle_source
     kind: source
     path: src/specpm/producer_bundle.py
@@ -858,6 +862,7 @@ evidence:
       - specpm.specs.ai_draft_preflight
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
+      - specpm.registry.baseline_submission_handoff_preflight
   - id: index_submission_validator_source
     kind: source
     path: src/specpm/index_submission.py
@@ -1033,6 +1038,7 @@ evidence:
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.generated_candidate_refresh_decision_ci_artifact
+      - specpm.registry.baseline_submission_handoff_preflight
       - specpm.registry.package_set_materialization_helper
       - specpm.specs.producer_receipt_contract
       - producer_receipts_not_generation_authority
@@ -1165,6 +1171,7 @@ evidence:
       - specpm.specs.ai_draft_preflight
       - specpm.registry.curated_accepted_artifacts
       - specpm.registry.generated_candidate_refresh_decision_policy
+      - specpm.registry.baseline_submission_handoff_preflight
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
@@ -1188,6 +1195,7 @@ evidence:
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.generated_candidate_refresh_decision_ci_artifact
+      - specpm.registry.baseline_submission_handoff_preflight
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake
@@ -1224,6 +1232,16 @@ evidence:
     supports:
       - specpm.registry.generated_candidate_refresh_decision_policy
       - specpm.specs.xyflow_package_set_reference
+      - producer_receipts_not_generation_authority
+      - scope.includes
+      - scope.excludes
+  - id: baseline_submission_handoff_preflight_docs
+    kind: documentation
+    path: specs/BASELINE_SUBMISSION_HANDOFF_PREFLIGHT.md
+    supports:
+      - specpm.registry.baseline_submission_handoff_preflight
+      - specpm.specs.multi_package_producer_intake
+      - specpm.registry.generated_candidate_refresh_decision_policy
       - producer_receipts_not_generation_authority
       - scope.includes
       - scope.excludes
@@ -1598,6 +1616,7 @@ evidence:
       - specpm.specs.producer_bundle_proposal_policy
       - specpm.registry.curated_accepted_artifacts
       - specpm.registry.curated_artifact_lifecycle
+      - specpm.registry.baseline_submission_handoff_preflight
   - id: docc_curated_accepted_artifact_lifecycle
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/CuratedAcceptedArtifactLifecycle.md
@@ -1616,10 +1635,19 @@ evidence:
       - specpm.registry.generated_candidate_refresh_decision_preflight
       - specpm.registry.generated_candidate_refresh_decision_prepare
       - specpm.registry.generated_candidate_refresh_decision_ci_artifact
+      - specpm.registry.baseline_submission_handoff_preflight
       - specpm.registry.curated_artifact_lifecycle
       - specpm.registry.curated_accepted_artifacts
       - specpm.specs.multi_package_producer_intake
       - specpm.specs.xyflow_package_set_reference
+  - id: docc_baseline_submission_handoff_preflight
+    kind: documentation
+    path: Sources/SpecPM/Documentation.docc/BaselineSubmissionHandoffPreflight.md
+    supports:
+      - specpm.documentation.docc_site
+      - specpm.registry.baseline_submission_handoff_preflight
+      - specpm.specs.multi_package_producer_intake
+      - specpm.registry.generated_candidate_refresh_decision_policy
   - id: docc_xyflow_package_set_reference
     kind: documentation
     path: Sources/SpecPM/Documentation.docc/XyflowPackageSetReference.md

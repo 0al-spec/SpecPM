@@ -63,6 +63,12 @@ It does not replace deterministic workspace inventory, package-set handoff,
 bundle-set preflight, AI enrichment, relation acceptance, or accepted-source
 review.
 
+First-submission or seeded-baseline evidence may appear as
+`baseline-submission-handoff.json` with
+`kind: SpecHarvesterBaselineSubmissionHandoff`. It records that a fresh
+package-set output cannot produce a normal generated-candidate refresh decision
+because SpecPM reported a missing current generated baseline.
+
 ## Handoff Checklist
 
 Before turning a package-set handoff into registry input, maintainers should
@@ -95,6 +101,28 @@ This checks package-set handoff identity, linked evidence digests, member
 manifest IDs, bundle-set preflight status/counts, and `contains` relation
 endpoints. It remains review evidence only and does not accept packages or
 relations.
+
+Maintainers can also preflight a baseline-submission handoff before
+first-submission or seeded-baseline review:
+
+```bash
+specpm producer-bundle preflight-baseline-submission \
+  --body <baseline-submission-handoff.json> \
+  --root <handoff-artifact-root> \
+  --json
+```
+
+This emits `SpecPMBaselineSubmissionHandoffPreflightReport` and verifies
+handoff identity, status/reason semantics, package-set member counts,
+missing-baseline diagnostic metadata, maintainer actions, authority flags,
+non-goals, linked fresh-run identity, linked SpecPM prepare-report diagnostics,
+and SHA-256 digests when `--root` is provided. Passing preflight is review
+evidence only; it does not seed a baseline, emit a refresh decision, accept
+packages, accept relations, or publish registry metadata.
+
+The handoff must leave the final choice to maintainer actions:
+`first_submission_review`, `seed_baseline`, or
+`reject_or_request_regeneration`.
 
 After review, maintainers can materialize an explicit subset:
 

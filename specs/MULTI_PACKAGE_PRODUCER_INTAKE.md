@@ -92,6 +92,14 @@ should be excluded, and which `contains` relations should be drafted. It does
 not replace deterministic workspace inventory, package-set handoff, bundle-set
 preflight, AI enrichment, relation acceptance, or accepted-source review.
 
+First-submission or seeded-baseline evidence may appear as
+`baseline-submission-handoff.json` with
+`kind: SpecHarvesterBaselineSubmissionHandoff`. This artifact explains that a
+fresh package-set output cannot produce a normal generated-candidate refresh
+decision because SpecPM reported a missing current generated baseline. It does
+not replace first-submission review, baseline seeding review, accepted-source
+review, relation acceptance, or public-index publication.
+
 ## Package-Set Handoff Checklist
 
 Before turning a producer handoff into an accepted-source pull request,
@@ -193,6 +201,30 @@ The preflight verifies package-set handoff identity, linked evidence digests,
 member manifest IDs, bundle-set preflight status/counts, and `contains`
 relation endpoints. It is evidence for review only and does not accept packages,
 accept relations, or write registry input.
+
+## Baseline Submission Preflight Checklist
+
+When SpecHarvester emits `SpecHarvesterBaselineSubmissionHandoff`, maintainers
+can run:
+
+```bash
+specpm producer-bundle preflight-baseline-submission \
+  --body <baseline-submission-handoff.json> \
+  --root <handoff-artifact-root> \
+  --json
+```
+
+This emits `SpecPMBaselineSubmissionHandoffPreflightReport` and verifies
+handoff identity, first-submission status/reason semantics, package-set member
+counts, missing-baseline diagnostic metadata, maintainer actions, authority
+flags, non-goals, linked fresh-run identity, linked SpecPM prepare-report
+diagnostics, and SHA-256 digests when `--root` is provided.
+
+Passing preflight means the missing-baseline handoff is internally consistent
+review evidence. It does not seed `public-index/generated`, accept packages,
+accept relations, update curated artifacts, emit a refresh decision, or publish
+registry metadata. Maintainers must still choose `first_submission_review`,
+`seed_baseline`, or `reject_or_request_regeneration`.
 
 After review, maintainers can generate a proposed accepted-source diff from an
 explicit subset:

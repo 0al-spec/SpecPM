@@ -323,6 +323,12 @@ SpecPM now has a consumer-side `preflight-ai-draft` gate for
 selection, exclusions, and `contains` relations against deterministic workspace
 inventory evidence while keeping the artifact proposal-only and outside registry
 acceptance or materialization authority.
+SpecPM now has a consumer-side `preflight-baseline-submission` gate for
+`SpecHarvesterBaselineSubmissionHandoff`. It verifies first-submission or
+seeded-baseline handoff identity, missing-baseline diagnostics, linked
+fresh-run and prepare-report digests, maintainer action choices, and authority
+flags while keeping baseline seeding and registry acceptance under maintainer
+review.
 The `xyflow` package-set reference scenario is now documented with example
 workspace inventory, package-set metadata, relation proposals, and exact intent
 search result scope fixtures.

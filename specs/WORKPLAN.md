@@ -2449,6 +2449,53 @@ Result:
 - Regression coverage parses the workflow and checks manual dispatch inputs,
   read-only permissions, prepare/preflight commands, and artifact upload paths.
 
+### P66-T22. Baseline Submission Handoff Preflight
+
+Status: Completed.
+
+Motivation:
+
+- SpecHarvester now emits `SpecHarvesterBaselineSubmissionHandoff` when a fresh
+  package-set run cannot become a normal refresh decision because SpecPM has no
+  current generated baseline.
+- Without SpecPM-side preflight, maintainers could treat that producer evidence
+  as acceptance, baseline seeding, or a refresh decision.
+
+Goal:
+
+- Add a read-only `specpm producer-bundle preflight-baseline-submission`
+  command that accepts `SpecHarvesterBaselineSubmissionHandoff` JSON or
+  Markdown with a JSON block.
+- Verify artifact identity, `schemaVersion`, status/reason semantics,
+  missing-baseline diagnostic metadata, source revision, package-set counts,
+  maintainer action choices, authority flags, non-goals, linked fresh-run
+  identity, linked SpecPM prepare-report diagnostics, and SHA-256 digests when
+  `--root` is provided.
+- Keep passing reports as review evidence only, with no accepted-source,
+  generated-candidate, relation, baseline, refresh-decision, or registry
+  publication mutation.
+
+Expected result:
+
+- Maintainers can check first-submission or seeded-baseline handoff evidence
+  before deciding whether to review, seed a baseline, reject, or request
+  regeneration.
+- Missing `--root` warns rather than fails, because shape can be checked without
+  file access but digest alignment cannot be proven.
+- Invalid authority, action, schema, package alignment, or linked input digest
+  drift fails closed.
+
+Result:
+
+- `specpm producer-bundle preflight-baseline-submission` emits
+  `SpecPMBaselineSubmissionHandoffPreflightReport`.
+- Regression coverage checks success, CLI JSON output, no-root warning,
+  authority/schema drift, linked fresh-run schema/member drift, and linked
+  prepare-report diagnostic-count mismatch.
+- Baseline submission handoff policy, multi-package intake, refresh decision
+  policy, CLI reference, DocC, roadmap, and self-spec document the command and
+  non-authority boundary.
+
 ## Post-MVP Tracks
 
 - Remote registry service implementation.
