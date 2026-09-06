@@ -1,0 +1,155 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: axios.http_client
+  title: Axios HTTP Client Library
+  version: 1.19.0
+  status: draft
+intent:
+  summary: Let browser and Node.js application developers issue asynchronous HTTP requests and receive
+    typed response or error information through the Axios default API or a configured instance.
+scope:
+  boundedContext: public_axios_http_client_api
+  includes:
+  - The package default export and callable Axios instances created with axios.create.
+  - Request aliases and configuration for URL, method, query parameters, request data, headers, response
+    type, timeout, status validation, progress callbacks and cancellation signals.
+  - Response fields, Promise rejection behavior and Axios error type guards.
+  excludes:
+  - A standalone command-line client, HTTP server, or application-level retry/cache policy.
+  - Exhaustive adapter-specific behavior, browser compatibility beyond the documented support statement,
+    and performance or availability guarantees.
+  - Deprecated CancelToken as a recommended new-project interface.
+  - Upstream author endorsement, runtime conformance certification, and claims about revisions other than
+    the pinned source.
+provides:
+  capabilities:
+  - id: axios.http_client.request
+    role: primary
+    summary: Issue HTTP requests using a URL/config object or method aliases such as get, post, put, patch
+      and delete, returning a Promise for the response.
+  - id: axios.http_client.configure
+    role: supporting
+    summary: Create an Axios instance with base URL, timeout, headers and other defaults, then apply per-request
+      configuration and request/response interceptors.
+  - id: axios.http_client.control
+    role: supporting
+    summary: Control request outcomes with timeout, AbortController signals, status validation, response
+      types and Axios error/cancellation type guards.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+  - id: request_api
+    kind: library
+    summary: JavaScript or TypeScript consumers call the default Axios export or an AxiosInstance with
+      a config object, or call an HTTP method alias with URL, optional data and optional config. Config
+      includes URL/method, params, headers, data, timeout, responseType, validateStatus and signal among
+      other documented options.
+  - id: instance_factory
+    kind: library
+    summary: Consumers call axios.create with optional defaults such as baseURL, timeout and headers to
+      obtain an AxiosInstance whose methods merge request configuration with instance configuration.
+  outbound:
+  - id: response_promise
+    kind: library
+    summary: The call returns a Promise resolving to an object containing data, status, statusText, headers,
+      config and request; the response exposes the server-provided data and HTTP metadata.
+  - id: error_rejection
+    kind: library
+    summary: By default responses outside the 2xx range reject the Promise; consumers inspect error.response
+      for a server response, error.request when no response was received, or setup error information,
+      and may use isAxiosError or isCancel type guards.
+constraints:
+- id: promise_runtime
+  level: MUST
+  statement: The consuming runtime must provide a supported native ES6 Promise implementation or a compatible
+    polyfill.
+- id: browser_node_transport
+  level: MUST
+  statement: Transport depends on runtime and adapter selection; XMLHttpRequest, Node.js HTTP, and fetch
+    adapters are documented, with adapter-specific limitations.
+- id: timeout_recommendation
+  level: SHOULD
+  statement: Consumers should set a timeout in production because a request without one can hang indefinitely
+    according to the documented example guidance.
+- id: body_limits
+  level: SHOULD
+  statement: Consumers calling untrusted servers should set maxContentLength and maxBodyLength caps because
+    their documented defaults are -1 (unlimited) in Node.js.
+- id: cancel_token_deprecated
+  level: SHOULD
+  statement: New projects should use AbortController signal cancellation; the CancelToken API is documented
+    as deprecated since v0.22.0.
+- id: producer_output_not_authority
+  level: MUST
+  statement: Treat this third-party, AI-assisted description as discovery metadata. Catalog acceptance
+    does not certify runtime behavior, safety, or upstream endorsement.
+effects:
+  sideEffects:
+  - id: external_http
+    kind: network_write
+    summary: Sends HTTP requests, potentially with credentials and data, and receives responses; mutating
+      methods can change remote state.
+  - id: progress_callbacks
+    kind: event_emit
+    summary: Configured upload or download progress callbacks may be invoked during supported transfers.
+evidence:
+- id: readme_product_and_usage_1_1
+  kind: documentation
+  path: evidence/readme_product_and_usage_1_1.md
+  supports:
+  - intent.summary
+  - scope
+  - scope.includes
+  - scope.excludes
+  - provides.capabilities.axios.http_client.request
+  - provides.capabilities.axios.http_client.configure
+  - provides.capabilities.axios.http_client.control
+  - interfaces.inbound.request_api
+  - interfaces.inbound.instance_factory
+  - interfaces.outbound.response_promise
+  - interfaces.outbound.error_rejection
+  - constraints.timeout_recommendation
+  - constraints.body_limits
+  - constraints.cancel_token_deprecated
+  - effects.sideEffects.external_http
+  - effects.sideEffects.progress_callbacks
+  - provenance.sourceConfidence
+- id: public_type_surface_1_1
+  kind: source
+  path: evidence/public_type_surface_1_1.ts
+  supports:
+  - interfaces.inbound.request_api
+  - interfaces.inbound.instance_factory
+  - interfaces.outbound.response_promise
+  - interfaces.outbound.error_rejection
+- id: license_notice_1_1
+  kind: source
+  path: evidence/license_notice_1_1.txt
+  supports:
+  - provenance.sourceConfidence
+- id: package_metadata_1_1
+  kind: package_manifest
+  path: evidence/package_metadata_1_1.json
+  supports:
+  - intent.summary
+  - provenance.sourceConfidence
+- id: upstream_notice_0
+  kind: documentation
+  path: evidence/upstream-LICENSE
+  supports:
+  - provenance.sourceConfidence
+- id: curation_record
+  kind: documentation
+  path: evidence/curation.json
+  supports:
+  - provenance.sourceConfidence
+  - constraints.producer_output_not_authority
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: high
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []

@@ -1,0 +1,46 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: axios.http_client
+  name: Axios HTTP Client
+  version: 1.19.0
+  summary: Promise-based HTTP client boundary for making and configuring HTTP requests in browser and
+    Node.js applications.
+  license: MIT
+  authors:
+  - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+- path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+    - axios.http_client.request
+    - axios.http_client.configure
+    - axios.http_client.control
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+  - browser
+  - Node.js
+  languages:
+  - JavaScript
+  - TypeScript
+keywords:
+- http
+- client
+- browser
+- node
+- promises
+foreignArtifacts:
+- id: upstream_repository
+  role: primary_intent_source
+  uri: https://github.com/axios/axios
+  revision: 509719387e4993392ca40da03a49678269cdfb90
+- id: producer_original_archive
+  role: documentation
+  uri: https://github.com/0al-spec/SpecHarvester/blob/a460f1af79c563866512d50f4d977e9b39e47f12/SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz
+  revision: a460f1af79c563866512d50f4d977e9b39e47f12
+- id: curation_receipt
+  role: documentation
+  path: evidence/curation.json

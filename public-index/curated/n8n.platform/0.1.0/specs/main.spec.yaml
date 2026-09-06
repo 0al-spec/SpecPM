@@ -1,0 +1,216 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: n8n.platform
+  title: n8n Workflow Automation and Instance AI Boundary
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Enable teams to build and deploy integrations-driven workflows and multi-step AI agents, and
+    let users use Instance AI inside an n8n instance to inspect resources or build workflows.
+scope:
+  boundedContext: n8n_runtime_and_instance_ai
+  includes:
+  - The n8n product boundary described by the repository overview, including visual workflow construction,
+    custom JavaScript/Python code, integrations, self-hosted deployment, and cloud use.
+  - The Instance AI backend module's orchestrator, domain tools, workflow builder, observational memory,
+    and sandbox workspace behavior.
+  - Configuration of model providers, MCP servers, search providers, and workflow-building sandbox providers
+    through documented environment variables or Instance AI settings.
+  excludes:
+  - A complete enumeration or independent verification of every n8n integration, node, cloud feature,
+    or enterprise-only feature.
+  - A complete HTTP request/response schema for the Instance AI service; the inspected documentation identifies
+    the module location and tool contracts but not all route definitions.
+  - A guarantee that the documented license permits every redistribution or commercial deployment scenario.
+  - Upstream author endorsement, runtime conformance certification, and claims about revisions other than
+    the pinned source.
+  - 'Portable copies of upstream source documentation: this package retains pinned URLs and digests only,
+    so evidence inspection requires upstream access.'
+provides:
+  capabilities:
+  - id: n8n.platform.workflow_automation
+    role: primary
+    summary: Build and deploy workflows through a visual canvas, custom JavaScript or Python, and integrations
+      connecting existing systems.
+  - id: n8n.platform.ai_agent_assistance
+    role: primary
+    summary: Run an Instance AI orchestrator that receives user requests, maintains a plan, uses domain
+      tools, and can assist with workflows, executions, credentials, nodes, and workflow building.
+  - id: n8n.platform.workflow_resource_tools
+    role: supporting
+    summary: List accessible workflows, retrieve full workflow definitions or TypeScript SDK representations,
+      and use domain tools to read or update n8n resources through backend adapters.
+  - id: n8n.platform.sandboxed_workflow_building
+    role: supporting
+    summary: Use a configured sandbox workspace to write workflow source, validate TypeScript, execute
+      it into workflow JSON, and submit it to n8n only after the build passes.
+  - id: n8n.platform.workflow_verification
+    role: supporting
+    summary: Verify built workflows using a per-node execution/simulation plan and report simulated nodes;
+      the documentation describes suppression of selected destructive actions, not a proven isolation
+      guarantee.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+  - id: n8n_startup
+    kind: cli
+    summary: Start n8n with the documented npx or Docker entry points and access the editor on the configured
+      local port; the repository also exposes a pnpm dev:ai workflow for local Instance AI development.
+  - id: instance_ai_request
+    kind: http
+    summary: Instance AI accepts user requests through the n8n service; exact HTTP route and complete
+      payload schema are not established by the inspected package documentation.
+  - id: instance_ai_configuration
+    kind: config
+    summary: Configure model, model URL and API key, MCP servers, search providers, sandbox enablement/provider,
+      sandbox URL/API key, and output redaction with environment variables or self-hosted Instance AI
+      settings.
+  - id: workflow_tool_input
+    kind: schema
+    summary: Workflow tools accept identifiers and structured values such as workflowId, workItemId, query,
+      status, filePath, trigger inputData, timeout, verdict, and credential mappings as specified in the
+      tool reference.
+  outbound:
+  - id: workflow_backend
+    kind: http
+    summary: The Instance AI workflow builder and domain tools submit workflow changes through the n8n
+      backend; verification returns execution status and structured data or errors.
+  - id: model_provider
+    kind: http
+    summary: Instance AI sends model requests to a built-in provider or an OpenAI-compatible endpoint
+      selected by configuration; exact provider behavior is outside this boundary.
+  - id: sandbox_provider
+    kind: http
+    summary: The workspace routes filesystem and shell operations to the configured n8n sandbox service
+      or Daytona provider.
+constraints:
+- id: model_required
+  level: MUST
+  statement: Instance AI requires a non-empty N8N_INSTANCE_AI_MODEL to enable the module, unless an externally
+    managed deployment supplies the effective value.
+- id: sandbox_required_for_builder
+  level: MUST
+  statement: Workflow building is unavailable without sandboxing; when enabled, workflow source compilation
+    and execution run through the sandbox build runner.
+- id: sandbox_service_url_required
+  level: MUST
+  statement: The n8n-sandbox provider requires N8N_SANDBOX_SERVICE_URL; the Daytona provider requires
+    its configured API URL and API key.
+- id: simulation_boundary
+  level: MUST
+  statement: Verification must treat destructive and user-action nodes as simulated according to the build
+    outcome plan; a waiting result with a plan is a failure.
+- id: license_restrictions
+  level: MUST
+  statement: Consumers must review the Sustainable Use License, Enterprise License exceptions, third-party
+    licenses, and commercial or redistribution limitations before deployment or redistribution.
+- id: producer_output_not_authority
+  level: MUST
+  statement: Treat this third-party, AI-assisted description as discovery metadata. Catalog acceptance
+    does not certify runtime behavior, safety, or upstream endorsement.
+- id: feature_availability
+  level: MUST
+  statement: Check the target deployment, configured modules, and license for Instance AI and conditional
+    tools; this development snapshot does not establish availability in every released edition.
+effects:
+  sideEffects:
+  - id: workflow_state_mutation
+    kind: state_mutation
+    summary: Workflow building and credential application can persist changes to n8n workflow state.
+  - id: database_persistence
+    kind: database_write
+    summary: Instance AI memory, plans, snapshots, checkpoints, events, and verification records can persist
+      in the n8n PostgreSQL or SQLite database.
+  - id: network_calls
+    kind: network_write
+    summary: Model, MCP, search, workflow backend, and sandbox provider interactions can make network
+      calls when configured.
+  - id: sandbox_filesystem
+    kind: filesystem_write
+    summary: The Instance AI workspace writes workflow source files in a sandbox filesystem; the documented
+      workspace is destroyed on server shutdown.
+  - id: sandbox_process_execution
+    kind: process_spawn
+    summary: Sandbox workflow building executes TypeScript and shell commands in the configured sandbox
+      runtime.
+  - id: output_logging
+    kind: log_write
+    summary: Output filtering can log redaction categories and counts, and durable Instance AI event persistence
+      can record coalesced run facts.
+evidence:
+- id: product_overview_1_1
+  kind: documentation
+  path: evidence/product_overview_1_1.md
+  supports:
+  - intent.summary
+  - scope
+  - provides.capabilities.n8n.platform.workflow_automation
+  - interfaces.inbound.n8n_startup
+- id: instance_ai_overview_1_1
+  kind: documentation
+  path: evidence/instance_ai_overview_1_1.md
+  supports:
+  - intent.summary
+  - scope.includes
+  - provides.capabilities.n8n.platform.ai_agent_assistance
+  - provides.capabilities.n8n.platform.workflow_resource_tools
+  - provides.capabilities.n8n.platform.sandboxed_workflow_building
+  - constraints.sandbox_required_for_builder
+  - interfaces.inbound.instance_ai_request
+- id: instance_ai_tools_1_1
+  kind: documentation
+  path: evidence/instance_ai_tools_1_1.md
+  supports:
+  - provides.capabilities.n8n.platform.workflow_resource_tools
+  - provides.capabilities.n8n.platform.workflow_verification
+  - interfaces.inbound.workflow_tool_input
+  - interfaces.outbound.workflow_backend
+  - constraints.simulation_boundary
+  - effects.workflow_state_mutation
+- id: instance_ai_configuration_1_1
+  kind: documentation
+  path: evidence/instance_ai_configuration_1_1.md
+  supports:
+  - interfaces.inbound.instance_ai_configuration
+  - constraints.model_required
+  - constraints.sandbox_service_url_required
+  - effects.database_persistence
+  - effects.network_calls
+  - effects.sandbox_filesystem
+  - effects.sandbox_process_execution
+  - effects.output_logging
+- id: instance_ai_sandbox_1_1
+  kind: documentation
+  path: evidence/instance_ai_sandbox_1_1.md
+  supports:
+  - provides.capabilities.n8n.platform.sandboxed_workflow_building
+  - interfaces.outbound.sandbox_provider
+  - effects.sandbox_filesystem
+  - effects.sandbox_process_execution
+- id: license_terms_1_1
+  kind: documentation
+  path: evidence/license_terms_1_1.md
+  supports:
+  - constraints.license_restrictions
+  - scope.excludes
+- id: license_terms_2_1
+  kind: documentation
+  path: evidence/license_terms_2_1.md
+  supports:
+  - constraints.license_restrictions
+  - scope.excludes
+- id: curation_record
+  kind: documentation
+  path: evidence/curation.json
+  supports:
+  - provenance.sourceConfidence
+  - constraints.producer_output_not_authority
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: medium
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []

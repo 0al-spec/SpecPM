@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/openai/codex",
+  "revision": "16d7daad7c5dc73da8558102a65bb7d7709807e1",
+  "producer": {
+    "repository": "https://github.com/0al-spec/SpecHarvester",
+    "revision": "a460f1af79c563866512d50f4d977e9b39e47f12",
+    "archivePath": "SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz",
+    "archiveSha256": "e36def1ee027d04f36fba97bdf63da51f564aabf56e439e83eb62a394eb93ac5",
+    "candidate": "openai-codex",
+    "model": "gpt-5.6-luna",
+    "reasoningEffort": "medium",
+    "originalFiles": {
+      "evidence/license-notice.md": "79fc0cc228c30f915b1227fd4715af9283291610d67cc12393e9a48c40de9901",
+      "evidence/product-overview.md": "ce33e0591251861a5fb26e392c92ed4f30e1fe7c0600cb1c11fd8359a353e7b9",
+      "evidence/python-sdk.md": "d998c022e780d2d1797db3bb7f890b42ddbc20f08e063869137b311d4a0a9291",
+      "evidence/typescript-sdk.md": "0d11a96b568b1405a402bea571b465348726104ad8b43281ee51e999c1f86774",
+      "specpm.yaml": "c708946294d673ec9f2b230fae798b5007dbc7c87cc4c74d845eb5e572af823d",
+      "specs/main.spec.yaml": "38b25b1a95e1cb64b72de218883805f22ef72901c514c23b104a009406336f9b"
+    }
+  },
+  "review": {
+    "method": "AI-assisted static source review",
+    "runtimeExecuted": false,
+    "upstreamEndorsement": false,
+    "acceptance": "SpecPM maintainer acceptance through catalog PR merge",
+    "specStatus": "draft",
+    "sourceRedistribution": "selected_verbatim_evidence"
+  },
+  "evidence": [
+    {
+      "path": "evidence/product_overview_1_1.md",
+      "sourcePath": "README.md",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/README.md#L1-L81",
+      "sourceLines": [
+        1,
+        81
+      ],
+      "sourceSha256": "ba4e1f69ff48386e72a9c5e1edaf76aad64a475c2d51af79ccba6d1128261ba7",
+      "artifactSha256": "ba4e1f69ff48386e72a9c5e1edaf76aad64a475c2d51af79ccba6d1128261ba7",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/typescript_sdk_documentation_1_1.md",
+      "sourcePath": "sdk/typescript/README.md",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/sdk/typescript/README.md#L1-L149",
+      "sourceLines": [
+        1,
+        149
+      ],
+      "sourceSha256": "1d3787c793afa4b32b00bb538e079f313259c84b65e5c1f4192190052737242e",
+      "artifactSha256": "1d3787c793afa4b32b00bb538e079f313259c84b65e5c1f4192190052737242e",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/python_sdk_documentation_1_1.md",
+      "sourcePath": "sdk/python/README.md",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/sdk/python/README.md#L1-L74",
+      "sourceLines": [
+        1,
+        74
+      ],
+      "sourceSha256": "a2b0ca0160239ad8b816067df782d68be0831cbaa7a80bf85d2e39e8f2bf0cb7",
+      "artifactSha256": "a2b0ca0160239ad8b816067df782d68be0831cbaa7a80bf85d2e39e8f2bf0cb7",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/python_sdk_documentation_2_1.py",
+      "sourcePath": "sdk/python/src/openai_codex/client.py",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/sdk/python/src/openai_codex/client.py#L212-L269",
+      "sourceLines": [
+        212,
+        269
+      ],
+      "sourceSha256": "76bdb1e63c62987c3530ea763e9655a06b308cbc4e18cb51958e85b6c23aec3b",
+      "artifactSha256": "2137865cd5c3c4ec9f929eb718af2ad4897d15c92f45ad06e2454a1fc970e725",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/license_notice_1_1.txt",
+      "sourcePath": "LICENSE",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/LICENSE#L1-L201",
+      "sourceLines": [
+        1,
+        201
+      ],
+      "sourceSha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+      "artifactSha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/license_notice_2_1.txt",
+      "sourcePath": "NOTICE",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/NOTICE#L1-L6",
+      "sourceLines": [
+        1,
+        6
+      ],
+      "sourceSha256": "9d71575ecfd9a843fc1677b0efb08053c6ba9fd686a0de1a6f5382fd3c220915",
+      "artifactSha256": "9d71575ecfd9a843fc1677b0efb08053c6ba9fd686a0de1a6f5382fd3c220915",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/installation_documentation_1_1.md",
+      "sourcePath": "docs/install.md",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/docs/install.md#L1-L65",
+      "sourceLines": [
+        1,
+        65
+      ],
+      "sourceSha256": "1126ec733921878a40720e139ba7be88e325ecf9fa5b113de2cc636bc71a1f5a",
+      "artifactSha256": "1126ec733921878a40720e139ba7be88e325ecf9fa5b113de2cc636bc71a1f5a",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/upstream-LICENSE",
+      "sourcePath": "LICENSE",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/LICENSE",
+      "sourceLines": [
+        1,
+        201
+      ],
+      "sourceSha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+      "artifactSha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/upstream-NOTICE",
+      "sourcePath": "NOTICE",
+      "sourceUrl": "https://github.com/openai/codex/blob/16d7daad7c5dc73da8558102a65bb7d7709807e1/NOTICE",
+      "sourceLines": [
+        1,
+        6
+      ],
+      "sourceSha256": "9d71575ecfd9a843fc1677b0efb08053c6ba9fd686a0de1a6f5382fd3c220915",
+      "artifactSha256": "9d71575ecfd9a843fc1677b0efb08053c6ba9fd686a0de1a6f5382fd3c220915",
+      "mode": "verbatim"
+    }
+  ]
+}

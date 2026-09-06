@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/rtk-ai/rtk",
+  "revision": "7da2674073394194754a228d346189a74869e6ba",
+  "producer": {
+    "repository": "https://github.com/0al-spec/SpecHarvester",
+    "revision": "a460f1af79c563866512d50f4d977e9b39e47f12",
+    "archivePath": "SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz",
+    "archiveSha256": "e36def1ee027d04f36fba97bdf63da51f564aabf56e439e83eb62a394eb93ac5",
+    "candidate": "rtk-ai-rtk",
+    "model": "gpt-5.6-luna",
+    "reasoningEffort": "medium",
+    "originalFiles": {
+      "evidence/configuration-excerpt.md": "5b553f2255b1392b41db26f7984cf3ebbe349134cd7b0162cb5d9f588dbcc712",
+      "evidence/main-excerpt.rs": "65d547f71bdfa92d0848cfbc1724646ca9a8b9cc6e6c46b1a748c80038f31190",
+      "evidence/readme-excerpt.md": "e03d26a369db3379b0def50ed34b6053fe4bf31868330f4e21edb870bb64135c",
+      "evidence/rewrite-excerpt.rs": "92715332c8bb48bf2515316f5f3229dc4ba4e2e54c4e4bffd0e199d1a25e8b12",
+      "evidence/runner-excerpt.rs": "85b1f2b3b5c876c6fad31115fbfa93aec8f94a22aff0389a3714ae2d3e81033b",
+      "evidence/search-compress-excerpt.rs": "fd03b895025d4bd5b38ae11c7af878b5a9f1da6066dc92ab2b84e7839e5e7c11",
+      "evidence/source-notes.md": "8d01530304478ec991d0ff164b94f69866fc2d14aed9d0f0464d8040892a7c11",
+      "specpm.yaml": "a937eb9d1c9eda840a327027c380d22750184e8ea8fe068b3fd12940a6996992",
+      "specs/main.spec.yaml": "7259157dedc8e4675fc4f133b6914391ce7f12ecf767c9cd3e65e89f70ea8048"
+    }
+  },
+  "review": {
+    "method": "AI-assisted static source review",
+    "runtimeExecuted": false,
+    "upstreamEndorsement": false,
+    "acceptance": "SpecPM maintainer acceptance through catalog PR merge",
+    "specStatus": "draft",
+    "sourceRedistribution": "selected_verbatim_evidence"
+  },
+  "evidence": [
+    {
+      "path": "evidence/readme_product_1_1.md",
+      "sourcePath": "README.md",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/README.md#L1-L527",
+      "sourceLines": [
+        1,
+        527
+      ],
+      "sourceSha256": "9eedab13449e48321140887bad972786f1faa25ac5b4120f0259f4086dd601e9",
+      "artifactSha256": "9eedab13449e48321140887bad972786f1faa25ac5b4120f0259f4086dd601e9",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/configuration_docs_1_1.md",
+      "sourcePath": "docs/guide/getting-started/configuration.md",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/docs/guide/getting-started/configuration.md#L1-L150",
+      "sourceLines": [
+        1,
+        150
+      ],
+      "sourceSha256": "3ffa553ac613adbf275ddcad1c0be2e91484fe83bfeb8865e043f48654bb86e4",
+      "artifactSha256": "3ffa553ac613adbf275ddcad1c0be2e91484fe83bfeb8865e043f48654bb86e4",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/cli_boundary_1_1.rs",
+      "sourcePath": "src/main.rs",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/src/main.rs#L625-L660",
+      "sourceLines": [
+        625,
+        660
+      ],
+      "sourceSha256": "695842e2f300dfe18c0dd00f097fefd59c82e7245eb911589757e14ba742752c",
+      "artifactSha256": "1aa248d0e671d764f4cac5d4a93549de3a461cc163732dbc58cef414cfbfcbb8",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/cli_boundary_1_2.rs",
+      "sourcePath": "src/main.rs",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/src/main.rs#L825-L855",
+      "sourceLines": [
+        825,
+        855
+      ],
+      "sourceSha256": "695842e2f300dfe18c0dd00f097fefd59c82e7245eb911589757e14ba742752c",
+      "artifactSha256": "029bb633cd6c3fb0fa94a2e642814581d2673736702b6eec3c7d5af1fd8413e3",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/cli_boundary_1_3.rs",
+      "sourcePath": "src/main.rs",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/src/main.rs#L2480-L2520",
+      "sourceLines": [
+        2480,
+        2520
+      ],
+      "sourceSha256": "695842e2f300dfe18c0dd00f097fefd59c82e7245eb911589757e14ba742752c",
+      "artifactSha256": "2ed8842d7bce47da3a8aa999e8f223f474e7824eed439ecb585d9eb25e290e1a",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/runner_behavior_1_1.rs",
+      "sourcePath": "src/core/runner.rs",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/src/core/runner.rs#L1-L286",
+      "sourceLines": [
+        1,
+        286
+      ],
+      "sourceSha256": "10735ee99a3a1ae99e19bf2f1b0b902dc0246c9e3e014e66abbf4441c0ac6dcc",
+      "artifactSha256": "10735ee99a3a1ae99e19bf2f1b0b902dc0246c9e3e014e66abbf4441c0ac6dcc",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/rewrite_behavior_1_1.rs",
+      "sourcePath": "src/hooks/rewrite_cmd.rs",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/src/hooks/rewrite_cmd.rs#L1-L80",
+      "sourceLines": [
+        1,
+        80
+      ],
+      "sourceSha256": "f51ef85e22df0087dd1b5ff0ccff10e87adca2454e66522a4c9b8ea569727a84",
+      "artifactSha256": "b2383ba97e2613d841a11801ef58c91e9bf36c25921326f805c71ed4b1f26fdb",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/compression_tests_1_1.rs",
+      "sourcePath": "tests/search_compress_test.rs",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/tests/search_compress_test.rs#L1-L378",
+      "sourceLines": [
+        1,
+        378
+      ],
+      "sourceSha256": "a28ee4d6537153e06c6e96081b0114d623033831122bdd08b415c795ac809640",
+      "artifactSha256": "a28ee4d6537153e06c6e96081b0114d623033831122bdd08b415c795ac809640",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/upstream-LICENSE",
+      "sourcePath": "LICENSE",
+      "sourceUrl": "https://github.com/rtk-ai/rtk/blob/7da2674073394194754a228d346189a74869e6ba/LICENSE",
+      "sourceLines": [
+        1,
+        190
+      ],
+      "sourceSha256": "4044ade9c21d8b084d3d16a03375cf3b7e166b946a327bb37a3fbbdb53287cfd",
+      "artifactSha256": "4044ade9c21d8b084d3d16a03375cf3b7e166b946a327bb37a3fbbdb53287cfd",
+      "mode": "verbatim"
+    }
+  ]
+}

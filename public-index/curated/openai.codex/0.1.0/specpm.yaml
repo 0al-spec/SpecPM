@@ -1,0 +1,49 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: openai.codex
+  name: OpenAI Codex Local Coding Agent
+  version: 0.1.0
+  summary: Local coding agent usable through a CLI or embedded through TypeScript and Python SDKs for
+    repository-oriented turns, streaming progress, structured results and controlled workspace access.
+  license: Apache-2.0
+  authors:
+  - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+- path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+    - openai.codex.local_agent_turns
+    - openai.codex.typescript_embedding
+    - openai.codex.python_embedding
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+  - macOS 12+
+  - Ubuntu 20.04+
+  - Debian 10+
+  - Windows 11 via WSL2
+  languages:
+  - Rust
+  - TypeScript
+  - Python
+keywords:
+- coding-agent
+- CLI
+- SDK
+- repository-automation
+- streaming
+foreignArtifacts:
+- id: upstream_repository
+  role: primary_intent_source
+  uri: https://github.com/openai/codex
+  revision: 16d7daad7c5dc73da8558102a65bb7d7709807e1
+- id: producer_original_archive
+  role: documentation
+  uri: https://github.com/0al-spec/SpecHarvester/blob/a460f1af79c563866512d50f4d977e9b39e47f12/SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz
+  revision: a460f1af79c563866512d50f4d977e9b39e47f12
+- id: curation_receipt
+  role: documentation
+  path: evidence/curation.json

@@ -1,0 +1,240 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: openai.codex
+  title: OpenAI Codex Local Agent and Application Integration Boundary
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Help a developer use a locally running Codex coding agent for repository tasks, either interactively
+    through the CLI or programmatically through the TypeScript and Python SDK surfaces.
+scope:
+  boundedContext: local_coding_agent_and_sdk_integration
+  includes:
+  - The locally running Codex CLI and its documented installation and repository-oriented execution surface.
+  - TypeScript SDK embedding through threads, turns, streaming events, structured output schemas, image
+    inputs and thread resumption.
+  - Python SDK embedding through synchronous Codex threads and the app-server JSON-RPC client over stdio.
+  - Configuration of working directory, environment and CLI config overrides where documented by the SDK
+    materials.
+  excludes:
+  - The Codex desktop application, IDE integrations and cloud-based Codex Web service.
+  - A guarantee of model quality, task completion, latency, throughput or availability.
+  - Detailed sandbox, approval, authentication protocol and app-server method semantics not present in
+    the pinned snapshot.
+  - Upstream release publication, certification, canonical intent mappings or security approval.
+  - Upstream author endorsement, runtime conformance certification, and claims about revisions other than
+    the pinned source.
+provides:
+  capabilities:
+  - id: openai.codex.local_agent_turns
+    role: primary
+    summary: Run a local coding-agent turn from the Codex CLI against a repository-oriented working context
+      and receive the agent result through the CLI surface.
+  - id: openai.codex.typescript_embedding
+    role: supporting
+    summary: Embed Codex in a Node.js 18+ application using TypeScript threads, repeated turns, streamed
+      structured events, JSON-schema output, local image inputs and resumable thread IDs.
+  - id: openai.codex.python_embedding
+    role: supporting
+    summary: Embed Codex in a Python application using the Python SDK for thread turns and a typed app-server
+      JSON-RPC client launched over stdio, with caller-provided approval handling.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+  - id: codex_cli
+    kind: cli
+    summary: Invoke the installed `codex` executable for interactive local coding-agent use; the snapshot
+      also documents `codex exec` as a non-interactive mode, but its detailed input and output contract
+      is outside this snapshot.
+    inputs:
+    - name: operator_prompt
+      mediaTypes:
+      - text/plain
+    - name: working_repository
+      mediaTypes:
+      - application/octet-stream
+    outputs:
+    - name: agent_response
+      mediaTypes:
+      - text/plain
+  - id: typescript_thread
+    kind: library
+    summary: Construct `Codex`, call `startThread()` or `resumeThread(id)`, then call `thread.run(input,
+      options)` for a completed turn or `runStreamed(input, options)` for an async generator of structured
+      events.
+    inputs:
+    - name: text_or_local_images
+      mediaTypes:
+      - text/plain
+      - image/*
+    - name: output_schema
+      mediaTypes:
+      - application/schema+json
+    outputs:
+    - name: turn_result_or_events
+      mediaTypes:
+      - application/json
+  - id: python_thread
+    kind: library
+    summary: Construct a Python `Codex` client, start a thread and run a turn; the documented result contains
+      a final response, collected items and token usage.
+    inputs:
+    - name: text_prompt
+      mediaTypes:
+      - text/plain
+    outputs:
+    - name: turn_result
+      mediaTypes:
+      - application/json
+  outbound:
+  - id: local_codex_process
+    kind: cli
+    summary: SDK calls launch or wrap the local Codex CLI process; the Python app-server client starts
+      `codex app-server --listen stdio://` and exchanges typed JSON-RPC messages over standard streams.
+  - id: thread_session_store
+    kind: file
+    summary: TypeScript documentation identifies `~/.codex/sessions` as the persistence location used
+      when resuming an existing thread.
+  - id: configured_workspace
+    kind: file
+    summary: The agent operates with a caller-selected working directory and may receive caller-selected
+      environment and CLI configuration overrides through SDK options.
+constraints:
+- id: node_runtime
+  level: MUST
+  statement: TypeScript SDK consumers must provide Node.js 18 or newer.
+- id: python_runtime
+  level: MUST
+  statement: Python SDK consumers must install openai-codex and provide a compatible Python runtime; the
+    inspected SDK README does not establish a minimum version.
+- id: repository_context
+  level: MUST
+  statement: TypeScript SDK threads use the current working directory by default and require a Git repository
+    unless the caller explicitly enables `skipGitRepoCheck`.
+- id: authentication
+  level: MUST
+  statement: A caller must arrange Codex authentication before relying on a turn; the snapshot documents
+    reuse of existing authentication and separate ChatGPT or API-key setup, but does not define the complete
+    protocol.
+- id: credential_handling
+  level: MUST
+  statement: Applications must keep authentication material outside portable package evidence and must
+    control inherited environment variables when embedding the CLI.
+- id: approval_boundary
+  level: MUST
+  statement: Applications embedding the Python app-server client must supply an approval policy appropriate
+    to their host; the snapshot exposes an approval handler but does not establish a default security
+    policy.
+- id: producer_output_not_authority
+  level: MUST
+  statement: Treat this third-party, AI-assisted description as discovery metadata. Catalog acceptance
+    does not certify runtime behavior, safety, or upstream endorsement.
+effects:
+  sideEffects:
+  - id: process_spawn
+    kind: process_spawn
+    summary: The SDK starts or communicates with a local Codex CLI process.
+  - id: filesystem_read
+    kind: filesystem_read
+    summary: The agent and SDK may read the configured workspace and TypeScript thread state needed for
+      resumed sessions.
+  - id: filesystem_write
+    kind: filesystem_write
+    summary: Coding-agent operation may modify the configured workspace; the pinned snapshot does not
+      bound which files a successful task may change.
+  - id: network_call
+    kind: network_read
+    summary: Authentication and agent operation may use network services, but the pinned source snapshot
+      does not provide a complete endpoint or network policy contract.
+  - id: log_write
+    kind: log_write
+    summary: The CLI can emit diagnostic logging, including a configured plaintext TUI log directory,
+      while non-interactive mode prints messages inline according to the getting-started documentation.
+evidence:
+- id: product_overview_1_1
+  kind: documentation
+  path: evidence/product_overview_1_1.md
+  supports:
+  - intent.summary
+  - scope
+  - scope.includes
+  - scope.excludes
+  - provides.capabilities.openai.codex.local_agent_turns
+  - interfaces.inbound.codex_cli
+  - constraints.authentication
+  - effects.sideEffects.network_call
+- id: typescript_sdk_documentation_1_1
+  kind: documentation
+  path: evidence/typescript_sdk_documentation_1_1.md
+  supports:
+  - scope.includes
+  - provides.capabilities.openai.codex.typescript_embedding
+  - interfaces.inbound.typescript_thread
+  - interfaces.outbound.thread_session_store
+  - interfaces.outbound.configured_workspace
+  - constraints.node_runtime
+  - constraints.repository_context
+  - effects.sideEffects.filesystem_read
+- id: python_sdk_documentation_1_1
+  kind: documentation
+  path: evidence/python_sdk_documentation_1_1.md
+  supports:
+  - scope.includes
+  - provides.capabilities.openai.codex.python_embedding
+  - interfaces.inbound.python_thread
+  - interfaces.outbound.local_codex_process
+  - constraints.python_runtime
+  - constraints.approval_boundary
+  - effects.sideEffects.process_spawn
+- id: python_sdk_documentation_2_1
+  kind: documentation
+  path: evidence/python_sdk_documentation_2_1.py
+  supports:
+  - scope.includes
+  - provides.capabilities.openai.codex.python_embedding
+  - interfaces.inbound.python_thread
+  - interfaces.outbound.local_codex_process
+  - constraints.python_runtime
+  - constraints.approval_boundary
+  - effects.sideEffects.process_spawn
+- id: license_notice_1_1
+  kind: documentation
+  path: evidence/license_notice_1_1.txt
+  supports:
+  - provenance.sourceConfidence
+- id: license_notice_2_1
+  kind: documentation
+  path: evidence/license_notice_2_1.txt
+  supports:
+  - provenance.sourceConfidence
+- id: installation_documentation_1_1
+  kind: documentation
+  path: evidence/installation_documentation_1_1.md
+  supports:
+  - interfaces.inbound.codex_cli
+  - effects.sideEffects.log_write
+- id: upstream_notice_0
+  kind: documentation
+  path: evidence/upstream-LICENSE
+  supports:
+  - provenance.sourceConfidence
+- id: upstream_notice_1
+  kind: documentation
+  path: evidence/upstream-NOTICE
+  supports:
+  - provenance.sourceConfidence
+- id: curation_record
+  kind: documentation
+  path: evidence/curation.json
+  supports:
+  - provenance.sourceConfidence
+  - constraints.producer_output_not_authority
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: high
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []

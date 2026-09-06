@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/axios/axios",
+  "revision": "509719387e4993392ca40da03a49678269cdfb90",
+  "producer": {
+    "repository": "https://github.com/0al-spec/SpecHarvester",
+    "revision": "a460f1af79c563866512d50f4d977e9b39e47f12",
+    "archivePath": "SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz",
+    "archiveSha256": "e36def1ee027d04f36fba97bdf63da51f564aabf56e439e83eb62a394eb93ac5",
+    "candidate": "axios-axios",
+    "model": "gpt-5.6-luna",
+    "reasoningEffort": "medium",
+    "originalFiles": {
+      "evidence/LICENSE": "82761059eaedacb3356803aea8a170d8298609f91b14fc32ee1bfb40d690183c",
+      "evidence/README-excerpt.md": "f704476b1ee8d5508766b87511344da515f80ccc89dd3c00dbc94d5c81f46e93",
+      "evidence/index-types-excerpt.md": "45a28972350170bfe5abf7a8088bd66e33103f36241b4811f4eeb1411faf6edf",
+      "evidence/package-metadata.md": "0ee091dfd759f2de83e12731ba682cca13e4d011e0954019057f32b30aae2a3e",
+      "evidence/source-notes.md": "b025211fc4badd6e81cb9494f92caa47ef5802d2172929ee8f0c397a77915454",
+      "specpm.yaml": "980cbe90a41f5ad9d0457d2b38c265467ac5fd07c8bb0f66b7d24f3d73bf182b",
+      "specs/main.spec.yaml": "2f9e85dac985461e95bb286ab606278abe65aced4804d1e82b647cf1749bc1c1"
+    }
+  },
+  "review": {
+    "method": "AI-assisted static source review",
+    "runtimeExecuted": false,
+    "upstreamEndorsement": false,
+    "acceptance": "SpecPM maintainer acceptance through catalog PR merge",
+    "specStatus": "draft",
+    "sourceRedistribution": "selected_verbatim_evidence"
+  },
+  "evidence": [
+    {
+      "path": "evidence/readme_product_and_usage_1_1.md",
+      "sourcePath": "README.md",
+      "sourceUrl": "https://github.com/axios/axios/blob/509719387e4993392ca40da03a49678269cdfb90/README.md#L1-L2623",
+      "sourceLines": [
+        1,
+        2623
+      ],
+      "sourceSha256": "4db033f8e5c39cc3427078df94ebe079a37a7c6e557180e6f616638af5e3358f",
+      "artifactSha256": "4db033f8e5c39cc3427078df94ebe079a37a7c6e557180e6f616638af5e3358f",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/public_type_surface_1_1.ts",
+      "sourcePath": "index.d.ts",
+      "sourceUrl": "https://github.com/axios/axios/blob/509719387e4993392ca40da03a49678269cdfb90/index.d.ts#L1-L783",
+      "sourceLines": [
+        1,
+        783
+      ],
+      "sourceSha256": "3768eb0975f030352ec96190aaa485af41910029d9a62d9c70557c976b30a6f7",
+      "artifactSha256": "3768eb0975f030352ec96190aaa485af41910029d9a62d9c70557c976b30a6f7",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/license_notice_1_1.txt",
+      "sourcePath": "LICENSE",
+      "sourceUrl": "https://github.com/axios/axios/blob/509719387e4993392ca40da03a49678269cdfb90/LICENSE#L1-L7",
+      "sourceLines": [
+        1,
+        7
+      ],
+      "sourceSha256": "82761059eaedacb3356803aea8a170d8298609f91b14fc32ee1bfb40d690183c",
+      "artifactSha256": "82761059eaedacb3356803aea8a170d8298609f91b14fc32ee1bfb40d690183c",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/package_metadata_1_1.json",
+      "sourcePath": "package.json",
+      "sourceUrl": "https://github.com/axios/axios/blob/509719387e4993392ca40da03a49678269cdfb90/package.json#L1-L203",
+      "sourceLines": [
+        1,
+        203
+      ],
+      "sourceSha256": "c9afce8c65c9fadaebaac41ca90db26779efdc5e95aeca49b4e9477b61bcc4b2",
+      "artifactSha256": "c9afce8c65c9fadaebaac41ca90db26779efdc5e95aeca49b4e9477b61bcc4b2",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/upstream-LICENSE",
+      "sourcePath": "LICENSE",
+      "sourceUrl": "https://github.com/axios/axios/blob/509719387e4993392ca40da03a49678269cdfb90/LICENSE",
+      "sourceLines": [
+        1,
+        7
+      ],
+      "sourceSha256": "82761059eaedacb3356803aea8a170d8298609f91b14fc32ee1bfb40d690183c",
+      "artifactSha256": "82761059eaedacb3356803aea8a170d8298609f91b14fc32ee1bfb40d690183c",
+      "mode": "verbatim"
+    }
+  ]
+}

@@ -1,0 +1,254 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: bitcoin.core.fullnode
+  title: Bitcoin Core Full Node Boundary
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Help an operator run a Bitcoin network node that downloads and fully validates blocks and transactions,
+    and optionally operate wallets through local or configured RPC and GUI surfaces.
+scope:
+  boundedContext: bitcoin_core_full_node_with_optional_wallet_and_gui
+  includes:
+  - The Bitcoin Core node and daemon entry points described by the pinned repository snapshot.
+  - The authenticated JSON-RPC server and bitcoin-cli client for node and wallet operations.
+  - The optional wallet component, bitcoin-wallet tool, and bitcoin-qt graphical interface when enabled
+    or built.
+  excludes:
+  - A guarantee that the snapshot's development branch is stable or suitable for production without separate
+    release and operational review.
+  - Complete enumeration of RPC methods, wallet policy, GUI workflows, build dependencies, resource requirements,
+    or runtime performance.
+  - Security isolation or confidentiality guarantees beyond the documented configuration and access warnings.
+  - Upstream author endorsement, runtime conformance certification, and claims about revisions other than
+    the pinned source.
+  - A typed P2P wire-protocol interface; peer traffic is described only by capabilities and network effects.
+provides:
+  capabilities:
+  - id: bitcoin.core.fullnode.validate_and_sync
+    role: primary
+    summary: Connect to the Bitcoin peer-to-peer network to download and fully validate blocks and transactions,
+      using bitcoind or the node-capable Bitcoin Core entry point.
+  - id: bitcoin.core.rpc_control
+    role: primary
+    summary: Expose authenticated JSON-RPC node and wallet operations through documented root and wallet-specific
+      endpoints, callable with bitcoin-cli or another JSON-RPC client.
+  - id: bitcoin.core.wallet_and_gui
+    role: supporting
+    summary: Provide optional wallet functionality and a graphical node and wallet interface when the
+      wallet and GUI components are enabled and built.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+  - id: node_process
+    kind: cli
+    summary: Run the installed `bitcoind` headless daemon, or use the `bitcoin node` wrapper subcommand;
+      the process maintains node state and serves configured interfaces.
+    inputs:
+    - name: command_line_options
+      mediaTypes:
+      - text/plain
+    - name: bitcoin.conf
+      mediaTypes:
+      - text/plain
+  - id: rpc_request
+    kind: http
+    summary: Send authenticated JSON-RPC requests to `/` for non-wallet calls and single-wallet cases,
+      or `/wallet/<walletname>/` for wallet calls when multiple wallets are loaded. Requests may use positional
+      or named parameters and JSON-RPC 1.1 or 2.0 markers.
+    inputs:
+    - name: JSON-RPC request
+      mediaTypes:
+      - application/json
+    outputs:
+    - name: JSON-RPC response
+      mediaTypes:
+      - application/json
+  - id: gui_process
+    kind: cli
+    summary: Run `bitcoin-qt` or the `bitcoin gui` wrapper when the GUI is built; the GUI can execute
+      RPC methods in its Debug Console Dialog.
+    inputs:
+    - name: command_line_options
+      mediaTypes:
+      - text/plain
+  outbound:
+  - id: node_data_directory
+    kind: file
+    summary: Read and write node data, configuration, logs, runtime files, chainstate and optional indexes
+      in the configured data directory.
+  - id: wallet_storage
+    kind: file
+    summary: Read and write wallet databases and wallet-related files when wallet support is enabled;
+      wallet files must not be shared across node instances.
+constraints:
+- id: rpc_authentication
+  level: MUST
+  statement: RPC clients must provide valid authentication credentials; the documented default is local-computer
+    access, and remote RPC must be separately configured.
+- id: rpc_network_security
+  level: MUST
+  statement: Do not expose RPC to the public Internet; the documented RPC transport does not encrypt credentials,
+    and system-level isolation is recommended for security-sensitive operations.
+- id: wallet_endpoint_selection
+  level: MUST
+  statement: Use `/wallet/<walletname>/` for wallet requests when two or more wallets are loaded.
+- id: restart_configuration
+  level: MUST
+  statement: Changes to bitcoin.conf while bitcoind or bitcoin-qt is running take effect only after restart.
+- id: wallet_instance_exclusivity
+  level: MUST
+  statement: Do not share wallet.dat files across different node instances because unsynchronized instances
+    can cause key reuse and double-spends.
+- id: gui_build_option
+  level: MAY
+  statement: The GUI is optional and is built by enabling the BUILD_GUI CMake option; wallet support is
+    separately controlled by ENABLE_WALLET.
+- id: producer_output_not_authority
+  level: MUST
+  statement: Treat this third-party, AI-assisted description as discovery metadata. Catalog acceptance
+    does not certify runtime behavior, safety, or upstream endorsement.
+effects:
+  sideEffects:
+  - id: p2p_receive
+    kind: network_read
+    summary: Receives blocks and transactions from the Bitcoin peer-to-peer network.
+  - id: p2p_connections
+    kind: network_write
+    summary: Uses network connections as part of operating the peer-to-peer node; exact connection policy
+      is not characterized by this candidate.
+  - id: node_state_write
+    kind: filesystem_write
+    summary: Writes blockchain state, logs, runtime files, settings and optional indexes in the data directory.
+  - id: wallet_state_write
+    kind: filesystem_write
+    summary: Writes wallet databases and related wallet state when wallet functionality is enabled.
+  - id: rpc_state_mutation
+    kind: state_mutation
+    summary: RPC clients can control the node and perform wallet operations, including operations that
+      may spend funds or change settings.
+  - id: diagnostic_logging
+    kind: log_write
+    summary: Writes debug information and general logging to the configured debug log.
+evidence:
+- id: product_overview_1_1
+  kind: documentation
+  path: evidence/product_overview_1_1.md
+  supports:
+  - intent.summary
+  - scope
+  - provides.capabilities.bitcoin.core.fullnode.validate_and_sync
+  - provides.capabilities.bitcoin.core.wallet_and_gui
+  - constraints.gui_build_option
+  - provenance.sourceConfidence
+- id: product_overview_2_1
+  kind: documentation
+  path: evidence/product_overview_2_1.md
+  supports:
+  - intent.summary
+  - scope
+  - provides.capabilities.bitcoin.core.fullnode.validate_and_sync
+  - provides.capabilities.bitcoin.core.wallet_and_gui
+  - constraints.gui_build_option
+  - provenance.sourceConfidence
+- id: build_options_1_1
+  kind: package_manifest
+  path: evidence/build_options_1_1.txt
+  supports:
+  - scope.includes
+  - provides.capabilities.bitcoin.core.fullnode.validate_and_sync
+  - provides.capabilities.bitcoin.core.rpc_control
+  - provides.capabilities.bitcoin.core.wallet_and_gui
+  - constraints.gui_build_option
+- id: build_options_2_1
+  kind: package_manifest
+  path: evidence/build_options_2_1.txt
+  supports:
+  - scope.includes
+  - provides.capabilities.bitcoin.core.fullnode.validate_and_sync
+  - provides.capabilities.bitcoin.core.rpc_control
+  - provides.capabilities.bitcoin.core.wallet_and_gui
+  - constraints.gui_build_option
+- id: build_options_2_2
+  kind: package_manifest
+  path: evidence/build_options_2_2.txt
+  supports:
+  - scope.includes
+  - provides.capabilities.bitcoin.core.fullnode.validate_and_sync
+  - provides.capabilities.bitcoin.core.rpc_control
+  - provides.capabilities.bitcoin.core.wallet_and_gui
+  - constraints.gui_build_option
+- id: build_options_2_3
+  kind: package_manifest
+  path: evidence/build_options_2_3.txt
+  supports:
+  - scope.includes
+  - provides.capabilities.bitcoin.core.fullnode.validate_and_sync
+  - provides.capabilities.bitcoin.core.rpc_control
+  - provides.capabilities.bitcoin.core.wallet_and_gui
+  - constraints.gui_build_option
+- id: build_options_2_4
+  kind: package_manifest
+  path: evidence/build_options_2_4.txt
+  supports:
+  - scope.includes
+  - provides.capabilities.bitcoin.core.fullnode.validate_and_sync
+  - provides.capabilities.bitcoin.core.rpc_control
+  - provides.capabilities.bitcoin.core.wallet_and_gui
+  - constraints.gui_build_option
+- id: rpc_documentation_1_1
+  kind: documentation
+  path: evidence/rpc_documentation_1_1.md
+  supports:
+  - provides.capabilities.bitcoin.core.rpc_control
+  - interfaces.inbound.rpc_request
+  - constraints.rpc_authentication
+  - constraints.rpc_network_security
+  - constraints.wallet_endpoint_selection
+  - effects.sideEffects.rpc_state_mutation
+- id: operational_files_1_1
+  kind: documentation
+  path: evidence/operational_files_1_1.md
+  supports:
+  - interfaces.inbound.node_process
+  - interfaces.inbound.gui_process
+  - interfaces.outbound.node_data_directory
+  - interfaces.outbound.wallet_storage
+  - constraints.restart_configuration
+  - constraints.wallet_instance_exclusivity
+  - effects.sideEffects.node_state_write
+  - effects.sideEffects.wallet_state_write
+  - effects.sideEffects.diagnostic_logging
+- id: operational_files_2_1
+  kind: documentation
+  path: evidence/operational_files_2_1.md
+  supports:
+  - interfaces.inbound.node_process
+  - interfaces.inbound.gui_process
+  - interfaces.outbound.node_data_directory
+  - interfaces.outbound.wallet_storage
+  - constraints.restart_configuration
+  - constraints.wallet_instance_exclusivity
+  - effects.sideEffects.node_state_write
+  - effects.sideEffects.wallet_state_write
+  - effects.sideEffects.diagnostic_logging
+- id: upstream_notice_0
+  kind: documentation
+  path: evidence/upstream-COPYING
+  supports:
+  - provenance.sourceConfidence
+- id: curation_record
+  kind: documentation
+  path: evidence/curation.json
+  supports:
+  - provenance.sourceConfidence
+  - constraints.producer_output_not_authority
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: high
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []
