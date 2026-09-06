@@ -88,3 +88,26 @@ def test_seed_review_corrections():
     for name in ("rtk.shell_output_proxy", "openai.codex", "bitcoin.core.fullnode"):
         receipt = json.loads((base / name / "0.1.0/evidence/curation.json").read_text())
         assert any(e["sourcePath"] in {"LICENSE", "COPYING"} for e in receipt["evidence"])
+
+
+@pytest.mark.parametrize(
+    ("package_id", "version", "effect_id"),
+    [
+        ("openai.codex", "0.1.0", "network_call"),
+        ("axios.http_client", "1.19.0", "external_http"),
+        ("n8n.platform", "0.1.0", "network_calls"),
+    ],
+)
+def test_remote_requests_declare_outbound_data_flow(package_id, version, effect_id):
+    root = ROOT / "public-index/curated" / package_id / version
+    spec = yaml.safe_load((root / "specs/main.spec.yaml").read_text())
+    effect = next(item for item in spec["effects"]["sideEffects"] if item["id"] == effect_id)
+    # Receiving a response does not make sending request data a read-only effect.
+    assert effect["kind"] == "network_write"
+    if package_id == "openai.codex":
+        for disclosure in ("prompts", "images", "repository context", "configured service"):
+            assert disclosure in effect["summary"]
+        evidence = next(
+            item for item in spec["evidence"] if item["id"] == "typescript_sdk_documentation_1_1"
+        )
+        assert "effects.sideEffects.network_call" in evidence["supports"]

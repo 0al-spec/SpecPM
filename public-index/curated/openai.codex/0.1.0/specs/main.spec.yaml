@@ -145,9 +145,11 @@ effects:
     summary: Coding-agent operation may modify the configured workspace; the pinned snapshot does not
       bound which files a successful task may change.
   - id: network_call
-    kind: network_read
-    summary: Authentication and agent operation may use network services, but the pinned source snapshot
-      does not provide a complete endpoint or network policy contract.
+    kind: network_write
+    summary: When using a remote model service, CLI and SDK turns send user prompts and may send supplied
+      images or repository context to the configured service. Authentication also uses network services.
+      Exact transmitted context, endpoints and network policy depend on configuration and are not fully
+      established by this snapshot; local agent execution does not imply local-only data processing.
   - id: log_write
     kind: log_write
     summary: The CLI can emit diagnostic logging, including a configured plaintext TUI log directory,
@@ -171,6 +173,7 @@ evidence:
   supports:
   - scope.includes
   - provides.capabilities.openai.codex.typescript_embedding
+  - effects.sideEffects.network_call
   - interfaces.inbound.typescript_thread
   - interfaces.outbound.thread_session_store
   - interfaces.outbound.configured_workspace

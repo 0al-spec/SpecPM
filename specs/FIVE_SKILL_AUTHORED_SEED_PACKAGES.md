@@ -75,3 +75,25 @@ pass for the new test file. Original archive bindings were independently checked
 for all 38 original candidate files. `make dev-reload` and `make dev-smoke` pass:
 the local catalog contains 14 package IDs and 15 versions. `make pages-smoke`
 passes for the existing deployed catalog (9 IDs, 10 versions), not these additions.
+
+## Review Follow-Up: Outbound Data Flow
+
+PR #141 identified an inherited semantic error: the Codex candidate classified
+remote agent requests as `network_read`, omitting the outbound disclosure of
+prompts and potentially images or repository context. The curated copy now uses
+`network_write`, describes those data categories and configuration-dependent
+limits, and links the effect to the SDK evidence covering inputs and API routing.
+
+The source evidence was available; this was not an evidence-access failure.
+The original candidate used the wrong classification, and curation failed to
+apply the Axios outbound-request correction consistently to Codex. Validation
+accepts both effect kinds and does not infer data flow from natural language.
+The initial tests checked structure, evidence integrity and packaging, not this
+semantic obligation. Passing those tests did not prove the effects were accurate.
+
+The regression suite now checks outbound request effects for Codex, Axios and
+n8n, including Codex disclosure text and its evidence link. Future source review
+must trace each boundary crossing: what leaves, where it goes, what returns,
+and which conditions apply. Receiving a response must not hide a request's
+outbound data. These bounded tests protect reviewed facts, not arbitrary future
+AI-authored descriptions; a general semantic guarantee is still not claimed.
