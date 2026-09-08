@@ -1,0 +1,46 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: rtk.shell_output_proxy
+  name: RTK Shell Output Compression Proxy
+  version: 0.1.0
+  summary: Rust CLI proxy that rewrites supported shell commands and compresses their output before an
+    AI agent reads it.
+  license: Apache-2.0
+  authors:
+  - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+- path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+    - rtk.shell_output_proxy.compress_output
+    - rtk.shell_output_proxy.rewrite_commands
+    - rtk.shell_output_proxy.passthrough_unknown
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+  - macOS
+  - Linux
+  - Windows
+  languages:
+  - Rust
+keywords:
+- shell
+- output-filtering
+- LLM
+- CLI
+- token-estimation
+foreignArtifacts:
+- id: upstream_repository
+  role: primary_intent_source
+  uri: https://github.com/rtk-ai/rtk
+  revision: 7da2674073394194754a228d346189a74869e6ba
+- id: producer_original_archive
+  role: documentation
+  uri: https://github.com/0al-spec/SpecHarvester/blob/a460f1af79c563866512d50f4d977e9b39e47f12/SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz
+  revision: a460f1af79c563866512d50f4d977e9b39e47f12
+- id: curation_receipt
+  role: documentation
+  path: evidence/curation.json

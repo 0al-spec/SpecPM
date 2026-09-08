@@ -1,0 +1,49 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: n8n.platform
+  name: n8n Workflow Automation and AI Agent Platform
+  version: 0.1.0
+  summary: Self-hostable workflow automation platform with a visual canvas, integrations, custom code,
+    and an Instance AI agent runtime for inspecting, building, and operating workflows.
+  license: Sustainable Use License; see source license evidence for restrictions and exceptions.
+  authors:
+  - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+- path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+    - n8n.platform.workflow_automation
+    - n8n.platform.ai_agent_assistance
+    - n8n.platform.workflow_resource_tools
+    - n8n.platform.sandboxed_workflow_building
+    - n8n.platform.workflow_verification
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+  - self-hosted server deployment
+  - n8n cloud deployment
+  languages:
+  - JavaScript
+  - Python
+  - TypeScript
+keywords:
+- workflow automation
+- AI agents
+- integrations
+- self-hosting
+- Instance AI
+foreignArtifacts:
+- id: upstream_repository
+  role: primary_intent_source
+  uri: https://github.com/n8n-io/n8n
+  revision: 082b5d9190f4bc81d93c6a94d6d4692bed4660ca
+- id: producer_original_archive
+  role: documentation
+  uri: https://github.com/0al-spec/SpecHarvester/blob/a460f1af79c563866512d50f4d977e9b39e47f12/SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz
+  revision: a460f1af79c563866512d50f4d977e9b39e47f12
+- id: curation_receipt
+  role: documentation
+  path: evidence/curation.json

@@ -1,0 +1,195 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: rtk.shell_output_proxy
+  title: RTK Shell Output Compression Proxy
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Help AI-agent workflows reduce shell-output context by executing supported commands through
+    RTK filters while preserving useful results and command exit status.
+scope:
+  boundedContext: rtk_cli_proxy_and_hook_rewrite
+  includes:
+  - The rtk CLI entry point for supported command wrappers, output filtering, tracking, and passthrough
+    execution.
+  - The rewrite boundary used by configured agent hooks to turn a raw supported shell command into its
+    rtk equivalent.
+  excludes:
+  - A guarantee that every shell command is supported or filtered; unrecognized commands pass through.
+  - A tokenizer, exact billing or universal token-cost reduction guarantee.
+  - Native agent tools that do not issue Bash tool calls through the configured hook path.
+  - The complete analytics, telemetry, custom-filter trust, and agent-specific hook implementations as
+    independent boundaries.
+  - Upstream author endorsement, runtime conformance certification, and claims about revisions other than
+    the pinned source.
+provides:
+  capabilities:
+  - id: rtk.shell_output_proxy.compress_output
+    role: primary
+    summary: Execute supported command wrappers, apply command-specific filtering such as grouping, truncation,
+      deduplication, or failure-only summaries, and emit compact output for agent consumption.
+  - id: rtk.shell_output_proxy.rewrite_commands
+    role: supporting
+    summary: Rewrite a raw supported command to its rtk equivalent for an agent hook, while returning
+      passthrough for unsupported or unattestable command constructs and permission-aware outcomes for
+      allow, ask, or deny decisions.
+  - id: rtk.shell_output_proxy.passthrough_unknown
+    role: supporting
+    summary: Execute an unsupported command without filtering while tracking its use, so unsupported operations
+      remain available without being represented as compressed output.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+  - id: cli_wrapper
+    kind: cli
+    summary: Invoke `rtk <supported-command> [args...]` to execute an underlying tool and receive filtered
+      stdout/stderr plus the underlying exit status; command-specific flags and supported tools determine
+      the output shape.
+  - id: proxy_command
+    kind: cli
+    summary: Invoke `rtk proxy <command> [args...]` to execute a command without filtering but with usage
+      tracking; the command is required and an empty invocation is an error.
+  - id: rewrite_command
+    kind: cli
+    summary: Invoke `rtk rewrite <raw-command>` to print a rewritten command when an equivalent exists;
+      exit 1 indicates no equivalent, while permission-aware hook outcomes can use exits 0, 2, or 3.
+  - id: agent_initialization
+    kind: cli
+    summary: Invoke `rtk init` with an agent and optional global or dry-run mode to install or preview
+      command-rewrite integration for supported assistants.
+  - id: configuration
+    kind: config
+    summary: Configure tracking, display, ignored paths, tee recovery, telemetry, and hook exclusions
+      through the documented TOML configuration and environment variables.
+  outbound:
+  - id: compact_command_output
+    kind: cli
+    summary: Prints filtered command output, including compact summaries for supported ecosystems; failure
+      recovery may provide a path to saved raw output.
+  - id: command_exit_status
+    kind: cli
+    summary: Returns the underlying command exit status, including native failure status for piped commands
+      where documented.
+constraints:
+- id: output_measurement
+  level: MUST
+  statement: Treat documented savings percentages as bash-output reduction measurements, not as billing
+    or universal input-token reduction guarantees; reported token counts are approximate bytes-divided-by-four
+    estimates.
+- id: command_dependency
+  level: MUST
+  statement: Consumers must have the underlying command and any command-specific tool needed by a selected
+    wrapper; selected Unix integration tests skip when ripgrep is unavailable.
+- id: permission_boundary
+  level: MUST
+  statement: Hook consumers must honor rewrite outcomes and native permission handling; a rewrite is not
+    by itself authorization for an otherwise unapproved command.
+- id: producer_output_not_authority
+  level: MUST
+  statement: Treat this third-party, AI-assisted description as discovery metadata. Catalog acceptance
+    does not certify runtime behavior, safety, or upstream endorsement.
+effects:
+  sideEffects:
+  - id: process_execution
+    kind: process_spawn
+    summary: Spawns the underlying command and may execute it through a shell or command wrapper.
+  - id: usage_tracking
+    kind: database_write
+    summary: Records command, input/output estimates, and savings history when tracking is enabled; the
+      documented implementation uses a local SQLite history database.
+  - id: failure_recovery_file
+    kind: filesystem_write
+    summary: When tee recovery is enabled and a command fails, may save bounded raw output locally and
+      print its path.
+  - id: optional_telemetry
+    kind: network_write
+    summary: The documentation states that an anonymous daily telemetry ping may send device hash, version,
+      OS, architecture, command count, top commands, and savings percentage; it can be disabled.
+evidence:
+- id: readme_product_1_1
+  kind: documentation
+  path: evidence/readme_product_1_1.md
+  supports:
+  - intent.summary
+  - scope
+  - provides.capabilities.rtk.shell_output_proxy.compress_output
+  - interfaces.outbound.compact_command_output
+  - constraints.output_measurement
+  - provenance.sourceConfidence
+- id: configuration_docs_1_1
+  kind: documentation
+  path: evidence/configuration_docs_1_1.md
+  supports:
+  - interfaces.inbound.configuration
+  - effects.sideEffects.failure_recovery_file
+  - effects.sideEffects.optional_telemetry
+- id: cli_boundary_1_1
+  kind: source
+  path: evidence/cli_boundary_1_1.rs
+  supports:
+  - provides.capabilities.rtk.shell_output_proxy.passthrough_unknown
+  - interfaces.inbound.proxy_command
+  - interfaces.inbound.rewrite_command
+  - interfaces.inbound.agent_initialization
+  - effects.sideEffects.process_execution
+- id: cli_boundary_1_2
+  kind: source
+  path: evidence/cli_boundary_1_2.rs
+  supports:
+  - provides.capabilities.rtk.shell_output_proxy.passthrough_unknown
+  - interfaces.inbound.proxy_command
+  - interfaces.inbound.rewrite_command
+  - interfaces.inbound.agent_initialization
+  - effects.sideEffects.process_execution
+- id: cli_boundary_1_3
+  kind: source
+  path: evidence/cli_boundary_1_3.rs
+  supports:
+  - provides.capabilities.rtk.shell_output_proxy.passthrough_unknown
+  - interfaces.inbound.proxy_command
+  - interfaces.inbound.rewrite_command
+  - interfaces.inbound.agent_initialization
+  - effects.sideEffects.process_execution
+- id: runner_behavior_1_1
+  kind: source
+  path: evidence/runner_behavior_1_1.rs
+  supports:
+  - provides.capabilities.rtk.shell_output_proxy.compress_output
+  - provides.capabilities.rtk.shell_output_proxy.passthrough_unknown
+  - interfaces.outbound.command_exit_status
+  - effects.sideEffects.usage_tracking
+  - effects.sideEffects.failure_recovery_file
+- id: rewrite_behavior_1_1
+  kind: source
+  path: evidence/rewrite_behavior_1_1.rs
+  supports:
+  - provides.capabilities.rtk.shell_output_proxy.rewrite_commands
+  - interfaces.inbound.rewrite_command
+  - constraints.permission_boundary
+- id: compression_tests_1_1
+  kind: test
+  path: evidence/compression_tests_1_1.rs
+  supports:
+  - provides.capabilities.rtk.shell_output_proxy.compress_output
+  - scope
+  - constraints.command_dependency
+- id: upstream_notice_0
+  kind: documentation
+  path: evidence/upstream-LICENSE
+  supports:
+  - provenance.sourceConfidence
+- id: curation_record
+  kind: documentation
+  path: evidence/curation.json
+  supports:
+  - provenance.sourceConfidence
+  - constraints.producer_output_not_authority
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: medium
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []

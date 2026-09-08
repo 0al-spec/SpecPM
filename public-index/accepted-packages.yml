@@ -20,6 +20,11 @@ packages:
   - path: public-index/curated/xyflow.react/0.1.0
   - path: public-index/curated/xyflow.svelte/0.1.0
   - path: public-index/curated/xyflow.system/0.1.0
+  - path: public-index/curated/rtk.shell_output_proxy/0.1.0
+  - path: public-index/curated/openai.codex/0.1.0
+  - path: public-index/curated/axios.http_client/1.19.0
+  - path: public-index/curated/bitcoin.core.fullnode/0.1.0
+  - path: public-index/curated/n8n.platform/0.1.0
 relations:
   - id: xyflow.workspace.contains.xyflow.react
     type: contains

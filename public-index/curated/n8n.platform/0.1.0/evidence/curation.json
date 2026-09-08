@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/n8n-io/n8n",
+  "revision": "082b5d9190f4bc81d93c6a94d6d4692bed4660ca",
+  "producer": {
+    "repository": "https://github.com/0al-spec/SpecHarvester",
+    "revision": "a460f1af79c563866512d50f4d977e9b39e47f12",
+    "archivePath": "SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz",
+    "archiveSha256": "e36def1ee027d04f36fba97bdf63da51f564aabf56e439e83eb62a394eb93ac5",
+    "candidate": "n8n-io-n8n",
+    "model": "gpt-5.6-luna",
+    "reasoningEffort": "medium",
+    "originalFiles": {
+      "evidence/instance-ai-configuration.md": "07cf8d1c7617913aa348e251bfbfb7c36aca7340550c0735fb70bff0b96b98b0",
+      "evidence/instance-ai-overview.md": "7152176435be2be6b3923107529e9899ae5b1e2afaa12dab89b49ddc79c0c99b",
+      "evidence/instance-ai-sandbox.md": "1d50aad47e925b4754d9e9ede2e15848a44bac449f8f81951116f5b52835453c",
+      "evidence/instance-ai-tools.md": "e8570715e67a42f1020c4c3a321831a7fbbacad01e3ead3968cc4fa8a696dbb8",
+      "evidence/license-terms.md": "1bf55d77f555638337e373e8e27e052af518baba15c4d61823c1b1de19106b31",
+      "evidence/product-overview.md": "faf96c1432ec1a98d6a7d4b3a418853ba3635f81501ec5e77194110406db9814",
+      "evidence/source-provenance.md": "2cd24f0dec3949d2dd69be1b2d30a6930cad6e0f5e8e737fe4bd66916a778844",
+      "specpm.yaml": "6617eab4b17f59ead82c4f1f4738ee0be36751dcd51c1ce29bbeb0017cf0df5f",
+      "specs/main.spec.yaml": "1a8abbc9d4442b38c4f656605ac5173f6682a4942cd5a26bbb464a06cde10f84"
+    }
+  },
+  "review": {
+    "method": "AI-assisted static source review",
+    "runtimeExecuted": false,
+    "upstreamEndorsement": false,
+    "acceptance": "SpecPM maintainer acceptance through catalog PR merge",
+    "specStatus": "draft",
+    "sourceRedistribution": "reference_only"
+  },
+  "evidence": [
+    {
+      "path": "evidence/product_overview_1_1.md",
+      "sourcePath": "README.md",
+      "sourceUrl": "https://github.com/n8n-io/n8n/blob/082b5d9190f4bc81d93c6a94d6d4692bed4660ca/README.md#L1-L73",
+      "sourceLines": [
+        1,
+        73
+      ],
+      "sourceSha256": "9af8818267836df37f8d58cbb1db8c02c83cbd110118361811f4910d4de59eca",
+      "artifactSha256": "b5ea7cd14f4a9302c2be0906dfc13105ab81d0a249e1d975d2f32aa32dc6f310",
+      "mode": "reference_only"
+    },
+    {
+      "path": "evidence/instance_ai_overview_1_1.md",
+      "sourcePath": "packages/@n8n/instance-ai/README.md",
+      "sourceUrl": "https://github.com/n8n-io/n8n/blob/082b5d9190f4bc81d93c6a94d6d4692bed4660ca/packages/@n8n/instance-ai/README.md#L1-L128",
+      "sourceLines": [
+        1,
+        128
+      ],
+      "sourceSha256": "317a18f9ca5b64cbc269ccf161caecc0c98c1e0fe69a95c2701c0df405141307",
+      "artifactSha256": "ca4349ace9c9de8501e148add27f8fdd1a448ae2dbef9bb75fa16707da961e6f",
+      "mode": "reference_only"
+    },
+    {
+      "path": "evidence/instance_ai_tools_1_1.md",
+      "sourcePath": "packages/@n8n/instance-ai/docs/tools.md",
+      "sourceUrl": "https://github.com/n8n-io/n8n/blob/082b5d9190f4bc81d93c6a94d6d4692bed4660ca/packages/@n8n/instance-ai/docs/tools.md#L1-L797",
+      "sourceLines": [
+        1,
+        797
+      ],
+      "sourceSha256": "4f2bea0119e2957280a14968f12dd0cfe49eae1955f75e270e414331ddcf1fe3",
+      "artifactSha256": "a979f3051794c37c9b32526d11eec58adb281b15b1be3c521f216d3dbbb34891",
+      "mode": "reference_only"
+    },
+    {
+      "path": "evidence/instance_ai_configuration_1_1.md",
+      "sourcePath": "packages/@n8n/instance-ai/docs/configuration.md",
+      "sourceUrl": "https://github.com/n8n-io/n8n/blob/082b5d9190f4bc81d93c6a94d6d4692bed4660ca/packages/@n8n/instance-ai/docs/configuration.md#L1-L274",
+      "sourceLines": [
+        1,
+        274
+      ],
+      "sourceSha256": "6081074413dad9cbee3eb884dc3776ca98c3221bf0042b05903ca969faf1a2d1",
+      "artifactSha256": "2d7d937d7baf5dc1dde8427903f0b5e98005f4d93a2e85179f2683b564914f0d",
+      "mode": "reference_only"
+    },
+    {
+      "path": "evidence/instance_ai_sandbox_1_1.md",
+      "sourcePath": "packages/@n8n/instance-ai/docs/sandboxing.md",
+      "sourceUrl": "https://github.com/n8n-io/n8n/blob/082b5d9190f4bc81d93c6a94d6d4692bed4660ca/packages/@n8n/instance-ai/docs/sandboxing.md#L1-L256",
+      "sourceLines": [
+        1,
+        256
+      ],
+      "sourceSha256": "4c3b7877f489adc344a5c68bc390b42a9e51586cc10c233177f149a96c4879c2",
+      "artifactSha256": "c6aab50212ec174992d918c4011a083545a6a8417e810e5161e9bc59f1050577",
+      "mode": "reference_only"
+    },
+    {
+      "path": "evidence/license_terms_1_1.md",
+      "sourcePath": "LICENSE.md",
+      "sourceUrl": "https://github.com/n8n-io/n8n/blob/082b5d9190f4bc81d93c6a94d6d4692bed4660ca/LICENSE.md#L1-L88",
+      "sourceLines": [
+        1,
+        88
+      ],
+      "sourceSha256": "d2f621f59aa4c10eab79b6333e59d9d3d5b53307dcfd16dbd75e40e679e84965",
+      "artifactSha256": "50ff48d00ea7bcf84495e7374ba79643cd4b6eb75126f2050b5b1617b0aa507e",
+      "mode": "reference_only"
+    },
+    {
+      "path": "evidence/license_terms_2_1.md",
+      "sourcePath": "LICENSE_EE.md",
+      "sourceUrl": "https://github.com/n8n-io/n8n/blob/082b5d9190f4bc81d93c6a94d6d4692bed4660ca/LICENSE_EE.md#L1-L27",
+      "sourceLines": [
+        1,
+        27
+      ],
+      "sourceSha256": "6110c69fd3b92928328a89e863dc2c862ea449f2335c352a9c4a137a36b13040",
+      "artifactSha256": "ea68fbd30a6d6d9269278f56bf562f11cc9cbb6d2d9951e0791937e1d4745e16",
+      "mode": "reference_only"
+    }
+  ]
+}

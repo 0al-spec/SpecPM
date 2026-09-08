@@ -1,0 +1,46 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: bitcoin.core.fullnode
+  name: Bitcoin Core Full Node
+  version: 0.1.0
+  summary: Run a Bitcoin Core node that downloads and fully validates the Bitcoin blockchain, with optional
+    wallet, RPC, and graphical interfaces.
+  license: MIT
+  authors:
+  - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+- path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+    - bitcoin.core.fullnode.validate_and_sync
+    - bitcoin.core.rpc_control
+    - bitcoin.core.wallet_and_gui
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+  - Unix
+  - Windows
+  - macOS
+  languages: []
+keywords:
+- bitcoin
+- blockchain
+- full-node
+- json-rpc
+- wallet
+- gui
+foreignArtifacts:
+- id: upstream_repository
+  role: primary_intent_source
+  uri: https://github.com/bitcoin/bitcoin
+  revision: a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b
+- id: producer_original_archive
+  role: documentation
+  uri: https://github.com/0al-spec/SpecHarvester/blob/a460f1af79c563866512d50f4d977e9b39e47f12/SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz
+  revision: a460f1af79c563866512d50f4d977e9b39e47f12
+- id: curation_receipt
+  role: documentation
+  path: evidence/curation.json

@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/bitcoin/bitcoin",
+  "revision": "a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b",
+  "producer": {
+    "repository": "https://github.com/0al-spec/SpecHarvester",
+    "revision": "a460f1af79c563866512d50f4d977e9b39e47f12",
+    "archivePath": "SPECS/EVIDENCE/P56-T4/P56-T4_Original_Candidates.tar.gz",
+    "archiveSha256": "e36def1ee027d04f36fba97bdf63da51f564aabf56e439e83eb62a394eb93ac5",
+    "candidate": "bitcoin-bitcoin",
+    "model": "gpt-5.6-luna",
+    "reasoningEffort": "medium",
+    "originalFiles": {
+      "evidence/build-options.md": "c3ef2d03a96550d3fc3eebd2a267131cbe2226b4612a20cf91a14be41498ff49",
+      "evidence/operational-files.md": "bdefea06ccc95384ab3fa5c650ae490e4cac91e58491339196ac68fe222bbd69",
+      "evidence/product-overview.md": "4947ec047e5fee47338e1537b52b0bdb3811830e4b96cd6e6ba92ba3bda30df6",
+      "evidence/rpc.md": "d61a22545309d0501c87a33e00ec046c64df069fd0332f6a6d5ac67f94905f48",
+      "evidence/source-provenance.md": "4438872357164a4b6e004d69c8d158f702cc563ffd030621218fa8bbeff8c323",
+      "specpm.yaml": "2a1a8f2a8dbd9e46d4944286efbf2d1222fc38798a2fae3d66d2b8c9721a3a89",
+      "specs/main.spec.yaml": "83b1c96fc921887f121e720ec015aaf75db7034f3453b32b08075c8a806bf726"
+    }
+  },
+  "review": {
+    "method": "AI-assisted static source review",
+    "runtimeExecuted": false,
+    "upstreamEndorsement": false,
+    "acceptance": "SpecPM maintainer acceptance through catalog PR merge",
+    "specStatus": "draft",
+    "sourceRedistribution": "selected_verbatim_evidence"
+  },
+  "evidence": [
+    {
+      "path": "evidence/product_overview_1_1.md",
+      "sourcePath": "README.md",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/README.md#L1-L79",
+      "sourceLines": [
+        1,
+        79
+      ],
+      "sourceSha256": "45916e6961540c536e8b17b3a4d3305393afce5b407d1ea3da82c246cba8aa5d",
+      "artifactSha256": "45916e6961540c536e8b17b3a4d3305393afce5b407d1ea3da82c246cba8aa5d",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/product_overview_2_1.md",
+      "sourcePath": "doc/README.md",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/doc/README.md#L1-L94",
+      "sourceLines": [
+        1,
+        94
+      ],
+      "sourceSha256": "efa121f49b44bb110d7ddead48106f6f71db71d0d9b619e85f38193f525a06e8",
+      "artifactSha256": "efa121f49b44bb110d7ddead48106f6f71db71d0d9b619e85f38193f525a06e8",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/build_options_1_1.txt",
+      "sourcePath": "CMakeLists.txt",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/CMakeLists.txt#L95-L130",
+      "sourceLines": [
+        95,
+        130
+      ],
+      "sourceSha256": "c7ce45f448c9104a47a765638631695fee1311de19f94d08e65de1538fcdbfc3",
+      "artifactSha256": "1b5ce4137598f98eb9748c61f5949bd14ec9b40653fd4b0dab2be91d4de26e39",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/build_options_2_1.txt",
+      "sourcePath": "src/CMakeLists.txt",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/src/CMakeLists.txt#L155-L185",
+      "sourceLines": [
+        155,
+        185
+      ],
+      "sourceSha256": "049cb55c817ef25e01c6fe4610435b284498b1fabd758608dcac42980100b8d9",
+      "artifactSha256": "b61f2f65f6812553c3197ced8b35ce04d6433073d16dcbcb3b071a182adde6fd",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/build_options_2_2.txt",
+      "sourcePath": "src/CMakeLists.txt",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/src/CMakeLists.txt#L308-L330",
+      "sourceLines": [
+        308,
+        330
+      ],
+      "sourceSha256": "049cb55c817ef25e01c6fe4610435b284498b1fabd758608dcac42980100b8d9",
+      "artifactSha256": "62d86bbe8a9dca71944e1878510691bf167cd49d00ad10b5076f9253697fafab",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/build_options_2_3.txt",
+      "sourcePath": "src/CMakeLists.txt",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/src/CMakeLists.txt#L348-L370",
+      "sourceLines": [
+        348,
+        370
+      ],
+      "sourceSha256": "049cb55c817ef25e01c6fe4610435b284498b1fabd758608dcac42980100b8d9",
+      "artifactSha256": "f5cc1a09b4ac4dc3a74eabea53d983ab4d1f7af16083951a0f70b3621a977e6e",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/build_options_2_4.txt",
+      "sourcePath": "src/CMakeLists.txt",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/src/CMakeLists.txt#L390-L405",
+      "sourceLines": [
+        390,
+        405
+      ],
+      "sourceSha256": "049cb55c817ef25e01c6fe4610435b284498b1fabd758608dcac42980100b8d9",
+      "artifactSha256": "aa3960ab9fada233b03e02036821fe8cdbaaec6cbd52c0e90471701c22cfb7f5",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/rpc_documentation_1_1.md",
+      "sourcePath": "doc/JSON-RPC-interface.md",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/doc/JSON-RPC-interface.md#L1-L232",
+      "sourceLines": [
+        1,
+        232
+      ],
+      "sourceSha256": "0d92a9f8b0319373462e93a02ba414fd5f61f173e89366d430227776ba23f4bd",
+      "artifactSha256": "0d92a9f8b0319373462e93a02ba414fd5f61f173e89366d430227776ba23f4bd",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/operational_files_1_1.md",
+      "sourcePath": "doc/files.md",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/doc/files.md#L1-L169",
+      "sourceLines": [
+        1,
+        169
+      ],
+      "sourceSha256": "003ac26441b44e8dc5a5f31bf749816483edd47996dadecb9dcd455ea75e0cfc",
+      "artifactSha256": "003ac26441b44e8dc5a5f31bf749816483edd47996dadecb9dcd455ea75e0cfc",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/operational_files_2_1.md",
+      "sourcePath": "doc/bitcoin-conf.md",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/doc/bitcoin-conf.md#L1-L92",
+      "sourceLines": [
+        1,
+        92
+      ],
+      "sourceSha256": "f0e4ef5eae69a3670f5a9c38597850900dadd770d4a3eb51201c63c5554034c7",
+      "artifactSha256": "f0e4ef5eae69a3670f5a9c38597850900dadd770d4a3eb51201c63c5554034c7",
+      "mode": "verbatim"
+    },
+    {
+      "path": "evidence/upstream-COPYING",
+      "sourcePath": "COPYING",
+      "sourceUrl": "https://github.com/bitcoin/bitcoin/blob/a2aab6df97d9f3e1186e8c3fc57ad909cc8aef9b/COPYING",
+      "sourceLines": [
+        1,
+        22
+      ],
+      "sourceSha256": "b028769f3852a9368ab10bd754ff01ebb741f84a2fa658c9aff82a631bc6ecfc",
+      "artifactSha256": "b028769f3852a9368ab10bd754ff01ebb741f84a2fa658c9aff82a631bc6ecfc",
+      "mode": "verbatim"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+    secp256k1
+    $<TARGET_NAME_IF_EXISTS:USDT::headers>
+    $<$<PLATFORM_ID:Windows>:ws2_32>
+)
+
+include(InstallBinaryComponent)
+
+if(ENABLE_WALLET)
+  add_subdirectory(wallet)
+
+  if(BUILD_WALLET_TOOL)
+    add_executable(bitcoin-wallet
+      bitcoin-wallet.cpp
+      init/bitcoin-wallet.cpp
+      wallet/wallettool.cpp
+    )
+    add_windows_resources(bitcoin-wallet bitcoin-wallet-res.rc)
+    add_windows_application_manifest(bitcoin-wallet)
+    target_link_libraries(bitcoin-wallet
+      core_interface
+      bitcoin_wallet
+      bitcoin_common
+      bitcoin_util
+    )
+    install_binary_component(bitcoin-wallet HAS_MANPAGE)
+  endif()
+endif()
+
+
+# P2P and RPC server functionality used by `bitcoind` and `bitcoin-qt` executables.
+add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
