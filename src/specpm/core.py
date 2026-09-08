@@ -18,6 +18,8 @@ from urllib.request import Request, urlopen
 import yaml
 from yaml.tokens import AliasToken, AnchorToken, TagToken
 
+from specpm.upstream import manifest_upstream, normalize_upstream
+
 SUPPORTED_API_VERSION = "specpm.dev/v0.1"
 INDEX_SCHEMA_VERSION = 1
 LOCK_SCHEMA_VERSION = 1
@@ -2097,6 +2099,7 @@ def validate_remote_package_summary(
     errors: list[Issue],
     field: str,
 ) -> None:
+    validate_remote_upstream(package, errors, field)
     require_remote_string(package, "package_id", errors, f"{field}.package_id")
     require_remote_string(package, "name", errors, f"{field}.name")
     validate_required_remote_string_list(package, "capabilities", errors, f"{field}.capabilities")
@@ -2115,6 +2118,16 @@ def validate_remote_package_summary(
             "deprecated",
             errors,
             f"{field}.versions.{index}.deprecated",
+        )
+
+
+def validate_remote_upstream(package: dict[str, Any], errors: list[Issue], field: str) -> None:
+    if "upstream" in package and normalize_upstream(package["upstream"]) is None:
+        errors.append(
+            remote_field_invalid(
+                f"{field}.upstream",
+                "must contain a credential-free HTTP(S) repository url and optional revision",
+            )
         )
 
 
@@ -2373,6 +2386,7 @@ def validate_remote_package_version_payload(
     package = require_remote_mapping(payload, "package", errors, "package")
     if package is None:
         return
+    validate_remote_upstream(package, errors, "package")
     require_remote_string(package, "package_id", errors, "package.package_id")
     require_remote_string(package, "name", errors, "package.name")
     require_remote_string(package, "version", errors, "package.version")
@@ -4314,7 +4328,9 @@ def summarize_manifest(manifest: dict[str, Any] | None) -> dict[str, Any]:
         return {}
     metadata = manifest.get("metadata") if isinstance(manifest.get("metadata"), dict) else {}
     compatibility = manifest.get("compatibility")
+    upstream = manifest_upstream(manifest)
     return {
+        **({"upstream": upstream} if upstream else {}),
         "identity": package_identity(manifest),
         "name": metadata.get("name"),
         "summary": metadata.get("summary"),
