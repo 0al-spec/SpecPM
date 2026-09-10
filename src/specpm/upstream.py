@@ -11,7 +11,8 @@ def valid_host(host: str) -> bool:
     try:
         if ":" in host:
             return "%" not in host and bool(ipaddress.IPv6Address(host))
-        host = host.encode("idna").decode("ascii").rstrip(".")
+        host = host.encode("idna").decode("ascii").lower().rstrip(".")
+        host.encode("ascii").decode("idna")
         if not host or len(host) > 253:
             return False
         if not all(
@@ -20,7 +21,7 @@ def valid_host(host: str) -> bool:
         ):
             return False
         # Browsers interpret numeric final labels as IPv4, not DNS names.
-        if re.fullmatch(r"(?:[0-9]+|0[xX][0-9a-fA-F]+)", host.split(".")[-1]):
+        if re.fullmatch(r"(?:[0-9]+|0[xX][0-9a-fA-F]*)", host.split(".")[-1]):
             return bool(ipaddress.IPv4Address(host))
         return True
     except (ValueError, UnicodeError):
