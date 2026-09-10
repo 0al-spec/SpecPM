@@ -810,6 +810,7 @@ def prepare_public_index_package(
         "status": "ok",
         "package": {
             "package_id": package_id,
+            **({"upstream": package_summary["upstream"]} if "upstream" in package_summary else {}),
             "name": identity.get("name"),
             "version": version,
             "summary": package_summary.get("summary"),
@@ -1288,6 +1289,7 @@ def remote_package_payload(
         "kind": "RemotePackage",
         "status": "ok",
         "package": {
+            **({"upstream": latest["upstream"]} if "upstream" in latest else {}),
             "package_id": latest["package_id"],
             "name": latest["name"],
             "summary": latest["summary"],
@@ -1322,6 +1324,7 @@ def remote_package_version_payload(
         "kind": "RemotePackageVersion",
         "status": "ok",
         "package": {
+            **({"upstream": package["upstream"]} if "upstream" in package else {}),
             "package_id": package["package_id"],
             "name": package["name"],
             "version": package["version"],

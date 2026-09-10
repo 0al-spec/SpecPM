@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from specpm.core import pack_package, validate_package
+from specpm.core import pack_package, validate_package, validate_remote_registry_payload
 from specpm.public_index import generate_public_index
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,6 +76,33 @@ def test_seed_packages_generate_registry_metadata(tmp_path):
         payload = json.loads(version_file.read_text())
         assert payload["package"]["package_id"] == name
         assert payload["package"]["version"] == version
+        manifest = yaml.safe_load(
+            (ROOT / "public-index/curated" / name / version / "specpm.yaml").read_text()
+        )
+        artifact = next(
+            item for item in manifest["foreignArtifacts"] if item["id"] == "upstream_repository"
+        )
+        expected = {"url": artifact["uri"], "revision": artifact["revision"]}
+        assert payload["package"]["upstream"] == expected
+        assert payload["package"]["source"]["url"] != expected["url"]
+        summary = json.loads((tmp_path / "v0/packages" / name / "index.json").read_text())
+        assert summary["package"]["upstream"] == expected
+        index = json.loads((tmp_path / "v0/packages/index.json").read_text())
+        assert (
+            next(item for item in index["packages"] if item["package_id"] == name)["upstream"]
+            == expected
+        )
+        assert json.loads(version_file.with_name("index.html").read_text()) == payload
+        for remote in (payload, summary, index):
+            assert not validate_remote_registry_payload(remote)
+        payload["package"]["upstream"] = {"url": "javascript:alert(1)"}
+        assert any(
+            error.field == "package.upstream" for error in validate_remote_registry_payload(payload)
+        )
+        summary["package"]["upstream"] = None
+        assert any(
+            error.field == "package.upstream" for error in validate_remote_registry_payload(summary)
+        )
 
 
 def test_seed_review_corrections():

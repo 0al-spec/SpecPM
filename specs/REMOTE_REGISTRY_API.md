@@ -138,6 +138,41 @@ returning success:
 
 ## Transport
 
+### Declared Upstream Repository
+
+`RemotePackageIndex` entries, `RemotePackage.package`, and
+`RemotePackageVersion.package` may include additive `upstream` metadata:
+
+```json
+{"upstream": {"url": "https://github.com/openai/codex", "revision": "16d7daad7c5dc73da8558102a65bb7d7709807e1"}}
+```
+
+The generator reads only the package manifest's unique `foreignArtifacts` entry
+with `id: upstream_repository` and `role: primary_intent_source`. `uri` becomes
+`url`; optional `revision` is copied from that same entry. Revision is a declared
+opaque reference, not necessarily an immutable commit or a verified checkout.
+Package summaries use the selected latest version's declaration; exact-version
+metadata uses that version alone. Missing, ambiguous, or unsafe declarations are
+omitted, never inferred from package IDs, documentation links, or build sources.
+
+URLs must be nonempty HTTP(S) URLs (maximum 2048 characters), with a hostname and
+valid optional port, without credentials, query, fragment, whitespace, control
+characters, or backslashes.
+URLs additionally require a DNS/IDNA hostname, a standard dotted-decimal IPv4
+address, or an IPv6 address. Escaped host delimiters and ambiguous numeric hosts
+are rejected. Control-character exclusion includes Unicode Cc, Cf, and Cs.
+Optional revisions must be nonempty strings up to
+256 characters without whitespace or control characters. Clients validate this
+optional object when present; older payloads without it remain valid.
+
+`upstream.url` identifies the software project. `source.url` still identifies the
+downloadable **spec package archive**; provenance receipts describe the spec's
+accepted/build source. None of these declarations establishes upstream
+endorsement, ownership, runtime behavior, or permission to fetch/execute code.
+Consumers should preserve upstream metadata through import and show it as an
+external project link, not as an exact-verification result. Re-import and rebuild
+existing search snapshots to populate the new field after registry publication.
+
 The initial transport model is HTTPS with JSON payloads.
 
 Clients SHOULD send:

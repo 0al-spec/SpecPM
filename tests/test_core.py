@@ -7720,6 +7720,16 @@ def test_conformance_remote_registry_payload_cases() -> None:
         assert_remote_registry_payload_shape(payload)
         assert payload["kind"] == expected["kind"], case["id"]
         assert payload["status"] == expected["status"], case["id"]
+        if "upstream" in expected:
+            packages = (
+                payload["packages"]
+                if payload["kind"] == "RemotePackageIndex"
+                else [payload["package"]]
+            )
+            assert packages
+            assert all(package.get("upstream") == expected["upstream"] for package in packages), (
+                case["id"]
+            )
         if payload["kind"] == "RemoteRegistryError":
             assert payload["error"]["code"] == expected["error_code"], case["id"]
         if "profile" in expected:
