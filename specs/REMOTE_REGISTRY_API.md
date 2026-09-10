@@ -157,7 +157,11 @@ omitted, never inferred from package IDs, documentation links, or build sources.
 
 URLs must be nonempty HTTP(S) URLs (maximum 2048 characters), with a hostname and
 valid optional port, without credentials, query, fragment, whitespace, control
-characters, or backslashes. Optional revisions must be nonempty strings up to
+characters, or backslashes.
+URLs additionally require a DNS/IDNA hostname, a standard dotted-decimal IPv4
+address, or an IPv6 address. Escaped host delimiters and ambiguous numeric hosts
+are rejected. Control-character exclusion includes Unicode Cc, Cf, and Cs.
+Optional revisions must be nonempty strings up to
 256 characters without whitespace or control characters. Clients validate this
 optional object when present; older payloads without it remain valid.
 

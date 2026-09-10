@@ -1,7 +1,30 @@
 """Explicit software-origin metadata, independent of spec archive provenance."""
 
+import ipaddress
+import re
+import unicodedata
 from typing import Any
 from urllib.parse import urlsplit
+
+
+def valid_host(host: str) -> bool:
+    try:
+        if ":" in host:
+            return "%" not in host and bool(ipaddress.IPv6Address(host))
+        host = host.encode("idna").decode("ascii").rstrip(".")
+        if not host or len(host) > 253:
+            return False
+        if not all(
+            re.fullmatch(r"[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?", label)
+            for label in host.split(".")
+        ):
+            return False
+        # Browsers interpret numeric final labels as IPv4, not DNS names.
+        if re.fullmatch(r"(?:[0-9]+|0[xX][0-9a-fA-F]+)", host.split(".")[-1]):
+            return bool(ipaddress.IPv4Address(host))
+        return True
+    except (ValueError, UnicodeError):
+        return False
 
 
 def normalize_upstream(value: Any) -> dict[str, str] | None:
@@ -12,7 +35,7 @@ def normalize_upstream(value: Any) -> dict[str, str] | None:
         not isinstance(url, str)
         or not url
         or len(url) > 2048
-        or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in url)
+        or any(char.isspace() or unicodedata.category(char) in {"Cc", "Cf", "Cs"} for char in url)
         or "\\" in url
     ):
         return None
@@ -21,6 +44,7 @@ def normalize_upstream(value: Any) -> dict[str, str] | None:
         if (
             parsed.scheme not in {"http", "https"}
             or not parsed.hostname
+            or not valid_host(parsed.hostname)
             or parsed.username is not None
             or parsed.password is not None
             or parsed.query
@@ -37,7 +61,10 @@ def normalize_upstream(value: Any) -> dict[str, str] | None:
             not isinstance(revision, str)
             or not revision
             or len(revision) > 256
-            or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in revision)
+            or any(
+                char.isspace() or unicodedata.category(char) in {"Cc", "Cf", "Cs"}
+                for char in revision
+            )
         ):
             return None
         result["revision"] = revision

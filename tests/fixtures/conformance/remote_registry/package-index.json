@@ -8,6 +8,7 @@
   "packages": [
     {
       "package_id": "document_conversion.email_tools",
+      "upstream": {"url": "https://example.org/email-tools", "revision": "v0.1.0"},
       "name": "Email Tools",
       "summary": "Boundary specifications for email document conversion.",
       "license": "MIT",

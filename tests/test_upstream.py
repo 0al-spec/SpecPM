@@ -5,6 +5,38 @@ from specpm.public_index import remote_package_payload, remote_package_version_p
 from specpm.upstream import manifest_upstream, normalize_upstream
 
 
+@pytest.mark.parametrize("char", ["\u0080", "\u009f", "\u200b", "\u202e", "\ud800"])
+def test_unicode_controls_rejected(char):
+    assert normalize_upstream({"url": "https://example.org/" + char}) is None
+    assert normalize_upstream({"url": "https://example.org/repo", "revision": "v" + char}) is None
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        "example.com%2Frepo",
+        "example.com%40evil",
+        "example.com%00",
+        "bad^host",
+        "a..b",
+        "-host.org",
+        "example.123",
+        "127.1",
+        "0x7f.0.0.1",
+        "a" * 254,
+    ],
+)
+def test_invalid_browser_host(host):
+    assert normalize_upstream({"url": f"https://{host}/repo"}) is None
+
+
+@pytest.mark.parametrize(
+    "host", ["example.org", "127.0.0.1", "[::1]", "xn--bcher-kva.example", "bücher.example"]
+)
+def test_valid_browser_host(host):
+    assert normalize_upstream({"url": f"https://{host}/repo"}) == {"url": f"https://{host}/repo"}
+
+
 @pytest.mark.parametrize(
     "value",
     [

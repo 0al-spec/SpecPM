@@ -114,6 +114,7 @@
       "payload": "tests/fixtures/conformance/remote_registry/package-index.json",
       "expected": {
         "kind": "RemotePackageIndex",
+        "upstream": {"url": "https://example.org/email-tools", "revision": "v0.1.0"},
         "status": "ok",
         "package_count": 1,
         "version_count": 1
@@ -125,6 +126,7 @@
       "payload": "tests/fixtures/conformance/remote_registry/package-metadata.json",
       "expected": {
         "kind": "RemotePackage",
+        "upstream": {"url": "https://example.org/email-tools", "revision": "v0.1.0"},
         "status": "ok",
         "package_id": "document_conversion.email_tools"
       }
@@ -135,6 +137,7 @@
       "payload": "tests/fixtures/conformance/remote_registry/package-version.json",
       "expected": {
         "kind": "RemotePackageVersion",
+        "upstream": {"url": "https://example.org/email-tools", "revision": "v0.1.0"},
         "status": "ok",
         "package_id": "document_conversion.email_tools",
         "version": "0.1.0",
