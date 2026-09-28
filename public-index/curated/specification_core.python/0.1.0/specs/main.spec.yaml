@@ -2,7 +2,7 @@ apiVersion: specpm.dev/v0.1
 kind: BoundarySpec
 metadata:
   id: specification_core.python
-  title: SpecificationCore for Python
+  title: SpycificationCore
   version: 0.1.0
   status: draft
 intent:

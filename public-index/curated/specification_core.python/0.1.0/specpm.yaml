@@ -2,7 +2,7 @@ apiVersion: specpm.dev/v0.1
 kind: SpecPackage
 metadata:
   id: specification_core.python
-  name: SpecificationCore for Python
+  name: SpycificationCore
   version: 0.1.0
   summary: Typed, dependency-free Python rules for deterministic synchronous and asynchronous decisions with local traces.
   license: MIT

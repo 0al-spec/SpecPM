@@ -1,4 +1,4 @@
-# SpecificationCore for Python: pinned source evidence
+# SpycificationCore: pinned source evidence
 
 This SpecPM description is curated from public files in the upstream repository
 at commit `6113d773e78cb94c4eb0ce31e8439877fef45494`. The upstream README and
@@ -12,6 +12,8 @@ package is the initial catalog-record version as well.
 | Exported synchronous, asynchronous, decision, and tracing symbols | [&lowbar;&lowbar;init&lowbar;&lowbar;.py](https://github.com/SoundBlaster/SpycificationCore/blob/6113d773e78cb94c4eb0ce31e8439877fef45494/src/specification_core/__init__.py), [core.py](https://github.com/SoundBlaster/SpycificationCore/blob/6113d773e78cb94c4eb0ce31e8439877fef45494/src/specification_core/core.py), [async_core.py](https://github.com/SoundBlaster/SpycificationCore/blob/6113d773e78cb94c4eb0ce31e8439877fef45494/src/specification_core/async_core.py), [&lowbar;trace.py](https://github.com/SoundBlaster/SpycificationCore/blob/6113d773e78cb94c4eb0ce31e8439877fef45494/src/specification_core/_trace.py) |
 | License | [LICENSE](https://github.com/SoundBlaster/SpycificationCore/blob/6113d773e78cb94c4eb0ce31e8439877fef45494/LICENSE) |
 
-The public distribution name is `specification-core`; the upstream repository
-name is `SpycificationCore`. No package code, build scripts, package manager
-commands, or tests were executed to prepare this evidence map.
+The upstream repository is named `SpycificationCore`; its README presents the
+product as “SpecificationCore for Python”, while the distribution name is
+`specification-core` and the import module is `specification_core`. No package
+code, build scripts, package manager commands, or tests were executed to
+prepare this evidence map.
