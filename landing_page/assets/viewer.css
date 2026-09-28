@@ -576,6 +576,10 @@ h3 {
   margin-top: 14px;
 }
 
+.capability-list {
+  min-width: 0;
+}
+
 .token {
   display: inline-flex;
   min-height: 28px;
@@ -592,6 +596,13 @@ h3 {
 .token:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.capability-token {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .catalog-grid {
