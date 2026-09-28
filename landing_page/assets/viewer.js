@@ -668,7 +668,7 @@ function renderPackageDetail() {
     <div class="detail-head">
       <div class="detail-title">
         <span class="pill live">${escapeHtml(packageScopeLabel(pkg))}</span>
-        <h2>${escapeHtml(pkg?.package_id || state.activeId || "Package")}</h2>
+        <h2>${renderBreakableIdentifier(pkg?.package_id || state.activeId || "Package")}</h2>
         <p>${escapeHtml(pkg?.summary || "")}</p>
       </div>
       <div class="actions">
@@ -689,8 +689,8 @@ function renderPackageDetail() {
       ${versions.map((version) => `<button class="token" data-action="version" data-package="${escapeAttr(pkg.package_id)}" data-version="${escapeAttr(version.version)}">${escapeHtml(version.version)}</button>`).join("")}
     </div>
     <h3 style="margin-top: 24px;">Capabilities</h3>
-    <div class="token-list">
-      ${(pkg?.capabilities || []).map((capability) => `<button class="token" data-action="capability" data-id="${escapeAttr(capability)}">${escapeHtml(capability)}</button>`).join("") || `<span class="empty">No capabilities listed.</span>`}
+    <div class="token-list capability-list">
+      ${(pkg?.capabilities || []).map((capability) => renderCapabilityToken(capability)).join("") || `<span class="empty">No capabilities listed.</span>`}
     </div>
     <h3 style="margin-top: 24px;">Observed Intents</h3>
     <div class="token-list">
@@ -705,7 +705,7 @@ function renderVersionDetail() {
     <div class="detail-head">
       <div class="detail-title">
         <span class="pill live">Version</span>
-        <h2>${escapeHtml(pkg.package_id || "")}@${escapeHtml(pkg.version || "")}</h2>
+        <h2>${renderBreakableIdentifier(`${pkg.package_id || ""}@${pkg.version || ""}`)}</h2>
         <p>${escapeHtml(pkg.summary || "")}</p>
       </div>
       <div class="actions">
@@ -772,8 +772,8 @@ function renderIntentDetail() {
       <div class="fact"><span>Capabilities</span><strong>${escapeHtml(String(intent.capability_count || 0))}</strong></div>
     </div>
     <h3>Capability Matches</h3>
-    <div class="token-list">
-      ${(intent.capabilities || []).map((capability) => `<button class="token" data-action="capability" data-id="${escapeAttr(capability)}">${escapeHtml(capability)}</button>`).join("") || `<span class="empty">No capability matches.</span>`}
+    <div class="token-list capability-list">
+      ${(intent.capabilities || []).map((capability) => renderCapabilityToken(capability)).join("") || `<span class="empty">No capability matches.</span>`}
     </div>
   `;
 }
@@ -1390,6 +1390,15 @@ function formatPayloadKind(kind) {
     .replace(/[_-]+/g, " ")
     .toLowerCase()
     .replace(/^./, (first) => first.toUpperCase());
+}
+
+function renderCapabilityToken(capability) {
+  const id = String(capability ?? "");
+  return `<button class="token capability-token" data-action="capability" data-id="${escapeAttr(id)}" aria-label="${escapeAttr(id)}" title="${escapeAttr(id)}">${renderBreakableIdentifier(id)}</button>`;
+}
+
+function renderBreakableIdentifier(value) {
+  return String(value ?? "").split(".").map(escapeHtml).join(".<wbr>");
 }
 
 function escapeHtml(value) {
