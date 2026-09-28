@@ -6,10 +6,6 @@ schemaVersion: 1
 packages:
   - path: examples/email_tools
   - path: packages/intent.package.public_repository_metadata
-  - path: packages/soundblaster.specification_core
-  - path: packages/soundblaster.specification_kit
-  - path: packages/soundblaster.swiftdecision
-  - path: packages/specification_core.python
   - repository: https://github.com/0al-spec/SpecPM.git
     ref: v0.1.0
     revision: 0109b471bfea6dc765f4b97f2ce70b39ef08fb6f
@@ -29,6 +25,10 @@ packages:
   - path: public-index/curated/axios.http_client/1.19.0
   - path: public-index/curated/bitcoin.core.fullnode/0.1.0
   - path: public-index/curated/n8n.platform/0.1.0
+  - path: packages/soundblaster.specification_core
+  - path: packages/soundblaster.specification_kit
+  - path: packages/soundblaster.swiftdecision
+  - path: packages/specification_core.python
 relations:
   - id: xyflow.workspace.contains.xyflow.react
     type: contains
