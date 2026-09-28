@@ -1,0 +1,43 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: soundblaster.specification_kit
+  name: SpecificationKit
+  version: 0.1.0
+  summary: Swift library for platform context providers, product-level specifications, and SwiftUI observation wrappers.
+  license: MIT
+  authors:
+    - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+  - path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+      - soundblaster.specification_kit.observe_rules_in_swiftui
+      - soundblaster.specification_kit.provide_platform_context
+      - soundblaster.specification_kit.evaluate_product_rules
+  requires:
+    capabilities:
+      - soundblaster.specification_core.compose_rules
+compatibility:
+  platforms:
+    - iOS
+    - macOS
+    - tvOS
+    - watchOS
+  languages:
+    - Swift
+keywords:
+  - SwiftUI
+  - observation
+  - context providers
+  - feature flags
+  - subscription rules
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: https://github.com/SoundBlaster/SpecificationKit
+    revision: 60850e758d020ceacc1cfe83801c09b4749eab6f
+  - id: source_evidence_map
+    role: documentation
+    path: evidence/source-map.md

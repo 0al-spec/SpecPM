@@ -1,0 +1,91 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: specification_core.python
+  title: SpecificationCore for Python
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Provide typed, composable Python rules for deterministic synchronous and asynchronous decisions with explicit no-match results and local trace records.
+scope:
+  boundedContext: python_specification_evaluation_core
+  includes:
+    - Synchronous specification protocols, boolean composition, and predicate rules.
+    - Ordered first-match decisions with explicit match results.
+    - Asynchronous specification and decision counterparts.
+    - In-memory trace recorders and typed trace events.
+    - The public symbols exported by the pinned package source.
+  excludes:
+    - Network clients, database or filesystem persistence, and application action execution.
+    - A policy or workflow service that performs side effects for a returned decision.
+    - Compatibility guarantees beyond the Python versions and package metadata in the pinned source.
+provides:
+  capabilities:
+    - id: specification_core.python.compose_rules
+      role: primary
+      summary: Compose predicate and boolean specifications into reusable deterministic rules.
+    - id: specification_core.python.evaluate_async_rules
+      role: supporting
+      summary: Evaluate asynchronous specifications and asynchronous first-match decision rules.
+    - id: specification_core.python.produce_decisions
+      role: supporting
+      summary: Return typed decision values with an explicit match status for ordered rules.
+    - id: specification_core.python.record_traces
+      role: supporting
+      summary: Record in-memory evaluation events and outcomes through a caller-provided trace recorder.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: python_import
+      kind: library
+      summary: Install the specification-core distribution and import public types from the specification_core module.
+    - id: synchronous_specification
+      kind: library
+      summary: Build PredicateSpec and compose Specification instances with boolean operators, then evaluate or choose using the documented API.
+    - id: asynchronous_specification
+      kind: library
+      summary: Use AsyncSpecification and async decision types with an async caller.
+    - id: trace_recorder
+      kind: library
+      summary: Pass a TraceRecorder to a supported decision evaluation to collect in-memory trace events.
+  outbound:
+    - id: rule_result
+      kind: library
+      summary: Return a boolean result or a MatchResult that distinguishes a matched decision from no match.
+    - id: trace_events
+      kind: library
+      summary: Expose recorded event names and outcomes to the caller when a recorder is supplied.
+constraints:
+  - id: caller_owns_side_effects
+    level: MUST
+    statement: Rule evaluation returns outcomes and diagnostics; callers own side effects such as publishing a proposal or calling a service.
+  - id: deterministic_evidence_scope
+    level: MUST
+    statement: Deterministic behavior is the documented intent of this package and is not a claim that arbitrary caller-supplied predicates are pure or deterministic.
+  - id: catalog_is_source_pinned
+    level: MUST
+    statement: This catalog record describes the exact upstream revision in foreignArtifacts and does not certify other revisions or runtime behavior.
+effects:
+  sideEffects: []
+evidence:
+  - id: readme_manifest_and_public_exports
+    kind: documentation
+    path: evidence/source-map.md
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities.specification_core.python.compose_rules
+      - provides.capabilities.specification_core.python.evaluate_async_rules
+      - provides.capabilities.specification_core.python.produce_decisions
+      - provides.capabilities.specification_core.python.record_traces
+      - interfaces
+      - constraints
+      - provenance.sourceConfidence
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: medium
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []

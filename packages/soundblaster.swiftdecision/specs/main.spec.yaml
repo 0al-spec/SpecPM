@@ -1,0 +1,101 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: soundblaster.swiftdecision
+  title: SwiftDecision
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Turn structured backend probabilities into typed application decisions with explicit acceptance, abstention, and fallback policy outcomes.
+scope:
+  boundedContext: swift_backend_decision_layer
+  includes:
+    - Typed Noul, Choice, and Score decision requests and results.
+    - A replaceable asynchronous DecisionBackend interface and deterministic closure adapter.
+    - Validation of backend probability vectors and caller-configured thresholds, abstention, and fallbacks.
+    - Optional MLX trait for the documented local Laya backend on supported Apple hardware.
+    - Content-free lifecycle and SpecificationCore traces when tracing is enabled.
+  excludes:
+    - Training, hosting, selecting, or evaluating the general accuracy of a model.
+    - A built-in hosted-provider transport; hosted integrations are separate backends or packages.
+    - Automatic execution of application actions based on a returned decision.
+    - Redistribution of MLX model weights or guarantees about model quality.
+provides:
+  capabilities:
+    - id: soundblaster.swiftdecision.make_typed_model_decisions
+      role: primary
+      summary: Convert a backend probability distribution into a typed boolean, option choice, or rubric score result.
+    - id: soundblaster.swiftdecision.apply_uncertainty_policy
+      role: supporting
+      summary: Apply configured probability and confidence thresholds and return accepted, abstained, or caller-selected fallback outcomes.
+    - id: soundblaster.swiftdecision.trace_decisions
+      role: supporting
+      summary: Collect content-free decision lifecycle and nested specification trace records when enabled.
+    - id: soundblaster.swiftdecision.run_optional_local_mlx
+      role: supporting
+      summary: Run the included Laya model backend through the optional MLX trait when its platform and local checkpoint prerequisites are met.
+requires:
+  capabilities:
+    - soundblaster.specification_core.compose_rules
+    - soundblaster.specification_core.produce_typed_decisions
+interfaces:
+  inbound:
+    - id: decision_engine
+      kind: library
+      summary: Submit a typed decision request to DecisionEngine using configured policies, timeout, trace mode, and a DecisionBackend.
+    - id: decision_backend
+      kind: library
+      summary: Implement DecisionBackend.predict(for:) to provide an ordered probability vector for a rendered request.
+    - id: decision_policy
+      kind: library
+      summary: Configure per-kind probability and confidence thresholds and an optional application-owned fallback.
+    - id: optional_mlx_trait
+      kind: config
+      summary: Enable the MLX trait and supply a compatible local Laya checkpoint to use the native local inference backend.
+  outbound:
+    - id: typed_decision_result
+      kind: library
+      summary: Return the chosen typed value together with probabilities, confidence, and accepted, abstained, or fallback outcome information.
+    - id: ordered_trace
+      kind: library
+      summary: Expose content-free lifecycle and nested specification events for one decision invocation when collection is enabled.
+constraints:
+  - id: caller_owns_actions
+    level: MUST
+    statement: A returned decision is data for the application; SwiftDecision does not authorize or execute the application's next action.
+  - id: backend_controls_data_transport
+    level: MUST
+    statement: The configured backend determines whether request content leaves the process; callers must assess provider transport and data handling before using sensitive inputs.
+  - id: thresholds_do_not_measure_accuracy
+    level: MUST
+    statement: Probability and confidence thresholds implement caller policy and are not evidence of model accuracy on arbitrary application data.
+  - id: local_mlx_prerequisites
+    level: MUST
+    statement: The optional MLX backend requires the documented Apple hardware, operating-system, SwiftPM trait, and caller-provided local checkpoint prerequisites.
+  - id: catalog_is_source_pinned
+    level: MUST
+    statement: This catalog record describes the exact upstream revision in foreignArtifacts and does not certify other revisions or model behavior.
+effects:
+  sideEffects: []
+evidence:
+  - id: readme_and_public_api
+    kind: documentation
+    path: evidence/source-map.md
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities.soundblaster.swiftdecision.make_typed_model_decisions
+      - provides.capabilities.soundblaster.swiftdecision.apply_uncertainty_policy
+      - provides.capabilities.soundblaster.swiftdecision.trace_decisions
+      - provides.capabilities.soundblaster.swiftdecision.run_optional_local_mlx
+      - requires.capabilities
+      - interfaces
+      - constraints
+      - provenance.sourceConfidence
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: high
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []

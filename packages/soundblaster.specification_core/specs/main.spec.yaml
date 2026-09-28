@@ -1,0 +1,85 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: soundblaster.specification_core
+  title: SpecificationCore for Swift
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Provide reusable, platform-independent Swift building blocks for evaluating and composing business rules, asynchronous rules, and typed decisions.
+scope:
+  boundedContext: swift_specification_evaluation_core
+  includes:
+    - Synchronous and asynchronous specification protocols and composition operators.
+    - Type-erased specifications, decision specifications, and context-provider abstractions.
+    - Built-in predicate, first-match, date, counter, and cooldown specifications.
+    - Property wrappers and macros documented by the pinned package source.
+    - Optional tracing enabled through the documented SwiftPM trait.
+  excludes:
+    - SwiftUI observation and platform-specific context integrations provided by SpecificationKit.
+    - A policy language, persistence service, or business-domain rule catalog.
+    - Guarantees about application policy correctness or model decision quality.
+provides:
+  capabilities:
+    - id: soundblaster.specification_core.compose_rules
+      role: primary
+      summary: Compose synchronous specifications with reusable boolean operators and type-erased wrappers.
+    - id: soundblaster.specification_core.evaluate_async_rules
+      role: supporting
+      summary: Model asynchronous specifications and typed asynchronous decision rules using Swift concurrency.
+    - id: soundblaster.specification_core.produce_typed_decisions
+      role: supporting
+      summary: Evaluate ordered decision specifications that return typed results rather than only boolean satisfaction.
+    - id: soundblaster.specification_core.trace_evaluations
+      role: supporting
+      summary: Record evaluation spans and outcomes when the opt-in Tracing trait and recorder are configured.
+requires:
+  capabilities: []
+interfaces:
+  inbound:
+    - id: swift_package_product
+      kind: library
+      summary: Import the SpecificationCore SwiftPM product and implement or compose its public specification protocols and built-in types.
+    - id: optional_tracing_trait
+      kind: config
+      summary: Enable the SwiftPM Tracing trait and configure a trace recorder to collect evaluation events.
+  outbound:
+    - id: specification_results
+      kind: library
+      summary: Return boolean satisfaction or typed decision values from evaluated specifications.
+    - id: trace_events
+      kind: library
+      summary: Expose evaluation spans and outcomes to a caller-configured recorder when tracing is enabled.
+constraints:
+  - id: optional_tracing
+    level: MUST
+    statement: Tracing is opt-in through the package trait and requires an explicitly configured recorder; an ordinary evaluation does not imply trace collection.
+  - id: caller_owns_policy
+    level: MUST
+    statement: The package supplies evaluation primitives; callers remain responsible for defining and validating application-specific business policy.
+  - id: catalog_is_source_pinned
+    level: MUST
+    statement: This catalog record describes the exact upstream revision in foreignArtifacts and does not certify other revisions or runtime behavior.
+effects:
+  sideEffects: []
+evidence:
+  - id: readme_and_package_manifest
+    kind: documentation
+    path: evidence/source-map.md
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities.soundblaster.specification_core.compose_rules
+      - provides.capabilities.soundblaster.specification_core.evaluate_async_rules
+      - provides.capabilities.soundblaster.specification_core.produce_typed_decisions
+      - provides.capabilities.soundblaster.specification_core.trace_evaluations
+      - interfaces
+      - constraints
+      - provenance.sourceConfidence
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: medium
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []
