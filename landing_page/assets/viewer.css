@@ -489,13 +489,19 @@ h3 {
   grid-template-columns: minmax(0, 0.84fr) minmax(360px, 1fr);
   gap: 18px;
   align-items: start;
+  min-width: 0;
 }
 
 .detail {
+  min-width: 0;
   min-height: 520px;
   padding: 24px;
   border: 1px solid var(--rule);
   background: var(--panel);
+}
+
+.json-panel {
+  min-width: 0;
 }
 
 .detail-head {
@@ -570,6 +576,10 @@ h3 {
   margin-top: 14px;
 }
 
+.capability-list {
+  min-width: 0;
+}
+
 .token {
   display: inline-flex;
   min-height: 28px;
@@ -586,6 +596,13 @@ h3 {
 .token:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.capability-token {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .catalog-grid {
@@ -758,5 +775,44 @@ pre {
 
   .content {
     padding: 22px 14px;
+  }
+
+  .detail-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .detail-title {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .capability-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .capability-token {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 34px;
+    padding: 7px 0;
+    border: 0;
+    border-bottom: 1px solid var(--rule-soft);
+    background: transparent;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+
+  .capability-token:last-child {
+    border-bottom: 0;
+  }
+
+  .capability-token:hover {
+    background: var(--accent-soft);
   }
 }
