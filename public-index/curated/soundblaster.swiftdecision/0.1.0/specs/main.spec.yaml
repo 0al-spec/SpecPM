@@ -10,7 +10,7 @@ intent:
 scope:
   boundedContext: swift_backend_decision_layer
   includes:
-    - Typed Noul, Choice, and Score decision requests and results.
+    - Boolean (Noul), Choice, and Score decision modes with typed results.
     - A replaceable asynchronous DecisionBackend interface and deterministic closure adapter.
     - Validation of backend probability vectors and caller-configured thresholds, abstention, and fallbacks.
     - Optional MLX trait for the documented local Laya backend on supported Apple hardware.
