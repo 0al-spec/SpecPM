@@ -1,0 +1,96 @@
+apiVersion: specpm.dev/v0.1
+kind: BoundarySpec
+metadata:
+  id: soundblaster.specification_kit
+  title: SpecificationKit
+  version: 0.1.0
+  status: draft
+intent:
+  summary: Add Apple-platform context integrations, SwiftUI observation, and product-level rules on top of the SpecificationCore model.
+scope:
+  boundedContext: swift_platform_specification_integrations
+  includes:
+    - SwiftUI property wrappers that observe specification or decision results.
+    - Platform, environment, composite, persistent, and network context-provider types present in the pinned source.
+    - Product-level specifications such as feature-flag, subscription-status, comparative, weighted, historical, and threshold rules.
+    - Test utilities, tracing, and profiling helpers exposed by the package.
+  excludes:
+    - The platform-independent specification and decision primitives owned by SpecificationCore.
+    - A hosted service or guarantee that a platform context provider is configured for a specific application.
+    - Claims that all providers are equivalent in persistence, privacy, or network behavior.
+    - Upstream package revisions other than the pinned source.
+provides:
+  capabilities:
+    - id: soundblaster.specification_kit.observe_rules_in_swiftui
+      role: primary
+      summary: Bind specification and decision results to SwiftUI observation wrappers that update when the configured context publishes changes.
+    - id: soundblaster.specification_kit.provide_platform_context
+      role: supporting
+      summary: Supply platform and application context through the provider implementations included in the package.
+    - id: soundblaster.specification_kit.evaluate_product_rules
+      role: supporting
+      summary: Evaluate reusable product-oriented rules for flags, subscriptions, thresholds, weighted choices, and related domains.
+requires:
+  capabilities:
+    - soundblaster.specification_core.compose_rules
+interfaces:
+  inbound:
+    - id: swift_package_product
+      kind: library
+      summary: Import the SpecificationKit SwiftPM product and configure its provider and rule types in a Swift application.
+    - id: swiftui_observation_wrappers
+      kind: library
+      summary: Use the documented observed property wrappers with a SwiftUI-compatible context update source.
+    - id: context_provider_configuration
+      kind: library
+      summary: Select and configure a provider implementation appropriate to the app's platform and data source.
+  outbound:
+    - id: observed_rule_values
+      kind: library
+      summary: Expose specification or decision values for SwiftUI views through the package's observation wrappers.
+    - id: context_values
+      kind: library
+      summary: Provide context values consumed by specification evaluation.
+constraints:
+  - id: provider_behavior_is_specific
+    level: MUST
+    statement: Consumers must select and configure a concrete provider; persistence, network access, and update behavior depend on that implementation.
+  - id: depends_on_core
+    level: MUST
+    statement: The package depends on SpecificationCore for its shared specification model, and this catalog record declares that dependency explicitly.
+  - id: catalog_is_source_pinned
+    level: MUST
+    statement: This catalog record describes the exact upstream revision in foreignArtifacts and does not certify other revisions or runtime behavior.
+effects:
+  sideEffects:
+    - id: network_context_fetch
+      kind: network_read
+      summary: NetworkContextProvider performs configured HTTP GET requests to retrieve context and can cache fetched values.
+    - id: persistent_context_storage
+      kind: database_write
+      summary: PersistentContextProvider can read and write context through its configured Core Data store.
+    - id: platform_location_access
+      kind: state_mutation
+      summary: LocationContextProvider can request platform location authorization and location updates when configured to do so.
+evidence:
+  - id: readme_and_package_manifest
+    kind: documentation
+    path: evidence/source-map.md
+    supports:
+      - intent.summary
+      - scope
+      - provides.capabilities.soundblaster.specification_kit.observe_rules_in_swiftui
+      - provides.capabilities.soundblaster.specification_kit.provide_platform_context
+      - provides.capabilities.soundblaster.specification_kit.evaluate_product_rules
+      - requires.capabilities
+      - interfaces
+      - constraints
+      - effects.sideEffects
+      - provenance.sourceConfidence
+provenance:
+  sourceConfidence:
+    intent: high
+    boundary: medium
+    behavior: medium
+  curatedBy: SpecPM AI-assisted source review; acceptance through catalog PR
+implementationBindings: []

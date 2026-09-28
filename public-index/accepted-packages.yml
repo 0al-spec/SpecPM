@@ -25,6 +25,10 @@ packages:
   - path: public-index/curated/axios.http_client/1.19.0
   - path: public-index/curated/bitcoin.core.fullnode/0.1.0
   - path: public-index/curated/n8n.platform/0.1.0
+  - path: public-index/curated/soundblaster.specification_core/0.1.0
+  - path: public-index/curated/soundblaster.specification_kit/0.1.0
+  - path: public-index/curated/soundblaster.swiftdecision/0.1.0
+  - path: public-index/curated/specification_core.python/0.1.0
 relations:
   - id: xyflow.workspace.contains.xyflow.react
     type: contains

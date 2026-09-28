@@ -1,0 +1,40 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: specification_core.python
+  name: SpycificationCore
+  version: 0.1.0
+  summary: Typed, dependency-free Python rules for deterministic synchronous and asynchronous decisions with local traces.
+  license: MIT
+  authors:
+    - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+  - path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+      - specification_core.python.compose_rules
+      - specification_core.python.evaluate_async_rules
+      - specification_core.python.produce_decisions
+      - specification_core.python.record_traces
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - any
+  languages:
+    - Python
+keywords:
+  - specification pattern
+  - deterministic decisions
+  - async rules
+  - typed outcomes
+  - local tracing
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: https://github.com/SoundBlaster/SpycificationCore
+    revision: 6113d773e78cb94c4eb0ce31e8439877fef45494
+  - id: source_evidence_map
+    role: documentation
+    path: evidence/source-map.md

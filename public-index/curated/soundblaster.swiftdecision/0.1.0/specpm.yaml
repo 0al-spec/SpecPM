@@ -1,0 +1,46 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: soundblaster.swiftdecision
+  name: SwiftDecision
+  version: 0.1.0
+  summary: Swift decision engine that maps backend probabilities to typed values with acceptance, abstention, and fallback outcomes.
+  license: Apache-2.0
+  authors:
+    - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+  - path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+      - soundblaster.swiftdecision.make_typed_model_decisions
+      - soundblaster.swiftdecision.apply_uncertainty_policy
+      - soundblaster.swiftdecision.trace_decisions
+      - soundblaster.swiftdecision.run_optional_local_mlx
+  requires:
+    capabilities:
+      - soundblaster.specification_core.compose_rules
+      - soundblaster.specification_core.produce_typed_decisions
+compatibility:
+  platforms:
+    - iOS
+    - macOS
+    - tvOS
+    - watchOS
+  languages:
+    - Swift
+keywords:
+  - typed model decisions
+  - classification
+  - routing
+  - abstention
+  - confidence thresholds
+  - MLX
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: https://github.com/SoundBlaster/SwiftDecision
+    revision: de28736b2d022aa2e4f31f8fec870eab459d0d93
+  - id: source_evidence_map
+    role: documentation
+    path: evidence/source-map.md

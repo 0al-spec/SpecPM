@@ -1,0 +1,45 @@
+apiVersion: specpm.dev/v0.1
+kind: SpecPackage
+metadata:
+  id: soundblaster.specification_core
+  name: SpecificationCore for Swift
+  version: 0.1.0
+  summary: Cross-platform Swift primitives for composing synchronous and asynchronous specifications and typed decisions.
+  license: MIT
+  authors:
+    - name: SpecPM Maintainers (AI-assisted curation)
+specs:
+  - path: specs/main.spec.yaml
+index:
+  provides:
+    capabilities:
+      - soundblaster.specification_core.compose_rules
+      - soundblaster.specification_core.evaluate_async_rules
+      - soundblaster.specification_core.produce_typed_decisions
+      - soundblaster.specification_core.trace_evaluations
+  requires:
+    capabilities: []
+compatibility:
+  platforms:
+    - iOS
+    - macOS
+    - tvOS
+    - watchOS
+    - Linux
+    - Windows
+  languages:
+    - Swift
+keywords:
+  - specification pattern
+  - rule evaluation
+  - typed decisions
+  - Swift macros
+  - tracing
+foreignArtifacts:
+  - id: upstream_repository
+    role: primary_intent_source
+    uri: https://github.com/SoundBlaster/SpecificationCore
+    revision: 483214469828c42f7b615654aa70d0acbecc4dbf
+  - id: source_evidence_map
+    role: documentation
+    path: evidence/source-map.md
