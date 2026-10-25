@@ -190,7 +190,9 @@ async function loadRegistry() {
     state.intents = intents || emptyIntentIndex();
     state.capabilities = collectCapabilities(state.packages);
     state.catalogItems = buildCatalogItems();
-    state.catalogSearch = SpecPMCatalogSearch.createIndex(state.catalogItems);
+    state.catalogSearch = await SpecPMCatalogSearch.loadIndex(
+      state.catalogItems, () => fetchRequired("search/catalog-index.json")
+    );
     state.payload = state.status;
     state.activePath = "status/index.json";
     state.activeKind = "status";
@@ -240,7 +242,9 @@ function clearLoadedRegistryState() {
 }
 
 async function fetchRequired(path) {
-  const response = await fetch(resourceUrl(path), { headers: { Accept: "application/json" } });
+  const response = await fetch(resourceUrl(path), {
+    headers: { Accept: "application/json" }, cache: "no-cache"
+  });
   if (!response.ok) {
     throw new Error(`${path} returned HTTP ${response.status}`);
   }
@@ -1211,47 +1215,7 @@ function routeToHash(route) {
 }
 
 function buildCatalogItems() {
-  const packages = packageItems().map((pkg) => ({
-    type: packageScopeLabel(pkg),
-    action: "package",
-    id: pkg.package_id,
-    meta: `${pkg.name || ""} - ${pkg.summary || ""}`,
-    searchFields: {
-      title: pkg.name,
-      summary: pkg.summary,
-      keywords: (pkg.keywords || []).join(" "),
-      identifiers: [...(pkg.capabilities || []), ...(pkg.intents || [])].join(" "),
-      details: [pkg.latest_version, pkg.license].join(" ")
-    }
-  }));
-  const intents = intentItems().map((intent) => ({
-    type: "intent",
-    action: "intent",
-    id: intent.intent_id,
-    meta: `${intent.package_count || 0} package(s), ${intent.capability_count || 0} capability match(es)`,
-    searchFields: {
-      identifiers: [...(intent.package_ids || []), ...(intent.capabilities || [])].join(" "),
-      details: intent.status
-    }
-  }));
-  const capabilities = state.capabilities.map((capability) => ({
-    type: "capability",
-    action: "capability",
-    id: capability.id,
-    meta: `${capability.packages.length} package source(s)`,
-    searchFields: { identifiers: capability.packages.join(" ") }
-  }));
-  return [...packages, ...intents, ...capabilities]
-    .sort((left, right) => {
-      if (left.type === right.type) {
-        return left.id.localeCompare(right.id);
-      }
-      return typeRank(left.type) - typeRank(right.type);
-    });
-}
-
-function typeRank(type) {
-  return { "package-set": 0, package: 1, intent: 2, capability: 3 }[type] ?? 9;
+  return SpecPMCatalogSearch.catalogItems(state.packages, state.intents);
 }
 
 function isCatalogItemActive(item) {

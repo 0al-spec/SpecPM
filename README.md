@@ -23,12 +23,25 @@ consumers can use
 
 The browser catalog at [SpecPM.dev](https://specpm.dev/viewer/) and
 [GitHub Pages](https://0al-spec.github.io/SpecPM/viewer/) ranks metadata matches
-with browser-local BM25. Names, keywords and IDs receive higher weights than
+with BM25. CI prebuilds `/v0/search/catalog-index.json` once per publication
+using the same JavaScript engine and document projection as the viewer, then
+includes it in both public site artifacts. The browser restores the postings
+and statistics without tokenizing the corpus. A SHA-256 hash of the search
+documents binds the index to the loaded metadata; schema and engine versions
+also have to match. The hash detects a mismatched snapshot, not publisher trust.
+
+Missing, incompatible, malformed or stale indexes fall back to browser-local
+assembly, including third-party registries that only implement the existing
+`/v0` API. Metadata requests use HTTP cache revalidation. Opening the page or
+pressing **Load Registry** reloads the data and index; open tabs do not poll.
+Viewer script URLs include the publication revision to avoid mixing cached
+JavaScript versions across deployments.
+Names, keywords and IDs receive higher weights than
 summaries; exact IDs take priority, and the last query word supports prefix
 completion. Multiple words match independently, with deterministic ranking.
 An empty query keeps the normal browse order. Package, intent and capability
-scope filters still apply. Search uses the loaded registry snapshot and rebuilds
-its index when a registry is loaded; it sends no search requests to a backend.
+scope filters still apply. Search uses the loaded registry snapshot and sends
+no query requests to a backend.
 It does not search full BoundarySpec or evidence files, translate queries,
 infer synonyms, or change the exact `/v0` capability and intent lookup APIs.
 
@@ -36,6 +49,12 @@ Run the dependency-free search checks with Node.js 24 or newer:
 
 ```sh
 node --test tests/catalog-search.test.cjs
+```
+
+After generating a static registry, prebuild its browser search index with:
+
+```sh
+node scripts/build_catalog_search.cjs <generated-site-directory>
 ```
 
 ## MVP baseline

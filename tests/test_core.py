@@ -1713,7 +1713,10 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "payload?.registry?.implementation" in landing_version_js
     assert '<link rel="stylesheet" href="./assets/specpm-design.css" />' in registry_viewer
     assert '<link rel="stylesheet" href="./assets/viewer.css" />' in registry_viewer
-    assert '<script src="./assets/viewer.js" defer></script>' in registry_viewer
+    assert (
+        '<script src="./assets/viewer.js?v=__SPECPM_BUILD_REVISION__" defer></script>'
+        in registry_viewer
+    )
     assert "viewer-build-badge" in registry_viewer
     assert "viewer-build-line" in registry_viewer
     assert "Static Registry Viewer" in registry_viewer
@@ -1740,9 +1743,12 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "clearLoadedRegistryState" in registry_viewer_js
     assert "state.catalogItems" in registry_viewer_js
     assert "buildCatalogItems" in registry_viewer_js
-    assert "searchFields" in registry_viewer_js
-    assert "SpecPMCatalogSearch.createIndex(state.catalogItems)" in registry_viewer_js
-    assert '<script src="./assets/catalog-search.js" defer></script>' in registry_viewer
+    assert "SpecPMCatalogSearch.catalogItems(state.packages, state.intents)" in registry_viewer_js
+    assert "SpecPMCatalogSearch.loadIndex(" in registry_viewer_js
+    assert (
+        '<script src="./assets/catalog-search.js?v=__SPECPM_BUILD_REVISION__" defer></script>'
+        in registry_viewer
+    )
     assert registry_viewer.index("assets/catalog-search.js") < registry_viewer.index(
         "assets/viewer.js"
     )
@@ -6122,6 +6128,7 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "public-index/**",
         "landing_page/**",
         "scripts/render_pages.py",
+        "scripts/build_catalog_search.cjs",
         "pyproject.toml",
         ".github/workflows/docs.yml",
     } <= paths
@@ -6136,6 +6143,9 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
         "Render GitHub Pages root redirect and viewer"
     )
     assert step_names.index("Render GitHub Pages root redirect and viewer") < step_names.index(
+        "Prebuild browser catalog search"
+    )
+    assert step_names.index("Prebuild browser catalog search") < step_names.index(
         "Prepare SpecPM.dev static host artifact"
     )
     assert step_names.index("Prepare SpecPM.dev static host artifact") < step_names.index(
@@ -6145,6 +6155,10 @@ def test_docs_workflow_publishes_public_index_metadata_with_docc() -> None:
 
     steps_by_name = {step["name"]: step for step in steps if "name" in step}
     assert steps_by_name["Set up Python"]["uses"] == "actions/setup-python@v6"
+    assert steps_by_name["Set up Node"]["with"]["node-version"] == "24"
+    assert steps_by_name["Prebuild browser catalog search"]["run"] == (
+        "node scripts/build_catalog_search.cjs ./.docc-build"
+    )
     assert steps_by_name["Install SpecPM"]["run"] == 'python -m pip install -e ".[dev]"'
 
     generate = steps_by_name["Generate public index metadata"]
@@ -6315,6 +6329,9 @@ def test_render_pages_can_keep_github_pages_root_as_docc_redirect(
     assert (output / "viewer/index.html").is_file()
     assert (output / "viewer/assets/viewer.js").is_file()
     assert (output / "viewer/assets/catalog-search.js").is_file()
+    viewer = (output / "viewer/index.html").read_text(encoding="utf-8")
+    assert "catalog-search.js?v=1234567890abcdef" in viewer
+    assert "viewer.js?v=1234567890abcdef" in viewer
     assert (output / "site-metadata.json").is_file()
     assert json.loads((output / "theme-settings.json").read_text(encoding="utf-8")) == {}
 
