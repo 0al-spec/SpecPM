@@ -21,6 +21,23 @@ consumers can use
 
 - [https://0al-spec.github.io/SpecPM](https://0al-spec.github.io/SpecPM/documentation/specpm/)
 
+The browser catalog at [SpecPM.dev](https://specpm.dev/viewer/) and
+[GitHub Pages](https://0al-spec.github.io/SpecPM/viewer/) ranks metadata matches
+with browser-local BM25. Names, keywords and IDs receive higher weights than
+summaries; exact IDs take priority, and the last query word supports prefix
+completion. Multiple words match independently, with deterministic ranking.
+An empty query keeps the normal browse order. Package, intent and capability
+scope filters still apply. Search uses the loaded registry snapshot and rebuilds
+its index when a registry is loaded; it sends no search requests to a backend.
+It does not search full BoundarySpec or evidence files, translate queries,
+infer synonyms, or change the exact `/v0` capability and intent lookup APIs.
+
+Run the dependency-free search checks with Node.js 24 or newer:
+
+```sh
+node --test tests/catalog-search.test.cjs
+```
+
 ## MVP baseline
 
 Install locally:

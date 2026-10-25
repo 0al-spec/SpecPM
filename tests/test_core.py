@@ -1740,7 +1740,12 @@ def test_public_index_submission_entrypoints_are_user_visible() -> None:
     assert "clearLoadedRegistryState" in registry_viewer_js
     assert "state.catalogItems" in registry_viewer_js
     assert "buildCatalogItems" in registry_viewer_js
-    assert "searchText" in registry_viewer_js
+    assert "searchFields" in registry_viewer_js
+    assert "SpecPMCatalogSearch.createIndex(state.catalogItems)" in registry_viewer_js
+    assert '<script src="./assets/catalog-search.js" defer></script>' in registry_viewer
+    assert registry_viewer.index("assets/catalog-search.js") < registry_viewer.index(
+        "assets/viewer.js"
+    )
     assert "RemoteRegistryLoadError" in registry_viewer_js
     assert 'url.protocol !== "http:" && url.protocol !== "https:"' in registry_viewer_js
     assert 'window.addEventListener("popstate"' in registry_viewer_js
@@ -6309,6 +6314,7 @@ def test_render_pages_can_keep_github_pages_root_as_docc_redirect(
     assert "SpecPM - Resolve Needs Into Specifications" not in root
     assert (output / "viewer/index.html").is_file()
     assert (output / "viewer/assets/viewer.js").is_file()
+    assert (output / "viewer/assets/catalog-search.js").is_file()
     assert (output / "site-metadata.json").is_file()
     assert json.loads((output / "theme-settings.json").read_text(encoding="utf-8")) == {}
 
