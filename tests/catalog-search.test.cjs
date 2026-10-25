@@ -115,7 +115,7 @@ test("ties are deterministic and a new registry index has no old documents", () 
 
 test("serialized postings preserve ranking, exact IDs, prefixes and Unicode", async () => {
   const entries = [
-    item("axios.http_client", { title: "Axios HTTP Client", summary: "HTTP requests" }),
+    item("axios.http_client", { title: "Axios HTTPClient", summary: "HTTP requests" }),
     item("email_tools", { title: "Email Tools", keywords: "markdown поиск" }),
     item("other", { summary: "client support" })
   ];
@@ -125,7 +125,7 @@ test("serialized postings preserve ranking, exact IDs, prefixes and Unicode", as
   const restored = restoreIndex(payload, entries, hash);
   assert.equal(restored.source, "prebuilt");
   for (const query of ["", "http client", "client http", "axios.http_client", "http cli",
-    "ПОИСК", "missing"]) {
+    "HTTPClient", "httpclient", "HTTPCLIENT", "ПОИСК", "missing"]) {
     assert.deepEqual(ids(restored, query), ids(local, query));
   }
   assert.deepEqual(createIndex(entries).toJSON(hash), payload);
@@ -169,6 +169,7 @@ test("unsupported versions and invalid statistics or postings fall back", async 
   const corruptions = [
     (p) => { p.schemaVersion += 1; },
     (p) => { p.engineVersion += 1; },
+    (p) => { p.engineVersion = 1; },
     (p) => { p.averages.summary = 999; },
     (p) => { p.documents[0].id = "another"; },
     (p) => { p.documents[0].lengths.summary = -1; },

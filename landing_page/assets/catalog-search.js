@@ -6,7 +6,7 @@
   const k1 = 1.2;
   const b = 0.75;
   // Bump when tokenization, field weights, projection or scoring changes.
-  const engineVersion = 1;
+  const engineVersion = 2;
 
   function catalogItems(packageIndex, intentIndex) {
     const capabilities = new Map();
