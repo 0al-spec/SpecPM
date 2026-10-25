@@ -7,6 +7,7 @@ const state = {
   intents: null,
   capabilities: [],
   catalogItems: [],
+  catalogSearch: null,
   activePath: "status/index.json",
   activeKind: "status",
   activeId: null,
@@ -189,6 +190,9 @@ async function loadRegistry() {
     state.intents = intents || emptyIntentIndex();
     state.capabilities = collectCapabilities(state.packages);
     state.catalogItems = buildCatalogItems();
+    state.catalogSearch = await SpecPMCatalogSearch.loadIndex(
+      state.catalogItems, () => fetchRequired("search/catalog-index.json")
+    );
     state.payload = state.status;
     state.activePath = "status/index.json";
     state.activeKind = "status";
@@ -224,6 +228,7 @@ function clearLoadedRegistryState() {
   state.intents = null;
   state.capabilities = [];
   state.catalogItems = [];
+  state.catalogSearch = null;
   state.activePath = "status/index.json";
   state.activeKind = "status";
   state.activeId = null;
@@ -237,7 +242,9 @@ function clearLoadedRegistryState() {
 }
 
 async function fetchRequired(path) {
-  const response = await fetch(resourceUrl(path), { headers: { Accept: "application/json" } });
+  const response = await fetch(resourceUrl(path), {
+    headers: { Accept: "application/json" }, cache: "no-cache"
+  });
   if (!response.ok) {
     throw new Error(`${path} returned HTTP ${response.status}`);
   }
@@ -394,8 +401,8 @@ function renderEndpointTree() {
 }
 
 function renderCatalog() {
-  const filter = catalogFilter.value.trim().toLowerCase();
-  const results = state.catalogItems.filter((item) => {
+  const ranked = state.catalogSearch?.search(catalogFilter.value) || [];
+  const results = ranked.filter((item) => {
     if (
       state.catalogMode !== "all"
       && item.type !== state.catalogMode
@@ -403,7 +410,7 @@ function renderCatalog() {
     ) {
       return false;
     }
-    return matchesCatalogFilter(item, filter);
+    return true;
   });
   const visible = results.slice(0, catalogVisibleLimit);
   catalogCount.textContent = String(results.length);
@@ -1208,54 +1215,7 @@ function routeToHash(route) {
 }
 
 function buildCatalogItems() {
-  const packages = packageItems().map((pkg) => ({
-    type: packageScopeLabel(pkg),
-    action: "package",
-    id: pkg.package_id,
-    meta: `${pkg.name || ""} - ${pkg.summary || ""}`,
-    search: [
-      pkg.name,
-      pkg.summary,
-      pkg.latest_version,
-      pkg.license,
-      ...(pkg.capabilities || []),
-      ...(pkg.intents || []),
-      ...(pkg.keywords || [])
-    ].join(" ")
-  }));
-  const intents = intentItems().map((intent) => ({
-    type: "intent",
-    action: "intent",
-    id: intent.intent_id,
-    meta: `${intent.package_count || 0} package(s), ${intent.capability_count || 0} capability match(es)`,
-    search: [
-      intent.status,
-      ...(intent.package_ids || []),
-      ...(intent.capabilities || [])
-    ].join(" ")
-  }));
-  const capabilities = state.capabilities.map((capability) => ({
-    type: "capability",
-    action: "capability",
-    id: capability.id,
-    meta: `${capability.packages.length} package source(s)`,
-    search: capability.packages.join(" ")
-  }));
-  return [...packages, ...intents, ...capabilities]
-    .map((item) => ({
-      ...item,
-      searchText: `${item.id || ""} ${item.search || ""}`.toLowerCase()
-    }))
-    .sort((left, right) => {
-      if (left.type === right.type) {
-        return left.id.localeCompare(right.id);
-      }
-      return typeRank(left.type) - typeRank(right.type);
-    });
-}
-
-function typeRank(type) {
-  return { "package-set": 0, package: 1, intent: 2, capability: 3 }[type] ?? 9;
+  return SpecPMCatalogSearch.catalogItems(state.packages, state.intents);
 }
 
 function isCatalogItemActive(item) {
@@ -1362,13 +1322,6 @@ function routeTemplatePayload(kind) {
 function clearRoutePrompt() {
   state.routePrompt = null;
   state.routeError = null;
-}
-
-function matchesCatalogFilter(item, filter) {
-  if (!filter) {
-    return true;
-  }
-  return item.searchText.includes(filter);
 }
 
 function endpointTitle(kind) {
