@@ -12,7 +12,17 @@ function ids(index, query) {
 
 test("splits identifiers, camel case and Unicode without losing numbers", () => {
   assert.deepEqual(tokenize("HTTPClient email_to.Markdown v1.19 ПОИСК"),
-    ["http", "client", "email", "to", "markdown", "v1", "19", "поиск"]);
+    ["httpclient", "http", "client", "email", "to", "markdown", "v1", "19", "поиск"]);
+});
+
+test("compound names match whole words regardless of query capitalization", () => {
+  const index = createIndex([
+    item("example.client", { title: "HTTPClient", summary: "SwiftDecision integration" })
+  ]);
+  for (const query of ["HTTPClient", "httpclient", "HTTPCLIENT", "http client",
+    "SwiftDecision", "swiftdecision", "SWIFTDECISION", "swift decision"]) {
+    assert.deepEqual(ids(index, query), ["example.client"]);
+  }
 });
 
 test("empty query preserves browse order and empty indexes are searchable", () => {

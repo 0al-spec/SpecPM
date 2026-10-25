@@ -11,10 +11,14 @@
   }
 
   function tokenize(text) {
-    return normalize(String(text ?? "")
-      .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
-      .replace(/([a-z])([A-Z])/g, "$1 $2"))
-      .match(/[\p{L}\p{N}]+/gu) || [];
+    const words = String(text ?? "").normalize("NFKC").match(/[\p{L}\p{N}]+/gu) || [];
+    return words.flatMap((word) => {
+      const parts = normalize(word
+        .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")).split(" ");
+      // Keep the whole word so lowercase and uppercase compound queries still match.
+      return parts.length > 1 ? [normalize(word), ...parts] : parts;
+    });
   }
 
   function createIndex(items) {
