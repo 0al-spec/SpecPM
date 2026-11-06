@@ -342,10 +342,18 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
 
     warn_duplicates(spec_ids, "duplicate_spec_id", "Duplicate BoundarySpec id", warnings)
 
+    for rel, spec in specs:
+        warn_unresolved_capabilities(
+            spec, rel, "requires.capabilities", provided_by_specs, warnings
+        )
+
     manifest_capabilities = []
     manifest_intents = []
     declared_intents = sorted({mapping["intent_id"] for mapping in intent_mappings})
     if manifest is not None:
+        warn_unresolved_capabilities(
+            manifest, "specpm.yaml", "index.requires.capabilities", provided_by_specs, warnings
+        )
         manifest_capabilities = capability_ids(get_field(manifest, "index.provides.capabilities"))
         for capability_id in manifest_capabilities:
             if capability_id not in provided_by_specs:
@@ -3497,7 +3505,7 @@ def validate_manifest(
         warnings,
     )
 
-    validate_capability_entries(
+    required = validate_capability_entries(
         get_field(manifest, "index.requires.capabilities"),
         errors,
         "specpm.yaml",
@@ -3507,6 +3515,8 @@ def validate_manifest(
         invalid_entry_code="manifest_required_capability_entry_invalid",
         allow_missing=True,
     )
+    for capability_id in required:
+        validate_id(capability_id, "capability_id_invalid", errors, "specpm.yaml")
     validate_foreign_artifacts(
         "specpm.yaml", manifest.get("foreignArtifacts"), root, warnings, errors
     )
@@ -3612,15 +3622,6 @@ def validate_boundary_spec(
     )
     for capability_id in required:
         validate_id(capability_id, "capability_id_invalid", errors, rel)
-        warnings.append(
-            Issue(
-                "warning",
-                "required_capability_unresolved",
-                f"Required capability is not resolved by MVP validation: {capability_id}",
-                rel,
-                "requires.capabilities",
-            )
-        )
 
     validate_interfaces(rel, spec, warnings, errors)
     validate_effects(rel, spec, warnings, errors)
@@ -5830,6 +5831,27 @@ def capability_ids(value: Any) -> list[str]:
         elif isinstance(item, dict) and isinstance(item.get("id"), str):
             ids.append(item["id"])
     return ids
+
+
+def warn_unresolved_capabilities(
+    document: dict[str, Any],
+    file: str,
+    field: str,
+    provided: set[str],
+    warnings: list[Issue],
+) -> None:
+    for capability_id in capability_ids(get_field(document, field)):
+        if capability_id in provided or not ID_RE.match(capability_id):
+            continue
+        warnings.append(
+            Issue(
+                "warning",
+                "required_capability_unresolved",
+                f"No local provider declares {capability_id}. External providers were not checked.",
+                file,
+                field,
+            )
+        )
 
 
 def intent_ids(value: Any) -> list[str]:
