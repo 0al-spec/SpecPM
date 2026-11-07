@@ -7483,6 +7483,56 @@ def test_rfc_example_validates() -> None:
     assert report["capabilities"] == ["document_conversion.email_to_markdown"]
 
 
+def test_validate_matches_requirements_to_referenced_boundary_specs(tmp_path: Path) -> None:
+    package = copy_email_package(tmp_path, "email-tools")
+    manifest_path = package / "specpm.yaml"
+    consumer_path = package / "specs/email-to-markdown.spec.yaml"
+    provider_path = package / "specs/email-parser.spec.yaml"
+
+    provider = load_yaml_file(consumer_path)
+    provider["metadata"]["id"] = "document_conversion.email_parser"
+    provider["provides"]["capabilities"] = [
+        {"id": "document_conversion.parse_email", "role": "primary"}
+    ]
+    provider["evidence"][0]["supports"] = ["intent.summary"]
+    write_yaml_file(provider_path, provider)
+
+    consumer = load_yaml_file(consumer_path)
+    consumer["requires"]["capabilities"] = [
+        {"id": "document_conversion.parse_email"},
+        "platform.filesystem",
+    ]
+    write_yaml_file(consumer_path, consumer)
+
+    manifest = load_yaml_file(manifest_path)
+    manifest["specs"].append({"path": "specs/email-parser.spec.yaml"})
+    manifest["index"]["requires"]["capabilities"] = [
+        "document_conversion.parse_email",
+        {"id": "platform.secure_storage"},
+    ]
+    write_yaml_file(manifest_path, manifest)
+
+    report = validate_package(package)
+
+    assert report["status"] == "warning_only"
+    assert report["errors"] == []
+    warnings = {
+        (warning["file"], warning["field"]): warning["message"]
+        for warning in report["warnings"]
+        if warning["code"] == "required_capability_unresolved"
+    }
+    assert report["warning_count"] == 2
+    assert warnings.keys() == {
+        ("specs/email-to-markdown.spec.yaml", "requires.capabilities"),
+        ("specpm.yaml", "index.requires.capabilities"),
+    }
+    assert (
+        "platform.filesystem"
+        in warnings[("specs/email-to-markdown.spec.yaml", "requires.capabilities")]
+    )
+    assert "platform.secure_storage" in warnings[("specpm.yaml", "index.requires.capabilities")]
+
+
 def test_reference_abstract_email_contract_validates() -> None:
     package_root = ROOT / "examples/abstract_email_to_markdown_contract"
     report = validate_package(package_root)
