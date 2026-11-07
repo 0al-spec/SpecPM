@@ -1,0 +1,39 @@
+name: specpm-local-registry
+
+services:
+  registry:
+    build: .
+    image: specpm:local-registry
+    working_dir: /registry/sources
+    entrypoint: ["python", "/workspace/serve_public_index.py"]
+    command: []
+    environment:
+      SPECPM_PUBLIC_INDEX_MANIFEST: /registry/sources/accepted-packages.yml
+      SPECPM_PUBLIC_INDEX_OUTPUT: /registry/data/index
+      SPECPM_PUBLIC_INDEX_REGISTRY_URL: "http://127.0.0.1:${SPECPM_LOCAL_REGISTRY_PORT:-8081}"
+      TMPDIR: /registry/data
+    volumes:
+      - ./scripts/serve_public_index.py:/workspace/serve_public_index.py:ro
+      - type: bind
+        source: ${SPECPM_LOCAL_REGISTRY_SOURCES:?Set the registry source directory}
+        target: /registry/sources
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${SPECPM_LOCAL_REGISTRY_DATA:?Set the registry data directory}
+        target: /registry/data
+        bind:
+          create_host_path: false
+    ports:
+      - "127.0.0.1:${SPECPM_LOCAL_REGISTRY_PORT:-8081}:8081"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "from urllib.request import urlopen; urlopen('http://127.0.0.1:8081/v0/status/index.json', timeout=2).close()"
+      interval: 3s
+      timeout: 3s
+      start_period: 30s
+      retries: 5

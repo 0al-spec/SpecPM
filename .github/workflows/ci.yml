@@ -39,4 +39,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Build Docker image
-        run: docker build -t specpm:ci .
+        run: docker build -t specpm:local-registry .
+      - name: Smoke test the private registry
+        run: |
+          export SPECPM_LOCAL_REGISTRY_SOURCES="$RUNNER_TEMP/registry-sources"
+          export SPECPM_LOCAL_REGISTRY_DATA="$RUNNER_TEMP/registry-data"
+          mkdir -p "$SPECPM_LOCAL_REGISTRY_SOURCES" "$SPECPM_LOCAL_REGISTRY_DATA"
+          cp -R examples/email_tools "$SPECPM_LOCAL_REGISTRY_SOURCES/"
+          printf 'schemaVersion: 1\npackages:\n  - path: email_tools\n' \
+            > "$SPECPM_LOCAL_REGISTRY_SOURCES/accepted-packages.yml"
+          compose() { docker compose -f compose.local-registry.yaml "$@"; }
+          trap 'compose logs; compose down' EXIT
+          compose up -d --no-build --pull never --wait --wait-timeout 60
+          compose exec -T registry specpm remote search document_conversion.email_to_markdown \
+            --registry http://127.0.0.1:8081 --json |
+            jq -e '.payload.results[0].package_id == "document_conversion.email_tools"'

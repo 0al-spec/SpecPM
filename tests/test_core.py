@@ -7533,6 +7533,85 @@ def test_validate_matches_requirements_to_referenced_boundary_specs(tmp_path: Pa
     assert "platform.secure_storage" in warnings[("specpm.yaml", "index.requires.capabilities")]
 
 
+def test_validate_cli_resolves_external_requirements_against_registry(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:  # type: ignore[no-untyped-def]
+    consumer = copy_email_package(tmp_path, "consumer")
+    update_email_package(consumer, package_id="consumer.export", capability_id="consumer.export")
+    manifest_path = consumer / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["index"]["requires"]["capabilities"] = [
+        "consumer.export",
+        "document_conversion.email_to_markdown",
+        "document_conversion.parse_email",
+        "platform.filesystem",
+    ]
+    write_yaml_file(manifest_path, manifest)
+
+    provider = copy_email_package(tmp_path, "provider")
+    spec_path = provider / "specs/email-to-markdown.spec.yaml"
+    spec = load_yaml_file(spec_path)
+    spec["provides"]["capabilities"].append("document_conversion.parse_email")
+    write_yaml_file(spec_path, spec)
+    manifest_path = provider / "specpm.yaml"
+    manifest = load_yaml_file(manifest_path)
+    manifest["index"]["provides"]["capabilities"].append("document_conversion.parse_email")
+    write_yaml_file(manifest_path, manifest)
+    alternative = copy_email_package(tmp_path, "alternative")
+    update_email_package(
+        alternative,
+        package_id="alternative.email_parser",
+        capability_id="document_conversion.parse_email",
+    )
+    registry = "http://127.0.0.1:8081"
+    output = tmp_path / "registry"
+    assert (
+        public_index_module.generate_public_index([provider, alternative], output, registry)[
+            "status"
+        ]
+        == "ok"
+    )
+
+    requested: list[str] = []
+
+    def fetch(endpoint: str, timeout: float) -> tuple[dict[str, Any], list[core_module.Issue]]:
+        relative = endpoint.removeprefix(f"{registry}/").strip("/")
+        requested.append(relative)
+        return json.loads((output / relative / "index.json").read_text()), []
+
+    monkeypatch.setattr(core_module, "fetch_remote_registry_json", fetch)
+    assert main(["validate", str(consumer), "--registry", registry, "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["error_count"] == 0
+    results = {
+        item["capability_id"]: item for item in report["dependency_resolution"]["requirements"]
+    }
+    assert {key: item["status"] for key, item in results.items()} == {
+        "document_conversion.email_to_markdown": "resolved",
+        "document_conversion.parse_email": "ambiguous",
+        "platform.filesystem": "missing",
+    }
+    resolved = results["document_conversion.email_to_markdown"]["providers"][0]
+    assert resolved["package_id"] == "document_conversion.email_tools"
+    assert resolved["version"] == "0.1.0"
+    assert resolved["digest"]["algorithm"] == "sha256"
+    assert len(requested) == 3
+    assert issue_codes(report["warnings"]) == {
+        "required_capability_ambiguous",
+        "required_capability_missing_from_registry",
+    }
+
+    def unreachable(endpoint: str, timeout: float) -> tuple[None, list[core_module.Issue]]:
+        return None, [core_module.Issue("error", "remote_registry_request_failed", "offline")]
+
+    monkeypatch.setattr(core_module, "fetch_remote_registry_json", unreachable)
+    report = validate_package(consumer, registry=registry)
+    assert issue_codes(report["warnings"]) == {"dependency_registry_unavailable"}
+    assert {item["status"] for item in report["dependency_resolution"]["requirements"]} == {
+        "registry_unavailable"
+    }
+
+
 def test_reference_abstract_email_contract_validates() -> None:
     package_root = ROOT / "examples/abstract_email_to_markdown_contract"
     report = validate_package(package_root)
