@@ -171,6 +171,57 @@ For reusable review artifacts, `make public-index-observation-report` writes
 `specs/REGISTRY_OBSERVATION_REPORTS.md` for naming, retention, and comparison
 guidance.
 
+### Private registry for multiple repositories
+
+Keep an `accepted-packages.yml` in a separate directory for this registry.
+Add each provider once with its HTTPS repository URL, branch or tag, exact
+commit SHA, and package path. The generator checks that the ref still
+resolves to the approved SHA. For a repository available only as a local
+checkout, place an exported snapshot under that directory and list its
+relative `path` in the manifest.
+
+```yaml
+schemaVersion: 1
+packages:
+  - repository: https://github.com/example/provider.git
+    ref: v1.0.0
+    revision: 0123456789abcdef0123456789abcdef01234567
+    path: specs/package
+```
+
+From the SpecPM checkout, point Compose to the source and data directories.
+The source directory is mounted read-only. The registry publishes on loopback.
+
+```bash
+export SPECPM_LOCAL_REGISTRY_SOURCES="$HOME/.config/specpm/local-registry"
+export SPECPM_LOCAL_REGISTRY_DATA="$HOME/.local/share/specpm/local-registry"
+mkdir -p "$SPECPM_LOCAL_REGISTRY_DATA"
+docker compose -f compose.local-registry.yaml up -d --build --wait
+specpm remote packages --registry http://127.0.0.1:8081
+```
+
+After approving a new source revision in the manifest, rerun `docker compose
+-f compose.local-registry.yaml up -d --force-recreate --wait` to regenerate the
+index. Set `SPECPM_LOCAL_REGISTRY_PORT` if port 8081 is already in use.
+
+From a consumer repository:
+
+```bash
+specpm validate . --registry http://127.0.0.1:8081 --json
+```
+
+Validation matches local declarations first and checks each remaining
+capability ID once against the registry. A single eligible provider version
+resolves the requirement. The JSON report includes the provider's package ID,
+version and archive digest, and every location that needs the capability.
+Multiple eligible versions are ambiguous. Missing providers and registry
+failures have separate diagnostics. A package's indexed versions and yanked
+versions cannot satisfy its external requirements. These are declaration
+checks. Contract and version compatibility require their own policy.
+Plain `specpm validate .` works offline.
+
+### Remote metadata client
+
 Run the post-MVP read-only remote metadata client against a compatible registry:
 
 ```bash
@@ -201,7 +252,7 @@ interface depth, reproducibility, and consumer utility is documented in
 
 Implemented first slice:
 
-- `specpm validate <package-dir> [--json]`
+- `specpm validate <package-dir> [--registry URL] [--timeout SECONDS] [--json]`
 - `specpm inspect <package-dir> [--json]`
 - `specpm pack <package-dir> [-o <archive>] [--json]`
 - `specpm index <package-dir-or-archive> [--index <path>] [--json]`

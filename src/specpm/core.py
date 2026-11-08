@@ -234,7 +234,9 @@ class RestrictedYamlError(Exception):
         self.issues = issues
 
 
-def validate_package(package_dir: Path) -> dict[str, Any]:
+def validate_package(
+    package_dir: Path, *, registry: str | None = None, timeout: float = 10.0
+) -> dict[str, Any]:
     root = package_dir.resolve()
     errors: list[Issue] = []
     warnings: list[Issue] = []
@@ -342,18 +344,10 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
 
     warn_duplicates(spec_ids, "duplicate_spec_id", "Duplicate BoundarySpec id", warnings)
 
-    for rel, spec in specs:
-        warn_unresolved_capabilities(
-            spec, rel, "requires.capabilities", provided_by_specs, warnings
-        )
-
     manifest_capabilities = []
     manifest_intents = []
     declared_intents = sorted({mapping["intent_id"] for mapping in intent_mappings})
     if manifest is not None:
-        warn_unresolved_capabilities(
-            manifest, "specpm.yaml", "index.requires.capabilities", provided_by_specs, warnings
-        )
         manifest_capabilities = capability_ids(get_field(manifest, "index.provides.capabilities"))
         for capability_id in manifest_capabilities:
             if capability_id not in provided_by_specs:
@@ -396,7 +390,34 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
                         )
                     )
 
-    return validation_report(
+    requirement_fields = [(rel, spec, "requires.capabilities") for rel, spec in specs]
+    if manifest is not None:
+        requirement_fields.append(("specpm.yaml", manifest, "index.requires.capabilities"))
+    unresolved = [
+        (capability_id, file, field)
+        for file, document, field in requirement_fields
+        for capability_id in capability_ids(get_field(document, field))
+        if ID_RE.match(capability_id) and capability_id not in provided_by_specs
+    ]
+    dependency_resolution = None
+    if registry is not None and not errors:
+        dependency_resolution = resolve_external_requirements(
+            unresolved, get_field(manifest, "metadata.id"), registry, timeout, warnings
+        )
+    else:
+        for capability_id, file, field in unresolved:
+            warnings.append(
+                Issue(
+                    "warning",
+                    "required_capability_unresolved",
+                    f"No local provider declares {capability_id}. "
+                    "External providers were not checked.",
+                    file,
+                    field,
+                )
+            )
+
+    report = validation_report(
         errors,
         warnings,
         manifest,
@@ -405,6 +426,9 @@ def validate_package(package_dir: Path) -> dict[str, Any]:
         intent_mappings,
         manifest_intents if manifest_intents else declared_intents,
     )
+    if dependency_resolution is not None:
+        report["dependency_resolution"] = dependency_resolution
+    return report
 
 
 def inspect_package(package_dir: Path) -> dict[str, Any]:
@@ -5833,25 +5857,94 @@ def capability_ids(value: Any) -> list[str]:
     return ids
 
 
-def warn_unresolved_capabilities(
-    document: dict[str, Any],
-    file: str,
-    field: str,
-    provided: set[str],
+def resolve_external_requirements(
+    unresolved: list[tuple[str, str, str]],
+    package_id: str,
+    registry: str,
+    timeout: float,
     warnings: list[Issue],
-) -> None:
-    for capability_id in capability_ids(get_field(document, field)):
-        if capability_id in provided or not ID_RE.match(capability_id):
-            continue
+) -> dict[str, Any]:
+    requirements: dict[str, list[dict[str, str]]] = {}
+    for capability_id, file, field in unresolved:
+        requirements.setdefault(capability_id, []).append({"file": file, "field": field})
+
+    report: dict[str, Any] = {"registry": registry, "requirements": []}
+    if not requirements:
+        return report
+
+    # The static registry only serves exact lookup files for advertised IDs.
+    # Read the catalog first so an absent ID is distinct from a failed request.
+    index = get_remote_package_index(registry, timeout)
+    indexed_capabilities: set[str] = set()
+    if index["status"] == "ok":
+        indexed_capabilities = {
+            capability_id
+            for package in index["payload"]["packages"]
+            if package["package_id"] != package_id
+            for capability_id in package["capabilities"]
+        }
+    else:
+        report["errors"] = index["errors"]
         warnings.append(
             Issue(
                 "warning",
-                "required_capability_unresolved",
-                f"No local provider declares {capability_id}. External providers were not checked.",
-                file,
-                field,
+                "dependency_registry_unavailable",
+                f"Could not read the dependency registry: {registry}.",
             )
         )
+
+    for capability_id, locations in requirements.items():
+        result: dict[str, Any] = {
+            "capability_id": capability_id,
+            "required_by": locations,
+            "status": "missing",
+            "providers": [],
+        }
+        report["requirements"].append(result)
+        if index["status"] != "ok":
+            result["status"] = "registry_unavailable"
+            continue
+        if capability_id in indexed_capabilities:
+            lookup = search_remote_registry(registry, capability_id, timeout)
+            if lookup["status"] == "ok":
+                providers = {
+                    (item["package_id"], item["version"], item["source"]["digest"]["value"]): {
+                        "package_id": item["package_id"],
+                        "version": item["version"],
+                        "digest": item["source"]["digest"],
+                    }
+                    for item in lookup["payload"]["results"]
+                    if not item["yanked"]
+                    and item["package_id"] != package_id
+                    and capability_id in item["provided_capabilities"]
+                }
+                result["providers"] = [providers[key] for key in sorted(providers)]
+                if len(providers) == 1:
+                    result["status"] = "resolved"
+                    continue
+                if providers:
+                    result["status"] = "ambiguous"
+            else:
+                result["status"] = "registry_unavailable"
+                result["errors"] = lookup["errors"]
+
+        code, message = {
+            "missing": (
+                "required_capability_missing_from_registry",
+                f"No eligible provider in the registry declares {capability_id}.",
+            ),
+            "ambiguous": (
+                "required_capability_ambiguous",
+                f"Multiple eligible package versions in the registry declare {capability_id}.",
+            ),
+            "registry_unavailable": (
+                "dependency_registry_unavailable",
+                f"Could not verify {capability_id} against the registry.",
+            ),
+        }[result["status"]]
+        for location in locations:
+            warnings.append(Issue("warning", code, message, location["file"], location["field"]))
+    return report
 
 
 def intent_ids(value: Any) -> list[str]:

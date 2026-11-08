@@ -72,6 +72,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate", help="Validate a SpecPackage directory.")
     validate.add_argument("package_dir")
+    validate.add_argument("--registry", help="Check external capability IDs against this registry.")
+    validate.add_argument("--timeout", type=float, default=10.0, help="Registry request timeout.")
     validate.add_argument(
         "--json", action="store_true", help="Emit a stable JSON validation report."
     )
@@ -562,7 +564,7 @@ def add_remote_registry_options(parser: argparse.ArgumentParser) -> None:
 
 
 def handle_validate(args: argparse.Namespace) -> int:
-    report = validate_package(Path(args.package_dir))
+    report = validate_package(Path(args.package_dir), registry=args.registry, timeout=args.timeout)
     if args.json:
         print_json(report)
     else:
@@ -1222,6 +1224,14 @@ def print_validation(report: dict[str, Any], stream: TextIO | None = None) -> No
         print(f"error {issue['code']}: {issue['message']}", file=stream)
     for issue in report["warnings"]:
         print(f"warning {issue['code']}: {issue['message']}", file=stream)
+    for requirement in report.get("dependency_resolution", {}).get("requirements", []):
+        if requirement["status"] == "resolved":
+            provider = requirement["providers"][0]
+            print(
+                f"resolved {requirement['capability_id']} -> "
+                f"{provider['package_id']}@{provider['version']}",
+                file=stream,
+            )
 
 
 def print_inspection(report: dict[str, Any]) -> None:
